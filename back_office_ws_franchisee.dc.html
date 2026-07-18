@@ -1236,6 +1236,8 @@ class Component extends DCLogic {
     window.FB.get('/incidents').then(r=>set('incidents',r)).catch(()=>{});
     window.FB.get('/rentability').then(r=>set('rentability',r)).catch(()=>{});
     window.FB.get('/rentability-tree').then(r=>set('rentabilityTree',r)).catch(()=>{});
+    window.FB.get('/dashboard-tree').then(r=>set('dashboardTree',r)).catch(()=>{});
+    window.FB.get('/live').then(r=>set('live',r)).catch(()=>{});
   }
   formDefs(){
     const tours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
@@ -1615,36 +1617,7 @@ class Component extends DCLogic {
     ];
 
     const pillG=this.pill('#eaf5ec','#2d7a3e'), pillGrey=this.pill('var(--color-background-secondary)','var(--color-text-muted)');
-    const tdbRaw=[
-      {nom:'Tournée Bruxelles-Centre',chauffeur:'Marek Kowalski',statutLabel:'Prête',statutStyle:pillG,zones:[
-        {nom:'Bruxelles Centre',sites:[
-          {libelle:'Brasserie Le Cirio',ville:'Grand-Place',cutoff:'08:00–11:00',office:'Le Cirio SA',users:[{nom:'Cuisine — M. Dupont',cmd:2},{nom:'Bar — S. Lefèvre',cmd:1}]},
-          {libelle:'Maison Dandoy',ville:'Sablon',cutoff:'08:00–10:30',office:'Dandoy',users:[{nom:'Boutique Sablon',cmd:2}]},
-        ]},
-        {nom:'Sablon',sites:[
-          {libelle:'Hôtel Amigo',ville:'Sablon',cutoff:'07:30–10:00',office:'Rocco Forte',users:[{nom:'Économat',cmd:2}]},
-        ]},
-        {nom:'Schaerbeek',sites:[
-          {libelle:'Boulangerie du Parc',ville:'Schaerbeek',cutoff:'06:30–09:00',office:'Franchise BXL-N',users:[{nom:'Resp. magasin',cmd:1}]},
-        ]},
-      ]},
-      {nom:'Tournée Uccle / Waterloo',chauffeur:'Julien Dubois',statutLabel:'En préparation',statutStyle:pillGrey,zones:[
-        {nom:'Uccle / Waterloo',sites:[
-          {libelle:'Café Belga',ville:'Ixelles',cutoff:'09:00–11:30',office:'Belga SPRL',users:[{nom:'Gérant — J. Belga',cmd:2}]},
-          {libelle:'Resto Le Chalet',ville:'Uccle',cutoff:'10:00–12:00',office:'Chalet SPRL',users:[{nom:'Chef de cuisine',cmd:1}]},
-          {libelle:'Event Château',ville:'Waterloo',cutoff:'11:00–13:00',office:'Événements Sud',users:[{nom:'Traiteur événement',cmd:1}]},
-        ]},
-      ]},
-      {nom:'Tournée Etterbeek / Leuven',chauffeur:'Sofie Peeters',statutLabel:'En préparation',statutStyle:pillGrey,zones:[
-        {nom:'Etterbeek / Leuven',sites:[
-          {libelle:'Traiteur Delcourt',ville:'Etterbeek',cutoff:'08:00–10:00',office:'Delcourt',users:[{nom:'Atelier production',cmd:2}]},
-          {libelle:'Corporate KBC',ville:'Leuven',cutoff:'07:00–09:00',office:'KBC Group',users:[{nom:'Cafétéria HQ',cmd:1}]},
-        ]},
-        {nom:'Anderlecht',sites:[
-          {libelle:'Horeca Cureghem',ville:'Anderlecht',cutoff:'09:00–11:00',office:'Cureghem SPRL',users:[{nom:'Cuisine centrale',cmd:2}]},
-        ]},
-      ]},
-    ];
+    const tdbRaw=((S.data&&S.data.dashboardTree)||[]).map(t=>({...t,statutStyle:this.pill('var(--color-background-secondary)','var(--color-text-muted)')}));
     const col=S.tdbCollapsed;
     const toggleKey=(k)=>this.setState(s=>({tdbCollapsed:{...s.tdbCollapsed,[k]:!s.tdbCollapsed[k]}}));
     const car=(k)=>({open:!col[k],caret:col[k]?'▸':'▾',toggle:()=>toggleKey(k)});
@@ -1735,21 +1708,9 @@ class Component extends DCLogic {
     const zfSubmit=()=>{ if(!zfCanSubmit) return; const id='zn'+(S.newZones.length+1); const nz={id,nom:zForm.name,cp:zForm.cp||'—',vehicule:zForm.vehicule,franco:zForm.franco,delai:zForm.delai,service:parseInt(zForm.service,10)||15}; this.setState(s=>({newZones:[...s.newZones,nz],zfOpen:false,zf:{name:'',type:'primary',parent:'',cp:'',vehicule:'Standard',franco:'250 €',delai:'J+1',service:15,access:10}})); this.printJob('✓ Zone créée : '+nz.nom); };
 
     // SUIVI
-    const liveDrivers=[
-      {color:'#8D1D2C',nom:'Marek Kowalski',info:'BXL-Centre · Renault frigo',avancement:'3/4'},
-      {color:'#3B3468',nom:'Julien Dubois',info:'Sud · Iveco Daily',avancement:'1/3'},
-    ];
-    const liveEta=[
-      {eta:'10:24',drift:'à l\'heure',driftColor:'#2d7a3e',libelle:'Maison Dandoy',ville:'Sablon',statut:'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')},
-      {eta:'10:52',drift:'+6 min',driftColor:'var(--color-primary)',libelle:'Boulangerie du Parc',ville:'Schaerbeek',statut:'En attente',statutStyle:this.pill('var(--color-background-secondary)','var(--color-text-muted)')},
-      {eta:'11:30',drift:'à l\'heure',driftColor:'#2d7a3e',libelle:'Café Belga',ville:'Ixelles',statut:'En attente',statutStyle:this.pill('var(--color-background-secondary)','var(--color-text-muted)')},
-      {eta:'12:40',drift:'+18 min',driftColor:'var(--color-primary)',libelle:'Event Château',ville:'Waterloo',statut:'Risque',statutStyle:this.pill('#fbe9eb','var(--color-primary)')},
-    ];
-    const liveTable=[
-      {color:'#8D1D2C',nom:'Marek Kowalski',vehicule:'Renault Master frigo',tournee:'Centre',avancement:'3/4',next:'Maison Dandoy',nextVille:'Sablon',eta:'10:24',drift:'à l\'heure',driftColor:'#2d7a3e',statut:'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')},
-      {color:'#3B3468',nom:'Julien Dubois',vehicule:'Iveco Daily',tournee:'Uccle',avancement:'1/3',next:'Event Château',nextVille:'Waterloo',eta:'12:40',drift:'+18 min',driftColor:'var(--color-primary)',statut:'Risque',statutStyle:this.pill('#fbe9eb','var(--color-primary)')},
-      {color:'#2d7a3e',nom:'Sofie Peeters',vehicule:'Renault Master',tournee:'Etterbeek',avancement:'2/3',next:'Corporate KBC',nextVille:'Leuven',eta:'09:05',drift:'+5 min',driftColor:'var(--color-primary)',statut:'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')},
-    ];
+    const liveDrivers=((S.data&&S.data.live)||[]).map((t,i)=>({color:['#8D1D2C','#3B3468','#2d7a3e','#b26a00'][i%4],nom:t.name,info:(t.done||0)+'/'+(t.total||0)+' livrées',avancement:(t.done||0)+'/'+(t.total||0)}));
+    const liveEta=((S.data&&S.data.live)||[]).map(t=>({eta:'—',drift:'—',driftColor:'var(--color-text-muted)',libelle:t.name,ville:'—',statut:((t.total||0)>0&&(t.done||0)>=(t.total||0))?'Terminée':'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')}));
+    const liveTable=((S.data&&S.data.live)||[]).map((t,i)=>({color:['#8D1D2C','#3B3468','#2d7a3e','#b26a00'][i%4],nom:t.name,vehicule:'—',tournee:t.name,avancement:(t.done||0)+'/'+(t.total||0),next:'—',nextVille:'—',eta:'—',drift:'—',driftColor:'var(--color-text-muted)',statut:((t.total||0)>0&&(t.done||0)>=(t.total||0))?'Terminée':'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')}));
 
     // CLIENTS
     const clientsData=[
