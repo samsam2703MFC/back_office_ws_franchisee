@@ -119,7 +119,7 @@
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
             <div class="t-admin-label">Commandes à préparer</div>
-            <div style="font:700 30px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">34</div>
+            <div style="font:700 30px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">{{ kpiToPrepare }}</div>
             <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">sur 3 tournées · 44 colis</div>
           </div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
@@ -129,7 +129,7 @@
           </div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
             <div class="t-admin-label">Tournées du jour</div>
-            <div style="font:700 30px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">3</div>
+            <div style="font:700 30px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">{{ kpiTours }}</div>
             <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">1 prête · 2 en préparation</div>
           </div>
         </div>
@@ -2319,7 +2319,8 @@ class Component extends DCLogic {
       valClose:()=>this.setState({valModal:null,valSite:'',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''}),
       incCount:incData.filter(i=>i.statut!=='Résolu').length,
       incBadgeStyle:'margin-left:auto;background:var(--color-primary);color:#fff;font:600 9px var(--font-ui);border-radius:9px;min-width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px',
-      isTdb:screen==='tdb',isPrep:screen==='prep',isTournees:screen==='tournees',isSuivi:screen==='suivi',isClients:screen==='clients',isIncidents:screen==='incidents',isRentabilite:screen==='rentabilite',isParams:screen==='params',
+      isTdb:screen==='tdb',
+      kpiToPrepare:(S.data&&S.data.dashboard&&S.data.dashboard.toPrepare)||0, kpiTours:(S.data&&S.data.dashboard&&S.data.dashboard.tours)||0,isPrep:screen==='prep',isTournees:screen==='tournees',isSuivi:screen==='suivi',isClients:screen==='clients',isIncidents:screen==='incidents',isRentabilite:screen==='rentabilite',isParams:screen==='params',
       tdbTree,prepTree,tdbToggleAll,tdbToggleAllLabel,
       toast:S.toast,toastShow:!!S.toast,
       prints:{
