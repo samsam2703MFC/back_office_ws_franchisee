@@ -2222,11 +2222,14 @@ class Component extends DCLogic {
 
     // Demandes de rattachement bureau
     const jrHandled=S.jrHandled||{};
-    const joinRaw=[
-      {id:'jr1',client:'Émilie Rousseau',demande:'« Rattacher à la Résidence Les Tilleuls »',proche:'Résidence Les Tilleuls (Av. Tervueren 50)',dup:true},
-      {id:'jr2',client:'Restaurant Le Nord',demande:'« Créer un compte entreprise »',proche:'Aucun doublon détecté',dup:false},
-      {id:'jr3',client:'Sophie Laurent',demande:'« Rattacher à Café des Arts »',proche:'Café des Arts (Av. Louise 210)',dup:true},
-    ].filter(r=>!jrHandled[r.id]);
+    // Demandes B2B réelles (ws_office_join_requests, bornées au périmètre).
+    const joinRaw=((S.data&&S.data.b2b)||[]).map(r=>({
+      id:'jr'+r.id,
+      client:r.office||('Boutique #'+r.shop_id),
+      demande:'« '+(r.office||'Rattachement bureau')+' »'+(r.shop?' · '+r.shop:''),
+      proche:r.address||'—',
+      dup:false,
+    })).filter(r=>!jrHandled[r.id]);
     const jrResolve=(id,msg)=>()=>{ this.setState(s=>({jrHandled:{...s.jrHandled,[id]:true}})); this.printJob(msg); };
     const joinRequests=joinRaw.map(r=>({...r,
       dupPill:r.dup?pill2('#fff4e5','#b26a00'):pill2('#eaf5ec','#2d7a3e'), dupTxt:r.dup?'Doublon possible':'Nouveau',
