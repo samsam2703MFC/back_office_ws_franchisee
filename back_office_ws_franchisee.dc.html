@@ -1226,6 +1226,7 @@ class Component extends DCLogic {
   _loadFB(){
     if(this._fbStarted || typeof window==='undefined' || !window.FB) return;
     this._fbStarted = true;
+    this._startLivePolling();
     const set=(k,rows)=>this.setState(prev=>({data:Object.assign({},prev.data,{[k]:rows})}));
     window.FB.get('/orders').then(r=>set('orders',r)).catch(()=>{});
     window.FB.get('/dashboard').then(r=>set('dashboard',r)).catch(()=>{});
@@ -1239,6 +1240,29 @@ class Component extends DCLogic {
     window.FB.get('/dashboard-tree').then(r=>set('dashboardTree',r)).catch(()=>{});
     window.FB.get('/live').then(r=>set('live',r)).catch(()=>{});
   }
+  // Replace les marqueurs chauffeurs de la carte suivi depuis la télémétrie courante.
+  _updateDriverMarkers(){
+    const L=window.L; if(!L||!this._driverLayer) return;
+    this._driverLayer.clearLayers();
+    ((this.state.data&&this.state.data.live)||[]).forEach(tr=>{
+      if(tr.lat!=null&&tr.lng!=null){
+        L.marker([tr.lat,tr.lng]).addTo(this._driverLayer)
+          .bindPopup('<b>'+(tr.driver_name||tr.name)+'</b><br>'+tr.name+(tr.eta?('<br>ETA '+String(tr.eta).slice(0,5)):''));
+      }
+    });
+  }
+  // Rafraîchissement live : sonde /live toutes les 15 s, uniquement sur l'écran Suivi.
+  _startLivePolling(){
+    if(this._liveTimer||typeof window==='undefined') return;
+    this._liveTimer=setInterval(()=>{
+      if(this.state.screen!=='suivi'||!window.FB) return;   // auto-pause hors écran
+      window.FB.get('/live').then(r=>{
+        this.setState(prev=>({data:Object.assign({},prev.data,{live:r})}));
+        this._updateDriverMarkers();
+      }).catch(()=>{});
+    },15000);
+  }
+  componentWillUnmount(){ if(this._liveTimer){ clearInterval(this._liveTimer); this._liveTimer=null; } }
   formDefs(){
     const tours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
     const bureaux=['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
@@ -1532,7 +1556,7 @@ class Component extends DCLogic {
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
         const d=this.depot();
         L.marker([d.lat,d.lng]).addTo(m).bindPopup("<b>"+d.libelle+"</b><br>Dépôt magasin");
-        ((this.state.data&&this.state.data.live)||[]).forEach(function(tr){ if(tr.lat!=null&&tr.lng!=null){ L.marker([tr.lat,tr.lng]).addTo(m).bindPopup('<b>'+(tr.driver_name||tr.name)+'</b><br>'+tr.name+(tr.eta?('<br>ETA '+String(tr.eta).slice(0,5)):'')); } });
+        this._suiviMap=m; this._driverLayer=L.layerGroup().addTo(m); this._updateDriverMarkers();
         const stat={livre:'#2d7a3e',en_cours:'#8D1D2C',attendu:'#c9a24b'};
         this.points().forEach((p,i)=>{
           const st=i<3?'livre':(i<6?'en_cours':'attendu');
