@@ -1,0 +1,146 @@
+/* admin-compat.css — comble ce que admin.css/admin-app.css ne définissent pas,
+   pour que les compositions back-office rendent identiquement au WebShop admin.
+   Tokens manquants (valeurs du design system L'Atelier By) + classes .t-*/.btn-*. */
+:root{
+  --color-text-primary: var(--color-text);
+  --color-text-secondary: var(--color-text-muted);
+  --color-background-secondary: #F4EFE8;
+  --color-linked: #F2C9A0;
+  --color-collect: #8D1D2C;
+  --color-collection-fill: #FAC775;
+  --color-collection-icon: #6b3d0a;
+  --color-popup: #78554B;
+  --color-ink: #222222;
+  --font-accent: 'Playwrite DEVA', 'Gotham';
+  --font-size-page-title: 32px;
+  --font-size-section-title: 20px;
+  --font-size-navbar-brand: 15px;
+  --font-size-body: 16px;
+  --font-size-label: 13px;
+  --font-size-small: 11px;
+  --font-size-button: 14px;
+  --font-size-price: 14px;
+  --font-size-admin-label: 11px;
+  --line-height-display: 1.2;
+  --line-height-section: 1.3;
+  --line-height-body: 1.6;
+  --tracking-nav: 0.06em;
+  --tracking-admin: 0.08em;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --grid-cols-desktop: 6;
+  --grid-cols-tablet: 3;
+  --grid-cols-mobile: 2;
+  --grid-gap: 12px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --pkg-fraise: #8D1D2C;
+  --pkg-framboise: #A61E4D;
+  --pkg-groseille: #C41E3A;
+  --pkg-cerise: #7B1424;
+  --pkg-mure: #4A1E3C;
+  --pkg-myrtille: #3B3468;
+  --pkg-cassis: #2E1A47;
+  --pkg-abricot: #E8964B;
+  --pkg-peche: #F4A97F;
+  --pkg-mirabelle: #E8B84B;
+  --pkg-orange-amere: #D97B29;
+  --pkg-coing: #D9A441;
+  --pkg-rhubarbe: #C96A6E;
+  --pkg-figue: #6E3B5C;
+  --pkg-prune: #5C3A6E;
+  --pkg-poire: #C8C87A;
+  --pkg-pomme: #A8C47A;
+  --pkg-miel-acacia: #F5DFA8;
+  --pkg-miel-colza: #EFD9A0;
+  --pkg-miel-toutes-fleurs: #E3B155;
+  --pkg-miel-tilleul: #DCC26B;
+  --pkg-miel-lavande: #E8C97F;
+  --pkg-miel-lavande-accent: #9A8FBF;
+  --pkg-miel-chataignier: #9C6B2F;
+  --pkg-miel-foret: #6B4A26;
+  --pkg-miel-sarrasin: #5C3D22;
+  --grouped: last-child,
+section > .container > .products-grid:last-child,
+section > .container > .locations-grid:last-child {
+  padding-bottom: var(--spacing-lg);
+}
+.t-admin-label {
+  font-family: var(--font-ui);
+  font-size: var(--font-size-admin-label);
+  font-weight: var(--weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-admin);
+  color: var(--color-text-secondary);
+}
+.t-section-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-section-title);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-section);
+  color: var(--color-text-primary);
+}
+.t-page-title {
+  font-family: var(--font-display);
+  font-size: var(--font-size-page-title);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-display);
+  color: var(--color-text-primary);
+}
+.t-body {
+  font-family: var(--font-ui);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-body);
+  color: var(--color-text-primary);
+}
+.t-label {
+  font-family: var(--font-ui);
+  font-size: var(--font-size-label);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-secondary);
+}
+.t-small {
+  font-family: var(--font-ui);
+  font-size: var(--font-size-small);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-nav);
+}
+.t-button {
+  font-family: var(--font-ui);
+  font-size: var(--font-size-button);
+  font-weight: var(--weight-medium);
+}
+.t-price {
+  font-family: var(--font-ui);
+  font-size: var(--font-size-price);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 11px 16px;
+  font-family: var(--font-ui);
+  font-size: var(--font-size-button);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  line-height: 1.2;
+}
+.btn-secondary {
+  background: transparent;
+  border: 0.5px solid var(--color-border-secondary);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  padding: 11px 16px;
+  font-family: var(--font-ui);
+  font-size: var(--font-size-button);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
