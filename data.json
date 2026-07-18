@@ -1,0 +1,306 @@
+{
+  "theme": {
+    "--color-primary": "#8D1D2C",
+    "--color-secondary": "#F2C9A0",
+    "--color-bg": "#EAE4DC",
+    "--color-surface": "#FFFFFF",
+    "--color-text": "#222222",
+    "--color-text-muted": "#666666",
+    "--color-background-secondary": "#F4EFE8",
+    "--color-border-secondary": "rgba(34,34,34,.18)",
+    "--color-border-tertiary": "rgba(34,34,34,.10)"
+  },
+  "palette": {
+    "primary": "var(--color-primary)",
+    "text": "var(--color-text)",
+    "muted": "var(--color-text-muted)",
+    "surface": "var(--color-surface)",
+    "bgSec": "var(--color-background-secondary)",
+    "borderSec": "var(--color-border-secondary)",
+    "borderTer": "var(--color-border-tertiary)",
+    "success": "#2d7a3e",
+    "warn": "#b26a00",
+    "office": "#C87A3F",
+    "apricot": "#E8A15C",
+    "copper": "#8C4A2F",
+    "info": "#2a5a9e",
+    "successBg": "#eaf5ec",
+    "warnBg": "#fbf1e3",
+    "dangerBg": "#fbe9eb",
+    "infoBg": "#eef3fb"
+  },
+  "brand": {
+    "logo": "img/logo.png",
+    "logoAlt": "L'Atelier",
+    "name": "L'Atelier By",
+    "mark": "L",
+    "app": "Console franchisé",
+    "consoleLabel": "Console franchisé · Uccle",
+    "backLink": "Retour à l'ERP",
+    "date": "jeu. 17 juil. 2026",
+    "user": { "initials": "ML", "name": "Marc Lambert", "role": "Gérant · Uccle" }
+  },
+  "defaultScreen": "tdb",
+  "nav": [
+    { "label": "Exploitation", "collapsible": false, "items": [
+      { "screen": "tdb", "label": "Tableau de bord", "icon": "home" },
+      { "screen": "commandes", "label": "Commandes du jour", "icon": "bag" },
+      { "screen": "stock", "label": "Stock du jour", "icon": "product" },
+      { "screen": "b2b", "label": "Demandes B2B", "icon": "user" },
+      { "screen": "incidents", "label": "Incidents & litiges", "icon": "clipboard" }
+    ]},
+    { "label": "Analytique", "collapsible": false, "items": [
+      { "screen": "rentabilite", "label": "Rentabilité", "icon": "chart" }
+    ]},
+    { "label": "Paramétrage", "collapsible": false, "items": [
+      { "screen": "horaires", "label": "Horaires des tournées", "icon": "clock" },
+      { "screen": "frais", "label": "Frais de livraison", "icon": "euro" },
+      { "screen": "bureaux", "label": "Bureaux (B2B)", "icon": "shop" }
+    ]}
+  ],
+  "screens": {
+    "tdb": {
+      "title": "Tableau de bord", "sub": "Activité du jour · L'Atelier — Uccle",
+      "kind": "dashboard", "kpis": "kpis",
+      "table": {
+        "title": "Commandes du jour",
+        "note": "Retrait & livraison · créneau · montant",
+        "dataset": "orders",
+        "columns": [
+          { "w": ".8fr", "header": "Réf.", "type": "mono", "field": "ref" },
+          { "w": "1.8fr", "header": "Client", "type": "text", "field": "client" },
+          { "w": "1fr", "header": "Mode", "align": "center", "type": "pill", "field": "mode",
+            "map": { "Livraison": { "bg": "warnBg", "fg": "office" }, "Retrait": { "bg": "bgSec", "fg": "muted" } } },
+          { "w": "1.2fr", "header": "Créneau", "type": "muted", "field": "slot" },
+          { "w": ".9fr", "header": "Total", "align": "right", "type": "textStrong", "field": "total" }
+        ]
+      }
+    },
+    "commandes": {
+      "title": "Commandes du jour", "sub": "Suivi & préparation",
+      "kind": "table", "badge": "ws_orders ← webshop", "dataset": "orders",
+      "columns": [
+        { "w": ".8fr", "header": "Réf.", "type": "mono", "field": "ref" },
+        { "w": "1.8fr", "header": "Client", "type": "text", "field": "client" },
+        { "w": "1fr", "header": "Mode", "align": "center", "type": "pill", "field": "mode",
+          "map": { "Livraison": { "bg": "warnBg", "fg": "office" }, "Retrait": { "bg": "bgSec", "fg": "muted" } } },
+        { "w": "1.2fr", "header": "Créneau", "type": "muted", "field": "slot" },
+        { "w": "1fr", "header": "Statut", "align": "center", "type": "pill", "field": "statut",
+          "map": { "Préparée": { "bg": "successBg", "fg": "success" }, "En cours": { "bg": "warnBg", "fg": "warn" }, "Nouvelle": { "bg": "infoBg", "fg": "info" } } },
+        { "w": ".9fr", "header": "Total", "align": "right", "type": "textStrong", "field": "total" },
+        { "w": "40px", "header": "", "type": "edit", "form": "order", "map": { "client": "client", "mode": "mode", "slot": "slot" } }
+      ]
+    },
+    "stock": {
+      "title": "Stock du jour", "sub": "Disponibilités webshop & boutique",
+      "kind": "table", "badge": "ws_stock (boutique)",
+      "note": "Seuil = niveau d'alerte · dispo = en ligne + boutique",
+      "dataset": "stock",
+      "columns": [
+        { "w": "2fr", "header": "Produit", "type": "text", "field": "nom" },
+        { "w": "1.2fr", "header": "Catégorie", "type": "muted", "field": "cat" },
+        { "w": ".7fr", "header": "Seuil", "align": "right", "type": "mutedSm", "field": "min" },
+        { "w": ".8fr", "header": "En ligne", "align": "right", "type": "textStrong", "field": "online" },
+        { "w": ".8fr", "header": "Boutique", "align": "right", "type": "textStrong", "field": "shop" },
+        { "w": "1fr", "header": "Statut", "align": "center", "type": "pill", "field": "etat",
+          "map": { "OK": { "bg": "successBg", "fg": "success" }, "Bas": { "bg": "warnBg", "fg": "warn" }, "Rupture": { "bg": "dangerBg", "fg": "primary" } } },
+        { "w": "40px", "header": "", "type": "edit", "form": "stock", "map": { "nom": "nom", "online": "online", "shop": "shop" } }
+      ]
+    },
+    "b2b": {
+      "title": "Demandes B2B", "sub": "Rattachement des comptes bureaux",
+      "kind": "table", "badge": "ws_office_requests",
+      "add": { "label": "+ Bureau", "form": "bureau", "variant": "primary" },
+      "dataset": "b2b",
+      "columns": [
+        { "w": "1.6fr", "header": "Entreprise", "type": "text", "field": "entreprise" },
+        { "w": "1.6fr", "header": "Contact", "type": "mutedSm", "field": "contact" },
+        { "w": "1fr", "header": "Sites", "type": "muted", "field": "sites" },
+        { "w": "1fr", "header": "Demande", "align": "center", "type": "pill", "field": "statut",
+          "map": { "À valider": { "bg": "warnBg", "fg": "warn" }, "Validé": { "bg": "successBg", "fg": "success" }, "Refusé": { "bg": "dangerBg", "fg": "primary" } } },
+        { "w": "40px", "header": "", "type": "edit", "form": "bureau", "map": { "entreprise": "entreprise", "contact": "contact" } }
+      ]
+    },
+    "incidents": {
+      "title": "Incidents & litiges", "sub": "Suivi des réclamations",
+      "kind": "table", "badge": "bo_incidents",
+      "add": { "label": "+ Incident", "form": "incident", "variant": "primary" },
+      "dataset": "incidents",
+      "columns": [
+        { "w": ".8fr", "header": "Réf.", "type": "mono", "field": "ref" },
+        { "w": "1.1fr", "header": "Type", "align": "center", "type": "pill", "field": "type",
+          "map": { "Manquant": { "bg": "warnBg", "fg": "warn" }, "Retard": { "bg": "infoBg", "fg": "info" }, "Qualité": { "bg": "dangerBg", "fg": "primary" } } },
+        { "w": "1.4fr", "header": "Commande", "type": "muted", "field": "commande" },
+        { "w": "1.6fr", "header": "Objet", "type": "mutedSm", "field": "objet" },
+        { "w": "1fr", "header": "Statut", "align": "center", "type": "pill", "field": "statut",
+          "map": { "Ouvert": { "bg": "dangerBg", "fg": "primary" }, "En cours": { "bg": "warnBg", "fg": "warn" }, "Résolu": { "bg": "successBg", "fg": "success" } } }
+      ]
+    },
+    "rentabilite": {
+      "title": "Rentabilité", "sub": "Marge, coûts & performance",
+      "kind": "dashboard", "kpis": "kpisRenta",
+      "table": {
+        "title": "Postes de coût (mois)",
+        "note": "Répartition des coûts d'exploitation",
+        "dataset": "couts",
+        "columns": [
+          { "w": "2fr", "header": "Poste", "type": "text", "field": "poste" },
+          { "w": "1fr", "header": "Part", "align": "right", "type": "textStrong", "field": "part" },
+          { "w": "1fr", "header": "Montant", "align": "right", "type": "textStrong", "field": "montant" },
+          { "w": "1fr", "header": "Évolution", "align": "right", "type": "muted", "field": "evo" }
+        ]
+      }
+    },
+    "horaires": {
+      "title": "Horaires des tournées", "sub": "Fenêtres de livraison",
+      "kind": "table", "badge": "ws_tour_schedules",
+      "add": { "label": "+ Horaire", "form": "horaire", "variant": "primary" },
+      "dataset": "horaires",
+      "columns": [
+        { "w": "1.4fr", "header": "Tournée", "type": "text", "field": "tournee" },
+        { "w": "1.4fr", "header": "Jours", "type": "muted", "field": "jours" },
+        { "w": ".9fr", "header": "Départ", "align": "center", "type": "mono", "field": "depart" },
+        { "w": ".9fr", "header": "Retour", "align": "center", "type": "mono", "field": "retour" },
+        { "w": ".7fr", "header": "Actif", "align": "center", "type": "toggle", "flag": "hor_{i}", "def": "actif" },
+        { "w": "40px", "header": "", "type": "edit", "form": "horaire", "map": { "tournee": "tournee", "jours": "jours", "depart": "depart", "retour": "retour" } }
+      ]
+    },
+    "frais": {
+      "title": "Frais de livraison", "sub": "Barème par zone",
+      "kind": "table", "badge": "ws_delivery_fees",
+      "add": { "label": "+ Zone", "form": "frais", "variant": "primary" },
+      "dataset": "frais",
+      "columns": [
+        { "w": "1.6fr", "header": "Zone", "type": "text", "field": "zone" },
+        { "w": "1fr", "header": "Franco dès", "align": "right", "type": "textStrong", "field": "franco" },
+        { "w": "1fr", "header": "Frais", "align": "right", "type": "textStrong", "field": "frais" },
+        { "w": "1.1fr", "header": "Mode", "type": "muted", "field": "mode" },
+        { "w": ".7fr", "header": "Actif", "align": "center", "type": "toggle", "flag": "frais_{i}", "def": "actif" },
+        { "w": "40px", "header": "", "type": "edit", "form": "frais", "map": { "zone": "zone", "franco": "franco", "frais": "frais" } }
+      ]
+    },
+    "bureaux": {
+      "title": "Bureaux (B2B)", "sub": "Comptes entreprises rattachés",
+      "kind": "table", "badge": "ws_offices · bo_office_users",
+      "add": { "label": "+ Bureau", "form": "bureau", "variant": "primary" },
+      "dataset": "bureaux",
+      "columns": [
+        { "w": "1.6fr", "header": "Bureau", "type": "text", "field": "bureau" },
+        { "w": "1.4fr", "header": "Entreprise", "type": "muted", "field": "entreprise" },
+        { "w": "1.6fr", "header": "Contact", "type": "mutedSm", "field": "contact" },
+        { "w": ".7fr", "header": "Sites", "align": "right", "type": "mutedSm", "field": "sites" },
+        { "w": ".7fr", "header": "Actif", "align": "center", "type": "toggle", "flag": "bur_{i}", "def": "actif" },
+        { "w": "40px", "header": "", "type": "edit", "form": "bureau", "map": { "bureau": "bureau", "entreprise": "entreprise", "contact": "contact" } }
+      ]
+    }
+  },
+  "datasets": {
+    "kpis": [
+      { "label": "CA du jour", "value": "4 280 €", "valColor": "text", "delta": "▲ +6,4 %", "deltaColor": "success" },
+      { "label": "Commandes du jour", "value": "48", "valColor": "primary", "delta": "▲ +5 vs hier", "deltaColor": "success" },
+      { "label": "Livraisons bureau", "value": "17", "valColor": "office", "delta": "▲ +3", "deltaColor": "success" },
+      { "label": "Panier moyen", "value": "89,20 €", "valColor": "text", "delta": "▲ +2,1 %", "deltaColor": "success" },
+      { "label": "À préparer", "value": "12", "valColor": "text", "delta": "6 en retard", "deltaColor": "primary" },
+      { "label": "Ruptures stock", "value": "3", "valColor": "text", "delta": "▼ −1", "deltaColor": "success" }
+    ],
+    "kpisRenta": [
+      { "label": "Marge brute (mois)", "value": "18 200 €", "valColor": "text", "delta": "▲ +7,2 % vs préc.", "deltaColor": "success" },
+      { "label": "Marge %", "value": "34 %", "valColor": "primary", "delta": "▲ +2,4 pts", "deltaColor": "success" },
+      { "label": "Chiffre d'affaires", "value": "53 500 €", "valColor": "text", "delta": "▲ +4,1 %", "deltaColor": "success" },
+      { "label": "Coûts", "value": "35 300 €", "valColor": "text", "delta": "▲ +1,9 %", "deltaColor": "primary" },
+      { "label": "Coût / colis", "value": "35,60 €", "valColor": "text", "delta": "▼ −2,1 %", "deltaColor": "success" },
+      { "label": "CA / km", "value": "12,40 €", "valColor": "text", "delta": "▲ +3,0 %", "deltaColor": "success" }
+    ],
+    "orders": [
+      { "ref": "#2041", "client": "Boucherie Charlier", "mode": "Livraison", "slot": "Matin 08–12", "statut": "Préparée", "total": "146,20 €" },
+      { "ref": "#2042", "client": "Marie Dupuis", "mode": "Retrait", "slot": "Retrait 14:00", "statut": "En cours", "total": "32,50 €" },
+      { "ref": "#2043", "client": "Hôtel Nord SA", "mode": "Livraison", "slot": "Matin 08–12", "statut": "Nouvelle", "total": "298,00 €" },
+      { "ref": "#2044", "client": "Café des Arts", "mode": "Livraison", "slot": "Après-midi 13–17", "statut": "En cours", "total": "87,40 €" },
+      { "ref": "#2045", "client": "Jan Kowalski", "mode": "Retrait", "slot": "Click & collect", "statut": "Préparée", "total": "18,90 €" },
+      { "ref": "#2046", "client": "Traiteur Piotrowski", "mode": "Livraison", "slot": "Express midi", "statut": "Nouvelle", "total": "204,60 €" }
+    ],
+    "stock": [
+      { "nom": "Baguette tradition", "cat": "Boulangerie", "min": 20, "online": 34, "shop": 18, "etat": "OK" },
+      { "nom": "Pain au chocolat", "cat": "Boulangerie", "min": 24, "online": 12, "shop": 9, "etat": "Bas" },
+      { "nom": "Éclair chocolat", "cat": "Pâtisserie fraîche", "min": 12, "online": 20, "shop": 8, "etat": "OK" },
+      { "nom": "Tarte aux fraises", "cat": "Pâtisserie fraîche", "min": 8, "online": 0, "shop": 3, "etat": "Bas" },
+      { "nom": "Macarons (boîte 24)", "cat": "Chocolaterie", "min": 6, "online": 0, "shop": 0, "etat": "Rupture" },
+      { "nom": "Quiche lorraine", "cat": "Traiteur", "min": 10, "online": 14, "shop": 11, "etat": "OK" }
+    ],
+    "b2b": [
+      { "entreprise": "Hôtel Nord SA", "contact": "compta@hotelnord.be", "sites": "2 sites", "statut": "À valider" },
+      { "entreprise": "Café des Arts", "contact": "gerant@cafedesarts.be", "sites": "1 site", "statut": "Validé" },
+      { "entreprise": "Traiteur Piotrowski", "contact": "info@piotrowski.be", "sites": "3 sites", "statut": "À valider" },
+      { "entreprise": "Boucherie Charlier", "contact": "charlier@bouch.be", "sites": "1 site", "statut": "Refusé" }
+    ],
+    "incidents": [
+      { "ref": "#IN-88", "type": "Manquant", "commande": "#2039 · Hôtel Nord SA", "objet": "2 éclairs manquants", "statut": "Ouvert" },
+      { "ref": "#IN-87", "type": "Retard", "commande": "#2033 · Café des Arts", "objet": "Livraison +40 min", "statut": "En cours" },
+      { "ref": "#IN-85", "type": "Qualité", "commande": "#2021 · Marie Dupuis", "objet": "Tarte abîmée", "statut": "Résolu" },
+      { "ref": "#IN-84", "type": "Manquant", "commande": "#2018 · Traiteur Piotrowski", "objet": "Boîte macarons absente", "statut": "Résolu" }
+    ],
+    "couts": [
+      { "poste": "Matières premières", "part": "46 %", "montant": "16 240 €", "evo": "▲ +1,2 %" },
+      { "poste": "Personnel", "part": "31 %", "montant": "10 940 €", "evo": "▲ +0,8 %" },
+      { "poste": "Livraison (tournées)", "part": "12 %", "montant": "4 240 €", "evo": "▼ −2,1 %" },
+      { "poste": "Emballage", "part": "6 %", "montant": "2 120 €", "evo": "▲ +0,4 %" },
+      { "poste": "Divers", "part": "5 %", "montant": "1 760 €", "evo": "= 0 %" }
+    ],
+    "horaires": [
+      { "tournee": "Tournée Uccle-Centre", "jours": "Lun–Ven", "depart": "07:30", "retour": "11:00", "actif": true },
+      { "tournee": "Tournée Sud", "jours": "Lun, Mer, Ven", "depart": "08:00", "retour": "10:30", "actif": true },
+      { "tournee": "Express midi", "jours": "Mar–Sam", "depart": "11:30", "retour": "13:00", "actif": true },
+      { "tournee": "Tournée bureaux", "jours": "Lun–Ven", "depart": "09:00", "retour": "12:00", "actif": false }
+    ],
+    "frais": [
+      { "zone": "Uccle & limitrophe", "franco": "40,00 €", "frais": "4,50 €", "mode": "Standard", "actif": true },
+      { "zone": "Bruxelles Sud", "franco": "60,00 €", "frais": "6,50 €", "mode": "Standard", "actif": true },
+      { "zone": "Express midi", "franco": "80,00 €", "frais": "9,00 €", "mode": "Express", "actif": true },
+      { "zone": "Hors zone", "franco": "120,00 €", "frais": "14,00 €", "mode": "Sur devis", "actif": false }
+    ],
+    "bureaux": [
+      { "bureau": "Hôtel Nord — Réception", "entreprise": "Hôtel Nord SA", "contact": "compta@hotelnord.be", "sites": "2", "actif": true },
+      { "bureau": "Café des Arts", "entreprise": "Café des Arts", "contact": "gerant@cafedesarts.be", "sites": "1", "actif": true },
+      { "bureau": "Traiteur Piotrowski — Dépôt", "entreprise": "Traiteur Piotrowski", "contact": "info@piotrowski.be", "sites": "3", "actif": true },
+      { "bureau": "Boucherie Charlier", "entreprise": "Boucherie Charlier", "contact": "charlier@bouch.be", "sites": "1", "actif": false }
+    ]
+  },
+  "forms": {
+    "order": { "title": "Commande", "table": "ws_orders", "save": "Enregistrer", "fields": [
+      { "k": "client", "label": "Client", "type": "text", "ph": "Nom / entreprise" },
+      { "k": "mode", "label": "Mode", "type": "select", "options": ["Livraison", "Retrait"], "def": "Livraison" },
+      { "k": "slot", "label": "Créneau", "type": "text", "ph": "ex. Matin 08–12" },
+      { "k": "statut", "label": "Statut", "type": "select", "options": ["Nouvelle", "En cours", "Préparée"], "def": "Nouvelle" }
+    ]},
+    "stock": { "title": "Ajuster le stock", "table": "ws_stock", "save": "Enregistrer", "fields": [
+      { "k": "nom", "label": "Produit", "type": "text", "ph": "Nom du produit" },
+      { "k": "online", "label": "Disponible en ligne", "type": "number", "def": 0 },
+      { "k": "shop", "label": "Disponible boutique", "type": "number", "def": 0 },
+      { "k": "min", "label": "Seuil d'alerte", "type": "number", "def": 10 }
+    ]},
+    "bureau": { "title": "Bureau (compte B2B)", "table": "ws_offices (+ bo_office_users)", "save": "Enregistrer", "fields": [
+      { "k": "bureau", "label": "Nom du bureau", "type": "text", "ph": "ex. Réception, Dépôt…" },
+      { "k": "entreprise", "label": "Entreprise", "type": "text", "ph": "Raison sociale" },
+      { "k": "contact", "label": "Contact", "type": "text", "ph": "email@entreprise.be" },
+      { "k": "sites", "label": "Nombre de sites", "type": "number", "def": 1 }
+    ]},
+    "incident": { "title": "Incident / litige", "table": "bo_incidents", "save": "Créer", "fields": [
+      { "k": "type", "label": "Type", "type": "select", "options": ["Manquant", "Retard", "Qualité"], "def": "Manquant" },
+      { "k": "commande", "label": "Commande", "type": "text", "ph": "ex. #2039 · Client" },
+      { "k": "objet", "label": "Objet", "type": "text", "ph": "Description courte" },
+      { "k": "statut", "label": "Statut", "type": "select", "options": ["Ouvert", "En cours", "Résolu"], "def": "Ouvert" }
+    ]},
+    "horaire": { "title": "Horaire de tournée", "table": "ws_tour_schedules", "save": "Enregistrer", "fields": [
+      { "k": "tournee", "label": "Tournée", "type": "text", "ph": "ex. Tournée Sud" },
+      { "k": "jours", "label": "Jours", "type": "text", "ph": "ex. Lun–Ven" },
+      { "k": "depart", "label": "Départ", "type": "text", "ph": "07:30" },
+      { "k": "retour", "label": "Retour", "type": "text", "ph": "11:00" }
+    ]},
+    "frais": { "title": "Zone de livraison", "table": "ws_delivery_fees", "save": "Enregistrer", "fields": [
+      { "k": "zone", "label": "Zone", "type": "text", "ph": "ex. Bruxelles Sud" },
+      { "k": "franco", "label": "Franco dès (€)", "type": "text", "ph": "60,00 €" },
+      { "k": "frais", "label": "Frais (€)", "type": "text", "ph": "6,50 €" },
+      { "k": "mode", "label": "Mode", "type": "select", "options": ["Standard", "Express", "Sur devis"], "def": "Standard" }
+    ]}
+  }
+}

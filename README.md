@@ -1,84 +1,65 @@
 # back_office_ws_franchisee
 
-Back-office **WebShop** de L'Atelier By — vue **Franchisé** (gérant d'un ou plusieurs
-magasins). Implémentation de la composition Claude Design
-`back_office_ws_franchisee.dc.html`.
+**Console franchisé** — the store-manager back-office for the **L'Atelier By**
+webshop. Aligned with `back_office_ws_franchisor`: same **data-driven**
+architecture and the **WebShop admin** look (Gotham + Vank fonts,
+`admin.css` + `admin-app.css`), deployed the same way.
 
-L'application est une SPA React autonome pilotée par le runtime « dc »
-(`support.js`) : le gabarit HTML (`<x-dc>…</x-dc>`) et la logique applicative
-(`class Component extends DCLogic`) vivent dans un seul fichier, rendus côté
-navigateur. Aucune étape de build n'est nécessaire.
+## Running
 
-## Écrans
-
-**Exploitation**
-- **Tableau de bord** — KPIs du jour, arbre commandes *tournée › zone › site › office › utilisateur*, vue liste des commandes avec avancement de statut.
-- **Préparation** — impression étiquettes / listes de production, arbre *tournée › delivery site › office*.
-- **Livraison du jour (Suivi live)** — chauffeurs en tournée + carte Leaflet.
-- **Stock du jour** — saisie / ajustement des stocks.
-- **Demandes B2B** — validation des demandes bureaux.
-- **Incidents & litiges**.
-
-**Analytique**
-- **Capacité · remplissage** (calendrier), **Rentabilité**.
-
-**Paramétrage** (sens livraison) — Tournées (constructeur glisser-déposer +
-carte), Horaires, Fermetures ponctuelles, Bureaux (B2B), etc.
-
-## Structure
-
-```
-index.html                          Point d'entrée (redirige vers la composition)
-back_office_ws_franchisee.dc.html   Gabarit + logique + données (composition dc)
-support.js                          Runtime dc (compile {{ }} / <sc-if> / <sc-for>, monte React)
-vendor/                             Dépendances hébergées localement (aucun CDN requis)
-  react.production.min.js           React 18.3.1 (UMD)
-  react-dom.production.min.js       ReactDOM 18.3.1 (UMD)
-  leaflet/                          Leaflet 1.9.4 (carte des tournées / suivi)
-img/logo.png                        Logo L'Atelier By
-_ds/l-atelier-by-8504a4e3…/         Design system L'Atelier By
-  global.css                          tokens (couleurs, typo, espacements) + composants
-  fonts/                              Gotham (UI), Vank (display), Playwrite DEVA (accent)
-  _ds_manifest.json, _ds_bundle.js
-```
-
-### Dépendances
-
-React, ReactDOM et Leaflet sont **hébergés localement** dans `vendor/` (chargés
-avant `support.js`, qui saute alors le CDN). L'application ne dépend d'aucun CDN
-externe. Seules les **tuiles cartographiques** proviennent d'OpenStreetMap
-(`tile.openstreetmap.org`) au moment de l'affichage des cartes ; en l'absence
-d'accès réseau à OSM, la carte s'affiche sans fond de plan mais conserve
-marqueurs, tracés et contrôles.
-
-## Lancer en local
-
-Servir le dossier avec n'importe quel serveur statique :
+The app fetches `data.json` at startup, so serve the folder over HTTP:
 
 ```bash
-python3 -m http.server 8000
-# puis ouvrir http://127.0.0.1:8000/
+python3 -m http.server 8080
+# then visit http://localhost:8080/back_office_ws_franchisee.html
 ```
 
-Le rendu et les interactions (navigation, arbres repliables, avancement de
-statut, constructeur de tournées, cartes) ont été vérifiés sous Chromium.
+No build step, no external runtime.
 
-## Authentification (API Franchise Buddy)
+## Architecture — identical to the franchisor
 
-La SPA est câblée sur le back-office **franchisé** (`/bo/franchisee/*`, guard
-`franchisee` — cf. `php-api/bo/` du repo WebShop) :
+- **`data.json`** — the single source of truth: theme, brand, navigation,
+  per-screen column schemas, every dataset, and form definitions.
+- **`app.js`** — generic render engine (fetches `data.json`, applies the theme
+  to `:root`, renders each screen from its config). Zero domain data. Same
+  engine as `back_office_ws_franchisor`.
+- **`admin.css` + `admin-app.css` + `fonts/`** — the WebShop admin stylesheets
+  and brand fonts, vendored verbatim, loaded in the same order as the WebShop
+  admin so the look matches.
 
-- `app/config.js` — `role: 'franchisee'` + `apiBase` de l'API (`''` = même
-  origine ; en test : `?api=http://127.0.0.1:8080`).
-- `app/fb-api.js` — client `window.FB` : `fetch` avec `credentials:'include'`
-  (cookie de session `fb_franchisee_session`), header `X-CSRF-Token` sur les
-  mutations, **redirection 401 vers `login.html`**, et un **gate** qui masque
-  l'app tant que la session n'est pas confirmée (`GET /bo/franchisee/me`).
-- `login.html` — écran de connexion de marque (`POST /bo/franchisee/login`).
-- Déconnexion : `window.FB.logout()` ou `…?logout=1`.
+## Screens (store-manager scope)
 
-> Déploiement : héberger la SPA et l'API sur le **même site** (sous-domaines
-> d'un même domaine) pour que le cookie `SameSite=Lax` circule.
+| Group | Screen | Backing tables (labelled in-UI) |
+| --- | --- | --- |
+| **Exploitation** | Tableau de bord (KPIs + commandes du jour) | ws_orders |
+| | Commandes du jour | ws_orders ← webshop |
+| | Stock du jour | ws_stock |
+| | Demandes B2B | ws_office_requests |
+| | Incidents & litiges | bo_incidents |
+| **Analytique** | Rentabilité (marge, coûts, CA/km) | — |
+| **Paramétrage** | Horaires des tournées | ws_tour_schedules |
+| | Frais de livraison | ws_delivery_fees |
+| | Bureaux (B2B) | ws_offices · bo_office_users |
 
-Flux vérifié sous Chromium (mock API) : gate → login → app, appel de données
-avec cookie, **401 croisé** vers le BO franchiseur refusé, logout → login.
+Interactions: sidebar nav with icons + count pills, live toggles, and a
+create/edit modal (text / number / select) with a confirmation toast — the
+same engine as the franchisor.
+
+> Map-heavy / drag-drop screens of the original franchisee composition (live
+> delivery tracking, tournée builder, capacity calendar) are out of scope for
+> this data-driven table/card port; they can be added later if needed.
+
+## Deployment
+
+GitHub Actions (`.github/workflows/deploy.yml`) deploys over SSH/rsync on every
+push to `main` — same mechanism and secrets as the franchisor — to the path
+served at `/webshop/backoffice_franchisee`. The workflow verifies the served
+page and that all fonts return `200`.
+
+## Files
+
+- `back_office_ws_franchisee.html` — page shell + tokens (loads `admin.css` + `admin-app.css`)
+- `data.json` — all data & configuration
+- `app.js` — generic render engine (no domain data)
+- `admin.css`, `admin-app.css`, `fonts/` — WebShop admin styling
+- `img/logo.png` — L'Atelier By wordmark
