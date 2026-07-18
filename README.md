@@ -62,3 +62,23 @@ python3 -m http.server 8000
 
 Le rendu et les interactions (navigation, arbres repliables, avancement de
 statut, constructeur de tournées, cartes) ont été vérifiés sous Chromium.
+
+## Authentification (API Franchise Buddy)
+
+La SPA est câblée sur le back-office **franchisé** (`/bo/franchisee/*`, guard
+`franchisee` — cf. `php-api/bo/` du repo WebShop) :
+
+- `app/config.js` — `role: 'franchisee'` + `apiBase` de l'API (`''` = même
+  origine ; en test : `?api=http://127.0.0.1:8080`).
+- `app/fb-api.js` — client `window.FB` : `fetch` avec `credentials:'include'`
+  (cookie de session `fb_franchisee_session`), header `X-CSRF-Token` sur les
+  mutations, **redirection 401 vers `login.html`**, et un **gate** qui masque
+  l'app tant que la session n'est pas confirmée (`GET /bo/franchisee/me`).
+- `login.html` — écran de connexion de marque (`POST /bo/franchisee/login`).
+- Déconnexion : `window.FB.logout()` ou `…?logout=1`.
+
+> Déploiement : héberger la SPA et l'API sur le **même site** (sous-domaines
+> d'un même domaine) pour que le cookie `SameSite=Lax` circule.
+
+Flux vérifié sous Chromium (mock API) : gate → login → app, appel de données
+avec cookie, **401 croisé** vers le BO franchiseur refusé, logout → login.
