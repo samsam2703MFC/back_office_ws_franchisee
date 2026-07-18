@@ -116,7 +116,12 @@ var ICONS = {
   truck:     '<path d="M3 16V7h11v9M14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
   chart:     '<path d="M4 20V4M4 20h16"/><rect x="7" y="12" width="3" height="5"/><rect x="12" y="8" width="3" height="9"/><rect x="17" y="5" width="3" height="12"/>',
   clock:     '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
-  euro:      '<path d="M17 7a6 6 0 100 10"/><path d="M5 10h9M5 14h9"/>'
+  euro:      '<path d="M17 7a6 6 0 100 10"/><path d="M5 10h9M5 14h9"/>',
+  layers:    '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/>',
+  route:     '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 010 6H9a3 3 0 000 6h6.5"/>',
+  map:       '<path d="M9 4l-5 2v14l5-2 6 2 5-2V4l-5 2-6-2z"/><path d="M9 4v14M15 6v14"/>',
+  pin:       '<path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  calx:      '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M10 13l4 4M14 13l-4 4"/>'
 };
 function icon(name, size){
   var d = ICONS[name]; if (!d) return '';

@@ -45,17 +45,25 @@
     { "label": "Exploitation", "collapsible": false, "items": [
       { "screen": "tdb", "label": "Tableau de bord", "icon": "home" },
       { "screen": "commandes", "label": "Commandes du jour", "icon": "bag" },
+      { "screen": "prep", "label": "Préparation", "icon": "layers" },
+      { "screen": "suivi", "label": "Suivi livraison", "icon": "truck" },
       { "screen": "stock", "label": "Stock du jour", "icon": "product" },
-      { "screen": "b2b", "label": "Demandes B2B", "icon": "user" },
       { "screen": "incidents", "label": "Incidents & litiges", "icon": "clipboard" }
+    ]},
+    { "label": "Livraison", "collapsible": false, "items": [
+      { "screen": "tournees", "label": "Tournées", "icon": "route" },
+      { "screen": "zones", "label": "Zones & capacité", "icon": "map" },
+      { "screen": "sites", "label": "Sites de livraison", "icon": "pin" },
+      { "screen": "horaires", "label": "Horaires des tournées", "icon": "clock" },
+      { "screen": "fermetures", "label": "Fermetures ponctuelles", "icon": "calx" },
+      { "screen": "frais", "label": "Frais de livraison", "icon": "euro" }
+    ]},
+    { "label": "Clients B2B", "collapsible": false, "items": [
+      { "screen": "b2b", "label": "Demandes B2B", "icon": "user" },
+      { "screen": "bureaux", "label": "Bureaux", "icon": "shop" }
     ]},
     { "label": "Analytique", "collapsible": false, "items": [
       { "screen": "rentabilite", "label": "Rentabilité", "icon": "chart" }
-    ]},
-    { "label": "Paramétrage", "collapsible": false, "items": [
-      { "screen": "horaires", "label": "Horaires des tournées", "icon": "clock" },
-      { "screen": "frais", "label": "Frais de livraison", "icon": "euro" },
-      { "screen": "bureaux", "label": "Bureaux (B2B)", "icon": "shop" }
     ]}
   ],
   "screens": {
@@ -134,6 +142,96 @@
         { "w": "1.6fr", "header": "Objet", "type": "mutedSm", "field": "objet" },
         { "w": "1fr", "header": "Statut", "align": "center", "type": "pill", "field": "statut",
           "map": { "Ouvert": { "bg": "dangerBg", "fg": "primary" }, "En cours": { "bg": "warnBg", "fg": "warn" }, "Résolu": { "bg": "successBg", "fg": "success" } } }
+      ]
+    },
+    "prep": {
+      "title": "Préparation", "sub": "Bons de chargement du jour",
+      "kind": "table", "badge": "ws_prep_lists",
+      "note": "Responsabilité franchisé · colis par tournée / site",
+      "dataset": "prep",
+      "columns": [
+        { "w": "1.3fr", "header": "Tournée", "type": "text", "field": "tournee" },
+        { "w": "1.4fr", "header": "Site / zone", "type": "muted", "field": "zone" },
+        { "w": ".8fr", "header": "Colis", "align": "right", "type": "textStrong", "field": "colis" },
+        { "w": ".8fr", "header": "Poids", "align": "right", "type": "mutedSm", "field": "poids" },
+        { "w": "1fr", "header": "Statut", "align": "center", "type": "pill", "field": "statut",
+          "map": { "Prêt": { "bg": "successBg", "fg": "success" }, "En cours": { "bg": "warnBg", "fg": "warn" }, "À préparer": { "bg": "infoBg", "fg": "info" } } }
+      ]
+    },
+    "suivi": {
+      "title": "Suivi livraison", "sub": "Avancement des tournées du jour",
+      "kind": "table", "badge": "ws_tour_runs (live)",
+      "note": "Positions & avancement · Bruxelles",
+      "dataset": "suivi",
+      "columns": [
+        { "w": "1.4fr", "header": "Chauffeur", "type": "text", "field": "chauffeur" },
+        { "w": "1.3fr", "header": "Tournée", "type": "muted", "field": "tournee" },
+        { "w": ".9fr", "header": "Arrêts", "align": "center", "type": "textStrong", "field": "arrets" },
+        { "w": "1fr", "header": "Position", "type": "mutedSm", "field": "position" },
+        { "w": ".9fr", "header": "ETA fin", "align": "center", "type": "mono", "field": "eta" },
+        { "w": "1fr", "header": "Statut", "align": "center", "type": "pill", "field": "statut",
+          "map": { "En route": { "bg": "infoBg", "fg": "info" }, "Terminée": { "bg": "successBg", "fg": "success" }, "En attente": { "bg": "warnBg", "fg": "warn" } } }
+      ]
+    },
+    "tournees": {
+      "title": "Tournées", "sub": "Organisation & publication tablette",
+      "kind": "table", "badge": "ws_tours · ws_tour_stops",
+      "note": "Zone · chauffeur · véhicule · remplissage véhicule",
+      "add": { "label": "+ Tournée", "form": "tournee", "variant": "primary" },
+      "dataset": "tours",
+      "columns": [
+        { "w": "1.2fr", "header": "Tournée", "type": "text", "field": "nom" },
+        { "w": "1fr", "header": "Zone", "type": "muted", "field": "zone" },
+        { "w": "1.2fr", "header": "Chauffeur", "type": "muted", "field": "chauffeur" },
+        { "w": "1fr", "header": "Véhicule", "align": "center", "type": "pill", "field": "vehicule",
+          "map": { "Vélo cargo": { "bg": "successBg", "fg": "success" }, "Camionnette": { "bg": "infoBg", "fg": "info" }, "Voiture": { "bg": "bgSec", "fg": "muted" } } },
+        { "w": ".7fr", "header": "Arrêts", "align": "right", "type": "textStrong", "field": "arrets" },
+        { "w": ".9fr", "header": "Remplissage", "align": "right", "type": "textStrong", "field": "remplissage" },
+        { "w": ".9fr", "header": "Statut", "align": "center", "type": "pill", "field": "statut",
+          "map": { "Publiée": { "bg": "successBg", "fg": "success" }, "Brouillon": { "bg": "bgSec", "fg": "muted" } } },
+        { "w": "40px", "header": "", "type": "edit", "form": "tournee", "map": { "nom": "nom", "zone": "zone", "chauffeur": "chauffeur", "vehicule": "vehicule" } }
+      ]
+    },
+    "zones": {
+      "title": "Zones & capacité tournées", "sub": "Codes postaux · véhicule · franco",
+      "kind": "table", "badge": "ws_tour_zones",
+      "add": { "label": "+ Zone", "form": "zone", "variant": "primary" },
+      "dataset": "zones",
+      "columns": [
+        { "w": "1.3fr", "header": "Zone", "type": "text", "field": "zone" },
+        { "w": "1.3fr", "header": "Codes postaux", "type": "mono", "field": "cp" },
+        { "w": "1fr", "header": "Véhicule", "type": "muted", "field": "vehicule" },
+        { "w": ".9fr", "header": "Franco dès", "align": "right", "type": "textStrong", "field": "franco" },
+        { "w": ".9fr", "header": "Temps service", "align": "right", "type": "mutedSm", "field": "temps" },
+        { "w": ".6fr", "header": "Actif", "align": "center", "type": "toggle", "flag": "zone_{i}", "def": "actif" },
+        { "w": "40px", "header": "", "type": "edit", "form": "zone", "map": { "zone": "zone", "cp": "cp", "franco": "franco" } }
+      ]
+    },
+    "sites": {
+      "title": "Sites de livraison", "sub": "Points de dépôt B2B",
+      "kind": "table", "badge": "ws_office_delivery_sites",
+      "add": { "label": "+ Site", "form": "site", "variant": "primary" },
+      "dataset": "sites",
+      "columns": [
+        { "w": "1.5fr", "header": "Site", "type": "text", "field": "site" },
+        { "w": "1.3fr", "header": "Entreprise", "type": "muted", "field": "entreprise" },
+        { "w": "1.6fr", "header": "Adresse", "type": "mutedSm", "field": "adresse" },
+        { "w": "1fr", "header": "Créneau", "type": "muted", "field": "creneau" },
+        { "w": ".6fr", "header": "Actif", "align": "center", "type": "toggle", "flag": "site_{i}", "def": "actif" },
+        { "w": "40px", "header": "", "type": "edit", "form": "site", "map": { "site": "site", "entreprise": "entreprise", "adresse": "adresse" } }
+      ]
+    },
+    "fermetures": {
+      "title": "Fermetures ponctuelles", "sub": "Jours sans tournée / sans livraison",
+      "kind": "table", "badge": "ws_tour_closures",
+      "add": { "label": "+ Fermeture", "form": "fermeture", "variant": "primary" },
+      "dataset": "fermetures",
+      "columns": [
+        { "w": ".9fr", "header": "Date", "type": "mono", "field": "date" },
+        { "w": "1.6fr", "header": "Motif", "type": "text", "field": "motif" },
+        { "w": "1.6fr", "header": "Tournées impactées", "type": "muted", "field": "impact" },
+        { "w": "1fr", "header": "Statut", "align": "center", "type": "pill", "field": "statut",
+          "map": { "Planifiée": { "bg": "warnBg", "fg": "warn" }, "Passée": { "bg": "bgSec", "fg": "muted" } } }
       ]
     },
     "rentabilite": {
@@ -263,6 +361,42 @@
       { "bureau": "Café des Arts", "entreprise": "Café des Arts", "contact": "gerant@cafedesarts.be", "sites": "1", "actif": true },
       { "bureau": "Traiteur Piotrowski — Dépôt", "entreprise": "Traiteur Piotrowski", "contact": "info@piotrowski.be", "sites": "3", "actif": true },
       { "bureau": "Boucherie Charlier", "entreprise": "Boucherie Charlier", "contact": "charlier@bouch.be", "sites": "1", "actif": false }
+    ],
+    "prep": [
+      { "tournee": "Tournée Uccle-Centre", "zone": "Uccle 1180", "colis": 14, "poids": "38 kg", "statut": "Prêt" },
+      { "tournee": "Tournée Sud", "zone": "Bruxelles Sud", "colis": 9, "poids": "22 kg", "statut": "En cours" },
+      { "tournee": "Express midi", "zone": "Uccle & Ixelles", "colis": 6, "poids": "11 kg", "statut": "À préparer" },
+      { "tournee": "Tournée bureaux", "zone": "Comptes B2B", "colis": 11, "poids": "31 kg", "statut": "À préparer" }
+    ],
+    "suivi": [
+      { "chauffeur": "Emile Vandekeere", "tournee": "Tournée Uccle-Centre", "arrets": "12 / 12", "position": "Retour dépôt", "eta": "11:05", "statut": "Terminée" },
+      { "chauffeur": "Lina Boussaïd", "tournee": "Tournée Sud", "arrets": "7 / 9", "position": "Av. Brugmann", "eta": "10:40", "statut": "En route" },
+      { "chauffeur": "Pierre Lemmens", "tournee": "Express midi", "arrets": "0 / 6", "position": "Dépôt", "eta": "13:00", "statut": "En attente" },
+      { "chauffeur": "Karim El Amrani", "tournee": "Tournée bureaux", "arrets": "3 / 8", "position": "Chaussée de Waterloo", "eta": "12:20", "statut": "En route" }
+    ],
+    "tours": [
+      { "nom": "Tournée Uccle-Centre", "zone": "Uccle 1180", "chauffeur": "Emile Vandekeere", "vehicule": "Vélo cargo", "arrets": 12, "remplissage": "88 %", "statut": "Publiée" },
+      { "nom": "Tournée Sud", "zone": "Bruxelles Sud", "chauffeur": "Lina Boussaïd", "vehicule": "Camionnette", "arrets": 9, "remplissage": "72 %", "statut": "Publiée" },
+      { "nom": "Express midi", "zone": "Uccle & Ixelles", "chauffeur": "Pierre Lemmens", "vehicule": "Vélo cargo", "arrets": 6, "remplissage": "45 %", "statut": "Brouillon" },
+      { "nom": "Tournée bureaux", "zone": "Comptes B2B", "chauffeur": "Karim El Amrani", "vehicule": "Camionnette", "arrets": 8, "remplissage": "63 %", "statut": "Publiée" }
+    ],
+    "zones": [
+      { "zone": "Uccle & limitrophe", "cp": "1180, 1190", "vehicule": "Vélo cargo", "franco": "40,00 €", "temps": "6 min/arrêt", "actif": true },
+      { "zone": "Bruxelles Sud", "cp": "1050, 1060, 1180", "vehicule": "Camionnette", "franco": "60,00 €", "temps": "9 min/arrêt", "actif": true },
+      { "zone": "Ixelles / Châtelain", "cp": "1050", "vehicule": "Vélo cargo", "franco": "45,00 €", "temps": "7 min/arrêt", "actif": true },
+      { "zone": "Périphérie sud", "cp": "1420, 1428", "vehicule": "Voiture", "franco": "120,00 €", "temps": "14 min/arrêt", "actif": false }
+    ],
+    "sites": [
+      { "site": "Hôtel Nord — Réception", "entreprise": "Hôtel Nord SA", "adresse": "Bd du Nord 12, 1000 Bruxelles", "creneau": "Matin 08–12", "actif": true },
+      { "site": "Café des Arts", "entreprise": "Café des Arts", "adresse": "Rue de l'Art 5, 1050 Ixelles", "creneau": "Après-midi 13–17", "actif": true },
+      { "site": "Traiteur Piotrowski — Dépôt", "entreprise": "Traiteur Piotrowski", "adresse": "Chée de Waterloo 300, 1060", "creneau": "Express midi", "actif": true },
+      { "site": "Boucherie Charlier", "entreprise": "Boucherie Charlier", "adresse": "Rue Vanderkindere 8, 1180", "creneau": "Matin 08–12", "actif": false }
+    ],
+    "fermetures": [
+      { "date": "21/07", "motif": "Fête nationale", "impact": "Toutes les tournées", "statut": "Planifiée" },
+      { "date": "15/08", "motif": "Assomption", "impact": "Toutes les tournées", "statut": "Planifiée" },
+      { "date": "10/07", "motif": "Voirie fermée — Uccle", "impact": "Tournée Uccle-Centre", "statut": "Passée" },
+      { "date": "01/11", "motif": "Toussaint", "impact": "Tournée Sud, Express midi", "statut": "Planifiée" }
     ]
   },
   "forms": {
@@ -301,6 +435,30 @@
       { "k": "franco", "label": "Franco dès (€)", "type": "text", "ph": "60,00 €" },
       { "k": "frais", "label": "Frais (€)", "type": "text", "ph": "6,50 €" },
       { "k": "mode", "label": "Mode", "type": "select", "options": ["Standard", "Express", "Sur devis"], "def": "Standard" }
+    ]},
+    "tournee": { "title": "Tournée", "table": "ws_tours (+ ws_tour_stops)", "save": "Enregistrer", "fields": [
+      { "k": "nom", "label": "Nom de la tournée", "type": "text", "ph": "ex. Tournée Sud" },
+      { "k": "zone", "label": "Zone", "type": "text", "ph": "ex. Bruxelles Sud" },
+      { "k": "chauffeur", "label": "Chauffeur", "type": "text", "ph": "Prénom Nom" },
+      { "k": "vehicule", "label": "Véhicule", "type": "select", "options": ["Vélo cargo", "Camionnette", "Voiture"], "def": "Vélo cargo" },
+      { "k": "statut", "label": "Statut", "type": "select", "options": ["Brouillon", "Publiée"], "def": "Brouillon" }
+    ]},
+    "zone": { "title": "Zone de tournée", "table": "ws_tour_zones", "save": "Enregistrer", "fields": [
+      { "k": "zone", "label": "Zone", "type": "text", "ph": "ex. Ixelles / Châtelain" },
+      { "k": "cp", "label": "Codes postaux", "type": "text", "ph": "ex. 1050, 1060" },
+      { "k": "vehicule", "label": "Véhicule", "type": "select", "options": ["Vélo cargo", "Camionnette", "Voiture"], "def": "Vélo cargo" },
+      { "k": "franco", "label": "Franco dès (€)", "type": "text", "ph": "45,00 €" }
+    ]},
+    "site": { "title": "Site de livraison", "table": "ws_office_delivery_sites", "save": "Enregistrer", "fields": [
+      { "k": "site", "label": "Nom du site", "type": "text", "ph": "ex. Réception, Dépôt…" },
+      { "k": "entreprise", "label": "Entreprise", "type": "text", "ph": "Raison sociale" },
+      { "k": "adresse", "label": "Adresse", "type": "text", "ph": "Rue, n°, code postal, ville" },
+      { "k": "creneau", "label": "Créneau", "type": "text", "ph": "ex. Matin 08–12" }
+    ]},
+    "fermeture": { "title": "Fermeture ponctuelle", "table": "ws_tour_closures", "save": "Enregistrer", "fields": [
+      { "k": "date", "label": "Date", "type": "text", "ph": "ex. 21/07" },
+      { "k": "motif", "label": "Motif", "type": "text", "ph": "ex. Fête nationale" },
+      { "k": "impact", "label": "Tournées impactées", "type": "text", "ph": "ex. Toutes les tournées" }
     ]}
   }
 }
