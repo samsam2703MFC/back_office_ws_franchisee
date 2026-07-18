@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Atelier By — Back-office Franchisé · Connexion</title>
+<link rel="icon" href="img/logo.png">
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css">
+<script>window.FB_GATE = false;</script>
+<script src="app/config.js"></script>
+<script src="app/fb-api.js"></script>
+<style>
+  html,body{height:100%;margin:0;background:var(--color-bg);font-family:var(--font-ui)}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+  .card{width:100%;max-width:380px;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:30px 28px;box-shadow:0 8px 30px rgba(34,34,34,.06)}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:22px}
+  .brand img{height:40px}
+  .kicker{display:flex;align-items:center;gap:7px;font:600 10px/1 var(--font-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--color-primary)}
+  .kicker span.dot{width:7px;height:7px;border-radius:50%;background:var(--color-primary)}
+  h1{font-family:var(--font-display);font-weight:400;font-size:20px;color:var(--color-text);margin:2px 0 0;text-align:center}
+  label{display:block;font:600 10px/1 var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);margin:16px 0 6px}
+  input{width:100%;box-sizing:border-box;min-height:46px;border:.5px solid var(--color-border-secondary);border-radius:8px;background:var(--color-background-secondary);padding:0 12px;font:400 14px var(--font-ui);color:var(--color-text)}
+  input:focus{outline:none;border-color:var(--color-primary)}
+  button{width:100%;margin-top:22px;min-height:48px;border:none;border-radius:8px;background:var(--color-primary);color:#fff;font:600 14px var(--font-ui);cursor:pointer}
+  button[disabled]{opacity:.6;cursor:default}
+  .err{margin-top:14px;min-height:16px;font:500 12px var(--font-ui);color:var(--color-primary);text-align:center}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <form class="card" id="f" autocomplete="on">
+      <div class="brand">
+        <img src="img/logo.png" alt="L'Atelier By">
+        <div class="kicker"><span class="dot"></span>Back-office · Franchisé</div>
+        <h1>Connexion</h1>
+      </div>
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" required autocomplete="username" placeholder="vous@atelierby.be">
+      <label for="password">Mot de passe</label>
+      <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+      <button id="btn" type="submit">Se connecter</button>
+      <div class="err" id="err" role="alert"></div>
+    </form>
+  </div>
+  <script>
+    (function () {
+      var f = document.getElementById('f'), btn = document.getElementById('btn'), err = document.getElementById('err');
+      var qs = new URLSearchParams(location.search);
+      var carry = qs.get('api') != null ? ('?api=' + encodeURIComponent(qs.get('api'))) : '';
+      // Déjà connecté ? → droit à l'app.
+      FB.me().then(function () { location.replace((window.FB_CONFIG.appUrl) + carry); }).catch(function () {});
+      f.addEventListener('submit', function (e) {
+        e.preventDefault(); err.textContent = ''; btn.disabled = true;
+        FB.login(document.getElementById('email').value.trim(), document.getElementById('password').value)
+          .then(function () { location.replace((window.FB_CONFIG.appUrl) + carry); })
+          .catch(function (ex) {
+            btn.disabled = false;
+            err.textContent = ex && ex.status === 401 ? 'Identifiants incorrects.' :
+                              (ex && ex.network ? 'API injoignable.' : (ex && ex.message) || 'Erreur.');
+          });
+      });
+    })();
+  </script>
+</body>
+</html>
