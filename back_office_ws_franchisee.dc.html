@@ -1232,6 +1232,9 @@ class Component extends DCLogic {
     window.FB.get('/tours').then(r=>set('tours',r)).catch(()=>{});
     window.FB.get('/stock').then(r=>set('stock',r)).catch(()=>{});
     window.FB.get('/b2b').then(r=>set('b2b',r)).catch(()=>{});
+    window.FB.get('/incidents').then(r=>set('incidents',r)).catch(()=>{});
+    window.FB.get('/rentability').then(r=>set('rentability',r)).catch(()=>{});
+    window.FB.get('/rentability-tree').then(r=>set('rentabilityTree',r)).catch(()=>{});
   }
   formDefs(){
     const tours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
@@ -1791,12 +1794,12 @@ class Component extends DCLogic {
       points:sc.points.map(p=>({libelle:p.libelle,adresse:p.adresse,fenetre:p.fenetre,jours:p.jours,validation:p.validation,tour:scTour||'—',livrLabel:(scE.deliverable?'✓ ':'✕ ')+scE.state,livrStyle:this.pill(scE.bg,scE.c),marge:(p.marge>=0?'+':'−')+this.eur(Math.abs(p.marge)),margeStyle:this.pill(p.marge>=0?'#eaf5ec':'#fbe9eb',p.marge>=0?'#2d7a3e':'var(--color-primary)')}))};
 
     // INCIDENTS
-    const incData=[
-      {type:'Colis endommagé',point:'Café Belga · Ixelles',heure:'aujourd\'hui 09:12',statut:'À traiter',icon:'!',iconBg:'#fbe9eb',iconColor:'var(--color-primary)',ref:'INC-2026-0412',geo:'50.8275, 4.3705',horodatage:'17 juil. 2026 09:12',chauffeur:'Marek Kowalski',impact:'24 €',impactRef:'avoir estimé',description:'Bac isotherme percuté au déchargement. 2 pots de confiture cassés. Photo prise sur place, réception a refusé la ligne.',statutColor:'var(--color-primary)'},
-      {type:'Colis manquant',point:'Hôtel Amigo · Sablon',heure:'aujourd\'hui 08:40',statut:'À traiter',icon:'?',iconBg:'var(--color-background-secondary)',iconColor:'var(--color-text-muted)',ref:'INC-2026-0411',geo:'50.8451, 4.3520',horodatage:'17 juil. 2026 08:40',chauffeur:'Marek Kowalski',impact:'46 €',impactRef:'relivraison',description:'1 colis attendu absent au scan de dépôt. Écart détecté sur le bon de chargement.',statutColor:'var(--color-text-muted)'},
-      {type:'Livraison refusée',point:'Event Château · Waterloo',heure:'hier 12:58',statut:'En cours',icon:'✕',iconBg:'#fbe9eb',iconColor:'var(--color-primary)',ref:'INC-2026-0407',geo:'50.7147, 4.3990',horodatage:'16 juil. 2026 12:58',chauffeur:'Julien Dubois',impact:'40 €',impactRef:'marchandise perdue',description:'Arrivée hors fenêtre horaire (13:12 vs 11:00–13:00). Client absent, dépôt refusé.',statutColor:'var(--color-primary)'},
-      {type:'Retour consigne',point:'Maison Dandoy · Sablon',heure:'hier 11:20',statut:'Résolu',icon:'↩',iconBg:'#eaf5ec',iconColor:'#2d7a3e',ref:'INC-2026-0403',geo:'50.8410, 4.3560',horodatage:'16 juil. 2026 11:20',chauffeur:'Sofie Peeters',impact:'0 €',impactRef:'sans impact',description:'3 bacs consignés récupérés au point. Rapprochement OK.',statutColor:'#2d7a3e'},
-    ];
+    const incData=((S.data&&S.data.incidents)||[]).map(i=>{
+      const st=i.status==='resolved'?'Résolu':(i.status==='in_progress'?'En cours':'À traiter');
+      const ts=String(i.created_at||''); const hz=ts?(ts.slice(8,10)+'/'+ts.slice(5,7)+' '+ts.slice(11,16)):'';
+      const ic=i.status==='resolved'?{icon:'↩',iconBg:'#eaf5ec',iconColor:'#2d7a3e',statutColor:'#2d7a3e'}:(i.status==='in_progress'?{icon:'⋯',iconBg:'var(--color-secondary)',iconColor:'var(--color-on-abricot)',statutColor:'var(--color-primary)'}:{icon:'!',iconBg:'#fbe9eb',iconColor:'var(--color-primary)',statutColor:'var(--color-primary)'});
+      return {type:i.title||i.type||'Incident',point:i.shop||('Boutique #'+i.shop_id),heure:hz,statut:st,icon:ic.icon,iconBg:ic.iconBg,iconColor:ic.iconColor,ref:i.order_ref||('INC-'+i.id),geo:'—',horodatage:hz,chauffeur:'—',impact:(i.severity==='high'?'Élevé':(i.severity==='low'?'Faible':'Moyen')),impactRef:'sévérité',description:i.description||'',statutColor:ic.statutColor};
+    });
     const incidents=incData.map((i,idx)=>({...i,
       statutStyle:this.pill(i.statut==='Résolu'?'#eaf5ec':i.statut==='En cours'?'var(--color-secondary)':'#fbe9eb',i.statut==='Résolu'?'#2d7a3e':i.statut==='En cours'?'var(--color-on-abricot)':'var(--color-primary)'),
       rowStyle:'display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer;'+(idx===S.selInc?'background:var(--color-background-secondary)':''),
@@ -1840,19 +1843,7 @@ class Component extends DCLogic {
     const A=S.analyse;
     const mColor=(ca,co)=>{ const pct=ca>0?(ca-co)/ca:-1; return pct>=0.3?'#2d7a3e':(pct>=0.1?'#b26a00':'var(--color-primary)'); };
     const pctTxt=(ca,co)=>(ca>0?Math.round((ca-co)/ca*100):0)+' %';
-    const rentaRaw=[
-      {nom:'Tournée Bruxelles-Centre',sites:[
-        {nom:'Brasserie Le Cirio',offices:[{nom:'Cuisine RDC',ca:520,couts:210},{nom:'Bar étage',ca:300,couts:150}]},
-        {nom:'Hôtel Nord',offices:[{nom:'Réception',ca:580,couts:312}]},
-      ]},
-      {nom:'Tournée Sud',sites:[
-        {nom:'Café des Arts',offices:[{nom:'Salle',ca:415,couts:413}]},
-        {nom:'Résidence Les Tilleuls',offices:[{nom:'Accueil',ca:260,couts:180}]},
-      ]},
-      {nom:'Tournée Est',sites:[
-        {nom:'Traiteur Piotrowski',offices:[{nom:'Atelier',ca:740,couts:360}]},
-      ]},
-    ];
+    const rentaRaw=((S.data&&S.data.rentabilityTree)||[]);
     const rOpen=S.rentaOpen||{};
     const rentaTree=rentaRaw.map((t,i)=>{
       const tk='rt'+i, tOpen=rOpen[tk]!==undefined?rOpen[tk]:(i===0);
