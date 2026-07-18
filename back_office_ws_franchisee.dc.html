@@ -1231,6 +1231,7 @@ class Component extends DCLogic {
     window.FB.get('/dashboard').then(r=>set('dashboard',r)).catch(()=>{});
     window.FB.get('/tours').then(r=>set('tours',r)).catch(()=>{});
     window.FB.get('/stock').then(r=>set('stock',r)).catch(()=>{});
+    window.FB.get('/catalog').then(r=>set('catalog',r)).catch(()=>{});
     window.FB.get('/b2b').then(r=>set('b2b',r)).catch(()=>{});
     window.FB.get('/incidents').then(r=>set('incidents',r)).catch(()=>{});
     window.FB.get('/rentability').then(r=>set('rentability',r)).catch(()=>{});
@@ -2152,26 +2153,7 @@ class Component extends DCLogic {
     });
 
     // ===== Catalogue partagé : catégories → produits (Assortiment + Stock) =====
-    const CATALOG=[
-      {cat:'Boulangerie',catMand:true,prods:[
-        {nom:'Baguette tradition',mand:true,online:28,shop:64,min:20},
-        {nom:'Pain au chocolat',mand:false,online:15,shop:22,min:30},
-        {nom:'Croissant beurre',mand:false,online:20,shop:0,min:25},
-      ]},
-      {cat:'Pâtisserie fraîche',catMand:false,prods:[
-        {nom:'Éclair chocolat',mand:true,online:18,shop:12,min:10},
-        {nom:'Tarte aux fraises',mand:false,online:0,shop:5,min:8},
-      ]},
-      {cat:'Chocolaterie',catMand:false,prods:[
-        {nom:'Macarons (boîte 24)',mand:false,online:34,shop:26,min:15},
-      ]},
-      {cat:'Traiteur',catMand:false,prods:[
-        {nom:'Quiche lorraine',mand:false,online:12,shop:8,min:10},
-      ]},
-      {cat:'Glaces',catMand:false,prods:[
-        {nom:'Glace artisanale',mand:false,online:9,shop:14,min:12,defOff:true},
-      ]},
-    ];
+    const CATALOG=((S.data&&S.data.catalog)||[]);;
     const catActive=(ci,c)=> c.catMand?true:(S.flags['catA_'+ci]!==undefined?S.flags['catA_'+ci]:true);
     const prodActive=(ci,pi,p)=> p.mand?true:(S.flags['prodA_'+ci+'_'+pi]!==undefined?S.flags['prodA_'+ci+'_'+pi]:(p.defOff?false:true));
 
