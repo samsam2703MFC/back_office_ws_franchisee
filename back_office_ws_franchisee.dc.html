@@ -15,8 +15,9 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js"></script>
+<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="admin-app.css">
+<link rel="stylesheet" href="admin-compat.css">
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <script src="vendor/leaflet/leaflet.js"></script>
 <style>
@@ -1791,7 +1792,7 @@ class Component extends DCLogic {
       statutStyle:this.pill(i.statut==='Résolu'?'#eaf5ec':i.statut==='En cours'?'var(--color-secondary)':'#fbe9eb',i.statut==='Résolu'?'#2d7a3e':i.statut==='En cours'?'var(--color-on-abricot)':'var(--color-primary)'),
       rowStyle:'display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer;'+(idx===S.selInc?'background:var(--color-background-secondary)':''),
       select:()=>this.setState({selInc:idx})}));
-    const si=incData[S.selInc];
+    const si=incData[S.selInc]||incData[0]||{};
     const selInc={...si,statutStyle:this.pill(si.statut==='Résolu'?'#eaf5ec':si.statut==='En cours'?'var(--color-secondary)':'#fbe9eb',si.statut==='Résolu'?'#2d7a3e':si.statut==='En cours'?'var(--color-on-abricot)':'var(--color-primary)')};
 
     // RENTABILITE
