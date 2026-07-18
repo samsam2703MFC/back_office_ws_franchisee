@@ -1207,6 +1207,7 @@
 class Component extends DCLogic {
   state = {
     screen: 'tdb', lang: 'FR', scan: 18, bonValide: false,
+    data: {},   // datasets chargés depuis l'API (/bo/franchisee/*) — aucune donnée en dur
     seqIds: [1,2,4,7], selClient: 0, selInc: 0, analyse: 'tournee',
     sim: 8, alpha: 40, beta: 40, gamma: 20, dragFrom: null,
     routeAssign: { r1:[1,2,4], r2:[3,5,8], r3:[6,9], r4:[7,10], r5:[], r6:[] }, selRoute: 'r1',
@@ -1221,6 +1222,17 @@ class Component extends DCLogic {
     zfOpen: false, zf: { name:'', type:'primary', parent:'', cp:'', vehicule:'Standard', franco:'250 €', delai:'J+1', service:15, access:10 },
   };
   printJob(msg){ this.setState({toast:msg}); clearTimeout(this._tt); this._tt=setTimeout(()=>this.setState({toast:''}),2800); }
+  // Charge les tables depuis la base via l'API back-office (aucune donnée en dur).
+  _loadFB(){
+    if(this._fbStarted || typeof window==='undefined' || !window.FB) return;
+    this._fbStarted = true;
+    const set=(k,rows)=>this.setState(prev=>({data:Object.assign({},prev.data,{[k]:rows})}));
+    window.FB.get('/orders').then(r=>set('orders',r)).catch(()=>{});
+    window.FB.get('/dashboard').then(r=>set('dashboard',r)).catch(()=>{});
+    window.FB.get('/tours').then(r=>set('tours',r)).catch(()=>{});
+    window.FB.get('/stock').then(r=>set('stock',r)).catch(()=>{});
+    window.FB.get('/b2b').then(r=>set('b2b',r)).catch(()=>{});
+  }
   formDefs(){
     const tours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
     const bureaux=['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
@@ -1553,6 +1565,7 @@ class Component extends DCLogic {
   render(){ return null; }
 
   renderVals(){
+    this._loadFB();
     const S=this.state, screen=S.screen;
     const pts=this.points();
     // nav
@@ -2132,14 +2145,14 @@ class Component extends DCLogic {
     const fPill=(f)=>'cursor:pointer;'+pill2(ordFilter===f?'var(--color-primary)':'var(--color-background-secondary)',ordFilter===f?'#fff':'var(--color-text-muted)');
     const ordSteps=['En préparation','Prête','Remise/Livrée'];
     const ordStatColor=(s)=>({'En préparation':['#fff4e5','#b26a00'],'Prête':['#eaf5ec','#2d7a3e'],'Remise/Livrée':['var(--color-background-secondary)','var(--color-text-muted)']}[s]);
-    let ordersRaw=[
-      {ref:'#2041',client:'Boucherie Charlier',mode:'Livraison',slot:'Matin 08–12',total:'146,20 €'},
-      {ref:'#2042',client:'Marie Dupuis',mode:'Retrait',slot:'Retrait 14:00',total:'32,50 €'},
-      {ref:'#2043',client:'Hôtel Nord SA',mode:'Livraison',slot:'Matin 08–12',total:'298,00 €'},
-      {ref:'#2044',client:'Café des Arts',mode:'Livraison',slot:'Après-midi 13–17',total:'87,40 €'},
-      {ref:'#2045',client:'Jan Kowalski',mode:'Retrait',slot:'Click & collect',total:'18,90 €'},
-      {ref:'#2046',client:'Traiteur Piotrowski',mode:'Livraison',slot:'Express midi',total:'204,60 €'},
-    ];
+    // Commandes réelles chargées depuis la base (/bo/franchisee/orders) — bornées au périmètre.
+    let ordersRaw=((S.data&&S.data.orders)||[]).map(o=>({
+      ref:    o.order_ref || ('#'+o.id),
+      client: o.client || '—',
+      mode:   (o.mode==='delivery'||o.delivery_mode==='delivery'||o.mode==='Livraison') ? 'Livraison' : 'Retrait',
+      slot:   o.slot_label || o.slot || '—',
+      total:  (typeof o.total==='number' ? o.total.toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2}) : (o.total||'0,00')) + ' €',
+    }));
     const ordersList=ordersRaw.filter(o=>ordFilter==='all'||(ordFilter==='deliv'&&o.mode==='Livraison')||(ordFilter==='pickup'&&o.mode==='Retrait')).map(o=>{
       const cur=S.flags['ord_'+o.ref]!==undefined?S.flags['ord_'+o.ref]:0; const st=ordSteps[cur]; const [bg,c]=ordStatColor(st);
       return {...o, modePill:modePill(o.mode), statut:st,
