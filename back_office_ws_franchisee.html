@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'Atelier By — Console franchisé</title>
+<!-- Same stylesheets & order as the WebShop admin (tournee-admin.html):
+     admin.css (shell + @font-face Gotham/Vank) then admin-app.css.
+     Both vendored verbatim from samsam2703MFC/WebShop, fonts under ./fonts. -->
+<link rel="stylesheet" href="./admin.css">
+<link rel="stylesheet" href="./admin-app.css">
+<style>
+  html, body, #app { height: 100%; margin: 0; }
+  #app { display: block; }
+
+  /* Tokens admin-app.css references but admin.css does not define. The runtime
+     theme in data.json still overrides colours on :root via setProperty. */
+  :root{
+    --color-background-secondary:#F4EFE8;
+    --weight-regular:400;
+    --weight-medium:500;
+    --tracking-admin:.08em;
+    --color-popup:#78554B;
+    --font-mono:'Courier New',ui-monospace,Menlo,Consolas,monospace;
+  }
+
+  ::-webkit-scrollbar{width:12px;height:12px}
+  ::-webkit-scrollbar-thumb{background:rgba(34,34,34,.2);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+  ::-webkit-scrollbar-track{background:transparent}
+  .lz{scrollbar-width:thin}
+
+  /* app-specific helpers layered on top of the WebShop admin stylesheets */
+  .admin__scroll{flex:1;overflow-y:auto;min-height:0}
+  .admin__content{padding:10px 28px 48px;display:flex;flex-direction:column;gap:16px}
+  .card{background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px}
+  .t-admin-label{font-family:var(--font-ui);font-size:11px;font-weight:400;text-transform:uppercase;letter-spacing:var(--tracking-admin);color:var(--color-text-secondary,var(--color-text-muted))}
+  .t-section-title{font-family:var(--font-display);font-weight:400;line-height:1.3;color:var(--color-text)}
+  .admin__nav-item{cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="./app.js"></script>
+</body>
+</html>
