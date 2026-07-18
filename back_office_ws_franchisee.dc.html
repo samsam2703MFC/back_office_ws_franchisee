@@ -1532,6 +1532,7 @@ class Component extends DCLogic {
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
         const d=this.depot();
         L.marker([d.lat,d.lng]).addTo(m).bindPopup("<b>"+d.libelle+"</b><br>Dépôt magasin");
+        ((this.state.data&&this.state.data.live)||[]).forEach(function(tr){ if(tr.lat!=null&&tr.lng!=null){ L.marker([tr.lat,tr.lng]).addTo(m).bindPopup('<b>'+(tr.driver_name||tr.name)+'</b><br>'+tr.name+(tr.eta?('<br>ETA '+String(tr.eta).slice(0,5)):'')); } });
         const stat={livre:'#2d7a3e',en_cours:'#8D1D2C',attendu:'#c9a24b'};
         this.points().forEach((p,i)=>{
           const st=i<3?'livre':(i<6?'en_cours':'attendu');
@@ -1708,9 +1709,9 @@ class Component extends DCLogic {
     const zfSubmit=()=>{ if(!zfCanSubmit) return; const id='zn'+(S.newZones.length+1); const nz={id,nom:zForm.name,cp:zForm.cp||'—',vehicule:zForm.vehicule,franco:zForm.franco,delai:zForm.delai,service:parseInt(zForm.service,10)||15}; this.setState(s=>({newZones:[...s.newZones,nz],zfOpen:false,zf:{name:'',type:'primary',parent:'',cp:'',vehicule:'Standard',franco:'250 €',delai:'J+1',service:15,access:10}})); this.printJob('✓ Zone créée : '+nz.nom); };
 
     // SUIVI
-    const liveDrivers=((S.data&&S.data.live)||[]).map((t,i)=>({color:['#8D1D2C','#3B3468','#2d7a3e','#b26a00'][i%4],nom:t.name,info:(t.done||0)+'/'+(t.total||0)+' livrées',avancement:(t.done||0)+'/'+(t.total||0)}));
-    const liveEta=((S.data&&S.data.live)||[]).map(t=>({eta:'—',drift:'—',driftColor:'var(--color-text-muted)',libelle:t.name,ville:'—',statut:((t.total||0)>0&&(t.done||0)>=(t.total||0))?'Terminée':'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')}));
-    const liveTable=((S.data&&S.data.live)||[]).map((t,i)=>({color:['#8D1D2C','#3B3468','#2d7a3e','#b26a00'][i%4],nom:t.name,vehicule:'—',tournee:t.name,avancement:(t.done||0)+'/'+(t.total||0),next:'—',nextVille:'—',eta:'—',drift:'—',driftColor:'var(--color-text-muted)',statut:((t.total||0)>0&&(t.done||0)>=(t.total||0))?'Terminée':'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')}));
+    const liveDrivers=((S.data&&S.data.live)||[]).map((t,i)=>{const done=(t.stops_total?t.stops_done:t.done)||0,total=(t.stops_total||t.total)||0;return {color:['#8D1D2C','#3B3468','#2d7a3e','#b26a00'][i%4],nom:t.driver_name||t.name,info:t.name+(t.vehicle?(' · '+t.vehicle):''),avancement:done+'/'+total};});
+    const liveEta=((S.data&&S.data.live)||[]).map(t=>{const dm=+t.drift_minutes||0;return {eta:t.eta?String(t.eta).slice(0,5):'—',drift:t.driver_name?(dm===0?'à l\'heure':(dm>0?('+'+dm+' min'):(dm+' min'))):'—',driftColor:dm>0?'var(--color-primary)':'#2d7a3e',libelle:t.next_label||t.name,ville:t.next_city||'—',statut:t.status==='done'?'Terminée':'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')};});
+    const liveTable=((S.data&&S.data.live)||[]).map((t,i)=>{const done=(t.stops_total?t.stops_done:t.done)||0,total=(t.stops_total||t.total)||0,dm=+t.drift_minutes||0;const drift=t.driver_name?(dm===0?'à l\'heure':(dm>0?('+'+dm+' min'):(dm+' min'))):'—';const dc=dm>0?'var(--color-primary)':'#2d7a3e';const st=t.status==='done'?'Terminée':(t.status==='paused'?'En pause':(t.status==='en_route'?'En route':(t.driver_name?'Au dépôt':'—')));return {color:['#8D1D2C','#3B3468','#2d7a3e','#b26a00'][i%4],nom:t.driver_name||t.name,vehicule:t.vehicle||'—',tournee:t.name,avancement:done+'/'+total,next:t.next_label||'—',nextVille:t.next_city||'—',eta:t.eta?String(t.eta).slice(0,5):'—',drift:drift,driftColor:dc,statut:st,statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')};});
 
     // CLIENTS
     const clientsData=[
