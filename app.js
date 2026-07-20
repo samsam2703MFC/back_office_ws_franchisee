@@ -27,7 +27,16 @@ function boot(){
       });
       state.screen = DB.defaultScreen;
       (DB.nav || []).forEach(function(b){ if (b.collapsible) state.paramNavOpen = !!b.open; });
-      render();
+      // Hydrate la vraie donnée (API PHP /franchisee/*) AVANT le 1er render, avec
+      // repli seed par dataset (data.json). Le boot n'est JAMAIS bloqué : timeout
+      // de sécurité + render systématique quel que soit le résultat.
+      var rendered = false, go = function(){ if (rendered) return; rendered = true; render(); };
+      try {
+        if (window.BOData && window.BOData.hydrate) {
+          var to = setTimeout(go, 4000);
+          window.BOData.hydrate(DB).then(function(){ clearTimeout(to); go(); }, function(){ clearTimeout(to); go(); });
+        } else { go(); }
+      } catch (e) { go(); }
     })
     .catch(function(err){
       document.getElementById('app').innerHTML =
