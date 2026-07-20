@@ -51,9 +51,12 @@ index.html
 | params | `/franchisee/params` | `ws_param` |
 | contexte | `/franchisee/me` | boutique de la portée |
 
-**En attente (endpoint renvoie `[]` → seed conservé, à câbler quand la source
-existera)** : `ws_delivery_fee_rules` (barème en cascade), `ws_franchisor_catchment`
-(zone de chalandise marque), `ws_product_availability` (règles produit).
+**Migration `0012_franchisee_config_tables.sql` (repo WebShop)** crée les
+tables manquantes et câble les 3 derniers endpoints : `ws_delivery_fee_rules`
+(barème en cascade), `ws_franchisor_catchment` (zone de chalandise, valeurs
+initiales insérées), `ws_product_availability_rules` (règles produit) +
+`b2b_client_company_department` (cible de la synchro ERP). Avant que la
+migration soit jouée sur le serveur, ces endpoints renvoient `[]` (repli seed).
 
 ## Reste en dur DANS la maquette (backlog dé-hardcoding)
 
