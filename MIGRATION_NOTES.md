@@ -58,13 +58,30 @@ initiales insérées), `ws_product_availability_rules` (règles produit) +
 `b2b_client_company_department` (cible de la synchro ERP). Avant que la
 migration soit jouée sur le serveur, ces endpoints renvoient `[]` (repli seed).
 
-## Reste en dur DANS la maquette (backlog dé-hardcoding)
+## Dé-hardcoding (PHASE B) — fait
 
-L'export contient encore des littéraux en JSX (hors BOServer) : données du
-Tableau de bord (`tdbRaw`, tournées du jour), coûts par défaut (`state.couts`),
-positions de la carte, listes de préparation. Les sortir vers des tables
-BOServer (puis vers l'API) = incrément suivant, écran par écran — même
-démarche que la PHASE B du franchisor.
+Les 12 littéraux JSX métier sont sortis vers des tables BOServer, hydratées
+depuis l'API : `fr_tdb_tournees`, `fr_tdb_tree` (TDB), `fr_prep_points`
+(préparation), `fr_live_eta`, `fr_live_table` (suivi), `fr_renta_kpis`,
+`fr_cout_params` (rentabilité — valeurs `state.couts` initialisées depuis les
+paramètres `cost_*`), `fr_validations` (ws_offices pending), `fr_dispo_cats`
+(ws_categories), `fr_stock_catalog` (ws_product_stock), `fr_join_requests`
+(ws_office_join_requests), `fr_assortiment` (ws_products × ws_product_shops).
+Sans source serveur (→ seed) : `fr_live_eta` (ETA télémétrie), `fr_renta_kpis`
+(analytique consolidée), `fr_cout_params` (libellés). Restent en dur : UI pure
+(`groupsDef` nav, `stockBadges` filtres, positions par défaut de la carte).
+
+## Écritures serveur — fait
+
+- `BOServer.save(table)` → `POST /franchisee/save` : mapping typé vers les
+  vraies tables pour `ws_franchisor_catchment`, `b2b_client_company_department`,
+  `ws_tour_closures` (remplacement intégral) ; les autres tables sont
+  persistées en JSON dans `ws_bo_store` (migration 0014), par boutique, et
+  réappliquées par `hydrate()` en overlay (priorité aux éditions utilisateur).
+- Onboarding B2B (wizard) → `POST /franchisee/onboard-office` : création réelle
+  `ws_offices` + `ws_office_delivery_sites` + départements (+ voucher si
+  `ws_vouchers` est une table de base — c'est une vue ERP en prod, donc différé).
+- Best-effort : hors-ligne/sans jeton ⇒ localStorage seul, comme avant.
 
 ## Vérifié (Playwright)
 

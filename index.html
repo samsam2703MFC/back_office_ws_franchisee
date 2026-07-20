@@ -1623,7 +1623,7 @@ class Component extends DCLogic {
     valHandled: {}, valModal: null, valSite: '', valTournee: '',
     valNewName: '', valZone: '', valZone2: '', valNewZone: '',
     tdbCollapsed: {}, openGroups: {}, flags: {}, formKey: null, formVals: {},
-    couts: { prep: 26, emb: 0.42, carb: 1.78, struct: 38, charg: 24 },
+    couts: (typeof window!=='undefined'&&window.BOServer)?{prep:+window.BOServer.getParam('cost_prep_hourly',26),emb:+window.BOServer.getParam('cost_packaging_unit',0.42),carb:+window.BOServer.getParam('cost_fuel_liter',1.78),struct:+window.BOServer.getParam('cost_structure_tour',38),charg:+window.BOServer.getParam('cost_loading_hourly',24)}:{ prep: 26, emb: 0.42, carb: 1.78, struct: 38, charg: 24 },
     toast: '', printed: {},
     newRoutes: [], newZones: [], deletedRoutes: [], delRoute: null,
     rfOpen: false, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, driver:'', vehicule:'', zonePrim:'', zoneSec:'', ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
@@ -1687,6 +1687,18 @@ class Component extends DCLogic {
     parts.push('voucher '+vcode);
     this.setState({obOpen:false,screen:'clients',selClient:newIdx,_rev:(S._rev||0)+1});
     this.printJob('✔ Bureau '+(o.raison||'')+' créé · '+parts.join(' · '));
+    // Écriture serveur typée : création réelle du bureau (office + site +
+    // départements + voucher de bienvenue) via l'API. Best-effort — le local
+    // reste la source d'affichage immédiate, le serveur fait foi au rechargement.
+    try { const fr=window.__FR||{};
+      if(fr.base&&fr.token) fetch(fr.base+'/franchisee/onboard-office'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{
+        method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':fr.token},credentials:'omit',
+        body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,
+          contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
+          adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
+          departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur}})
+      }).catch(()=>{});
+    } catch(e){}
   }
   toggleParam(cle){ return ()=>{ if(!window.BOServer) return; const cur=window.BOServer.getParam(cle,false); window.BOServer.setParam(cle,!cur); this.setState({_rev:(this.state._rev||0)+1}); }; }
   setParamDraft(cle){ return (e)=>{ const v=e.target.value; this.setState(s=>({paramDrafts:{...s.paramDrafts,[cle]:v}})); }; }
@@ -2115,44 +2127,11 @@ class Component extends DCLogic {
 
     // TDB
     const stat=(l,bg,c)=>({label:l,style:this.pill(bg,c)});
-    const tournees=[
-      {nom:'Tournée Bruxelles-Centre',chauffeur:'Marek Kowalski',vehicule:'Renault Master frigo',nbPoints:4,colis:23,depart:'08:30',statutLabel:'Prête',statutStyle:this.pill('#eaf5ec','#2d7a3e')},
-      {nom:'Tournée Uccle / Waterloo',chauffeur:'Julien Dubois',vehicule:'Iveco Daily',nbPoints:3,colis:8,depart:'09:15',statutLabel:'En préparation',statutStyle:this.pill('var(--color-background-secondary)','var(--color-text-muted)')},
-      {nom:'Tournée Etterbeek / Leuven',chauffeur:'Sofie Peeters',vehicule:'Renault Master',nbPoints:3,colis:13,depart:'09:45',statutLabel:'En préparation',statutStyle:this.pill('var(--color-background-secondary)','var(--color-text-muted)')},
-    ];
+    const tournees=SRV('fr_tdb_tournees').map(t=>({...t,statutLabel:t.statut,statutStyle:t.statut==='Prête'?this.pill('#eaf5ec','#2d7a3e'):this.pill('var(--color-background-secondary)','var(--color-text-muted)')}));
     const alertes=SRV('fr_alertes');
 
     const pillG=this.pill('#eaf5ec','#2d7a3e'), pillGrey=this.pill('var(--color-background-secondary)','var(--color-text-muted)');
-    const tdbRaw=[
-      {nom:'Tournée Bruxelles-Centre',chauffeur:'Marek Kowalski',statutLabel:'Prête',statutStyle:pillG,zones:[
-        {nom:'Bruxelles Centre',sites:[
-          {libelle:'Brasserie Le Cirio',ville:'Grand-Place',cutoff:'08:00–11:00',office:'Le Cirio SA',users:[{nom:'Cuisine — M. Dupont',cmd:2},{nom:'Bar — S. Lefèvre',cmd:1}]},
-          {libelle:'Maison Dandoy',ville:'Sablon',cutoff:'08:00–10:30',office:'Dandoy',users:[{nom:'Boutique Sablon',cmd:2}]},
-        ]},
-        {nom:'Sablon',sites:[
-          {libelle:'Hôtel Amigo',ville:'Sablon',cutoff:'07:30–10:00',office:'Rocco Forte',users:[{nom:'Économat',cmd:2}]},
-        ]},
-        {nom:'Schaerbeek',sites:[
-          {libelle:'Boulangerie du Parc',ville:'Schaerbeek',cutoff:'06:30–09:00',office:'Franchise BXL-N',users:[{nom:'Resp. magasin',cmd:1}]},
-        ]},
-      ]},
-      {nom:'Tournée Uccle / Waterloo',chauffeur:'Julien Dubois',statutLabel:'En préparation',statutStyle:pillGrey,zones:[
-        {nom:'Uccle / Waterloo',sites:[
-          {libelle:'Café Belga',ville:'Ixelles',cutoff:'09:00–11:30',office:'Belga SPRL',users:[{nom:'Gérant — J. Belga',cmd:2}]},
-          {libelle:'Resto Le Chalet',ville:'Uccle',cutoff:'10:00–12:00',office:'Chalet SPRL',users:[{nom:'Chef de cuisine',cmd:1}]},
-          {libelle:'Event Château',ville:'Waterloo',cutoff:'11:00–13:00',office:'Événements Sud',users:[{nom:'Traiteur événement',cmd:1}]},
-        ]},
-      ]},
-      {nom:'Tournée Etterbeek / Leuven',chauffeur:'Sofie Peeters',statutLabel:'En préparation',statutStyle:pillGrey,zones:[
-        {nom:'Etterbeek / Leuven',sites:[
-          {libelle:'Traiteur Delcourt',ville:'Etterbeek',cutoff:'08:00–10:00',office:'Delcourt',users:[{nom:'Atelier production',cmd:2}]},
-          {libelle:'Corporate KBC',ville:'Leuven',cutoff:'07:00–09:00',office:'KBC Group',users:[{nom:'Cafétéria HQ',cmd:1}]},
-        ]},
-        {nom:'Anderlecht',sites:[
-          {libelle:'Horeca Cureghem',ville:'Anderlecht',cutoff:'09:00–11:00',office:'Cureghem SPRL',users:[{nom:'Cuisine centrale',cmd:2}]},
-        ]},
-      ]},
-    ];
+    const tdbRaw=SRV('fr_tdb_tree').map(t=>({...t,statutLabel:t.statut,statutStyle:t.statut==='Prête'?pillG:pillGrey}));
     const col=S.tdbCollapsed;
     const toggleKey=(k)=>this.setState(s=>({tdbCollapsed:{...s.tdbCollapsed,[k]:!s.tdbCollapsed[k]}}));
     const car=(k)=>({open:!col[k],caret:col[k]?'▸':'▾',toggle:()=>toggleKey(k)});
@@ -2184,12 +2163,7 @@ class Component extends DCLogic {
     // PREP
     const scanTotal=23, scanDone=S.scan;
     const complete=scanDone>=scanTotal;
-    const prepPoints=[
-      {ordre:1,libelle:'Brasserie Le Cirio',colisTxt:'8 colis · froid positif',dotBg:'var(--color-primary)',dotColor:'#fff',stateLabel:complete?'✓':'En cours',stateColor:complete?'#2d7a3e':'var(--color-primary)'},
-      {ordre:2,libelle:'Hôtel Amigo',colisTxt:'6 colis · ambiant',dotBg:'var(--color-background-secondary)',dotColor:'var(--color-text-muted)',stateLabel:'À faire',stateColor:'var(--color-text-muted)'},
-      {ordre:3,libelle:'Maison Dandoy',colisTxt:'5 colis · ambiant',dotBg:'var(--color-background-secondary)',dotColor:'var(--color-text-muted)',stateLabel:'À faire',stateColor:'var(--color-text-muted)'},
-      {ordre:4,libelle:'Boulangerie du Parc',colisTxt:'4 colis · consigne bac',dotBg:'var(--color-background-secondary)',dotColor:'var(--color-text-muted)',stateLabel:'À faire',stateColor:'var(--color-text-muted)'},
-    ];
+    const prepPoints=SRV('fr_prep_points').map((p,i)=>i===0?{...p,dotBg:'var(--color-primary)',dotColor:'#fff',stateLabel:complete?'✓':'En cours',stateColor:complete?'#2d7a3e':'var(--color-primary)'}:{...p,dotBg:'var(--color-background-secondary)',dotColor:'var(--color-text-muted)',stateLabel:'À faire',stateColor:'var(--color-text-muted)'});
     const ecart=scanTotal-scanDone;
 
     // TOURNEES — gestion des tournées (delivery sites + offices + ETA)
@@ -2245,17 +2219,9 @@ class Component extends DCLogic {
 
     // SUIVI
     const liveDrivers=SRV('fr_live_drivers');
-    const liveEta=[
-      {eta:'10:24',drift:'à l\'heure',driftColor:'#2d7a3e',libelle:'Maison Dandoy',ville:'Sablon',statut:'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')},
-      {eta:'10:52',drift:'+6 min',driftColor:'var(--color-primary)',libelle:'Boulangerie du Parc',ville:'Schaerbeek',statut:'En attente',statutStyle:this.pill('var(--color-background-secondary)','var(--color-text-muted)')},
-      {eta:'11:30',drift:'à l\'heure',driftColor:'#2d7a3e',libelle:'Café Belga',ville:'Ixelles',statut:'En attente',statutStyle:this.pill('var(--color-background-secondary)','var(--color-text-muted)')},
-      {eta:'12:40',drift:'+18 min',driftColor:'var(--color-primary)',libelle:'Event Château',ville:'Waterloo',statut:'Risque',statutStyle:this.pill('#fbe9eb','var(--color-primary)')},
-    ];
-    const liveTable=[
-      {color:'#8D1D2C',nom:'Marek Kowalski',vehicule:'Renault Master frigo',tournee:'Centre',avancement:'3/4',next:'Maison Dandoy',nextVille:'Sablon',eta:'10:24',drift:'à l\'heure',driftColor:'#2d7a3e',statut:'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')},
-      {color:'#3B3468',nom:'Julien Dubois',vehicule:'Iveco Daily',tournee:'Uccle',avancement:'1/3',next:'Event Château',nextVille:'Waterloo',eta:'12:40',drift:'+18 min',driftColor:'var(--color-primary)',statut:'Risque',statutStyle:this.pill('#fbe9eb','var(--color-primary)')},
-      {color:'#2d7a3e',nom:'Sofie Peeters',vehicule:'Renault Master',tournee:'Etterbeek',avancement:'2/3',next:'Corporate KBC',nextVille:'Leuven',eta:'09:05',drift:'+5 min',driftColor:'var(--color-primary)',statut:'En route',statutStyle:this.pill('var(--color-secondary)','var(--color-on-abricot)')},
-    ];
+    const LIVE_ST=(s)=>s==='En route'?this.pill('var(--color-secondary)','var(--color-on-abricot)'):s==='Risque'?this.pill('#fbe9eb','var(--color-primary)'):this.pill('var(--color-background-secondary)','var(--color-text-muted)');
+    const liveEta=SRV('fr_live_eta').map(e=>({...e,driftColor:/\+/.test(e.drift)?'var(--color-primary)':'#2d7a3e',statutStyle:LIVE_ST(e.statut)}));
+    const liveTable=SRV('fr_live_table').map(d=>({...d,driftColor:/\+/.test(d.drift)?'var(--color-primary)':'#2d7a3e',statutStyle:LIVE_ST(d.statut)}));
 
     // CLIENTS
     const clientsData=SRV('fr_clients');
@@ -2320,14 +2286,7 @@ class Component extends DCLogic {
     const periodSegs=[ seg('per_wk','Semaine','Cette sem.','Sem. -1'), seg('per_mo','Mois','Ce mois','Mois -1'), seg('per_tr','Trimestre','Ce trim.','Trim. -1') ];
     const periodDaysSet=(e)=>{ const v=+e.target.value; this.setState({periodDays:v}); };
     const kd=(txt,col)=>({delta:txt,deltaColor:col});
-    const kpis=[
-      {label:this.tr('kMarge'),value:this.eur(marge),valColor:'var(--color-text)',...kd('▲ +7,2 % vs préc.','#2d7a3e')},
-      {label:this.tr('kMargePct'),value:'34 %',valColor:'var(--color-text)',...kd('▲ +2,4 pts','#2d7a3e')},
-      {label:this.tr('kCA'),value:this.eur(CA),valColor:'var(--color-text)',...kd('▲ +4,1 %','#2d7a3e')},
-      {label:this.tr('kCouts'),value:this.eur(couts),valColor:'var(--color-text)',...kd('▲ +1,9 %','var(--color-primary)')},
-      {label:this.tr('kColis'),value:'35,60 €',valColor:'var(--color-text)',...kd('▼ −2,1 %','#2d7a3e')},
-      {label:this.tr('kCAkm'),value:'12,40 €',valColor:'var(--color-text)',...kd('▲ +3,3 %','#2d7a3e')},
-    ];
+    const kpis=SRV('fr_renta_kpis').map(r=>({label:this.tr(r.key),value:r.computed==='marge'?this.eur(marge):r.computed==='ca'?this.eur(CA):r.computed==='couts'?this.eur(couts):r.value,valColor:'var(--color-text)',...kd(r.delta,r.ok===false?'var(--color-primary)':'#2d7a3e')}));
     const maxAbs=Math.max(...pts.map(p=>Math.abs(p.ca-p.couts)));
     const classement=[...pts].map(p=>({...p,m:p.ca-p.couts})).sort((a,b)=>b.m-a.m).map(p=>{
       const neg=p.m<0; const w=Math.abs(p.m)/maxAbs*50;
@@ -2416,13 +2375,7 @@ class Component extends DCLogic {
 
     // PARAMS
     const setCout=(k)=>(e)=>{ const v=parseFloat(e.target.value); this.setState(s=>({couts:{...s.couts,[k]:isNaN(v)?0:v}})); };
-    const coutParams=[
-      {key:'prep',label:'Coût horaire préparation',effet:'01/06/2026',unit:'€/h',step:'0.5'},
-      {key:'emb',label:'Coût emballage / colis',effet:'01/06/2026',unit:'€',step:'0.01'},
-      {key:'carb',label:'Coût carburant / litre',effet:'01/07/2026',unit:'€/L',step:'0.01'},
-      {key:'struct',label:'Coût structure / tournée',effet:'01/01/2026',unit:'€',step:'1'},
-      {key:'charg',label:'Taux horaire chargement',effet:'01/06/2026',unit:'€/h',step:'0.5'},
-    ].map(p=>({...p,val:S.couts[p.key],onInput:setCout(p.key)}));
+    const coutParams=SRV('fr_cout_params').map(p=>({...p,val:S.couts[p.key],onInput:setCout(p.key)}));
     const setW=(k)=>(e)=>{ const v=parseInt(e.target.value,10); this.setState({[k]:v}); };
     const abgSum=((S.alpha+S.beta+S.gamma)/100).toFixed(2).replace('.',',');
     const abg=[
@@ -2438,13 +2391,7 @@ class Component extends DCLogic {
     ];
 
     // VALIDATIONS Office Client
-    const pendingRaw=[
-      {id:'p1',init:'BC',raison:'Boucherie Charlier',email:'contact@charlier.be',segment:'retail',tva:'BE 0512.334.556',vies:'ok',date:'16 juil.'},
-      {id:'p2',init:'TP',raison:'Traiteur Piotrowski',email:'zamowienia@piotrowski.pl',segment:'horeca',tva:'PL 5261040828',vies:'ok',date:'16 juil.'},
-      {id:'p3',init:'HN',raison:'Hôtel Nord SA',email:'achats@hotelnord.be',segment:'corporate',tva:'BE 0455.09',vies:'invalid',date:'15 juil.'},
-      {id:'p4',init:'EV',raison:'Événements Lumière',email:'info@evlumiere.be',segment:'event',tva:'BE 0788.221.994',vies:'pending',date:'15 juil.'},
-      {id:'p5',init:'CB',raison:'Café des Arts',email:'gerant@cafedesarts.be',segment:'horeca',tva:'BE 0644.112.008',vies:'ok',date:'14 juil.'},
-    ];
+    const pendingRaw=SRV('fr_validations');
     const viesMeta={ok:{l:'✓ valide',bg:'#eaf5ec',c:'#2d7a3e'},pending:{l:'⋯ en cours',bg:'var(--color-background-secondary)',c:'var(--color-text-muted)'},invalid:{l:'✕ format invalide',bg:'#fbe9eb',c:'var(--color-primary)'}};
     const pendingList=pendingRaw.filter(p=>!S.valHandled[p.id]);
     const pendingClients=pendingList.map(p=>{ const vm=viesMeta[p.vies]; return {...p,
@@ -2555,14 +2502,7 @@ class Component extends DCLogic {
     const bpDays=(arr)=>['L','Ma','Me','J','V','S','D'].map((k,i)=>({k,style:dayPill((arr||[]).includes(i))}));
     const bureauParams=SRV('ws_office_delivery_settings').map((b,i)=>({...b,nom:b.bureau,days:bpDays(b.daysArr),edit:this.editForm('bureauParam',b,i),del:this.deleteRow('ws_office_delivery_settings',i,'ce paramétrage bureau'),pill:pill2('var(--color-background-secondary)','var(--color-text-muted)')}));
 
-    const dispoCats=[
-      {key:'trad',nom:'Pâtisserie fraîche',delai:'1',cut:'17:00',def:true},
-      {key:'boul',nom:'Boulangerie',delai:'1',cut:'17:00',def:true},
-      {key:'trait',nom:'Traiteur / plats',delai:'1',cut:'15:00',def:true},
-      {key:'choc',nom:'Chocolaterie',delai:'2',cut:'17:00',def:true},
-      {key:'glace',nom:'Glaces & surgelés',delai:'1',cut:'12:00',def:false},
-      {key:'epic',nom:'Épicerie fine',delai:'2',cut:'17:00',def:true},
-    ].map(c=>{ const on=S.flags['cat_'+c.key]!==undefined?S.flags['cat_'+c.key]:c.def;
+    const dispoCats=SRV('fr_dispo_cats').map(c=>{ const on=S.flags['cat_'+c.key]!==undefined?S.flags['cat_'+c.key]:c.def;
       const dk='catDelai_'+c.key, ck='catCut_'+c.key;
       const delaiVal=S.flags[dk]!==undefined?S.flags[dk]:c.delai;
       const cutVal=S.flags[ck]!==undefined?S.flags[ck]:c.cut;
@@ -2700,26 +2640,7 @@ class Component extends DCLogic {
     });
 
     // ===== Catalogue partagé : catégories → produits (Assortiment + Stock) =====
-    const CATALOG=[
-      {cat:'Boulangerie',catMand:true,prods:[
-        {nom:'Baguette tradition',mand:true,online:28,shop:64,min:20},
-        {nom:'Pain au chocolat',mand:false,online:15,shop:22,min:30},
-        {nom:'Croissant beurre',mand:false,online:20,shop:0,min:25},
-      ]},
-      {cat:'Pâtisserie fraîche',catMand:false,prods:[
-        {nom:'Éclair chocolat',mand:true,online:18,shop:12,min:10},
-        {nom:'Tarte aux fraises',mand:false,online:0,shop:5,min:8},
-      ]},
-      {cat:'Chocolaterie',catMand:false,prods:[
-        {nom:'Macarons (boîte 24)',mand:false,online:34,shop:26,min:15},
-      ]},
-      {cat:'Traiteur',catMand:false,prods:[
-        {nom:'Quiche lorraine',mand:false,online:12,shop:8,min:10},
-      ]},
-      {cat:'Glaces',catMand:false,prods:[
-        {nom:'Glace artisanale',mand:false,online:9,shop:14,min:12,defOff:true},
-      ]},
-    ];
+    const CATALOG=SRV('fr_stock_catalog');
     const catActive=(ci,c)=> c.catMand?true:(S.flags['catA_'+ci]!==undefined?S.flags['catA_'+ci]:true);
     const prodActive=(ci,pi,p)=> p.mand?true:(S.flags['prodA_'+ci+'_'+pi]!==undefined?S.flags['prodA_'+ci+'_'+pi]:(p.defOff?false:true));
 
@@ -2775,11 +2696,7 @@ class Component extends DCLogic {
 
     // Demandes de rattachement bureau — personnel déjà validé/intégré → Lier ou Rejeter seulement
     const jrHandled=S.jrHandled||{};
-    const joinRaw=[
-      {id:'jr1',client:'Émilie Rousseau',demande:'« Rattacher à la Résidence Les Tilleuls »',proche:'Résidence Les Tilleuls (Av. Tervueren 50)',dup:true},
-      {id:'jr3',client:'Sophie Laurent',demande:'« Rattacher à Café des Arts »',proche:'Café des Arts (Av. Louise 210)',dup:true},
-      {id:'jr4',client:'Marc Vanden',demande:'« Rattacher à Boucherie Charlier »',proche:'Boucherie Charlier (Rue du Marché 12)',dup:false},
-    ].filter(r=>!jrHandled[r.id]);
+    const joinRaw=SRV('fr_join_requests').filter(r=>!jrHandled[r.id]);
     const jrResolve=(id,msg)=>()=>{ this.setState(s=>({jrHandled:{...s.jrHandled,[id]:true}})); this.printJob(msg); };
     const joinRequests=joinRaw.map(r=>({...r,
       dupPill:r.dup?pill2('#fff4e5','#b26a00'):pill2('#eaf5ec','#2d7a3e'), dupTxt:r.dup?'Doublon possible':'Nouveau',
@@ -2838,14 +2755,7 @@ class Component extends DCLogic {
     const remiseSetMin=(e)=>{ const v=e.target.value; this.setState(s=>({flags:{...s.flags,remise_min:v}})); };
 
     // Assortiment
-    const assortRaw=[
-      {nom:'Baguette tradition',cat:'Boulangerie',locked:false,defA:true,defND:false},
-      {nom:'Éclair chocolat',cat:'Pâtisserie fraîche',locked:true,defA:true,defND:false},
-      {nom:'Foie gras mi-cuit',cat:'Traiteur',locked:false,defA:true,defND:true},
-      {nom:'Macarons (24)',cat:'Chocolaterie',locked:false,defA:true,defND:false},
-      {nom:'Bûche signature',cat:'Pâtisserie fraîche',locked:true,defA:true,defND:false},
-      {nom:'Glace artisanale',cat:'Glaces',locked:false,defA:false,defND:true},
-    ];
+    const assortRaw=SRV('fr_assortiment');
     const assortList=assortRaw.map((a,i)=>{ const A=toggle3('assortA_'+i,a.defA),N=toggle3('assortN_'+i,a.defND);
       return {...a, activeStyle:A.style+(a.locked?';opacity:.4;pointer-events:none':''),activeKnob:A.knob,toggleActive:A.toggle,
         ndStyle:N.style+(a.locked?';opacity:.4;pointer-events:none':''),ndKnob:N.knob,toggleNoDeliv:N.toggle }; });

@@ -244,17 +244,149 @@
       {nom:'Espèces',dw:false,dc:true,db:false},
       {nom:'Virement / facturation différée',dw:false,dc:false,db:true},
     ],
+    // ---- Tables UI franchisé (ex-littéraux JSX, dé-hardcodés — PHASE B) ----
+    "fr_tdb_tournees": [
+      {nom:'Tournée Bruxelles-Centre',chauffeur:'Marek Kowalski',vehicule:'Renault Master frigo',nbPoints:4,colis:23,depart:'08:30',statut:'Prête'},
+      {nom:'Tournée Uccle / Waterloo',chauffeur:'Julien Dubois',vehicule:'Iveco Daily',nbPoints:3,colis:8,depart:'09:15',statut:'En préparation'},
+      {nom:'Tournée Etterbeek / Leuven',chauffeur:'Sofie Peeters',vehicule:'Renault Master',nbPoints:3,colis:13,depart:'09:45',statut:'En préparation'},
+    ],
+    "fr_tdb_tree": [
+      {nom:'Tournée Bruxelles-Centre',chauffeur:'Marek Kowalski',statut:'Prête',zones:[
+        {nom:'Bruxelles Centre',sites:[
+          {libelle:'Brasserie Le Cirio',ville:'Grand-Place',cutoff:'08:00–11:00',office:'Le Cirio SA',users:[{nom:'Cuisine — M. Dupont',cmd:2},{nom:'Bar — S. Lefèvre',cmd:1}]},
+          {libelle:'Maison Dandoy',ville:'Sablon',cutoff:'08:00–10:30',office:'Dandoy',users:[{nom:'Boutique Sablon',cmd:2}]},
+        ]},
+        {nom:'Sablon',sites:[
+          {libelle:'Hôtel Amigo',ville:'Sablon',cutoff:'07:30–10:00',office:'Rocco Forte',users:[{nom:'Économat',cmd:2}]},
+        ]},
+        {nom:'Schaerbeek',sites:[
+          {libelle:'Boulangerie du Parc',ville:'Schaerbeek',cutoff:'06:30–09:00',office:'Franchise BXL-N',users:[{nom:'Resp. magasin',cmd:1}]},
+        ]},
+      ]},
+      {nom:'Tournée Uccle / Waterloo',chauffeur:'Julien Dubois',statut:'En préparation',zones:[
+        {nom:'Uccle / Waterloo',sites:[
+          {libelle:'Café Belga',ville:'Ixelles',cutoff:'09:00–11:30',office:'Belga SPRL',users:[{nom:'Gérant — J. Belga',cmd:2}]},
+          {libelle:'Resto Le Chalet',ville:'Uccle',cutoff:'10:00–12:00',office:'Chalet SPRL',users:[{nom:'Chef de cuisine',cmd:1}]},
+          {libelle:'Event Château',ville:'Waterloo',cutoff:'11:00–13:00',office:'Événements Sud',users:[{nom:'Traiteur événement',cmd:1}]},
+        ]},
+      ]},
+      {nom:'Tournée Etterbeek / Leuven',chauffeur:'Sofie Peeters',statut:'En préparation',zones:[
+        {nom:'Etterbeek / Leuven',sites:[
+          {libelle:'Traiteur Delcourt',ville:'Etterbeek',cutoff:'08:00–10:00',office:'Delcourt',users:[{nom:'Atelier production',cmd:2}]},
+          {libelle:'Corporate KBC',ville:'Leuven',cutoff:'07:00–09:00',office:'KBC Group',users:[{nom:'Cafétéria HQ',cmd:1}]},
+        ]},
+        {nom:'Anderlecht',sites:[
+          {libelle:'Horeca Cureghem',ville:'Anderlecht',cutoff:'09:00–11:00',office:'Cureghem SPRL',users:[{nom:'Cuisine centrale',cmd:2}]},
+        ]},
+      ]},
+    ],
+    "fr_prep_points": [
+      {ordre:1,libelle:'Brasserie Le Cirio',colisTxt:'8 colis · froid positif'},
+      {ordre:2,libelle:'Hôtel Amigo',colisTxt:'6 colis · ambiant'},
+      {ordre:3,libelle:'Maison Dandoy',colisTxt:'5 colis · ambiant'},
+      {ordre:4,libelle:'Boulangerie du Parc',colisTxt:'4 colis · consigne bac'},
+    ],
+    "fr_live_eta": [
+      {eta:'10:24',drift:"à l'heure",libelle:'Maison Dandoy',ville:'Sablon',statut:'En route'},
+      {eta:'10:52',drift:'+6 min',libelle:'Boulangerie du Parc',ville:'Schaerbeek',statut:'En attente'},
+      {eta:'11:30',drift:"à l'heure",libelle:'Café Belga',ville:'Ixelles',statut:'En attente'},
+      {eta:'12:40',drift:'+18 min',libelle:'Event Château',ville:'Waterloo',statut:'Risque'},
+    ],
+    "fr_live_table": [
+      {color:'#8D1D2C',nom:'Marek Kowalski',vehicule:'Renault Master frigo',tournee:'Centre',avancement:'3/4',next:'Maison Dandoy',nextVille:'Sablon',eta:'10:24',drift:"à l'heure",statut:'En route'},
+      {color:'#3B3468',nom:'Julien Dubois',vehicule:'Iveco Daily',tournee:'Uccle',avancement:'1/3',next:'Event Château',nextVille:'Waterloo',eta:'12:40',drift:'+18 min',statut:'Risque'},
+      {color:'#2d7a3e',nom:'Sofie Peeters',vehicule:'Renault Master',tournee:'Etterbeek',avancement:'2/3',next:'Corporate KBC',nextVille:'Leuven',eta:'09:05',drift:'+5 min',statut:'En route'},
+    ],
+    "fr_renta_kpis": [
+      {key:'kMarge',computed:'marge',delta:'▲ +7,2 % vs préc.'},
+      {key:'kMargePct',value:'34 %',delta:'▲ +2,4 pts'},
+      {key:'kCA',computed:'ca',delta:'▲ +4,1 %'},
+      {key:'kCouts',computed:'couts',delta:'▲ +1,9 %',ok:false},
+      {key:'kColis',value:'35,60 €',delta:'▼ −2,1 %'},
+      {key:'kCAkm',value:'12,40 €',delta:'▲ +3,3 %'},
+    ],
+    "fr_cout_params": [
+      {key:'prep',label:'Coût horaire préparation',effet:'01/06/2026',unit:'€/h',step:'0.5'},
+      {key:'emb',label:'Coût emballage / colis',effet:'01/06/2026',unit:'€',step:'0.01'},
+      {key:'carb',label:'Coût carburant / litre',effet:'01/07/2026',unit:'€/L',step:'0.01'},
+      {key:'struct',label:'Coût structure / tournée',effet:'01/01/2026',unit:'€',step:'1'},
+      {key:'charg',label:'Taux horaire chargement',effet:'01/06/2026',unit:'€/h',step:'0.5'},
+    ],
+    "fr_validations": [
+      {id:'p1',init:'BC',raison:'Boucherie Charlier',email:'contact@charlier.be',segment:'retail',tva:'BE 0512.334.556',vies:'ok',date:'16 juil.'},
+      {id:'p2',init:'TP',raison:'Traiteur Piotrowski',email:'zamowienia@piotrowski.pl',segment:'horeca',tva:'PL 5261040828',vies:'ok',date:'16 juil.'},
+      {id:'p3',init:'HN',raison:'Hôtel Nord SA',email:'achats@hotelnord.be',segment:'corporate',tva:'BE 0455.09',vies:'invalid',date:'15 juil.'},
+      {id:'p4',init:'EV',raison:'Événements Lumière',email:'info@evlumiere.be',segment:'event',tva:'BE 0788.221.994',vies:'pending',date:'15 juil.'},
+      {id:'p5',init:'CB',raison:'Café des Arts',email:'gerant@cafedesarts.be',segment:'horeca',tva:'BE 0644.112.008',vies:'ok',date:'14 juil.'},
+    ],
+    "fr_dispo_cats": [
+      {key:'trad',nom:'Pâtisserie fraîche',delai:'1',cut:'17:00',def:true},
+      {key:'boul',nom:'Boulangerie',delai:'1',cut:'17:00',def:true},
+      {key:'trait',nom:'Traiteur / plats',delai:'1',cut:'15:00',def:true},
+      {key:'choc',nom:'Chocolaterie',delai:'2',cut:'17:00',def:true},
+      {key:'glace',nom:'Glaces & surgelés',delai:'1',cut:'12:00',def:false},
+      {key:'epic',nom:'Épicerie fine',delai:'2',cut:'17:00',def:true},
+    ],
+    "fr_stock_catalog": [
+      {cat:'Boulangerie',catMand:true,prods:[
+        {nom:'Baguette tradition',mand:true,online:28,shop:64,min:20},
+        {nom:'Pain au chocolat',mand:false,online:15,shop:22,min:30},
+        {nom:'Croissant beurre',mand:false,online:20,shop:0,min:25},
+      ]},
+      {cat:'Pâtisserie fraîche',catMand:false,prods:[
+        {nom:'Éclair chocolat',mand:true,online:18,shop:12,min:10},
+        {nom:'Tarte aux fraises',mand:false,online:0,shop:5,min:8},
+      ]},
+      {cat:'Chocolaterie',catMand:false,prods:[
+        {nom:'Macarons (boîte 24)',mand:false,online:34,shop:26,min:15},
+      ]},
+      {cat:'Traiteur',catMand:false,prods:[
+        {nom:'Quiche lorraine',mand:false,online:12,shop:8,min:10},
+      ]},
+      {cat:'Glaces',catMand:false,prods:[
+        {nom:'Glace artisanale',mand:false,online:9,shop:14,min:12,defOff:true},
+      ]},
+    ],
+    "fr_join_requests": [
+      {id:'jr1',client:'Émilie Rousseau',demande:'« Rattacher à la Résidence Les Tilleuls »',proche:'Résidence Les Tilleuls (Av. Tervueren 50)',dup:true},
+      {id:'jr3',client:'Sophie Laurent',demande:'« Rattacher à Café des Arts »',proche:'Café des Arts (Av. Louise 210)',dup:true},
+      {id:'jr4',client:'Marc Vanden',demande:'« Rattacher à Boucherie Charlier »',proche:'Boucherie Charlier (Rue du Marché 12)',dup:false},
+    ],
+    "fr_assortiment": [
+      {nom:'Baguette tradition',cat:'Boulangerie',locked:false,defA:true,defND:false},
+      {nom:'Éclair chocolat',cat:'Pâtisserie fraîche',locked:true,defA:true,defND:false},
+      {nom:'Foie gras mi-cuit',cat:'Traiteur',locked:false,defA:true,defND:true},
+      {nom:'Macarons (24)',cat:'Chocolaterie',locked:false,defA:true,defND:false},
+      {nom:'Bûche signature',cat:'Pâtisserie fraîche',locked:true,defA:true,defND:false},
+      {nom:'Glace artisanale',cat:'Glaces',locked:false,defA:false,defND:true},
+    ],
   };
   var DB = null;
   function read(){ try { var r = localStorage.getItem(LS); if (r) return JSON.parse(r); } catch(e){} return null; }
   function persist(){ try { localStorage.setItem(LS, JSON.stringify(DB)); } catch(e){} return DB; }
   function ensure(){ if (DB) return DB; DB = read(); if (!DB){ DB = JSON.parse(JSON.stringify(SEED)); } else { for (var k in SEED){ if (!(k in DB)) DB[k] = JSON.parse(JSON.stringify(SEED[k])); } } persist(); return DB; }
+  // Écritures serveur : chaque BOServer.save(table) est poussé vers l'API.
+  // Tables à mapping propre → écrites dans les vraies tables ; les autres →
+  // journal serveur ws_bo_store (état du BO persisté côté serveur, plus
+  // seulement localStorage). Best-effort : hors-ligne/401 ⇒ localStorage seul.
+  function syncSave(n, rows){
+    try {
+      var fr = (typeof window !== 'undefined' && window.__FR) || {};
+      if (!fr.base || !fr.token) return;
+      fetch(fr.base + '/franchisee/save' + (fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : ''), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': fr.token },
+        credentials: 'omit',
+        body: JSON.stringify({ table: n, rows: rows })
+      }).catch(function(){});
+    } catch(e){}
+  }
   window.BOServer = {
     table: function(n){ var db = ensure(); return db[n] ? JSON.parse(JSON.stringify(db[n])) : []; },
     all: function(){ return JSON.parse(JSON.stringify(ensure())); },
     getParam: function(key, dflt){ var db = ensure(); var rows = db.params || []; for (var i=0;i<rows.length;i++){ if (rows[i].cle===key){ var r=rows[i]; return (r.val!==undefined ? r.val : (r.def!==undefined ? r.def : dflt)); } } return dflt; },
     setParam: function(key, val){ ensure(); var rows = DB.params || (DB.params = []); var found=false; for (var i=0;i<rows.length;i++){ if (rows[i].cle===key){ rows[i].val=val; found=true; } } if (!found) rows.push({cle:key, type:'bool', val:val}); return persist(); },
-    save: function(n, rows){ ensure(); DB[n] = JSON.parse(JSON.stringify(rows)); return persist(); },
+    save: function(n, rows){ ensure(); DB[n] = JSON.parse(JSON.stringify(rows)); syncSave(n, DB[n]); return persist(); },
     reset: function(){ DB = JSON.parse(JSON.stringify(SEED)); return persist(); },
     // Charge la vraie donnée depuis l'API PHP (/franchisee/*) EN MÉMOIRE, avec
     // repli seed par table : toute table absente/erreur/401/vide garde le seed,
@@ -280,7 +412,13 @@
         ws_office_delivery_settings:'ws-office-delivery-settings',
         ws_delivery_fee_rules:'ws-delivery-fee-rules',
         ws_franchisor_catchment:'ws-franchisor-catchment',
-        params:'params'
+        params:'params',
+        fr_tdb_tournees:'fr-tdb-tournees', fr_tdb_tree:'fr-tdb-tree',
+        fr_prep_points:'fr-prep-points', fr_live_eta:'fr-live-eta', fr_live_table:'fr-live-table',
+        fr_renta_kpis:'fr-renta-kpis', fr_cout_params:'fr-cout-params',
+        fr_validations:'fr-validations', fr_dispo_cats:'fr-dispo-cats',
+        fr_stock_catalog:'fr-stock-catalog', fr_join_requests:'fr-join-requests',
+        fr_assortiment:'fr-assortiment'
       };
       var headers = fr.token ? { 'X-Admin-Token': fr.token } : {};
       var qs = fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : '';
@@ -290,7 +428,20 @@
           .then(function(data){ if (Array.isArray(data) && data.length) DB[key] = data; })
           .catch(function(){ /* garde le seed pour cette table */ });
       });
-      return Promise.all(jobs).then(function(){ return true; });
+      return Promise.all(jobs).then(function(){
+        // Overlay des éditions BO persistées côté serveur (ws_bo_store) :
+        // priorité aux tables éditées via l'UI dont l'écriture n'est pas
+        // (encore) typée vers une vraie table.
+        return fetch(fr.base + '/franchisee/bo-store' + qs, { headers: headers, credentials: 'omit' })
+          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(store){
+            if (store && typeof store === 'object' && !Array.isArray(store)) {
+              Object.keys(store).forEach(function(k){ if (Array.isArray(store[k])) DB[k] = store[k]; });
+            }
+            return true;
+          })
+          .catch(function(){ return true; });
+      });
     }
   };
 })();
