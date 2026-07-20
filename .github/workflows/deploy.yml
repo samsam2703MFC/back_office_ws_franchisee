@@ -1,27 +1,19 @@
 name: Deploy to server (SSH / rsync)
 
-# Pushes the static back-office (Console franchisé) to the client's
-# server over SSH (rsync), exactly like the WebShop repo. This app is a static,
-# data-driven site (no build step): back_office_ws_franchisee.html + app.js +
-# data.json + img/. It is served at  http://<host>/webshop/backoffice_franchisee
+# Deploys the franchisee back-office (Claude Design DC app, run natively —
+# same architecture as back_office_ws_franchisor) to the client server over
+# SSH (rsync). Static site, no build step:
+#   index.html (wired copy of back_office_ws_franchisee.dc.html)
+#   + support.js (DC runtime) + bo_server.js (data layer, hydrate → /franchisee/*)
+#   + api-config.js + _ds/ (design system + fonts) + vendor/ (React UMD) + img/
+# Served at  http://<host>/webshop/backoffice_franchisee
 #
-# ─── One-time setup (GitHub → Settings → Secrets and variables → Actions) ─────
-#   Secrets (same names as WebShop):
-#     SSH_HOST       server IP/host, e.g. 185.180.206.46
-#     SSH_USER       ssh user (dedicated deploy user recommended)
-#     SSH_PASSWORD   that user's password
-#   Optional variables:
-#     SSH_PORT       ssh port (default 22)
-#     DEPLOY_DIR     absolute server dir mapped to the URL /webshop/backoffice_franchisee
-#                    (default /var/www/html/webshop/backoffice_franchisee)
+# Secrets:  SSH_HOST · SSH_USER · SSH_PASSWORD
+# Vars:     SSH_PORT (default 22)
+#           DEPLOY_DIR absolute server dir mapped to /webshop/backoffice_franchisee
+#                      (default /var/www/html/webshop/backoffice_franchisee)
 #
-#   Notes:
 #   • rsync runs WITHOUT --delete, so nothing else on the server is wiped.
-#   • An index.html (copy of back_office_ws_franchisee.html) is generated so the
-#     directory URL serves the app directly.
-#   • SECURITY: prefer a dedicated non-root deploy user + SSH key over the root
-#     password (replace the sshpass lines with an ssh-agent key, drop SSH_PASSWORD).
-# ─────────────────────────────────────────────────────────────────────────────
 
 on:
   push:
@@ -36,12 +28,10 @@ jobs:
 
       - name: Assemble static site
         run: |
-          rm -rf site && mkdir -p site/img
-          cp back_office_ws_franchisee.html app.js data.json admin.css admin-app.css site/
-          cp back_office_ws_franchisee.html site/index.html
-          cp -r fonts site/
-          cp img/logo.png site/img/
-          ls -R site
+          rm -rf site && mkdir -p site
+          cp index.html back_office_ws_franchisee.dc.html support.js bo_server.js api-config.js site/
+          cp -r _ds vendor img site/
+          ls -R site | head -50
 
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
@@ -71,19 +61,23 @@ jobs:
             -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s << 'REMOTE'
           BASE="http://localhost/webshop/backoffice_franchisee"
-          echo "== served page references app.js =="
-          curl -fsS "$BASE/" | grep -o './app.js' | head -1 || echo "WARN: app.js ref not found"
+          DS="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd"
+          echo "== served page references support.js =="
+          curl -fsS "$BASE/" | grep -o './support.js' | head -1 || echo "WARN: support.js ref not found"
           echo "== asset status (code type bytes) =="
           fail=0
-          for f in admin.css admin-app.css app.js data.json \
-                   fonts/GC_Vank.ttf fonts/Gotham_Regular.otf fonts/Gotham_Medium.otf \
-                   fonts/Gotham_Book.otf fonts/Gotham_Light.otf; do
+          for f in support.js bo_server.js api-config.js vendor/react.js vendor/react-dom.js \
+                   $DS/global.css $DS/_ds_bundle.js \
+                   $DS/fonts/GC_Vank.ttf $DS/fonts/Gotham_Regular_New.otf \
+                   $DS/fonts/Gotham_Medium.otf $DS/fonts/Gotham_Regular.otf \
+                   $DS/fonts/Gotham_Black.otf; do
             out=$(curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}" "$BASE/$f")
             set -- $out; code=$1; type=$2; size=$3
             echo "  $code  $type  ${size}b  $f"
             case "$f" in
-              fonts/*) if [ "$code" != "200" ] || [ "${size:-0}" -lt 1000 ]; then echo "  ^ FONT NOT OK"; fail=1; fi ;;
+              */fonts/*) if [ "$code" != "200" ] || [ "${size:-0}" -lt 1000 ]; then echo "  ^ FONT NOT OK"; fail=1; fi ;;
+              *) if [ "$code" != "200" ]; then echo "  ^ ASSET NOT OK"; fail=1; fi ;;
             esac
           done
-          if [ "$fail" = "0" ]; then echo "ALL FONTS OK"; else echo "FONT CHECK FAILED"; exit 1; fi
+          if [ "$fail" = "0" ]; then echo "ALL ASSETS OK"; else echo "ASSET CHECK FAILED"; exit 1; fi
           REMOTE
