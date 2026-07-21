@@ -1527,7 +1527,15 @@
 
         <sc-if value="{{ obStep2 }}" hint-placeholder-val="{{ false }}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Adresse du delivery site *</label><input value="{{ ob.adr }}" onInput="{{ obSetAdr }}" placeholder="Rue, n°, code postal, ville" style="{{ obInStyle }}"/></div>
+          <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Adresse du delivery site *</label><input value="{{ ob.adr }}" onInput="{{ obSetAdr }}" placeholder="Rue et n°" style="{{ obInStyle }}"/></div>
+          <!-- Collecte du code postal client (obligatoire partout) : dès 4 chiffres,
+               la localité s'affiche depuis le référentiel /geo/postcodes ; liste
+               déroulante quand un même code couvre plusieurs localités. -->
+          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Code postal *</label><input value="{{ ob.cp }}" onInput="{{ obSetCp }}" placeholder="1000" maxlength="4" inputmode="numeric" style="{{ obInStyle }}"/></div>
+          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Localité</label>
+            <sc-if value="{{ obCpLocMulti }}" hint-placeholder-val="{{ false }}"><select value="{{ ob.localite }}" onChange="{{ obSetLocalite }}" style="{{ obInStyle }}"><option value="">— Choisir la localité —</option><sc-for list="{{ obCpLocs }}" as="c" hint-placeholder-count="2"><option value="{{ c.v }}">{{ c.v }}</option></sc-for></select></sc-if>
+            <sc-if value="{{ obCpLocMono }}" hint-placeholder-val="{{ true }}"><input value="{{ obCpLocDisplay }}" readonly placeholder="— automatique dès le CP saisi —" style="{{ obInStyle }}"/></sc-if>
+          </div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Office / bâtiment</label><input value="{{ ob.office }}" onInput="{{ obSetOffice }}" placeholder="ex. Siège, Cafétéria HQ" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Étage / local</label><input value="{{ ob.etage }}" onInput="{{ obSetEtage }}" placeholder="ex. Sous-sol / quai" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Tournée rattachée</label><select value="{{ ob.tour }}" onChange="{{ obSetTour }}" style="{{ obInStyle }}"><sc-for list="{{ obTourOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
@@ -1681,7 +1689,7 @@ class Component extends DCLogic {
     obOpen: false, obStep: 0,
     ob: { raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
-      adr:'', etage:'', tour:'Tournée Centre-ville', acc:6, office:'',
+      adr:'', cp:'', localite:'', etage:'', tour:'Tournée Centre-ville', acc:6, office:'',
       remiseWeb:'10', franco:'250 €', drop:8,
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
@@ -1692,11 +1700,17 @@ class Component extends DCLogic {
   obOpen(){ this.setState({obOpen:true,obStep:0,
     ob:{ raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
-      adr:'', etage:'', tour:'Tournée Centre-ville', acc:6, office:'',
+      adr:'', cp:'', localite:'', etage:'', tour:'Tournée Centre-ville', acc:6, office:'',
       remiseWeb:'10', franco:'250 €', drop:8,
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
-    obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'' }); }
+    obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'' }); this.zfGeoEnsure(); }
   obClose(){ this.setState({obOpen:false}); }
+  // Localités du référentiel pour un CP belge (un code peut couvrir plusieurs
+  // localités, ex. 1300 → Limal · Wavre). [] tant que /geo/postcodes n'est pas chargé.
+  obLocsOf(cp){ const G=window.__CPGEO; const v=String(cp||'').trim(); if(!G||!/^[1-9][0-9]{3}$/.test(v)) return [];
+    const out=[]; G.list.forEach(e=>{ const c=String(e[1]); if(String(e[0])===v&&out.indexOf(c)<0) out.push(c); }); return out; }
+  obSetCp(e){ const v=e.target.value; const locs=this.obLocsOf(v);
+    this.setState(s=>({ob:{...s.ob,cp:v,localite:locs.length===1?locs[0]:(locs.indexOf(s.ob.localite)>=0?s.ob.localite:'')}})); }
   obSet(k){ return (e)=>{ const v=(e&&e.target)?e.target.value:e; this.setState(s=>({ob:{...s.ob,[k]:v}})); }; }
   obNext(){ this.setState(s=>({obStep:Math.min(this.OB_STEPS.length-1,s.obStep+1)})); }
   obPrev(){ this.setState(s=>({obStep:Math.max(0,s.obStep-1)})); }
@@ -1709,15 +1723,23 @@ class Component extends DCLogic {
     const add=[]; rows.forEach(l=>{ const parts=l.split(/[,\t]/).map(x=>x.trim()); let name='',email=''; parts.forEach(p=>{ if(/@/.test(p)) email=p; else if(p&&!name) name=p; }); if(email) add.push({name:name||email.split('@')[0],email}); });
     if(add.length) this.setState(s=>({obStaff:[...s.obStaff,...add],obCsv:''})); this.printJob('✔ '+add.length+' contact(s) importé(s) depuis le CSV'); }
   obCreate(){ const S=this.state, o=S.ob; if(!window.BOServer) return;
+    // Code postal OBLIGATOIRE (collecte réseau) — localité confirmée quand le
+    // code couvre plusieurs localités ; sinon déduite du référentiel.
+    const obCp=String(o.cp||'').trim();
+    if(!/^[1-9][0-9]{3}$/.test(obCp)){ this.setState({obStep:2}); this.printJob('⚠ Code postal du client requis (4 chiffres)'); return; }
+    const obLocs=this.obLocsOf(obCp);
+    if(obLocs.length>1&&!o.localite){ this.setState({obStep:2}); this.printJob('⚠ Choisissez la localité du code postal '+obCp); return; }
+    const obLocalite=o.localite||obLocs[0]||'';
     const clients=window.BOServer.table('fr_clients');
     const num=1000+Math.floor(Math.random()*8999); const code='CL-'+num;
     const office=o.office||o.raison;
     clients.push({raison:o.raison||'Nouveau bureau',code,seg:o.seg,statut:'actif',tva:o.tva,paiement:o.paiement,
       plafond:+o.plafond||5000,encours:0,franco:o.franco,remise:(o.remiseWeb||'0')+' %',fact:'Mensuel',
-      points:[{libelle:office+' — '+(o.adr||'site'),adresse:o.adr,fenetre:'08:00–11:00',jours:'L Ma Me J V',validation:'QR',marge:0}]});
+      cp:obCp,localite:obLocalite,
+      points:[{libelle:office+' — '+(o.adr||'site'),adresse:o.adr,cp:obCp,localite:obLocalite,fenetre:'08:00–11:00',jours:'L Ma Me J V',validation:'QR',marge:0}]});
     window.BOServer.save('fr_clients',clients);
     const sites=window.BOServer.table('ws_office_delivery_sites');
-    sites.push({bureau:o.raison,client_id:code,office,adr:o.adr,etage:o.etage,tour:o.tour,acc:+o.acc||6});
+    sites.push({bureau:o.raison,client_id:code,office,adr:o.adr,cp:obCp,localite:obLocalite,etage:o.etage,tour:o.tour,acc:+o.acc||6});
     window.BOServer.save('ws_office_delivery_sites',sites);
     if(S.obDepts.length){ const dep=window.BOServer.table('b2b_client_company_department');
       S.obDepts.forEach(d=>dep.push({client_id:code,company:o.raison,site:o.adr,office,dept:d.dept,effectif:+d.effectif||1,contact:o.contactEmail}));
@@ -1743,7 +1765,7 @@ class Component extends DCLogic {
     try { const fr=window.__FR||{};
       if(fr.base&&fr.token) fetch(fr.base+'/franchisee/onboard-office'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{
         method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':fr.token},credentials:'omit',
-        body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,
+        body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,cp:obCp,localite:obLocalite,
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur}})
@@ -2948,6 +2970,11 @@ class Component extends DCLogic {
       obSetRaison:this.obSet('raison'),obSetTva:this.obSet('tva'),obSetSeg:this.obSet('seg'),obSetPaiement:this.obSet('paiement'),obSetPlafond:this.obSet('plafond'),
       obSetContactNom:this.obSet('contactNom'),obSetContactEmail:this.obSet('contactEmail'),obSetContactTel:this.obSet('contactTel'),obSetContactRole:this.obSet('contactRole'),
       obSetAdr:this.obSet('adr'),obSetEtage:this.obSet('etage'),obSetTour:this.obSet('tour'),obSetAcc:this.obSet('acc'),obSetOffice:this.obSet('office'),
+      obSetCp:(e)=>this.obSetCp(e),obSetLocalite:this.obSet('localite'),
+      obCpLocs:this.obLocsOf(O.cp).map(c=>({v:c})),
+      obCpLocMulti:this.obLocsOf(O.cp).length>1,
+      obCpLocMono:this.obLocsOf(O.cp).length<=1,
+      obCpLocDisplay:(this.obLocsOf(O.cp).length===1?this.obLocsOf(O.cp)[0]:(O.localite||'')),
       obSetRemiseWeb:this.obSet('remiseWeb'),obSetFranco:this.obSet('franco'),obSetDrop:this.obSet('drop'),
       obSetVCode:this.obSet('vCode'),obSetVValeur:this.obSet('vValeur'),
       obTourOpts:obTours.map(t=>({value:t,label:t})),
