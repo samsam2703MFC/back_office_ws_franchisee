@@ -479,6 +479,10 @@
       <!-- ===================== ZONES DE LIVRAISON ===================== -->
       <sc-if value="{{ isZones }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:0;overflow:hidden">
+          <div style="padding:12px 18px;display:flex;align-items:center;gap:10px"><span class="t-admin-label">Carte du territoire</span><span style="font:11px var(--font-ui);color:var(--color-text-muted)">rubis pâle = zones primaires de la marque · couleurs pleines = vos zones</span></div>
+          <div id="map-zones-fr" style="width:100%;height:340px;background:var(--color-background-secondary)"></div>
+        </div>
         <div style="background:var(--color-surface);border:.5px solid #e7d3b8;border-radius:12px;overflow:hidden">
           <div style="padding:14px 18px;border-bottom:.5px solid #f0e2cc;background:#fbf3e6;display:flex;justify-content:space-between;align-items:center">
             <div style="display:flex;align-items:center;gap:9px"><span style="width:26px;height:26px;border-radius:7px;background:#f3e2c6;color:#a06a12;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><div><div class="t-section-title" style="font-size:15px;color:#7a4e0a">Zone de chalandise — cadre marque</div><div style="font:400 11px var(--font-ui);color:#a06a12;margin-top:2px">ws_franchisor_catchment · défini par le franchiseur · lecture seule</div></div></div>
@@ -1347,7 +1351,13 @@
         </sc-if>
         <div><div class="t-admin-label" style="margin-bottom:5px;display:flex;align-items:center;gap:6px">Rattachement chalandise (cadre marque)<span style="font:600 8px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:#a06a12;background:#f3e2c6;padding:2px 6px;border-radius:5px">verrouillé marque</span></div><select value="{{ zf.catchment }}" onChange="{{ zfSet.catchment }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui);background:var(--color-surface)"><sc-for list="{{ catchmentOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:5px">La zone doit rester dans un territoire autorisé par la marque.</div></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div><div class="t-admin-label" style="margin-bottom:5px">Codes postaux</div><input value="{{ zf.cp }}" onInput="{{ zfSet.cp }}" placeholder="ex. 1348 · 1300" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
+          <div><div class="t-admin-label" style="margin-bottom:5px">Codes postaux</div><input value="{{ zf.cp }}" onInput="{{ zfSet.cp }}" placeholder="ex. 1348 · 1300" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/>
+        <input value="{{ zfCpq }}" onInput="{{ zfSetCpq }}" placeholder="Recherche : commune, arrondissement, CP… (ex. Anderlecht, Brabant wallon)" style="width:100%;margin-top:7px;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 11px;font:400 12.5px var(--font-ui);background:var(--color-background-secondary)"/>
+        <sc-if value="{{ zfHasSug }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;margin-top:6px;border:.5px solid var(--color-border-tertiary);border-radius:9px;background:var(--color-background-secondary)">
+            <sc-for list="{{ zfSug }}" as="sg" hint-placeholder-count="3"><button onClick="{{ sg.pick }}" style="{{ sg.btnStyle }}">{{ sg.label }}</button></sc-for>
+          </div>
+        </sc-if></div>
           <div><div class="t-admin-label" style="margin-bottom:5px">Véhicule requis</div><input value="{{ zf.vehicule }}" onInput="{{ zfSet.vehicule }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
@@ -1432,6 +1442,17 @@
             </sc-if>
           </div>
         </sc-for>
+        <sc-if value="{{ formIsZone }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div class="t-admin-label" style="margin-bottom:5px">Recherche géo — commune, arrondissement ou CP</div>
+            <input value="{{ fgQ }}" onInput="{{ fgSetQ }}" placeholder="ex. Anderlecht · Brabant wallon · 1348" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 11px;font:400 12.5px var(--font-ui);background:var(--color-background-secondary)"/>
+            <sc-if value="{{ fgHasSug }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;margin-top:6px;border:.5px solid var(--color-border-tertiary);border-radius:9px;background:var(--color-background-secondary)">
+                <sc-for list="{{ fgSug }}" as="sg" hint-placeholder-count="3"><button onClick="{{ sg.pick }}" style="{{ sg.btnStyle }}">{{ sg.label }}</button></sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
       </div>
       <div style="padding:14px 24px 20px;border-top:.5px solid var(--color-border-tertiary);display:flex;gap:10px">
         <button onClick="{{ formClose }}" class="btn-secondary" style="flex:1;font-size:13px">Annuler</button>
@@ -2045,8 +2066,55 @@ class Component extends DCLogic {
   }
 
   // ---- maps ----
+  fgAppendCps(cps,label){ const cur=this.zfCpsOf((this.state.formVals||{}).cp); let added=0,refus=[],deja=0;
+    for(const cp of cps.map(String)){ if(cur.includes(cp)){ deja++; continue; } const k=this.zfLocalConflict(cp); if(k){ refus.push(cp+' → '+k.name); continue; } cur.push(cp); added++; }
+    this.setState(s=>({formVals:{...s.formVals,cp:cur.join(' · ')}}));
+    if(label||refus.length) this.printJob((added?'✔ '+(label?label+' : ':'')+added+' CP ajoutés':'')+(refus.length?' · ⚠ refusés : '+refus.slice(0,3).join(' · ')+(refus.length>3?'…':''):'')+(deja?' · '+deja+' déjà présents':'')); }
+  zfGeoEnsure(){ const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!window.__CPGEO && !this._geoLoading && fr.base){ this._geoLoading=true;
+      Promise.all([
+        fetch(fr.base+'/geo/postcodes?all=1',{credentials:'omit'}).then(r=>r.ok?r.json():null),
+        fetch(fr.base+'/geo/postcodes?groups=1',{credentials:'omit'}).then(r=>r.ok?r.json():null).catch(()=>null),
+      ]).then(([a,g])=>{
+        if(Array.isArray(a)&&a.length){ const idx={}; a.forEach(e=>{ idx[String(e[0])]={city:e[1],lat:e[2],lng:e[3]}; });
+          const communes={}; a.forEach(e=>{ const c=String(e[1]); (communes[c]=communes[c]||[]).push(String(e[0])); });
+          window.__CPGEO={list:a,idx,communes,groups:Array.isArray(g)?g:[]}; this.setState(s=>({_rev:(s._rev||0)+1})); }
+      }).catch(()=>{}); } }
+  zfCpsOf(txt){ return String(txt||'').split(/[^0-9]+/).filter(Boolean); }
+  zfLocalConflict(cp){ const zones=this.zonesData(); for(const z of zones){ if(this.zfCpsOf(z.cp).includes(cp)) return {type:'zone',name:z.nom}; }
+    const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
+    for(const c of cats){ if(this.zfCpsOf(c.cp).includes(cp)) return {type:'primaire',name:c.name}; } return null; }
+  zfAppendCps(cps,label){ const cur=this.zfCpsOf(this.state.zf.cp); let added=0,refus=[],deja=0;
+    for(const cp of cps){ if(cur.includes(cp)){ deja++; continue; } const k=this.zfLocalConflict(cp); if(k){ refus.push(cp+' → '+k.name); continue; } cur.push(cp); added++; }
+    this.setState(s=>({zf:{...s.zf,cp:cur.join(' · ')}}));
+    if(label||refus.length) this.printJob((added?'✔ '+(label?label+' : ':'')+added+' CP ajoutés':'')+(refus.length?' · ⚠ refusés : '+refus.slice(0,3).join(' · ')+(refus.length>3?'…':''):'')+(deja?' · '+deja+' déjà présents':'')); }
+  zfPick(cp){ return ()=>this.zfAppendCps([String(cp)],''); }
+  zfPickGroup(cps,label){ return ()=>this.zfAppendCps(cps.map(String),label); }
+  drawZonesMap(){ const L=window.L,m=this._zonesFrMap,geo=window.__CPGEO; if(!L||!m||!geo) return;
+    const zones=this.zonesData(); const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
+    const key=JSON.stringify([zones.map(z=>[z.id,z.cp]),cats.map(c=>[c.id,c.cp])]);
+    if(this._zfKey===key) return; this._zfKey=key;
+    if(this._zfLayer) m.removeLayer(this._zfLayer);
+    const g=L.layerGroup(); const pts=[];
+    cats.forEach(c=>{ this.zfCpsOf(c.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; pts.push([e.lat,e.lng]);
+      const mk=L.circleMarker([e.lat,e.lng],{radius:6,color:'#8D1D2C',weight:1.5,fillColor:'#8D1D2C',fillOpacity:.28});
+      mk.bindTooltip(cp+' '+e.city+' — zone primaire « '+c.name+' »'); g.addLayer(mk); }); });
+    const palette=['#C87A3F','#3B3468','#2d7a3e','#b26a00','#8C4A2F'];
+    zones.forEach((z,i)=>{ const col=palette[i%palette.length]; this.zfCpsOf(z.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; pts.push([e.lat,e.lng]);
+      const mk=L.circleMarker([e.lat,e.lng],{radius:7,color:col,weight:2,fillColor:col,fillOpacity:.6});
+      mk.bindTooltip(cp+' '+e.city+' — '+z.nom); g.addLayer(mk); }); });
+    g.addTo(m); this._zfLayer=g;
+    if(pts.length) m.fitBounds(pts,{padding:[28,28],maxZoom:11});
+  }
   ensureMaps(){
+    if(this.state.screen==='zones') this.zfGeoEnsure();
     if(!window.L){ this._mapTimer=setTimeout(()=>this.ensureMaps(),140); return; }
+    if(this.state.screen==='zones'){
+      const elz=document.getElementById('map-zones-fr');
+      if(elz && !elz._leaflet_id){ const Lz=window.L; const mz=Lz.map(elz,{zoomControl:true}).setView([50.72,4.45],9);
+        Lz.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(mz); this._zonesFrMap=mz; this._zfKey=null; }
+      this.drawZonesMap();
+    }
     const L=window.L;
     if(this.state.screen==='suivi'){
       const el=document.getElementById('map-suivi');
@@ -3011,7 +3079,29 @@ class Component extends DCLogic {
       zfSet:{name:zfSet('name'),cp:zfSet('cp'),vehicule:zfSet('vehicule'),franco:zfSet('franco'),delai:zfSet('delai'),service:zfSet('service'),access:zfSet('access'),parent:zfSet('parent'),catchment:zfSet('catchment')},
       zfPrimary:()=>this.setState(s=>({zf:{...s.zf,type:'primary'}})),zfSecondary:()=>this.setState(s=>({zf:{...s.zf,type:'secondary'}})),
       zfPrimaryStyle:S.zf.type==='primary'?pillActive:pillIdle,zfSecondaryStyle:S.zf.type==='secondary'?pillActive:pillIdle,
-      zfIsSecondary:S.zf.type==='secondary',zoneParentOpts,zfCanSubmit,zfSubmitExtra:zfCanSubmit?'':'opacity:.45;pointer-events:none',zfSubmit,
+      zfIsSecondary:S.zf.type==='secondary',
+      zfSug:(function(self,S){ const q=(S.zf.cpq||'').trim(); if(!S.zfOpen||!window.__CPGEO||q.length<2) return [];
+        const ql=q.toLowerCase(); const G=window.__CPGEO; const out=[];
+        (G.groups||[]).forEach(g=>{ if(g.name.toLowerCase().includes(ql)) out.push({label:'🗺 '+g.name+' — '+g.count+' CP',grp:true,pick:self.zfPickGroup(g.cps,g.name)}); });
+        Object.keys(G.communes||{}).forEach(c=>{ const cps=G.communes[c]; if(cps.length>1&&c.toLowerCase().includes(ql)) out.push({label:'🏘 '+c+' — tous ses '+cps.length+' CP',grp:true,pick:self.zfPickGroup(cps,c)}); });
+        G.list.filter(e=>String(e[0]).indexOf(q)===0||String(e[1]).toLowerCase().includes(ql)).slice(0,Math.max(4,10-out.length))
+          .forEach(e=>out.push({label:e[0]+' — '+e[1],grp:false,pick:self.zfPick(String(e[0]))}));
+        return out.slice(0,12).map(o=>({...o,btnStyle:o.grp?'background:#fdf3e7;border:.5px solid #ead9c3;border-radius:999px;padding:5px 12px;font:700 11.5px var(--font-ui);cursor:pointer;color:#6b4420':'background:#fff;border:.5px solid var(--color-border-secondary);border-radius:999px;padding:5px 12px;font:600 11.5px var(--font-ui);cursor:pointer'})); })(this,S),
+      zfHasSug:!!(S.zfOpen&&window.__CPGEO&&(S.zf.cpq||'').trim().length>=2),
+      formIsZone:S.formKey==='deliveryZone',
+      fgQ:S.formGeoQ||'',
+      fgSetQ:(e)=>this.setState({formGeoQ:e.target.value}),
+      fgSug:(function(self,S){ const q=(S.formGeoQ||'').trim(); if(S.formKey!=='deliveryZone'||!window.__CPGEO||q.length<2) return [];
+        const ql=q.toLowerCase(); const G=window.__CPGEO; const out=[];
+        (G.groups||[]).forEach(g=>{ if(g.name.toLowerCase().includes(ql)) out.push({label:'🗺 '+g.name+' — '+g.count+' CP',grp:true,pick:()=>self.fgAppendCps(g.cps,g.name)}); });
+        Object.keys(G.communes||{}).forEach(c=>{ const cps=G.communes[c]; if(cps.length>1&&c.toLowerCase().includes(ql)) out.push({label:'🏘 '+c+' — tous ses '+cps.length+' CP',grp:true,pick:()=>self.fgAppendCps(cps,c)}); });
+        G.list.filter(e=>String(e[0]).indexOf(q)===0||String(e[1]).toLowerCase().includes(ql)).slice(0,Math.max(4,10-out.length))
+          .forEach(e=>out.push({label:e[0]+' — '+e[1],grp:false,pick:()=>self.fgAppendCps([e[0]],'')}));
+        return out.slice(0,12).map(o=>({...o,btnStyle:o.grp?'background:#fdf3e7;border:.5px solid #ead9c3;border-radius:999px;padding:5px 12px;font:700 11.5px var(--font-ui);cursor:pointer;color:#6b4420':'background:#fff;border:.5px solid var(--color-border-secondary);border-radius:999px;padding:5px 12px;font:600 11.5px var(--font-ui);cursor:pointer'})); })(this,S),
+      fgHasSug:!!(S.formKey==='deliveryZone'&&window.__CPGEO&&(S.formGeoQ||'').trim().length>=2),
+      zfSetCpq:(e)=>this.setState(s=>({zf:{...s.zf,cpq:e.target.value}})),
+      zfCpq:S.zf.cpq||'',
+      zoneParentOpts,zfCanSubmit,zfSubmitExtra:zfCanSubmit?'':'opacity:.45;pointer-events:none',zfSubmit,
       publier:this.go('suivi'),publierLabel:'Publier vers la tablette',
       liveDrivers,liveEta,liveTable,
       clients,sel,
