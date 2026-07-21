@@ -59,6 +59,7 @@
       <div style="margin:14px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">Pilotage</div>
       <button onClick="{{ nav.capacite }}" style="{{ navStyles.capacite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span>Capacité · remplissage</span></button>
       <button onClick="{{ nav.rentabilite }}" style="{{ navStyles.rentabilite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/></svg><span>{{ t.navRentabilite }}</span></button>
+      <button onClick="{{ nav.geoAnalyse }}" style="{{ navStyles.geoAnalyse }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="10" r="3"/><path d="M12 21c4-4.5 7-8 7-11a7 7 0 1 0-14 0c0 3 3 6.5 7 11z"/></svg><span>Analyse géo</span></button>
       <button onClick="{{ toggleParams }}" style="{{ paramsHeadStyle }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="{{ paramsChevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase">Paramétrage</span></button>
       <sc-if value="{{ paramsOpen }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="6">
@@ -460,6 +461,19 @@
       </sc-if>
 
       <!-- ===================== ZONES DE LIVRAISON ===================== -->
+      <sc-if value="{{ isGeoAnalyse }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="card" style="padding:0;overflow:hidden;position:relative">
+            <div style="padding:12px 18px;display:flex;align-items:center;gap:10px"><span class="t-admin-label">Carte des clients</span><span style="font:11px var(--font-ui);color:var(--color-text-muted)">{{ geoACountTxt }}</span></div>
+            <div id="map-geo-fr" style="width:100%;height:520px;background:var(--color-background-secondary)"></div>
+            <div style="position:absolute;top:52px;right:12px;z-index:500;background:rgba(255,255,255,.96);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 14px;font:11.5px var(--font-ui);display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,.10)">
+              <div style="display:flex;align-items:center;gap:7px"><span style="width:11px;height:11px;border-radius:50%;background:#E8B84B;border:1.5px solid #b28a1f;flex:none"></span>Clients office (B2B)</div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="width:11px;height:11px;border-radius:50%;background:#3B6BC9;border:1.5px solid #24488f;flex:none"></span>Clients particuliers</div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:1.5px solid #5e1220;flex:none"></span>Ma boutique</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
       <sc-if value="{{ isZones }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:18px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:0;overflow:hidden">
@@ -2053,6 +2067,46 @@ class Component extends DCLogic {
     for(const cp of cps.map(String)){ if(cur.includes(cp)){ deja++; continue; } const k=this.zfLocalConflict(cp); if(k){ refus.push(cp+' → '+k.name); continue; } cur.push(cp); added++; }
     this.setState(s=>({formVals:{...s.formVals,cp:cur.join(' · ')}}));
     if(label||refus.length) this.printJob((added?'✔ '+(label?label+' : ':'')+added+' CP ajoutés':'')+(refus.length?' · ⚠ refusés : '+refus.slice(0,3).join(' · ')+(refus.length>3?'…':''):'')+(deja?' · '+deja+' déjà présents':'')); }
+  geoAEnsure(){ if(this.state.screen!=='geoAnalyse') return;
+    this.zfGeoEnsure();
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!this._geoAData && !this._geoADataLoading && fr.base){ this._geoADataLoading=true;
+      fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
+        .then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.clients)){ this._geoAData=d; this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{}); }
+    if(!window.L){ clearTimeout(this._gaT); this._gaT=setTimeout(()=>this.geoAEnsure(),160); return; }
+    const el=document.getElementById('map-geo-fr'); if(!el) return;
+    if(!el._leaflet_id){ const L=window.L; const m=L.map(el,{zoomControl:true}).setView([50.72,4.45],10);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m); this._geoAMap=m; this._geoAKey=null; }
+    this.geoADraw();
+  }
+  geoAFiltered(){ const D=this._geoAData; if(!D) return {list:[],unloc:0};
+    const geo=window.__CPGEO; let unloc=0;
+    const list=(D.clients||[]).filter(c=>{ const ok=geo&&c.cp&&geo.idx[String(c.cp).trim()]; if(!ok) unloc++; return !!ok; });
+    return {list,unloc};
+  }
+  geoAHash(s){ let h=0; for(let i=0;i<s.length;i++){ h=((h<<5)-h+s.charCodeAt(i))|0; } return h; }
+  geoADraw(){ const L=window.L,m=this._geoAMap,geo=window.__CPGEO,D=this._geoAData; if(!L||!m||!geo||!D) return;
+    const key=JSON.stringify([D.clients.length,(D.shops||[]).length]);
+    if(this._geoAKey===key) return; this._geoAKey=key;
+    if(this._geoALayer) m.removeLayer(this._geoALayer);
+    const g=L.layerGroup(); const pts=[];
+    const esc=(x)=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const shopName={}; (D.shops||[]).forEach(s2=>{ shopName[s2.id]=s2.name; });
+    this.geoAFiltered().list.forEach(c=>{ const e=geo.idx[String(c.cp).trim()];
+      const jx=((this.geoAHash(String(c.id))%100)/100-0.5)*0.008, jy=((this.geoAHash(String(c.id)+'y')%100)/100-0.5)*0.008;
+      const lat=e.lat+jx, lng=e.lng+jy; pts.push([lat,lng]);
+      const col=c.type==='office'?'#E8B84B':'#3B6BC9', bord=c.type==='office'?'#b28a1f':'#24488f';
+      const mk=L.circleMarker([lat,lng],{radius:7,color:bord,weight:1.5,fillColor:col,fillOpacity:.8});
+      mk.bindPopup('<div style="font:12.5px sans-serif;min-width:180px"><strong>'+esc(c.name)+'</strong><br>'+(c.type==='office'?'Client office (B2B)':'Client particulier')+'<br>Boutique : '+esc(shopName[c.shop_id]||'—')+'<br>CA total : '+(c.ca?c.ca.toLocaleString('fr-BE',{minimumFractionDigits:2})+' €':'—')+'</div>');
+      g.addLayer(mk); });
+    (D.shops||[]).forEach(s2=>{ let e=s2.cp&&geo.idx[String(s2.cp).trim()];
+      if(!e&&s2.city){ const cl=String(s2.city).toLowerCase(); const hit=geo.list.find(x=>String(x[1]).toLowerCase()===cl); if(hit) e={lat:hit[2],lng:hit[3]}; }
+      if(!e) return; pts.push([e.lat,e.lng]);
+      const ic=L.divIcon({className:'',html:'<div style="width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 12px sans-serif">A</span></div>',iconSize:[26,26],iconAnchor:[13,26]});
+      const mk=L.marker([e.lat,e.lng],{icon:ic}); mk.bindTooltip(s2.name); g.addLayer(mk); });
+    g.addTo(m); this._geoALayer=g;
+    if(pts.length) m.fitBounds(pts,{padding:[36,36],maxZoom:12});
+  }
   zfGeoEnsure(){ const fr=(typeof window!=='undefined'&&window.__FR)||{};
     if(!window.__CPGEO && !this._geoLoading && fr.base){ this._geoLoading=true;
       Promise.all([
@@ -2091,6 +2145,7 @@ class Component extends DCLogic {
   }
   ensureMaps(){
     if(this.state.screen==='zones') this.zfGeoEnsure();
+    if(this.state.screen==='geoAnalyse') this.geoAEnsure();
     if(!window.L){ this._mapTimer=setTimeout(()=>this.ensureMaps(),140); return; }
     if(this.state.screen==='zones'){
       const elz=document.getElementById('map-zones-fr');
@@ -2150,7 +2205,7 @@ class Component extends DCLogic {
     const pts=this.points();
     // nav
     const nav={}, navStyles={};
-    ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{ nav[k]=this.go(k); navStyles[k]=this.navStyle(k); });
+    ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{ nav[k]=this.go(k); navStyles[k]=this.navStyle(k); });
     const paramScreens=['tournees','horaires','fermetures','clients','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
     const paramsActive=paramScreens.includes(S.screen);
     const livFlow=[['tournees','Tournées'],['horaires','Horaires'],['clients','Bureaux'],['sites','Sites'],['bureauParams','Param. bureau'],['frais','Frais']];
@@ -2169,10 +2224,10 @@ class Component extends DCLogic {
     const setLang={}, langStyles={};
     ['FR','NL','EN','PL'].forEach(l=>{ setLang[l]=()=>this.setState({lang:l}); langStyles[l]=this.langStyle(l); });
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams') };
-    const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',validations:t.navValidations,zones:'Zones & capacité tournées',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',
+    const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',validations:t.navValidations,zones:'Zones & capacité tournées',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop'};
-    const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',
+    const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding'};
 
@@ -3024,7 +3079,10 @@ class Component extends DCLogic {
       valClose:()=>this.setState({valModal:null,valSite:'',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''}),
       incCount:incData.filter(i=>i.statut!=='Résolu').length,
       incBadgeStyle:'margin-left:auto;background:var(--color-primary);color:#fff;font:600 9px var(--font-ui);border-radius:9px;min-width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px',
-      isTdb:screen==='tdb',isPrep:screen==='prep',isTournees:screen==='tournees',isSuivi:screen==='suivi',isClients:screen==='clients',isIncidents:screen==='incidents',isRentabilite:screen==='rentabilite',isParams:screen==='params',
+      isTdb:screen==='tdb',isPrep:screen==='prep',isTournees:screen==='tournees',isSuivi:screen==='suivi',isClients:screen==='clients',isIncidents:screen==='incidents',isRentabilite:screen==='rentabilite',isParams:screen==='params',isGeoAnalyse:screen==='geoAnalyse',
+      geoACountTxt:(function(self){ const F=self.geoAFiltered(); const off=F.list.filter(c=>c.type==='office').length;
+        return F.list.length+' clients localisés ('+off+' office · '+(F.list.length-off)+' particuliers)'+(F.unloc?' · '+F.unloc+' clients non localisés':''); })(this),
+      
       tdbTree,prepTree,tdbToggleAll,tdbToggleAllLabel,
       toast:S.toast,toastShow:!!S.toast,
       prints:{
