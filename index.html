@@ -539,18 +539,34 @@
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:0;overflow:hidden">
           <div style="padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <span class="t-admin-label">Carte du territoire</span>
-            <span style="font:11px var(--font-ui);color:var(--color-text-muted)"><span style="color:#8D1D2C;font-weight:700">●</span> validée (couverte par une tournée) · <span style="color:#E8B93C;font-weight:700">●</span> en attente · <span style="color:#8a8378;font-weight:700">●</span> zone réseau sélectionnée</span>
+            <span style="font:11px var(--font-ui);color:var(--color-text-muted)"><span style="color:#8D1D2C;font-weight:700">●</span> office validé · <span style="color:#E8B93C;font-weight:700">●</span> office en attente · <span style="color:#c9a0a6;font-weight:700">·</span> CP de ma chalandise · <span style="color:#8a8378;font-weight:700">●</span> zone réseau</span>
             <select value="{{ zmapVal }}" onChange="{{ zmapSet }}" style="margin-left:auto;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:7px 10px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:280px">
               <sc-for list="{{ zmapOpts }}" as="zo" hint-placeholder-count="3"><option value="{{ zo.value }}">{{ zo.label }}</option></sc-for>
             </select>
           </div>
+          <div style="padding:0 18px 12px;display:flex;gap:8px;overflow-x:auto">
+            <sc-for list="{{ zmapTours }}" as="zt" hint-placeholder-count="4">
+              <button type="button" onClick="{{ zt.pick }}" style="{{ zt.style }}">
+                <span style="display:block;font:600 12px var(--font-ui);white-space:nowrap">{{ zt.nom }}</span>
+                <span style="display:block;font:400 10.5px var(--font-ui);opacity:.75;margin-top:2px">Capacité {{ zt.cap }}</span>
+              </button>
+            </sc-for>
+          </div>
           <div id="map-zones-fr" style="width:100%;height:340px;background:var(--color-background-secondary)"></div>
         </div>
         <div style="background:var(--color-surface);border:.5px solid #e7d3b8;border-radius:12px;overflow:hidden">
-          <div style="padding:14px 18px;border-bottom:.5px solid #f0e2cc;background:#fbf3e6;display:flex;justify-content:space-between;align-items:center">
-            <div style="display:flex;align-items:center;gap:9px"><span style="width:26px;height:26px;border-radius:7px;background:#f3e2c6;color:#a06a12;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><div><div class="t-section-title" style="font-size:15px;color:#7a4e0a">Zone de chalandise — cadre marque</div><div style="font:400 11px var(--font-ui);color:#a06a12;margin-top:2px">ws_franchisor_catchment · défini par le franchiseur · lecture seule</div></div></div>
-            <span style="font:600 10px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:#a06a12;background:#f3e2c6;padding:4px 10px;border-radius:20px">Verrouillé marque</span>
+          <div style="padding:14px 18px;background:#fbf3e6;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <button type="button" onClick="{{ zchToggle }}" style="display:flex;align-items:center;gap:9px;background:transparent;border:none;cursor:pointer;padding:0;text-align:left">
+              <span style="width:26px;height:26px;border-radius:7px;background:#f3e2c6;color:#a06a12;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+              <span><span class="t-section-title" style="font-size:15px;color:#7a4e0a;display:block">{{ zchCaret }} Zone de chalandise — cadre marque</span><span style="font:400 11px var(--font-ui);color:#a06a12;display:block;margin-top:2px">ws_franchisor_catchment · lecture seule · cliquez pour déplier</span></span>
+            </button>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+              <input value="{{ zchQ }}" onInput="{{ zchSetQ }}" placeholder="Vérifier un CP… (ex. 1450)" inputmode="numeric" style="border:.5px solid #e0c9a4;border-radius:8px;padding:8px 11px;font:500 12px var(--font-ui);background:#fff;color:#7a4e0a;width:170px"/>
+              <sc-if value="{{ zchVShow }}" hint-placeholder-val="{{ false }}"><span style="{{ zchVStyle }}">{{ zchVerdict }}</span></sc-if>
+              <span style="font:600 10px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:#a06a12;background:#f3e2c6;padding:4px 10px;border-radius:20px">Verrouillé marque</span>
+            </div>
           </div>
+          <sc-if value="{{ zchOpen }}" hint-placeholder-val="{{ false }}">
           <div style="display:grid;grid-template-columns:1.5fr 3fr .9fr;padding:10px 18px;border-bottom:.5px solid #f0e2cc;background:#fdf8f0"><span class="t-admin-label" style="color:#a06a12">Territoire</span><span class="t-admin-label" style="color:#a06a12">Codes postaux couverts</span><span class="t-admin-label" style="color:#a06a12;text-align:right">Exclusivité</span></div>
           <sc-for list="{{ catchmentZones }}" as="c" hint-placeholder-count="3">
             <div style="display:grid;grid-template-columns:1.5fr 3fr .9fr;align-items:center;padding:12px 18px;border-bottom:.5px solid #f6ecda">
@@ -560,6 +576,7 @@
               <sc-if value="{{ c.exclusif }}" hint-placeholder-val="{{ false }}"><span style="justify-self:end;font:500 10.5px var(--font-ui);color:var(--color-text-muted)">Partagée</span></sc-if>
             </div>
           </sc-for>
+          </sc-if>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div style="padding:14px 18px;border-bottom:.5px solid var(--color-border-tertiary)"><div class="t-section-title" style="font-size:15px">Tournées &amp; leurs codes postaux</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Les codes postaux sont choisis dans votre zone de chalandise, directement sur chaque tournée. Un même code postal peut servir plusieurs tournées.</div></div>
@@ -2385,23 +2402,38 @@ class Component extends DCLogic {
     const covered=new Set((window.BOServer?window.BOServer.table('ws_tour_postcodes'):[]).map(r=>String(r.postcode)));
     if(!covered.size){ (window.BOServer?window.BOServer.table('ws_tours'):[]).forEach(t=>{ const raw=t.postcodes||t.cp; (Array.isArray(raw)?raw:String(raw||'').split(/[^0-9]+/)).forEach(cp=>{ if(/^\d{4}$/.test(cp)) covered.add(cp); }); }); }
     const other=cats.find(c=>String(c.id)===String(S.zmapOther||''));
-    const key=JSON.stringify([shown.map(c=>[c.id,c.cp]),[...covered].sort(),S.zmapOther||'']);
+    const offSig=(window.BOServer?window.BOServer.table('ws_offices'):[]).map(o=>[o.id||o.name,o.status,o.tour,o.postal_code]);
+    const key=JSON.stringify([shown.map(c=>[c.id,c.cp]),offSig,S.zmapTour||'',S.zmapOther||'']);
     if(this._zfKey===key) return; this._zfKey=key;
     if(this._zfLayer) m.removeLayer(this._zfLayer);
-    const g=L.layerGroup(); const pts=[]; const otherPts=[];
-    // Ma chalandise : rouge = validé (couvert par une tournée) · jaune = en attente.
+    const offices=(window.BOServer?window.BOServer.table('ws_offices'):[]);
+    const depts=(window.BOServer?window.BOServer.table('b2b_client_company_department'):[]);
+    const selTour=S.zmapTour||'';
+    const g=L.layerGroup(); const pts=[]; const otherPts=[]; const focusPts=[];
+    // Fond : les CP de MA chalandise en points pâles (contexte territoire).
     shown.forEach(c=>{ this.zfCpsOf(c.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; pts.push([e.lat,e.lng]);
-      const ok=covered.has(String(cp)); const col=ok?'#8D1D2C':'#E8B93C';
-      const mk=L.circleMarker([e.lat,e.lng],{radius:7,color:col,weight:2,fillColor:col,fillOpacity:ok?.65:.55});
-      mk.bindTooltip(cp+' '+e.city+' — '+(ok?'validée · couverte par une tournée':'en attente · aucune tournée')+' («'+c.name+'»)'); g.addLayer(mk); }); });
+      const mk=L.circleMarker([e.lat,e.lng],{radius:3.5,color:'#c9a0a6',weight:1,fillColor:'#c9a0a6',fillOpacity:.35});
+      mk.bindTooltip(cp+' '+e.city+' — chalandise « '+c.name+' »'); g.addLayer(mk); }); });
+    // Les POINTS = les OFFICES (rouge validé · jaune en attente), filtrés par la
+    // tuile Tournée sélectionnée ; en mode tournée, la taille du point = le
+    // cluster de clients (effectif cumulé des départements de l'office).
+    offices.filter(o=>!selTour||o.tour===selTour).forEach((o,oi)=>{
+      const cp=String(o.postal_code||'').replace(/\D/g,''); const e=geo.idx[cp]; if(!e) return;
+      const lat=e.lat+(0.004*(oi%5)-0.008), lng=e.lng+(0.004*((oi*2)%5)-0.008);
+      const ok=o.status==='validated'; const col=ok?'#8D1D2C':'#E8B93C';
+      const eff=depts.filter(d=>d.office===o.name||d.company===o.name).reduce((a,d)=>a+(parseInt(d.effectif,10)||0),0);
+      const rad=selTour?Math.min(17,8+Math.sqrt(eff||1)*1.7):7;
+      const mk=L.circleMarker([lat,lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:ok?.65:.55});
+      mk.bindTooltip(o.name+' — '+(ok?'validé':'en attente')+(selTour?(' · '+(eff||0)+' clients (effectif)'):'')+((o.tour&&o.tour!=='—')?(' · '+o.tour):' · sans tournée'));
+      g.addLayer(mk); focusPts.push([lat,lng]); });
     // Zone réseau sélectionnée dans la liste déroulante : points gris.
     if(other){ this.zfCpsOf(other.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; otherPts.push([e.lat,e.lng]);
       const mk=L.circleMarker([e.lat,e.lng],{radius:5,color:'#8a8378',weight:1.5,fillColor:'#8a8378',fillOpacity:.35});
       mk.bindTooltip(cp+' '+e.city+' — réseau « '+other.name+' »'); g.addLayer(mk); }); }
     g.addTo(m); this._zfLayer=g;
-    // Zoom auto : ma chalandise — ou la zone réseau choisie.
-    const fit=(other&&otherPts.length)?otherPts:pts;
-    if(fit.length) m.fitBounds(fit,{padding:[28,28],maxZoom:11});
+    // Zoom auto : zone réseau choisie > tournée sélectionnée > ma chalandise.
+    const fit=(other&&otherPts.length)?otherPts:((selTour&&focusPts.length)?focusPts:(pts.length?pts:focusPts));
+    if(fit.length) m.fitBounds(fit,{padding:[28,28],maxZoom:12});
   }
   ensureMaps(){
     if(this.state.screen==='zones') this.zfGeoEnsure();
@@ -2470,7 +2502,7 @@ class Component extends DCLogic {
     const paramsActive=paramScreens.includes(S.screen);
     // Fil d'ariane dans le SENS du modèle : la tournée dessert des SITES
     // (buildings), qui hébergent des BUREAUX (offices) — puis leurs paramètres.
-    const livFlow=[['tournees','Tournées · horaires'],['sites','Sites (buildings)'],['clients','Bureaux (offices)'],['params','Coûts & frais']];
+    const livFlow=[['tournees','Tournées · horaires'],['sites','Sites (buildings)'],['clients','Bureaux (offices)']];
     const livKeys=livFlow.map(x=>x[0]);
     const isLivProcess=livKeys.includes(S.screen);
     const curLiv=livKeys.indexOf(S.screen);
@@ -3481,6 +3513,18 @@ class Component extends DCLogic {
       zmapVal:S.zmapOther||'',
       zmapOpts:[{value:'',label:'— Ma zone de chalandise —'},...SRV('ws_franchisor_catchment').filter(c=>{ const fr=window.__FR||{}; const my=parseInt(fr.shop,10)||null; return !(my&&String(c.shop_id)===String(my)); }).map(c=>({value:String(c.id),label:c.name+(c.shop_id?'':' (non attribuée)')}))],
       zmapSet:(e)=>this.setState({zmapOther:e.target.value},()=>this.drawZonesMap()),
+      // Tuiles Tournée (capacité incluse) : filtrent la carte + clusters clients.
+      zmapTours:this.tourneeSlots().map(tt=>{ const max=Math.max(1,Math.floor((tt.amplitude||240)/((tt.decharge||18)+(tt.trajet||12)))); const on=S.zmapTour===tt.nom;
+        return {nom:tt.nom,cap:(tt.used||0)+' / '+max,
+          style:'flex:none;text-align:left;border:1.5px solid '+(on?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(on?'var(--color-background-secondary)':'var(--color-surface)')+';color:'+(on?'var(--color-primary)':'var(--color-text)')+';border-radius:10px;padding:8px 14px;cursor:pointer',
+          pick:()=>this.setState(s=>({zmapTour:s.zmapTour===tt.nom?'':tt.nom}),()=>this.drawZonesMap())}; }),
+      // Cadre marque replié + recherche de liberté d'un CP.
+      zchOpen:!!S.zchOpen, zchToggle:()=>this.setState(s=>({zchOpen:!s.zchOpen})), zchCaret:S.zchOpen?'▾':'▸',
+      zchQ:S.zchQ||'', zchSetQ:(e)=>this.setState({zchQ:e.target.value}),
+      ...(()=>{ const q=String(S.zchQ||'').replace(/\D/g,''); if(q.length!==4) return {zchVShow:false,zchVerdict:'',zchVStyle:''};
+        const hit=SRV('ws_franchisor_catchment').find(c=>String(c.cp||'').split(/[^0-9]+/).includes(q));
+        if(!hit) return {zchVShow:true,zchVerdict:'✓ '+q+' libre — attribué à aucune zone',zchVStyle:'font:600 11px var(--font-ui);color:#2d7a3e;background:#eaf5ec;border-radius:7px;padding:5px 10px'};
+        return {zchVShow:true,zchVerdict:'✕ '+q+' pris — « '+hit.name+' »',zchVStyle:'font:600 11px var(--font-ui);color:var(--color-primary);background:#fbe9eb;border-radius:7px;padding:5px 10px'}; })(),
       tourPostcodeRows:(()=>{ const tp={}; (SRV('ws_tour_postcodes')||[]).forEach(r=>{ const k=String(r.tour_id); (tp[k]=tp[k]||[]).push(r.postcode); }); return SRV('ws_tours').map(t=>{ const k=String(t.id).replace(/^r/,''); let arr=tp[k]||tp[String(t.id)]; if(!arr){ const raw=t.postcodes||t.cp; arr=Array.isArray(raw)?raw:String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } return {nom:t.name||t.short||t.nom||('Tournée '+t.id), cp:(arr&&arr.length)?arr.join(' · '):'—', count:(arr||[]).length}; }); })(),
       deliveryZones:(()=>{ const catchAll=new Set(); SRV('ws_franchisor_catchment').forEach(c=>String(c.cp||'').split('·').forEach(x=>{const t=x.trim(); if(t) catchAll.add(t);})); return SRV('ws_delivery_zones').map((z,i)=>{ const cps=String(z.cp||'').split('·').map(x=>x.trim()).filter(Boolean); const outside=cps.filter(cp=>!catchAll.has(cp)); return {...z,activeOn:(z.active===true||z.active==='Active'),outOfScope:outside.length>0,outOfScopeTxt:'Hors périmètre : '+outside.join(' · '),edit:this.editForm('deliveryZone',z,i),del:this.deleteRow('ws_delivery_zones',i,'la zone « '+z.name+' »')}; }); })(),
       addDeliveryZone:this.openForm('deliveryZone'),
