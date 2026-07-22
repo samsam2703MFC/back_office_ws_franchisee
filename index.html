@@ -1837,8 +1837,10 @@ class Component extends DCLogic {
     statsReseau:{table:'ERP consolidé (lecture seule)',origin:'Stats multi-boutiques poussées par l\'ERP',calc:'Aucun formulaire ; agrégats read-only + exports CSV',dev:'1 j'},
   }; return M[screen]||{table:'ws_param · tables du module',origin:'Données de démonstration servies par la couche BOServer (localStorage)',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
   formDefs(){
-    const tours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
-    const bureaux=['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
+    const toursReal=(window.BOServer?window.BOServer.table('ws_tours'):[]).map(t=>t.name).filter(Boolean);
+    const tours=toursReal.length?[...new Set(toursReal)]:['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
+    const bureauxReal=(window.BOServer?window.BOServer.table('ws_offices'):[]).map(o=>o.name).filter(Boolean);
+    const bureaux=bureauxReal.length?[...new Set(bureauxReal)]:['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
     const cats=['Pâtisserie fraîche','Boulangerie','Traiteur / plats','Chocolaterie','Glaces & surgelés','Épicerie fine'];
     const sel=(a)=>a.map(x=>({value:x,label:x}));
     const catchmentSel=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]).map(c=>({value:c.name,label:c.name}));
