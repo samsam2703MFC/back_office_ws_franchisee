@@ -56,6 +56,10 @@
   ::-webkit-scrollbar-thumb{background:rgba(34,34,34,.18);border-radius:6px}
   ::-webkit-scrollbar-track{background:transparent}
   .lz{scrollbar-width:thin}
+  /* Vignette localité au survol d'un code postal (formulaire Tournée) */
+  .cpchip{position:relative}
+  .cpchip[data-loc]:not([data-loc=""]):hover::after{content:attr(data-loc);position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);background:var(--color-text);color:var(--color-surface);font:600 11px var(--font-ui);white-space:nowrap;padding:5px 9px;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,.22);pointer-events:none;z-index:50}
+  .cpchip[data-loc]:not([data-loc=""]):hover::before{content:"";position:absolute;left:50%;bottom:calc(100% + 2px);transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--color-text);z-index:50}
   @keyframes pulse{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
   .leaflet-container{font-family:var(--font-ui)}
@@ -1337,9 +1341,9 @@
         <div><div class="t-admin-label" style="margin-bottom:6px">Type de véhicule</div><div style="display:flex;gap:8px"><button onClick="{{ rfVehFrigo }}" style="{{ rfVehFrigoStyle }}">Camion frigo</button><button onClick="{{ rfVehBox }}" style="{{ rfVehBoxStyle }}">Box frigorifique</button></div></div>
         <div>
           <div class="t-admin-label" style="margin-bottom:5px">Codes postaux de la tournée <span style="color:var(--color-text-muted);font-weight:400">— cochez dans votre zone de chalandise</span></div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;max-height:140px;overflow:auto;padding:6px;border:.5px solid var(--color-border-secondary);border-radius:8px">
+          <div style="display:flex;flex-wrap:wrap;gap:6px;padding:26px 8px 8px;border:.5px solid var(--color-border-secondary);border-radius:8px">
             <sc-if value="{{ rfPostEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:4px 2px">Aucun code postal dans votre chalandise — le franchiseur doit d'abord vous en attribuer.</span></sc-if>
-            <sc-for list="{{ rfPostcodeOpts }}" as="o" hint-placeholder-count="8"><button type="button" onClick="{{ o.toggle }}" style="{{ o.style }}">{{ o.cp }}</button></sc-for>
+            <sc-for list="{{ rfPostcodeOpts }}" as="o" hint-placeholder-count="8"><button type="button" onClick="{{ o.toggle }}" class="cpchip" data-loc="{{ o.loc }}" style="{{ o.style }}">{{ o.cp }}</button></sc-for>
           </div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:5px">{{ rfPostCount }} code(s) postal(aux) sélectionné(s) · un même code postal peut servir plusieurs tournées.</div>
         </div>
@@ -2416,11 +2420,13 @@ class Component extends DCLogic {
     const rfCanSubmit=!!(rForm.name.trim()&&rForm.short.trim());
     const rfSubmit=()=>{ if(!rfCanSubmit) return; const id='rn'+Date.now(); const p=(rForm.start||'06:00').split(':'); const nr={id,name:rForm.name,short:rForm.short||rForm.name.slice(0,8),driver:rForm.driver||'— non assigné',start:(+p[0])*60+(+(p[1]||0)),max:parseInt(rForm.max,10)||10,forfait:parseFloat(rForm.forfait)||0,ret:rForm.ret,amplitude:this.NEW_AMPL,decharge:22,trajet:8,used:0,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')}; if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); rows.push(nr); window.BOServer.save('ws_tours',rows); } this.setState(s=>({routeAssign:{...s.routeAssign,[id]:[]},rfOpen:false,_rev:(s._rev||0)+1,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),()=>this.drawRoute()); this.printJob('✓ Tournée créée : '+nr.name+' ('+(rForm.postcodes||[]).length+' CP)'); };
     // Pool de codes postaux autorisés = zone de chalandise attribuée à la boutique.
-    let rfPoolCps=(SRV('catchment_postcodes')||[]).map(x=>String(x.cp));
+    // Chaque CP porte sa localité (référentiel bpost, via /franchisee/catchment-postcodes).
+    const rfLocByCp={};
+    let rfPoolCps=(SRV('catchment_postcodes')||[]).map(x=>{ const cp=String(x.cp); if(x.loc) rfLocByCp[cp]=x.loc; return cp; });
     if(!rfPoolCps.length){ SRV('ws_franchisor_catchment').forEach(c=>{ String(c.postcodes||'').split(/[^0-9]+/).forEach(cp=>{ if(/^\d{4}$/.test(cp)) rfPoolCps.push(cp); }); }); }
     rfPoolCps=[...new Set(rfPoolCps)].sort();
     const rfSelSet=new Set((S.rf.postcodes||[]).map(String));
-    const rfPostcodeOpts=rfPoolCps.map(cp=>({cp, style:(rfSelSet.has(cp)?pillActive:pillIdle), toggle:()=>this.setState(s=>{ const cur=new Set((s.rf.postcodes||[]).map(String)); if(cur.has(cp)) cur.delete(cp); else cur.add(cp); return {rf:{...s.rf,postcodes:[...cur]}}; })}));
+    const rfPostcodeOpts=rfPoolCps.map(cp=>({cp, loc:rfLocByCp[cp]||'', style:(rfSelSet.has(cp)?pillActive:pillIdle), toggle:()=>this.setState(s=>{ const cur=new Set((s.rf.postcodes||[]).map(String)); if(cur.has(cp)) cur.delete(cp); else cur.add(cp); return {rf:{...s.rf,postcodes:[...cur]}}; })}));
     const rfPostEmpty=rfPoolCps.length===0;
     const rfPostCount=(S.rf.postcodes||[]).length;
     const zfSet=(k)=>(e)=>this.setState(s=>({zf:{...s.zf,[k]:e.target.value}}));
