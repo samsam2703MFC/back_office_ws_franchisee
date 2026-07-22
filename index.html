@@ -1526,6 +1526,24 @@
   </div>
   </sc-if>
 
+  <!-- ===================== SIÈGE ≠ SITE : GARDER LE SIÈGE OU LE SITE ===================== -->
+  <sc-if value="{{ siegeChoiceOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.5);display:flex;align-items:center;justify-content:center;z-index:2300;padding:24px">
+    <div style="background:var(--color-surface);border-radius:14px;width:540px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden">
+      <div style="padding:22px 24px 14px;display:flex;gap:13px;align-items:flex-start">
+        <span style="width:38px;height:38px;border-radius:10px;background:#fbf1e3;color:#b26a00;display:flex;align-items:center;justify-content:center;flex:none"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></span>
+        <div style="min-width:0"><div class="t-page-title" style="font-size:16px;margin-bottom:6px">Siège social ≠ adresse encodée</div>
+        <div style="font:400 12.5px/1.6 var(--font-ui);color:var(--color-text)">{{ siegeChoiceMsg }}</div></div>
+      </div>
+      <div style="padding:6px 24px 20px;display:flex;flex-direction:column;gap:9px">
+        <button onClick="{{ siegeKeepSiege }}" class="btn-primary" style="width:100%;font-size:13px;text-align:left">1 · Garder le SIÈGE — l'adresse encodée est enregistrée comme site de livraison (ws_office_delivery_sites)</button>
+        <button onClick="{{ siegeKeepSite }}" class="btn-secondary" style="width:100%;font-size:13px;text-align:left">2 · Garder le SITE — encoder ces données telles quelles et valider</button>
+        <button onClick="{{ siegeChoiceCancel }}" style="width:100%;background:transparent;border:none;color:var(--color-text-muted);font:500 12px var(--font-ui);cursor:pointer;padding:8px">Annuler — revenir au formulaire</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
   <!-- ===================== CONTRÔLE TVA vs TOURNÉE : DEUX CHOIX ===================== -->
   <sc-if value="{{ officeClashOpen }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;inset:0;background:rgba(34,34,34,.5);display:flex;align-items:center;justify-content:center;z-index:2300;padding:24px">
@@ -2070,6 +2088,15 @@ class Component extends DCLogic {
       if(clash){ this.setState({officeClash:{existing:clash,vals:v}}); return; }
     }
     if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl); if(S.formEdit && S.formIndex!=null && rows[S.formIndex]){ rows[S.formIndex]={...rows[S.formIndex],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
+    // Choix « garder le siège » : l'adresse encodée devient un SITE de livraison
+    // rattaché à l'office (ws_office_delivery_sites) — créé après l'office pour
+    // que le serveur retrouve le bureau par son nom.
+    if(S.formKey==='office'&&S.officePendingSite){ const ps=S.officePendingSite;
+      setTimeout(()=>{ if(window.BOServer){ const srows=window.BOServer.table('ws_office_delivery_sites');
+        srows.push({bureau:ps.bureau,office:(ps.bureau?ps.bureau+' — site':'Site de livraison'),tour:ps.tour,adr:ps.adr,etage:'',acc:6,contact_name:'',contact_phone:''});
+        window.BOServer.save('ws_office_delivery_sites',srows); } this.printJob('✓ Adresse encodée enregistrée comme site de livraison'); },900);
+      this.setState({officePendingSite:null});
+    }
     this.setState({formKey:null,_rev:(S._rev||0)+1}); this.printJob((S.formEdit?'✔ Ligne mise à jour dans ':'✔ Enregistré dans ')+cfg.table); }
   deleteRow(tbl,idx,label){ return ()=>{ this.setState({confirmDel:{tbl,idx,label:label||'cet élément'}}); }; }
   confirmDelDo(){ const c=this.state.confirmDel; if(c&&c.tbl&&window.BOServer){ const rows=window.BOServer.table(c.tbl); rows.splice(c.idx,1); window.BOServer.save(c.tbl,rows); } this.setState({confirmDel:null,_rev:(this.state._rev||0)+1}); this.printJob('✖ Supprimé'); }
@@ -2943,9 +2970,11 @@ class Component extends DCLogic {
               // encodée (adresse, CP, ville) reste FIGÉE — jamais écrasée.
               if(s.formKey==='office'&&j.name) fv.name=j.name;
               const st={viesOk:true,viesMsg:'✓ TVA valide'+(j.name?(' — '+j.name):''),formVals:fv};
-              // Siège ≠ site : le CP du siège (VIES) diffère du CP encodé → alerte.
+              // Siège ≠ site : le CP du siège (VIES) diffère du CP encodé → choix
+              // « garder le siège (l'adresse encodée devient un SITE) » ou
+              // « garder le site (encoder tel quel) » — puis validation.
               const enc=String(fv.postal_code||'').replace(/\D/g,'');
-              if(j.zip&&enc&&enc!==String(j.zip)){ st.formAlert='Le siège social (registre VIES) est situé à '+j.zip+(j.city?(' '+j.city):'')+', mais la demande concerne une adresse à '+enc+(fv.city?(' '+fv.city):'')+'. Il s\'agit donc d\'un SITE distinct du siège — vérifiez l\'adresse de livraison avant de valider.'; }
+              if(j.zip&&enc&&enc!==String(j.zip)){ st.siegeChoice={zip:j.zip,city:j.city||'',street:j.street||'',encAdr:fv.address||'',encZip:enc,encCity:fv.city||''}; }
               return st; }); }
             else if(j&&j.error==='vies_unavailable'){ this.setState({viesOk:false,viesMsg:'Service VIES indisponible — réessayez'}); }
             else { this.setState({viesOk:false,viesMsg:'✕ N° TVA introuvable via VIES'}); } })
@@ -3243,6 +3272,14 @@ class Component extends DCLogic {
       formOpen:!!fCfg, formTitle:fCfg?fCfg.title:'', formTable:fCfg?fCfg.table:'', formSaveLabel:fCfg?fCfg.save:'', formFields,
       formClose:()=>this.closeForm(), formSubmit:()=>this.submitForm(), stop:(e)=>e.stopPropagation(),
       formAlertOpen:!!S.formAlert, formAlertMsg:S.formAlert||'', formAlertOk:()=>this.setState({formAlert:null}),
+      siegeChoiceOpen:!!S.siegeChoice,
+      siegeChoiceMsg:S.siegeChoice?('Le siège social (registre VIES) est à '+S.siegeChoice.zip+' '+(S.siegeChoice.city||'')+' ; l\'adresse encodée est à '+S.siegeChoice.encZip+' '+(S.siegeChoice.encCity||'')+'. Quelle adresse garder pour l\'office ?'):'',
+      siegeChoiceCancel:()=>this.setState({siegeChoice:null}),
+      siegeKeepSiege:()=>{ const c=S.siegeChoice; if(!c) return;
+        this.setState(s=>({siegeChoice:null,
+          officePendingSite:{bureau:s.formVals.name||'',tour:s.formVals.tour||'',adr:[c.encAdr,c.encZip,c.encCity].filter(Boolean).join(', ')},
+          formVals:{...s.formVals,address:c.street||s.formVals.address,postal_code:c.zip,city:c.city||s.formVals.city}}),()=>this.submitForm()); },
+      siegeKeepSite:()=>this.setState({siegeChoice:null},()=>this.submitForm()),
       officeClashOpen:!!S.officeClash,
       officeClashMsg:S.officeClash?('La tournée « '+(S.officeClash.vals.tour||'—')+' » dessert déjà « '+S.officeClash.existing.name+' » (CP '+(S.officeClash.existing.postal_code||'—')+') avec la TVA '+(S.officeClash.existing.vat||'—')+' — différente de celle saisie ('+(S.officeClash.vals.vat||'—')+'). Choisissez comment traiter ce client :'):'',
       officeClashCancel:()=>this.setState({officeClash:null}),
