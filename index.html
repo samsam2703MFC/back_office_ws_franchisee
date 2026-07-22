@@ -803,17 +803,22 @@
           <button onClick="{{ addSite }}" class="btn-primary" style="font-size:12px;flex:none">+ Site de livraison</button>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
-          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px">Lier un bureau à un site — cliquez un bureau pour le prendre, puis « Déposer ici » sur le site</div>
-          <div style="display:flex;flex-wrap:wrap;gap:7px">
-            <sc-for list="{{ dndBureaux }}" as="db" hint-placeholder-count="5"><button type="button" class="drg" onClick="{{ db.pick }}" style="{{ db.style }}">{{ db.name }}</button></sc-for>
+          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Assigner les sites aux tournées — 1 · créez vos tournées · 2 · assignez / déplacez les sites pour optimiser la charge</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:9px">Saisissez un site (bouton « ⠿ Déplacer » sur sa carte) puis déposez-le sur une tournée. Le rattachement des bureaux à un site se fait à l'onboarding du bureau, pas ici.</div>
+          <div style="display:flex;gap:8px;overflow-x:auto">
+            <sc-for list="{{ tourAssignTiles }}" as="ta" hint-placeholder-count="4">
+              <button type="button" onClick="{{ ta.drop }}" style="{{ ta.style }}">
+                <span style="display:block;font:600 12px var(--font-ui);white-space:nowrap">{{ ta.nom }}</span>
+                <span style="display:block;font:400 10.5px var(--font-ui);opacity:.8;margin-top:2px">Cap. {{ ta.cap }} · {{ ta.charge }}</span>
+                <sc-if value="{{ ta.canDrop }}" hint-placeholder-val="{{ false }}"><span style="display:block;font:600 10px var(--font-ui);margin-top:3px;color:var(--color-primary)">⤓ Déposer le site ici</span></sc-if>
+              </button>
+            </sc-for>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px">
           <sc-for list="{{ sitesList }}" as="s" hint-placeholder-count="6">
             <div style="{{ s.cardStyle }}">
-              <sc-if value="{{ s.canDrop }}" hint-placeholder-val="{{ false }}">
-                <button type="button" onClick="{{ s.dropHere }}" style="width:100%;margin-bottom:10px;border:1.5px dashed var(--color-primary);background:var(--color-background-secondary);color:var(--color-primary);border-radius:9px;padding:9px;font:600 12px var(--font-ui);cursor:copy">⤓ Déposer ici</button>
-              </sc-if>
+              <button type="button" class="drg" onClick="{{ s.grab }}" style="{{ s.grabStyle }}">{{ s.grabLabel }}</button>
               <sc-if value="{{ s.noTour }}" hint-placeholder-val="{{ false }}">
                 <div style="display:inline-flex;align-items:center;gap:6px;background:#fff4e5;color:#b26a00;border-radius:6px;padding:3px 9px;font:600 10px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px">⏸ Inactif — aucune tournée rattachée</div>
               </sc-if>
@@ -2894,6 +2899,7 @@ class Component extends DCLogic {
       const depts=deptRowsAll.map((d,gi)=>({d,gi})).filter(x=>x.d.site===r.adr);
       // Règle : un site SANS tournée est inactif → carte grisée jusqu'au rattachement.
       const noTour=!r.tour||r.tour==='—';
+      const grabbed=S.dndSite===i;
       return {...r, office:r.office||r.bureau, noTour,
         // Le TITRE de la vignette = le NOM du site (l'adresse passe en sous-titre).
         siteName:(r.name&&r.name!=='—')?r.name:((r.office&&r.office!=='—')?r.office:r.adr),
@@ -2902,9 +2908,11 @@ class Component extends DCLogic {
         tourVal:(r.tour&&r.tour!=='—')?r.tour:'',
         tourOpts:[{value:'',label:'— Rattacher une tournée —'},...siteTourNames.map(n=>({value:n,label:n}))],
         tourSet:(e)=>{ const v=e.target.value; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); if(rows[i]){ rows[i]={...rows[i],tour:v||'—'}; window.BOServer.save('ws_office_delivery_sites',rows); } } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob(v?('✓ Site rattaché à la tournée « '+v+' »'):'Tournée retirée — le site repasse inactif'); },
-        cardStyle:'background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:16px 18px'+(noTour?';opacity:.5;filter:grayscale(.35)':''),
-        canDrop:!!S.dndPick,
-        dropHere:()=>{ const b=this.state.dndPick; if(!b) return; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); rows.push({bureau:b,office:b+' — site',tour:(r.tour&&r.tour!=='—')?r.tour:'',adr:r.adr,etage:'',acc:6}); window.BOServer.save('ws_office_delivery_sites',rows); } this.setState(s=>({dndPick:null,_rev:(s._rev||0)+1})); this.printJob('✓ Bureau « '+b+' » lié au site '+r.adr); },
+        cardStyle:'background:var(--color-surface);border:'+(grabbed?'2px solid var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:14px;padding:16px 18px'+(noTour&&!grabbed?';opacity:.5;filter:grayscale(.35)':''),
+        // « Prendre → déposer » : on saisit LE SITE puis on le dépose sur une tuile Tournée.
+        grabbed, grabLabel:grabbed?'⠿ Saisi — choisissez une tournée ci-dessus':'⠿ Déplacer vers une tournée',
+        grabStyle:'width:100%;margin-bottom:10px;border:1.5px '+(grabbed?'solid':'dashed')+' '+(grabbed?'var(--color-primary)':'var(--color-border-secondary)')+';background:'+(grabbed?'var(--color-background-secondary)':'transparent')+';color:'+(grabbed?'var(--color-primary)':'var(--color-text-muted)')+';border-radius:9px;padding:8px;font:600 11.5px var(--font-ui);cursor:grab',
+        grab:()=>this.setState(s=>({dndSite:s.dndSite===i?null:i})),
         edit:this.editForm('site',r,i), del:this.deleteRow('ws_office_delivery_sites',i,'le site « '+(r.name||r.adr)+' »'),
         addDept:this.openFormWith('department',{company:r.bureau,site:r.adr,office:r.office||r.bureau}),
         chain:[
@@ -2933,11 +2941,18 @@ class Component extends DCLogic {
         gear:this.openFormWith('bureauParam',{bureau:o.name}),
         edit:this.editForm('office',o,i), del:this.deleteRow('ws_offices',i,'l\'office « '+o.name+' »') };
     });
-    // « Prendre → déposer » : lier un bureau à un site (les tuiles bureaux se
-    // saisissent d'un clic, puis se déposent sur la carte d'un site).
-    const dndBureaux=SRV('ws_offices').map(o=>({name:o.name,picked:S.dndPick===o.name,
-      style:'border:1.5px solid '+(S.dndPick===o.name?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(S.dndPick===o.name?'var(--color-background-secondary)':'var(--color-surface)')+';color:'+(S.dndPick===o.name?'var(--color-primary)':'var(--color-text)')+';border-radius:999px;padding:7px 14px;font:600 11.5px var(--font-ui);cursor:grab;white-space:nowrap',
-      pick:()=>this.setState(s=>({dndPick:s.dndPick===o.name?null:o.name}))}));
+    // Ordre de mise en place : 1· tournées, 2· assignation des SITES aux tournées
+    // (déplaçables pour optimiser la charge — les bureaux, eux, se rattachent au
+    // site à l'onboarding du bureau). Tuiles tournée = capacité + charge actuelle.
+    const allSiteRows=SRV('ws_office_delivery_sites');
+    const tourAssignTiles=this.tourneeSlots().map(tt=>{ const max=Math.max(1,Math.floor((tt.amplitude||240)/((tt.decharge||18)+(tt.trajet||12))));
+      const sitesOf=allSiteRows.filter(r=>r.tour===tt.nom);
+      const bx=new Set(sitesOf.map(r=>r.bureau||r.office).filter(v=>v&&v!=='—'));
+      const canDrop=S.dndSite!=null;
+      return {nom:tt.nom,cap:(tt.used||0)+' / '+max,charge:sitesOf.length+' site(s) · '+bx.size+' bureau(x)',canDrop,
+        style:'flex:none;text-align:left;border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';background:var(--color-surface);color:var(--color-text);border-radius:10px;padding:8px 14px;cursor:'+(canDrop?'copy':'default'),
+        drop:()=>{ const idx=this.state.dndSite; if(idx==null) return; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); if(rows[idx]){ rows[idx]={...rows[idx],tour:tt.nom}; window.BOServer.save('ws_office_delivery_sites',rows); } } this.setState(s=>({dndSite:null,_rev:(s._rev||0)+1})); this.printJob('✓ Site déplacé vers la tournée « '+tt.nom+' »'); }};
+    });
 
     const bpDays=(arr)=>['L','Ma','Me','J','V','S','D'].map((k,i)=>({k,style:dayPill((arr||[]).includes(i))}));
     const bureauParams=SRV('ws_office_delivery_settings').map((b,i)=>({...b,nom:b.bureau,days:bpDays(b.daysArr),edit:this.editForm('bureauParam',b,i),del:this.deleteRow('ws_office_delivery_settings',i,'ce paramétrage bureau'),pill:pill2('var(--color-background-secondary)','var(--color-text-muted)')}));
@@ -3425,7 +3440,7 @@ class Component extends DCLogic {
       // TOURNÉE → rendus dans l'écran Tournées (l'entrée de menu dédiée disparaît).
       isHoraires:screen==='horaires'||screen==='tournees',horaires,
       isFermetures:screen==='horaires'||screen==='tournees',fermetures,addFermeture,
-      isSites:screen==='sites',sitesList,dndBureaux,
+      isSites:screen==='sites',sitesList,tourAssignTiles,
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
       isBureauParams:screen==='bureauParams',bureauParams,
       isDispoCat:screen==='dispoCat',dispoCats,
