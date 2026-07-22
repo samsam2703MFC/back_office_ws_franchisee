@@ -1663,13 +1663,27 @@
         <button onClick="{{ closeProfile }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:24px;line-height:1;padding:0">×</button>
       </div>
       <div style="padding:18px 26px;overflow-y:auto;flex:1">
-        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:12px"><div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary)">Coordonnées &amp; horaires · ws_shops</div><button onClick="{{ profileEditShop }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Modifier</button></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
-          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">L'Atelier — Bruxelles-Centre</div></div>
-          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">Rue du Marché 12, 1000 BXL</div></div>
-          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">07:00</div></div>
-          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">18:30</div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:12px">
+          <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary)">Coordonnées &amp; horaires · ws_shops</div>
+          <sc-if value="{{ shopViewing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ shopEnter }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Modifier</button></sc-if>
+          <sc-if value="{{ shopEditing }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px"><button onClick="{{ shopCancel }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Annuler</button><button onClick="{{ shopSave }}" style="font-size:12px;flex:none;padding:6px 14px;background:var(--color-primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">Enregistrer</button></div></sc-if>
         </div>
+        <sc-if value="{{ shopViewing }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
+          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopEnseigne }}</div></div>
+          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopAdresse }}</div></div>
+          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopOpen }}</div></div>
+          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopClose }}</div></div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ shopEditing }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Enseigne</span><input value="{{ shopDraftEnseigne }}" onInput="{{ shopSetEnseigne }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Adresse</span><input value="{{ shopDraftAdresse }}" onInput="{{ shopSetAdresse }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Ouverture</span><input value="{{ shopDraftOpen }}" onInput="{{ shopSetOpen }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Fermeture</span><input value="{{ shopDraftClose }}" onInput="{{ shopSetClose }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
+        </div>
+        </sc-if>
         <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:6px">Paramètres du site · ws_param</div>
         <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">Les paramètres 0/1 sont des interrupteurs · les autres sont éditables avec ✓. <strong>bo_show_source</strong> affiche l'origine des données sur chaque page · <strong>bo_show_help</strong> affiche les « i » d'aide au survol des toggles.</div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -2804,6 +2818,17 @@ class Component extends DCLogic {
       pm:shopCell(d.jour,'pm',d.pm,'rgba(140,74,47,.14)'),
     }));
 
+    // ===== Coordonnées & horaires boutique — édition inline dans la modale Profil =====
+    const shopDefaults={enseigne:"L'Atelier — Bruxelles-Centre",adresse:'Rue du Marché 12, 1000 BXL',open:'07:00',close:'18:30'};
+    const shopValOf=(k)=>S.flags['shop_'+k]!==undefined?S.flags['shop_'+k]:shopDefaults[k];
+    const shopEditing=!!S.shopEdit;
+    const shopDraft0=S.shopDraft||{};
+    const shopDraftOf=(k)=>shopDraft0[k]!==undefined?shopDraft0[k]:shopValOf(k);
+    const shopSetK=(k)=>(e)=>{ const v=e.target.value; this.setState(st=>({shopDraft:{...(st.shopDraft||{}),[k]:v}})); };
+    const shopEnter=()=>this.setState({shopEdit:true,shopDraft:{enseigne:shopValOf('enseigne'),adresse:shopValOf('adresse'),open:shopValOf('open'),close:shopValOf('close')}});
+    const shopCancel=()=>this.setState({shopEdit:false,shopDraft:null});
+    const shopSave=()=>{ const d=this.state.shopDraft||{}; this.setState(st=>({shopEdit:false,shopDraft:null,flags:{...st.flags,shop_enseigne:d.enseigne!==undefined?d.enseigne:shopValOf('enseigne'),shop_adresse:d.adresse!==undefined?d.adresse:shopValOf('adresse'),shop_open:d.open!==undefined?d.open:shopValOf('open'),shop_close:d.close!==undefined?d.close:shopValOf('close')}})); this.printJob('✔ Coordonnées & horaires enregistrés'); };
+
     const joursExcept=SRV('ws_shop_exceptions').map((j,i)=>{ const dm=splitDate(j.date); const fermé=j.type==='Fermé'; const bg=fermé?'#fbe9eb':'#fff4e5'; const c=fermé?'var(--color-primary)':'#b26a00'; const hasRange=!!(j.dateFin&&String(j.dateFin).trim()); return {...j,d:dm.d,m:dm.m,hasRange,rangeTxt:hasRange?('du '+j.date+' au '+j.dateFin):'',edit:this.editForm('except',j,i),del:this.deleteRow('ws_shop_exceptions',i),pill:pill2(bg,c)}; });
     const addExcept=this.openForm('except');
 
@@ -3079,7 +3104,11 @@ class Component extends DCLogic {
       toggleSrc:()=>this.setState(s=>({srcOpen:!s.srcOpen})),
       profileOpen:S.profileOpen, openProfile:()=>this.setState({profileOpen:true,paramDrafts:{}}),
       openShopParams:()=>this.setState({profileOpen:false,screen:'shopParams'}),
-      profileEditShop:()=>{ const cfg=this.formDefs()['shop']; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); this.setState({profileOpen:false,formKey:'shop',formVals:v,formEdit:false,formIndex:null}); },
+      shopEditing, shopViewing:!shopEditing,
+      shopEnseigne:shopValOf('enseigne'), shopAdresse:shopValOf('adresse'), shopOpen:shopValOf('open'), shopClose:shopValOf('close'),
+      shopDraftEnseigne:shopDraftOf('enseigne'), shopDraftAdresse:shopDraftOf('adresse'), shopDraftOpen:shopDraftOf('open'), shopDraftClose:shopDraftOf('close'),
+      shopEnter, shopCancel, shopSave,
+      shopSetEnseigne:shopSetK('enseigne'), shopSetAdresse:shopSetK('adresse'), shopSetOpen:shopSetK('open'), shopSetClose:shopSetK('close'),
       closeProfile:()=>this.setState({profileOpen:false}),
       paramRows,
     };
