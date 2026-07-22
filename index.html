@@ -1470,11 +1470,25 @@
                 <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
               </select>
             </sc-if>
+            <sc-if value="{{ f.isToggle }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:8px">
+                <sc-for list="{{ f.toggleOpts }}" as="t" hint-placeholder-count="2"><button type="button" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ f.isReadonly }}" hint-placeholder-val="{{ false }}">
+              <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" disabled style="{{ f.inputStyle }};background:var(--color-background-secondary);color:var(--color-text-muted);cursor:not-allowed"/>
+            </sc-if>
             <sc-if value="{{ f.isText }}" hint-placeholder-val="{{ false }}">
               <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
             </sc-if>
             <sc-if value="{{ f.isNumber }}" hint-placeholder-val="{{ false }}">
               <input type="number" value="{{ f.value }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
+            </sc-if>
+            <sc-if value="{{ f.hasVies }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:10px;margin-top:7px;flex-wrap:wrap">
+                <button type="button" onClick="{{ f.viesCheck }}" style="border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:8px;padding:7px 12px;font:600 11.5px var(--font-ui);cursor:pointer">Vérifier via VIES</button>
+                <span style="{{ f.viesStyle }}">{{ f.viesMsg }}</span>
+              </div>
             </sc-if>
           </div>
         </sc-for>
@@ -1910,8 +1924,8 @@ class Component extends DCLogic {
       office:{ title:'Office (bureau)', table:'ws_offices', tbl:'ws_offices', save:'Enregistrer l\'office',
         fields:[
           {k:'name',label:'Nom de l\'office',type:'text',ph:'ex. KBC — Cafétéria HQ',section:'Identité'},
-          {k:'vat',label:'N° TVA',type:'text',ph:'BE 0xxx.xxx.xxx',section:'Identité'},
-          {k:'status',label:'Statut',type:'select',options:sel(['pending','validated']),def:'pending',section:'Identité'},
+          {k:'vat',label:'N° TVA (validé via VIES)',type:'text',ph:'BE 0xxx.xxx.xxx',vies:true,section:'Identité'},
+          {k:'status',label:'Statut',type:'toggle',options:[{value:'pending',label:'En attente'},{value:'validated',label:'Validé'}],def:'validated',section:'Identité'},
           {k:'address',label:'Adresse',type:'text',ph:'Rue, n°',section:'Coordonnées'},
           {k:'postal_code',label:'Code postal',type:'text',ph:'1000',section:'Coordonnées'},
           {k:'city',label:'Ville',type:'text',ph:'Bruxelles',section:'Coordonnées'},
@@ -1919,10 +1933,10 @@ class Component extends DCLogic {
           {k:'email',label:'Email',type:'text',ph:'contact@exemple.be',section:'Contact'},
           {k:'phone',label:'Téléphone',type:'text',ph:'+32 …',section:'Contact'},
           {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Livraison (ws_office_delivery_settings)'},
-          {k:'allowed_days',label:'Jours autorisés',type:'text',ph:'ex. Lun–Ven',section:'Livraison (ws_office_delivery_settings)'},
-          {k:'delivery_cutoff',label:'Cut-off commande',type:'text',ph:'17:00 J-1',section:'Livraison (ws_office_delivery_settings)'},
+          {k:'allowed_days',label:'Jours autorisés — hérités de la tournée',readonly:true,ph:'choisissez une tournée',section:'Livraison (ws_office_delivery_settings)'},
+          {k:'delivery_cutoff',label:'Cut-off commande — hérité de la tournée',readonly:true,ph:'choisissez une tournée',section:'Livraison (ws_office_delivery_settings)'},
           {k:'delivery_notes',label:'Consignes de livraison',type:'text',ph:'ex. Accès quai côté rue',section:'Livraison (ws_office_delivery_settings)'},
-          {k:'deferred_billing_enabled',label:'Facturation différée',type:'select',options:sel(['Oui','Non']),def:'Oui',section:'Facturation'},
+          {k:'deferred_billing_enabled',label:'Facturation différée',type:'toggle',options:[{value:'Oui',label:'Oui'},{value:'Non',label:'Non'}],def:'Oui',section:'Facturation'},
         ]},
       department:{ title:'Département du site', table:'b2b_client_company_department', tbl:'b2b_client_company_department', save:'Enregistrer le département',
         fields:[
@@ -2005,9 +2019,14 @@ class Component extends DCLogic {
         ]},
     };
   }
-  openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null}); }; }
-  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null}); }; }
-  editForm(key,vals,idx){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(vals&&vals[f.k]!==undefined&&vals[f.k]!=='')?vals[f.k]:(f.def!==undefined?f.def:''); }); this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null)}); }; }
+  // Office : la tournée choisie impose cut-off + jours autorisés (ws_tour_availability).
+  officeAutofill(v){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v.tour); if(av){ v.delivery_cutoff=av.cut||''; v.allowed_days=av.jour||''; } return v; }
+  openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:''}); }; }
+  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:''}); }; }
+  editForm(key,vals,idx){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(vals&&vals[f.k]!==undefined&&vals[f.k]!=='')?vals[f.k]:(f.def!==undefined?f.def:''); });
+    // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
+    if(key==='office'){ v.status='pending'; this.officeAutofill(v); }
+    this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:''}); }; }
   closeForm(){ this.setState({formKey:null}); }
   submitForm(){ const S=this.state, cfg=this.formDefs()[S.formKey]; if(!cfg){ return; } const v={...S.formVals};
     if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl); if(S.formEdit && S.formIndex!=null && rows[S.formIndex]){ rows[S.formIndex]={...rows[S.formIndex],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
@@ -2864,11 +2883,30 @@ class Component extends DCLogic {
     const inputBase='width:100%;padding:11px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface);box-sizing:border-box';
     const formFields=fCfg?fCfg.fields.map((f,i)=>{
       const val=S.formVals[f.k]!==undefined?S.formVals[f.k]:'';
-      const onInput=(e)=>{ const v=e.target.value; this.setState(s=>({formVals:{...s.formVals,[f.k]:v}})); };
+      const onInput=(e)=>{ const v=e.target.value; this.setState(s=>{ const fv={...s.formVals,[f.k]:v};
+        // Office : la tournée pilote le cut-off + les jours autorisés (champs hérités, lecture seule).
+        if(s.formKey==='office'&&f.k==='tour'){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v); if(av){ fv.delivery_cutoff=av.cut||''; fv.allowed_days=av.jour||''; } }
+        return {formVals:fv}; }); };
       const prevSec=i>0?fCfg.fields[i-1].section:null;
+      const isToggle=f.type==='toggle';
+      const tOn='border:1.5px solid var(--color-primary);background:var(--color-background-secondary);color:var(--color-primary);border-radius:9px;padding:10px 18px;font:600 12.5px var(--font-ui);cursor:pointer';
+      const tOff='border:1.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-muted);border-radius:9px;padding:10px 18px;font:600 12.5px var(--font-ui);cursor:pointer';
+      const toggleOpts=isToggle?(f.options||[]).map(o=>({label:o.label,style:(String(val)===String(o.value)?tOn:tOff),
+        pick:()=>this.setState(s=>({formVals:{...s.formVals,[f.k]:o.value}}))})):[];
+      // VIES : vérifie le n° TVA + pré-remplit nom/adresse depuis le registre européen.
+      const viesCheck=()=>{ const raw=(this.state.formVals.vat||'').replace(/[^A-Za-z0-9]/g,''); if(!raw){ this.setState({viesOk:false,viesMsg:'Encodez d\'abord le n° TVA'}); return; }
+        this.setState({viesOk:null,viesMsg:'Vérification VIES…'}); const fr=window.__FR||{};
+        fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(raw)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
+          .then(r=>r.json()).then(j=>{ if(j&&j.valid){ this.setState(s=>({viesOk:true,viesMsg:'✓ TVA valide'+(j.name?(' — '+j.name):''),formVals:{...s.formVals,vies_name:j.name||'',name:(s.formVals.name&&s.formVals.name.trim())?s.formVals.name:(j.name||s.formVals.name),address:(s.formVals.address&&s.formVals.address.trim())?s.formVals.address:(j.address||s.formVals.address)}})); }
+            else if(j&&j.error==='vies_unavailable'){ this.setState({viesOk:false,viesMsg:'Service VIES indisponible — réessayez'}); }
+            else { this.setState({viesOk:false,viesMsg:'✕ N° TVA introuvable via VIES'}); } })
+          .catch(()=>this.setState({viesOk:false,viesMsg:'Réseau indisponible'})); };
       return { label:f.label, ph:f.ph||'', value:val, onInput,
         hasSection:!!f.section&&f.section!==prevSec, sectionLabel:f.section||'',
-        isSelect:f.type==='select', isNumber:f.type==='number', isText:f.type!=='select'&&f.type!=='number',
+        isSelect:f.type==='select', isNumber:f.type==='number', isToggle, isReadonly:!!f.readonly&&f.type!=='select'&&f.type!=='toggle',
+        isText:f.type!=='select'&&f.type!=='number'&&!isToggle&&!f.readonly,
+        toggleOpts, hasVies:!!f.vies, viesCheck, viesMsg:S.viesMsg||'',
+        viesStyle:'font:500 12px var(--font-ui);color:'+(S.viesOk===true?'#2d7a3e':(S.viesOk===false?'var(--color-primary)':'var(--color-text-muted)')),
         options:(f.options||[]), inputStyle:inputBase };
     }):[];
 
