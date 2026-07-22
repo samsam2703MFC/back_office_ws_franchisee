@@ -1492,8 +1492,34 @@
             </sc-if>
           </div>
         </sc-for>
+        <sc-if value="{{ formIsOffice }}" hint-placeholder-val="{{ false }}">
+          <div style="grid-column:1/-1;border-top:.5px solid var(--color-border-tertiary);padding-top:12px">
+            <sc-if value="{{ osShowSearch }}" hint-placeholder-val="{{ false }}">
+              <div class="t-admin-label" style="margin-bottom:6px">Rechercher un siège existant</div>
+              <input value="{{ osq }}" onInput="{{ osSetQ }}" placeholder="Nom de société, n° TVA ou ville…" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:10px 12px;font:400 13px var(--font-ui);background:var(--color-background-secondary);box-sizing:border-box"/>
+              <sc-if value="{{ osHasSug }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;border:.5px solid var(--color-border-tertiary);border-radius:9px;padding:7px;background:var(--color-background-secondary)">
+                  <sc-for list="{{ osSug }}" as="sg" hint-placeholder-count="3"><button type="button" onClick="{{ sg.pick }}" style="text-align:left;border:none;background:var(--color-surface);border-radius:7px;padding:9px 11px;font:500 12px var(--font-ui);color:var(--color-text);cursor:pointer">{{ sg.label }}</button></sc-for>
+                </div>
+              </sc-if>
+            </sc-if>
+            <div class="t-admin-label" style="margin:14px 0 7px">Sites de cette société {{ osCountTxt }}</div>
+            <sc-for list="{{ osSites }}" as="st2" hint-placeholder-count="2">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 11px;border:.5px solid var(--color-border-tertiary);border-radius:8px;margin-bottom:6px">
+                <span style="font:500 12px var(--font-ui);color:var(--color-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ st2.adr }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted);flex:none">{{ st2.note }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ osNoSites }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:2px 0 4px">Aucun site encodé pour cette société.</div></sc-if>
+            <div style="display:grid;grid-template-columns:1.5fr 1fr auto;gap:8px;margin-top:8px">
+              <input value="{{ osAdr }}" onInput="{{ osSetAdr }}" placeholder="Adresse du site (rue, n°, CP, ville)" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:10px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
+              <input value="{{ osNote }}" onInput="{{ osSetNote }}" placeholder="Note (étage, accès…)" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:10px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
+              <button type="button" onClick="{{ osAddSite }}" class="btn-secondary" style="font-size:12px;padding:0 16px">+ Site</button>
+            </div>
+          </div>
+        </sc-if>
         <sc-if value="{{ formIsZone }}" hint-placeholder-val="{{ false }}">
-          <div>
+          <div style="grid-column:1/-1">
             <div class="t-admin-label" style="margin-bottom:5px">Recherche géo — commune, arrondissement ou CP</div>
             <input value="{{ fgQ }}" onInput="{{ fgSetQ }}" placeholder="ex. Anderlecht · Brabant wallon · 1348" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 11px;font:400 12.5px var(--font-ui);background:var(--color-background-secondary)"/>
             <sc-if value="{{ fgHasSug }}" hint-placeholder-val="{{ false }}">
@@ -2071,12 +2097,12 @@ class Component extends DCLogic {
   }
   // Office : la tournée choisie impose cut-off + jours autorisés (ws_tour_availability).
   officeAutofill(v){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v.tour); if(av){ v.delivery_cutoff=av.cut||''; v.allowed_days=av.jour||''; } return v; }
-  openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:''}); }; }
-  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:''}); }; }
+  openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:''}); }; }
+  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:''}); }; }
   editForm(key,vals,idx){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(vals&&vals[f.k]!==undefined&&vals[f.k]!=='')?vals[f.k]:(f.def!==undefined?f.def:''); });
     // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
     if(key==='office'){ v.status='pending'; this.officeAutofill(v); }
-    this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:''}); }; }
+    this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:''}); }; }
   closeForm(){ this.setState({formKey:null}); }
   submitForm(){ const S=this.state, cfg=this.formDefs()[S.formKey]; if(!cfg){ return; } const v={...S.formVals};
     // Contrôle TVA vs tournée (office) : un office déjà desservi par cette
@@ -3280,6 +3306,25 @@ class Component extends DCLogic {
           officePendingSite:{bureau:s.formVals.name||'',tour:s.formVals.tour||'',adr:[c.encAdr,c.encZip,c.encCity].filter(Boolean).join(', ')},
           formVals:{...s.formVals,address:c.street||s.formVals.address,postal_code:c.zip,city:c.city||s.formVals.city}}),()=>this.submitForm()); },
       siegeKeepSite:()=>this.setState({siegeChoice:null},()=>this.submitForm()),
+      ...(()=>{ const noop=()=>{}; if(S.formKey!=='office') return {formIsOffice:false,osShowSearch:false,osq:'',osSetQ:noop,osSug:[],osHasSug:false,osSites:[],osHasSites:false,osNoSites:false,osCountTxt:'',osAdr:'',osSetAdr:noop,osNote:'',osSetNote:noop,osAddSite:noop};
+        const q=String(S.osq||'').toLowerCase();
+        const offices=SRV('ws_offices');
+        const osSug=(q.length>=2)?offices.map((o,i)=>({o,i})).filter(x=>[x.o.name,x.o.vat,x.o.city].some(vv=>String(vv||'').toLowerCase().includes(q))).slice(0,6)
+          .map(x=>({label:(x.o.name||'—')+' · '+(x.o.vat||'TVA —')+' · '+(x.o.city||'—'),pick:()=>{ this.setState({osq:''}); this.editForm('office',x.o,x.i)(); }})):[];
+        const nm=String(S.formVals.name||'').trim();
+        const osSites=(nm?SRV('ws_office_delivery_sites').filter(r=>r.bureau===nm||r.office===nm||String(r.office||'').indexOf(nm+' —')===0):[])
+          .map(r=>({adr:r.adr||r.address||'—',note:r.etage||r.floor_room||''}));
+        return {formIsOffice:true,osShowSearch:!S.formEdit,
+          osq:S.osq||'',osSetQ:(e)=>this.setState({osq:e.target.value}),
+          osSug,osHasSug:osSug.length>0,osSites,osHasSites:osSites.length>0,osNoSites:nm!==''&&osSites.length===0,osCountTxt:'('+osSites.length+')',
+          osAdr:S.osAdr||'',osSetAdr:(e)=>this.setState({osAdr:e.target.value}),
+          osNote:S.osNote||'',osSetNote:(e)=>this.setState({osNote:e.target.value}),
+          osAddSite:()=>{ const nm2=String(this.state.formVals.name||'').trim(); const adr=String(this.state.osAdr||'').trim();
+            if(!nm2){ this.printJob('Encodez d\'abord le nom de la société (ou choisissez un siège)'); return; }
+            if(!adr){ this.printJob('Adresse du site requise'); return; }
+            if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); rows.push({bureau:nm2,office:nm2+' — site',tour:this.state.formVals.tour||'',adr:adr,etage:String(this.state.osNote||''),acc:6}); window.BOServer.save('ws_office_delivery_sites',rows); }
+            this.setState(s=>({osAdr:'',osNote:'',_rev:(s._rev||0)+1})); this.printJob('✓ Site ajouté pour « '+nm2+' »'); }};
+      })(),
       officeClashOpen:!!S.officeClash,
       officeClashMsg:S.officeClash?('La tournée « '+(S.officeClash.vals.tour||'—')+' » dessert déjà « '+S.officeClash.existing.name+' » (CP '+(S.officeClash.existing.postal_code||'—')+') avec la TVA '+(S.officeClash.existing.vat||'—')+' — différente de celle saisie ('+(S.officeClash.vals.vat||'—')+'). Choisissez comment traiter ce client :'):'',
       officeClashCancel:()=>this.setState({officeClash:null}),
