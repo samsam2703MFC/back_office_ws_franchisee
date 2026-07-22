@@ -578,33 +578,10 @@
           </sc-for>
           </sc-if>
         </div>
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
-          <div style="padding:14px 18px;border-bottom:.5px solid var(--color-border-tertiary)"><div class="t-section-title" style="font-size:15px">Tournées &amp; leurs codes postaux</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Les codes postaux sont choisis dans votre zone de chalandise, directement sur chaque tournée. Un même code postal peut servir plusieurs tournées.</div></div>
-          <div style="display:grid;grid-template-columns:1.4fr 3fr .5fr;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Tournée</span><span class="t-admin-label">Codes postaux</span><span class="t-admin-label" style="text-align:right">Nb</span></div>
-          <sc-for list="{{ tourPostcodeRows }}" as="t" hint-placeholder-count="4">
-            <div style="display:grid;grid-template-columns:1.4fr 3fr .5fr;align-items:center;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ t.nom }}</span>
-              <span style="font:400 11.5px/1.6 var(--font-ui);color:var(--color-text-muted)">{{ t.cp }}</span>
-              <span style="text-align:right;font:600 12.5px var(--font-ui);color:var(--color-primary)">{{ t.count }}</span>
-            </div>
-          </sc-for>
-        </div>
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div class="t-section-title" style="font-size:16px;margin-bottom:3px">Capacité des tournées</div>
-          <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Le nombre d'emplacements dépend du temps de déchargement par point et de l'amplitude de la tournée.</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
-            <sc-for list="{{ zTournees }}" as="tt" hint-placeholder-count="3">
-              <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:14px 16px">
-                <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 13px var(--font-ui);color:var(--color-text)">{{ tt.nom }}</span><span style="font:700 18px var(--font-ui);color:var(--color-primary)">{{ tt.used }}/{{ tt.max }}</span></div>
-                <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:5px">amplitude {{ tt.amplitude }} · {{ tt.perPoint }} min/point</div>
-              </div>
-            </sc-for>
-          </div>
-        </div>
       </div>
       </sc-if>
 
-      <!-- ===================== INCIDENTS ===================== -->
+      <!-- ===================== INCIDENTS =====================      <!-- ===================== INCIDENTS ===================== -->
       <sc-if value="{{ isIncidents }}" hint-placeholder-val="{{ true }}">
       <div style="display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:stretch">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
