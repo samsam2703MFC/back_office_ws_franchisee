@@ -2814,7 +2814,7 @@ class Component extends DCLogic {
         options:(f.options||[]), inputStyle:inputBase };
     }):[];
 
-    const feeRules=SRV('ws_delivery_fee_rules').map((r,i)=>{ const bg={Site:'#fbe9eb',Bureau:'#fff4e5','Tournée':'var(--color-background-secondary)',Boutique:'#eef3fb'}[r.niveau]; const c={Site:'var(--color-primary)',Bureau:'#b26a00','Tournée':'var(--color-text-muted)',Boutique:'#2a5a9e'}[r.niveau]; return {...r,rank:String(i+1),edit:this.editForm('fee',r,i),del:this.deleteRow('ws_delivery_fee_rules',i),pill:'display:inline-flex;align-items:center;font:600 11px var(--font-ui);border-radius:5px;padding:1px 7px;background:'+bg+';color:'+c}; });
+    const feeRules=SRV('ws_delivery_fee_rules').map((r,i)=>{ const bg={Site:'#fbe9eb',Bureau:'#fff4e5','Tournée':'var(--color-background-secondary)',Boutique:'#eef3fb'}[r.niveau]; const c={Site:'var(--color-primary)',Bureau:'#b26a00','Tournée':'var(--color-text-muted)',Boutique:'#2a5a9e'}[r.niveau]; return {...r,rank:String(i+1),edit:this.editForm('fee',r,i),del:this.deleteRow('ws_delivery_fee_rules',i),pill:'display:inline-flex;align-items:center;justify-self:start;width:fit-content;font:600 11px var(--font-ui);border-radius:5px;padding:1px 7px;background:'+bg+';color:'+c}; });
 
     // ===== nouveaux écrans opérationnels & paramétrage =====
     const modePill=(m)=>pill2(m==='Livraison'?'var(--color-background-secondary)':'#eef3fb',m==='Livraison'?'var(--color-primary)':'#2a5a9e');
