@@ -293,9 +293,22 @@
       {eta:'12:40',drift:'+18 min',libelle:'Event Château',ville:'Waterloo',statut:'Risque'},
     ],
     "fr_live_table": [
-      {color:'#8D1D2C',nom:'Marek Kowalski',vehicule:'Renault Master frigo',tournee:'Centre',avancement:'3/4',next:'Maison Dandoy',nextVille:'Sablon',eta:'10:24',drift:"à l'heure",statut:'En route'},
-      {color:'#3B3468',nom:'Julien Dubois',vehicule:'Iveco Daily',tournee:'Uccle',avancement:'1/3',next:'Event Château',nextVille:'Waterloo',eta:'12:40',drift:'+18 min',statut:'Risque'},
-      {color:'#2d7a3e',nom:'Sofie Peeters',vehicule:'Renault Master',tournee:'Etterbeek',avancement:'2/3',next:'Corporate KBC',nextVille:'Leuven',eta:'09:05',drift:'+5 min',statut:'En route'},
+      {color:'#8D1D2C',nom:'Marek Kowalski',vehicule:'Renault Master frigo',tournee:'Centre',avancement:'3/4',next:'Maison Dandoy',nextVille:'Sablon',eta:'10:24',drift:"à l'heure",statut:'En route',stops:[
+        {name:'Boulangerie du Sablon',ville:'Sablon',heure:'08:40',state:'done'},
+        {name:'Hôtel Amigo',ville:'Grand-Place',heure:'09:15',state:'done',incident:true,incidentLabel:'Colis refusé — réception fermée'},
+        {name:'Café Central',ville:'Bourse',heure:'09:52',state:'done'},
+        {name:'Maison Dandoy',ville:'Sablon',heure:'10:24',state:'current'},
+      ]},
+      {color:'#3B3468',nom:'Julien Dubois',vehicule:'Iveco Daily',tournee:'Uccle',avancement:'1/3',next:'Event Château',nextVille:'Waterloo',eta:'12:40',drift:'+18 min',statut:'Risque',stops:[
+        {name:'Restaurant Uccle',ville:'Uccle',heure:'11:20',state:'done'},
+        {name:'Event Château',ville:'Waterloo',heure:'12:40',state:'current',incident:true,incidentLabel:'Retard +18 min — accès livraison bloqué'},
+        {name:'Traiteur Sud',ville:'Rhode-Saint-Genèse',heure:'13:25',state:'todo'},
+      ]},
+      {color:'#2d7a3e',nom:'Sofie Peeters',vehicule:'Renault Master',tournee:'Etterbeek',avancement:'2/3',next:'Corporate KBC',nextVille:'Leuven',eta:'09:05',drift:'+5 min',statut:'En route',stops:[
+        {name:'Bureau Etterbeek',ville:'Etterbeek',heure:'08:10',state:'done'},
+        {name:'Clinique Sainte-Élisabeth',ville:'Uccle',heure:'08:40',state:'done'},
+        {name:'Corporate KBC',ville:'Leuven',heure:'09:05',state:'current'},
+      ]},
     ],
     "fr_renta_kpis": [
       {key:'kMarge',computed:'marge',delta:'▲ +7,2 % vs préc.'},

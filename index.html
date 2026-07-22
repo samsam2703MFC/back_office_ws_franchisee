@@ -371,12 +371,28 @@
           <div class="t-section-title" style="font-size:15px;margin-bottom:8px">Chauffeurs · prochaine livraison</div>
           <div style="display:grid;grid-template-columns:1.1fr .9fr 1.3fr 80px 130px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Chauffeur</span><span class="t-admin-label">Tournée</span><span class="t-admin-label">Prochaine livraison</span><span class="t-admin-label" style="text-align:right">ETA</span><span class="t-admin-label" style="text-align:right">Statut</span></div>
           <sc-for list="{{ liveTable }}" as="d" hint-placeholder-count="3">
-            <div style="display:grid;grid-template-columns:1.1fr .9fr 1.3fr 80px 130px;align-items:center;padding:12px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <div style="display:flex;align-items:center;gap:9px;min-width:0"><div style="width:8px;height:8px;border-radius:50%;background:{{ d.color }};flex:none"></div><div style="min-width:0"><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ d.nom }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ d.vehicule }} · {{ d.avancement }}</div></div></div>
-              <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ d.tournee }}</span>
-              <div style="min-width:0"><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ d.next }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ d.nextVille }}</div></div>
-              <div style="text-align:right"><div style="font:600 13px var(--font-ui);color:var(--color-primary)">{{ d.eta }}</div><div style="font:400 9px var(--font-ui);color:{{ d.driftColor }}">{{ d.drift }}</div></div>
-              <div style="justify-self:end"><span style="{{ d.statutStyle }}">{{ d.statut }}</span></div>
+            <div style="border-bottom:.5px solid var(--color-border-tertiary)">
+              <div onClick="{{ d.toggleOpen }}" style="display:grid;grid-template-columns:1.1fr .9fr 1.3fr 80px 130px;align-items:center;padding:12px 6px;cursor:pointer">
+                <div style="display:flex;align-items:center;gap:8px;min-width:0"><span style="flex:none;width:12px;color:var(--color-text-muted);font-size:10px">{{ d.caret }}</span><div style="width:8px;height:8px;border-radius:50%;background:{{ d.color }};flex:none"></div><div style="min-width:0"><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ d.nom }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ d.vehicule }} · {{ d.avancement }}</div></div></div>
+                <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ d.tournee }}</span>
+                <div style="min-width:0"><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ d.next }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ d.nextVille }}</div></div>
+                <div style="text-align:right"><div style="font:600 13px var(--font-ui);color:var(--color-primary)">{{ d.eta }}</div><div style="font:400 9px var(--font-ui);color:{{ d.driftColor }}">{{ d.drift }}</div></div>
+                <div style="justify-self:end"><span style="{{ d.statutStyle }}">{{ d.statut }}</span></div>
+              </div>
+              <sc-if value="{{ d.open }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:2px 6px 14px 30px;background:var(--color-background-secondary)">
+                  <div style="font:600 9px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);margin:8px 0 10px">Fil de livraison</div>
+                  <sc-for list="{{ d.stops }}" as="s" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:stretch;gap:11px">
+                      <div style="display:flex;flex-direction:column;align-items:center;flex:none;padding-top:2px"><span style="{{ s.dotStyle }}"></span><sc-if value="{{ s.notLast }}" hint-placeholder-val="{{ true }}"><span style="{{ s.lineStyle }}"></span></sc-if></div>
+                      <div style="flex:1;min-width:0;padding-bottom:12px">
+                        <div style="display:flex;align-items:center;gap:8px"><span style="{{ s.nameStyle }}">{{ s.name }}</span><sc-if value="{{ s.hasIncident }}" hint-placeholder-val="{{ false }}"><button onClick="{{ s.goInc }}" title="Voir l'incident" style="display:inline-flex;align-items:center;gap:4px;border:none;cursor:pointer;background:#fbe9eb;color:var(--color-primary);border-radius:6px;padding:2px 7px;font:600 9.5px var(--font-ui)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>Incident</button></sc-if></div>
+                        <div style="{{ s.metaStyle }}">{{ s.ville }} · {{ s.heure }} · {{ s.stateLabel }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
             </div>
           </sc-for>
         </div>
@@ -2448,7 +2464,23 @@ class Component extends DCLogic {
     const liveDrivers=SRV('fr_live_drivers');
     const LIVE_ST=(s)=>s==='En route'?this.pill('var(--color-secondary)','var(--color-on-abricot)'):s==='Risque'?this.pill('#fbe9eb','var(--color-primary)'):this.pill('var(--color-background-secondary)','var(--color-text-muted)');
     const liveEta=SRV('fr_live_eta').map(e=>({...e,driftColor:/\+/.test(e.drift)?'var(--color-primary)':'#2d7a3e',statutStyle:LIVE_ST(e.statut)}));
-    const liveTable=SRV('fr_live_table').map(d=>({...d,driftColor:/\+/.test(d.drift)?'var(--color-primary)':'#2d7a3e',statutStyle:LIVE_ST(d.statut)}));
+    const liveOpen=S.liveOpen||{};
+    const liveTable=SRV('fr_live_table').map((d,i)=>{
+      const open=!!liveOpen[i];
+      const raw=d.stops||[];
+      const stops=raw.map((s,si)=>{ const done=s.state==='done'; const cur=s.state==='current';
+        return {...s, done, cur, notLast:si<raw.length-1, hasIncident:!!s.incident,
+          stateLabel:done?'Livré':(cur?'En cours':'À venir'),
+          goInc:this.go('incidents'),
+          dotStyle:'width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 2px var(--color-surface);background:'+(s.incident?'var(--color-primary)':(done?'#2d7a3e':(cur?d.color:'var(--color-border-secondary)'))),
+          lineStyle:'width:2px;flex:1;min-height:16px;background:'+(done?'#cfe6d4':'var(--color-border-tertiary)'),
+          nameStyle:'font:'+(cur?'600':'500')+' 12px var(--font-ui);color:'+(done?'var(--color-text-muted)':'var(--color-text)')+(done?';text-decoration:line-through':''),
+          metaStyle:'font:400 10px var(--font-ui);color:var(--color-text-muted)' };
+      });
+      return {...d,driftColor:/\+/.test(d.drift)?'var(--color-primary)':'#2d7a3e',statutStyle:LIVE_ST(d.statut),
+        open, caret:open?'▾':'▸', hasStops:stops.length>0, stops,
+        toggleOpen:()=>this.setState(st=>({liveOpen:{...(st.liveOpen||{}),[i]:!(st.liveOpen&&st.liveOpen[i])}}))};
+    });
 
     // CLIENTS
     const clientsData=SRV('fr_clients');
