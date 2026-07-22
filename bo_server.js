@@ -415,6 +415,7 @@
         fr_clients:'fr-clients', fr_incidents:'fr-incidents', fr_alertes:'fr-alertes',
         fr_rentabilite:'fr-rentabilite', fr_live_drivers:'fr-live-drivers',
         ws_tours:'ws-tours', ws_delivery_zones:'ws-delivery-zones',
+        ws_tour_postcodes:'ws-tour-postcodes', catchment_postcodes:'catchment-postcodes',
         ws_office_delivery_sites:'ws-office-delivery-sites', ws_offices:'ws-offices',
         ws_office_emails:'ws-office-emails', b2b_client_company_department:'b2b-departments',
         ws_tour_availability:'ws-tour-availability', ws_tour_closures:'ws-tour-closures',

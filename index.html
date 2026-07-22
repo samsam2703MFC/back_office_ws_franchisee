@@ -533,7 +533,7 @@
       <sc-if value="{{ isZones }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:18px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:0;overflow:hidden">
-          <div style="padding:12px 18px;display:flex;align-items:center;gap:10px"><span class="t-admin-label">Carte du territoire</span><span style="font:11px var(--font-ui);color:var(--color-text-muted)">rubis pâle = zones primaires de la marque · couleurs pleines = vos zones</span></div>
+          <div style="padding:12px 18px;display:flex;align-items:center;gap:10px"><span class="t-admin-label">Carte du territoire</span><span style="font:11px var(--font-ui);color:var(--color-text-muted)">rubis pâle = votre zone de chalandise (cadre marque) · couleurs pleines = vos tournées</span></div>
           <div id="map-zones-fr" style="width:100%;height:340px;background:var(--color-background-secondary)"></div>
         </div>
         <div style="background:var(--color-surface);border:.5px solid #e7d3b8;border-radius:12px;overflow:hidden">
@@ -552,18 +552,13 @@
           </sc-for>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
-          <div style="padding:14px 18px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center"><div><div class="t-section-title" style="font-size:15px">Zones (groupements de bureaux)</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Zone primaire créée par la boutique · rattachée aux tournées et delivery sites (ws_delivery_zones)</div></div><button onClick="{{ addDeliveryZone }}" class="btn-primary" style="padding:8px 14px;font-size:12px">+ Nouvelle zone</button></div>
-          <div style="display:grid;grid-template-columns:2fr .8fr .8fr .9fr;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Zone</span><span class="t-admin-label">Ordre</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Actions</span></div>
-          <sc-for list="{{ deliveryZones }}" as="z" hint-placeholder-count="4">
-            <div style="display:grid;grid-template-columns:2fr .8fr .8fr .9fr;align-items:center;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:9px;height:9px;border-radius:50%;background:var(--color-primary);flex:none"></span><div style="min-width:0"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ z.name }}</span><sc-if value="{{ z.outOfScope }}" hint-placeholder-val="{{ false }}"><span title="{{ z.outOfScopeTxt }}" style="font:600 9.5px var(--font-ui);color:#b26a00;background:#fbf1e3;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3l9 16H3z"/><path d="M12 9v4M12 16h.01"/></svg>Hors périmètre marque</span></sc-if></div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ z.cp }}</div></div></div>
-              <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ z.sort_order }}</span>
-              <sc-if value="{{ z.activeOn }}" hint-placeholder-val="{{ true }}"><span style="justify-self:start;font:600 10.5px var(--font-ui);color:#2d7a3e;background:#eaf5ec;padding:3px 9px;border-radius:20px">Active</span></sc-if>
-              <sc-if value="{{ z.activeOn }}" hint-placeholder-val="{{ false }}"></sc-if>
-              <div style="display:flex;gap:6px;justify-content:flex-end">
-                <button onClick="{{ z.edit }}" title="Éditer" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-text-muted);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                <button onClick="{{ z.del }}" title="Supprimer" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
-              </div>
+          <div style="padding:14px 18px;border-bottom:.5px solid var(--color-border-tertiary)"><div class="t-section-title" style="font-size:15px">Tournées &amp; leurs codes postaux</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Les codes postaux sont choisis dans votre zone de chalandise, directement sur chaque tournée. Un même code postal peut servir plusieurs tournées.</div></div>
+          <div style="display:grid;grid-template-columns:1.4fr 3fr .5fr;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Tournée</span><span class="t-admin-label">Codes postaux</span><span class="t-admin-label" style="text-align:right">Nb</span></div>
+          <sc-for list="{{ tourPostcodeRows }}" as="t" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:1.4fr 3fr .5fr;align-items:center;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)">
+              <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ t.nom }}</span>
+              <span style="font:400 11.5px/1.6 var(--font-ui);color:var(--color-text-muted)">{{ t.cp }}</span>
+              <span style="text-align:right;font:600 12.5px var(--font-ui);color:var(--color-primary)">{{ t.count }}</span>
             </div>
           </sc-for>
         </div>
@@ -578,20 +573,6 @@
               </div>
             </sc-for>
           </div>
-        </div>
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
-          <div style="padding:14px 18px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center"><div><div class="t-section-title" style="font-size:15px">Zones de livraison</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Paramètres appliqués à chaque point de livraison de la zone</div></div><button onClick="{{ openZoneForm }}" class="btn-primary" style="padding:8px 14px;font-size:12px">+ Nouvelle zone</button></div>
-          <div style="display:grid;grid-template-columns:1.3fr .9fr 1fr .7fr .7fr .9fr;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Zone</span><span class="t-admin-label">Codes postaux</span><span class="t-admin-label">Véhicule requis</span><span class="t-admin-label">Franco</span><span class="t-admin-label">Délai</span><span class="t-admin-label" style="text-align:right">Temps service</span></div>
-          <sc-for list="{{ zones }}" as="z" hint-placeholder-count="5">
-            <div style="display:grid;grid-template-columns:1.3fr .9fr 1fr .7fr .7fr .9fr;align-items:center;padding:13px 18px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:9px;height:9px;border-radius:2px;background:var(--color-primary);flex:none"></span><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ z.nom }}</span></div>
-              <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ z.cp }}</span>
-              <span style="font:400 12px var(--font-ui);color:var(--color-text)">{{ z.vehicule }}</span>
-              <span style="font:500 12px var(--font-ui);color:var(--color-text)">{{ z.franco }}</span>
-              <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ z.delai }}</span>
-              <span style="text-align:right;font:600 12.5px var(--font-ui);color:var(--color-primary)">{{ z.service }} min</span>
-            </div>
-          </sc-for>
         </div>
       </div>
       </sc-if>
@@ -1354,9 +1335,13 @@
           <div><div class="t-admin-label" style="margin-bottom:5px">Forfait livraison (€ / tournée)</div><input type="number" value="{{ rf.forfait }}" onInput="{{ rfSet.forfait }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
         </div>
         <div><div class="t-admin-label" style="margin-bottom:6px">Type de véhicule</div><div style="display:flex;gap:8px"><button onClick="{{ rfVehFrigo }}" style="{{ rfVehFrigoStyle }}">Camion frigo</button><button onClick="{{ rfVehBox }}" style="{{ rfVehBoxStyle }}">Box frigorifique</button></div></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div><div class="t-admin-label" style="margin-bottom:5px">Zone primaire</div><select value="{{ rf.zonePrim }}" onChange="{{ rfSet.zonePrim }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"><option value="">— Choisir une zone —</option><sc-for list="{{ rfZoneOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
-          <div><div class="t-admin-label" style="margin-bottom:5px">Zone secondaire (optionnel)</div><input value="{{ rf.zoneSec }}" onInput="{{ rfSet.zoneSec }}" placeholder="ex. codes postaux limitrophes" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
+        <div>
+          <div class="t-admin-label" style="margin-bottom:5px">Codes postaux de la tournée <span style="color:var(--color-text-muted);font-weight:400">— cochez dans votre zone de chalandise</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;max-height:140px;overflow:auto;padding:6px;border:.5px solid var(--color-border-secondary);border-radius:8px">
+            <sc-if value="{{ rfPostEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:4px 2px">Aucun code postal dans votre chalandise — le franchiseur doit d'abord vous en attribuer.</span></sc-if>
+            <sc-for list="{{ rfPostcodeOpts }}" as="o" hint-placeholder-count="8"><button type="button" onClick="{{ o.toggle }}" style="{{ o.style }}">{{ o.cp }}</button></sc-for>
+          </div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:5px">{{ rfPostCount }} code(s) postal(aux) sélectionné(s) · un même code postal peut servir plusieurs tournées.</div>
         </div>
         <div><div class="t-admin-label" style="margin-bottom:6px">Récurrence</div><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ rfDays }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.toggle }}" style="{{ d.style }}">{{ d.k }}</button></sc-for></div></div>
         <div><div class="t-admin-label" style="margin-bottom:6px">Retour au dépôt (inclus dans l'ETA)</div><div style="display:flex;gap:8px"><button onClick="{{ rfRetOn }}" style="{{ rfRetStyle }}">Oui</button><button onClick="{{ rfRetOff }}" style="{{ rfRetOffStyle }}">Non</button></div></div>
@@ -1444,13 +1429,7 @@
         <sc-if value="{{ valIsNewT }}" hint-placeholder-val="{{ false }}">
           <input value="{{ valNewName }}" onInput="{{ valSetNewName }}" placeholder="Nom de la nouvelle tournée (ex. Tournée Schaerbeek)" style="width:100%;font:400 13px var(--font-ui);border:.5px solid var(--color-primary);border-radius:8px;background:var(--color-surface);padding:10px 11px;color:var(--color-text);margin-top:8px"/>
         </sc-if>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-          <select value="{{ valZone }}" onChange="{{ valSetZone }}" style="width:100%;font:400 12.5px var(--font-ui);border:.5px solid var(--color-border-secondary);border-radius:8px;background:var(--color-surface);padding:10px 11px;color:var(--color-text)"><sc-for list="{{ valZoneOpts }}" as="z" hint-placeholder-count="5"><option value="{{ z.value }}">{{ z.label }}</option></sc-for></select>
-          <select value="{{ valZone2 }}" onChange="{{ valSetZone2 }}" style="width:100%;font:400 12.5px var(--font-ui);border:.5px solid var(--color-border-secondary);border-radius:8px;background:var(--color-surface);padding:10px 11px;color:var(--color-text)"><sc-for list="{{ valZone2Opts }}" as="z" hint-placeholder-count="5"><option value="{{ z.value }}">{{ z.label }}</option></sc-for></select>
-        </div>
-        <sc-if value="{{ valIsNewZone }}" hint-placeholder-val="{{ false }}">
-          <input value="{{ valNewZone }}" onInput="{{ valSetNewZone }}" placeholder="Nom de la nouvelle zone" style="width:100%;font:400 13px var(--font-ui);border:.5px solid var(--color-primary);border-radius:8px;background:var(--color-surface);padding:10px 11px;color:var(--color-text);margin-top:8px"/>
-        </sc-if>
+        <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:8px">Les codes postaux desservis sont portés par la tournée (zone de chalandise) — rien à saisir ici.</div>
         <sc-if value="{{ valHasT }}" hint-placeholder-val="{{ false }}">
           <div style="background:var(--color-background-secondary);border-radius:9px;padding:12px 14px;margin-top:12px">
             <div style="display:flex;justify-content:space-between;align-items:center"><span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Emplacements disponibles</span><span style="font:700 15px var(--font-ui);color:var(--color-primary)">{{ valUsed }} / {{ valMaxSlots }}</span></div>
@@ -1728,7 +1707,7 @@ class Component extends DCLogic {
     couts: (typeof window!=='undefined'&&window.BOServer)?{prep:+window.BOServer.getParam('cost_prep_hourly',26),emb:+window.BOServer.getParam('cost_packaging_unit',0.42),carb:+window.BOServer.getParam('cost_fuel_liter',1.78),struct:+window.BOServer.getParam('cost_structure_tour',38),charg:+window.BOServer.getParam('cost_loading_hourly',24)}:{ prep: 26, emb: 0.42, carb: 1.78, struct: 38, charg: 24 },
     toast: '', printed: {},
     newRoutes: [], newZones: [], deletedRoutes: [], delRoute: null,
-    rfOpen: false, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, driver:'', vehicule:'', zonePrim:'', zoneSec:'', ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
+    rfOpen: false, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, driver:'', vehicule:'', postcodes:[], ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
     zfOpen: false, zf: { name:'', type:'primary', parent:'', catchment:'', cp:'', vehicule:'Standard', franco:'250 €', delai:'J+1', service:15, access:10 },
     obOpen: false, obStep: 0,
     ob: { raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
@@ -2435,7 +2414,15 @@ class Component extends DCLogic {
     const rfSet=(k)=>(e)=>this.setState(s=>({rf:{...s.rf,[k]:e.target.value}}));
     const rfDays=['L','Ma','Me','J','V','S','D'].map(k=>({k,style:rForm.days[k]?pillActive:pillIdle,toggle:()=>this.setState(s=>({rf:{...s.rf,days:{...s.rf.days,[k]:!s.rf.days[k]}}}))}));
     const rfCanSubmit=!!(rForm.name.trim()&&rForm.short.trim());
-    const rfSubmit=()=>{ if(!rfCanSubmit) return; const id='rn'+Date.now(); const p=(rForm.start||'06:00').split(':'); const nr={id,name:rForm.name,short:rForm.short||rForm.name.slice(0,8),driver:rForm.driver||'— non assigné',start:(+p[0])*60+(+(p[1]||0)),max:parseInt(rForm.max,10)||10,forfait:parseFloat(rForm.forfait)||0,ret:rForm.ret,amplitude:this.NEW_AMPL,decharge:22,trajet:8,used:0,zone:rForm.zonePrim||'',zonePrim:rForm.zonePrim||'',zoneSec:rForm.zoneSec||''}; if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); rows.push(nr); window.BOServer.save('ws_tours',rows); } this.setState(s=>({routeAssign:{...s.routeAssign,[id]:[]},rfOpen:false,_rev:(s._rev||0)+1,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',zonePrim:'',zoneSec:'',ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),()=>this.drawRoute()); this.printJob('✓ Tournée créée : '+nr.name); };
+    const rfSubmit=()=>{ if(!rfCanSubmit) return; const id='rn'+Date.now(); const p=(rForm.start||'06:00').split(':'); const nr={id,name:rForm.name,short:rForm.short||rForm.name.slice(0,8),driver:rForm.driver||'— non assigné',start:(+p[0])*60+(+(p[1]||0)),max:parseInt(rForm.max,10)||10,forfait:parseFloat(rForm.forfait)||0,ret:rForm.ret,amplitude:this.NEW_AMPL,decharge:22,trajet:8,used:0,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')}; if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); rows.push(nr); window.BOServer.save('ws_tours',rows); } this.setState(s=>({routeAssign:{...s.routeAssign,[id]:[]},rfOpen:false,_rev:(s._rev||0)+1,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),()=>this.drawRoute()); this.printJob('✓ Tournée créée : '+nr.name+' ('+(rForm.postcodes||[]).length+' CP)'); };
+    // Pool de codes postaux autorisés = zone de chalandise attribuée à la boutique.
+    let rfPoolCps=(SRV('catchment_postcodes')||[]).map(x=>String(x.cp));
+    if(!rfPoolCps.length){ SRV('ws_franchisor_catchment').forEach(c=>{ String(c.postcodes||'').split(/[^0-9]+/).forEach(cp=>{ if(/^\d{4}$/.test(cp)) rfPoolCps.push(cp); }); }); }
+    rfPoolCps=[...new Set(rfPoolCps)].sort();
+    const rfSelSet=new Set((S.rf.postcodes||[]).map(String));
+    const rfPostcodeOpts=rfPoolCps.map(cp=>({cp, style:(rfSelSet.has(cp)?pillActive:pillIdle), toggle:()=>this.setState(s=>{ const cur=new Set((s.rf.postcodes||[]).map(String)); if(cur.has(cp)) cur.delete(cp); else cur.add(cp); return {rf:{...s.rf,postcodes:[...cur]}}; })}));
+    const rfPostEmpty=rfPoolCps.length===0;
+    const rfPostCount=(S.rf.postcodes||[]).length;
     const zfSet=(k)=>(e)=>this.setState(s=>({zf:{...s.zf,[k]:e.target.value}}));
     const zoneParentOpts=[{value:'',label:'— Aucune —'},...this.zonesData().map(z=>({value:z.id,label:z.nom}))];
     const catchmentOpts=[{value:'',label:'— Sélectionner un territoire marque —'},...SRV('ws_franchisor_catchment').map(c=>({value:c.id,label:c.name}))];
@@ -2667,7 +2654,7 @@ class Component extends DCLogic {
       {value:'__new__',label:'＋ Créer une nouvelle tournée'}];
     const zOpt=(ph)=>[{value:'',label:ph},...zones.map(z=>({value:z.id,label:z.nom})),{value:'__new__',label:'＋ Créer une zone'}];
     const valZoneOpts=zOpt('— Zone principale —');
-    const valZone2Opts=zOpt('— Zone secondaire (optionnel) —');
+    const valZone2Opts=zOpt('— Code postal (optionnel) —');
     const isNewT=S.valTournee==='__new__';
     const selT=tSlots.find(tt=>tt.id===S.valTournee);
     let valUsed=0,valMaxSlots=0,valAmpl='',valPerPoint=0,valDecharge=0,valTrajet=0,valFull=false,valHasT=false;
@@ -2675,7 +2662,7 @@ class Component extends DCLogic {
     else if(isNewT){ valHasT=true; valUsed=0; valMaxSlots=Math.floor(this.NEW_AMPL/this.NEW_PERPOINT); valAmpl=this.fmtMin(this.NEW_AMPL); valDecharge=22; valTrajet=8; valPerPoint=this.NEW_PERPOINT; valFull=false; }
     const valFree=Math.max(0,valMaxSlots-valUsed);
     const isNewZone=S.valZone==='__new__'||S.valZone2==='__new__';
-    const zoneOk=S.valZone && (S.valZone!=='__new__'||S.valNewZone.trim());
+    const zoneOk=true; // zones « secondaires » retirées : l'affectation zone vient de la tournée (chalandise)
     const tOk=(selT&&!valFull)||(isNewT&&S.valNewName.trim());
     const valCanConfirm=!!(S.valModal&&S.valSite&&tOk&&zoneOk);
 
@@ -2728,8 +2715,8 @@ class Component extends DCLogic {
         addDept:this.openFormWith('department',{company:r.bureau,site:r.adr,office:r.office||r.bureau}),
         chain:[
           {lbl:'Tournée',val:r.tour,style:chipMini,go:this.go('tournees')},
-          {lbl:'Zone primaire',val:zc.prim,style:chipMini,go:this.go('zones')},
-          {lbl:'Zone secondaire',val:zc.sec,style:chipMini,go:this.go('zones')},
+          {lbl:'Chalandise',val:zc.prim,style:chipMini,go:this.go('zones')},
+          {lbl:'Code postal',val:zc.sec,style:chipMini,go:this.go('zones')},
           {lbl:'Delivery site',val:r.adr,style:chipMini+';background:#eaf5ec;color:#2d7a3e',go:this.editForm('site',r,i)},
           {lbl:'Office',val:r.office||r.bureau,style:chipMini+';background:#eef3fb;color:#2a5a9e',go:this.go('offices')},
         ],
@@ -3056,7 +3043,7 @@ class Component extends DCLogic {
     const obMailTog=obTog(O.sendMail), obAdhTog=obTog(O.sendAdhesion);
     const obChip='font:500 10.5px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:5px 9px;color:var(--color-text);white-space:nowrap';
     const obChainView=[
-      {lbl:'Tournée',val:O.tour||'—'},{lbl:'Zone primaire',val:obZc.prim},{lbl:'Zone secondaire',val:obZc.sec},
+      {lbl:'Tournée',val:O.tour||'—'},{lbl:'Chalandise',val:obZc.prim},{lbl:'Code postal',val:obZc.sec},
       {lbl:'Delivery site',val:O.adr||'—'},{lbl:'Office',val:O.office||O.raison||'—'},
     ].map(x=>({...x,style:obChip}));
     const obVals={
@@ -3219,6 +3206,7 @@ class Component extends DCLogic {
       setTabAcces:()=>this.setState({b2bTab:'acces'}),setTabRattach:()=>this.setState({b2bTab:'rattach'}),setTabNouveau:()=>this.setState({b2bTab:'nouveau'}),
       isZones:screen==='zones',zones:this.zonesData(),
       catchmentZones:SRV('ws_franchisor_catchment'),catchmentOpts,
+      tourPostcodeRows:(()=>{ const tp={}; (SRV('ws_tour_postcodes')||[]).forEach(r=>{ const k=String(r.tour_id); (tp[k]=tp[k]||[]).push(r.postcode); }); return SRV('ws_tours').map(t=>{ const k=String(t.id).replace(/^r/,''); let arr=tp[k]||tp[String(t.id)]; if(!arr){ const raw=t.postcodes||t.cp; arr=Array.isArray(raw)?raw:String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } return {nom:t.name||t.short||t.nom||('Tournée '+t.id), cp:(arr&&arr.length)?arr.join(' · '):'—', count:(arr||[]).length}; }); })(),
       deliveryZones:(()=>{ const catchAll=new Set(); SRV('ws_franchisor_catchment').forEach(c=>String(c.cp||'').split('·').forEach(x=>{const t=x.trim(); if(t) catchAll.add(t);})); return SRV('ws_delivery_zones').map((z,i)=>{ const cps=String(z.cp||'').split('·').map(x=>x.trim()).filter(Boolean); const outside=cps.filter(cp=>!catchAll.has(cp)); return {...z,activeOn:(z.active===true||z.active==='Active'),outOfScope:outside.length>0,outOfScopeTxt:'Hors périmètre : '+outside.join(' · '),edit:this.editForm('deliveryZone',z,i),del:this.deleteRow('ws_delivery_zones',i,'la zone « '+z.name+' »')}; }); })(),
       addDeliveryZone:this.openForm('deliveryZone'),
       zTournees:this.tourneeSlots().map(tt=>({nom:tt.nom,max:Math.floor(tt.amplitude/(tt.decharge+tt.trajet)),used:tt.used,amplitude:this.fmtMin(tt.amplitude),perPoint:tt.decharge+tt.trajet})),
@@ -3285,7 +3273,8 @@ class Component extends DCLogic {
       confirmDelCancel:()=>this.setState({confirmDel:null}),confirmDelOk:()=>this.confirmDelDo(),
       delRouteConfirm:()=>{ const rid=S.delRoute; if(!rid) return; const nextRA={...RA}; delete nextRA[rid]; const remaining=rMeta.filter(r=>r.id!==rid); if(window.BOServer){ const rows=window.BOServer.table('ws_tours').filter(t=>t.id!==rid); window.BOServer.save('ws_tours',rows); } this.setState(st=>({routeAssign:nextRA,delRoute:null,_rev:(st._rev||0)+1,selRoute:(st.selRoute===rid?(remaining[0]?remaining[0].id:''):st.selRoute)}),()=>this.drawRoute()); this.printJob('✓ Tournée supprimée'); },
       openRouteForm:()=>this.setState({rfOpen:true}),rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false}),
-      rfSet:{name:rfSet('name'),short:rfSet('short'),start:rfSet('start'),max:rfSet('max'),forfait:rfSet('forfait'),driver:rfSet('driver'),vehicule:rfSet('vehicule'),zonePrim:rfSet('zonePrim'),zoneSec:rfSet('zoneSec')},
+      rfPostcodeOpts,rfPostEmpty,rfPostCount,
+      rfSet:{name:rfSet('name'),short:rfSet('short'),start:rfSet('start'),max:rfSet('max'),forfait:rfSet('forfait'),driver:rfSet('driver'),vehicule:rfSet('vehicule')},
       rfZoneOpts:SRV('ws_delivery_zones').filter(z=>z.active===true||z.active==='Active').map(z=>({value:z.name,label:z.name})),
       rfDays,rfRetOn:()=>this.setState(s=>({rf:{...s.rf,ret:true}})),rfRetOff:()=>this.setState(s=>({rf:{...s.rf,ret:false}})),
       rfVehFrigo:()=>this.setState(s=>({rf:{...s.rf,vehicule:'Camion frigo'}})),rfVehBox:()=>this.setState(s=>({rf:{...s.rf,vehicule:'Box frigorifique'}})),
