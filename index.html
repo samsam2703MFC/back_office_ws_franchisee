@@ -775,6 +775,7 @@
       <!-- ===================== OFFICES (BUREAUX) ===================== -->
       <sc-if value="{{ isOffices }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:9px 14px;font:600 10.5px var(--font-ui)"><span style="color:var(--color-text-muted);letter-spacing:.06em;text-transform:uppercase">Hiérarchie</span><span title="Circuit de livraison (horaires, exceptions, cut-off) — racine" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Tournée</span><span style="color:var(--color-text-muted)">›</span><span title="Adresse physique rattachée à une tournée" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Site</span><span style="color:var(--color-text-muted)">›</span><span title="Point paramétrable au sein d\u2019un site" style="border-radius:999px;padding:4px 11px;background:var(--color-primary);color:#fff;cursor:help">Bureau</span><span style="color:var(--color-text-muted)">›</span><span title="Regroupement rattaché à un bureau (facultatif) — lié via le client" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Département</span><span style="color:var(--color-text-muted)">›</span><span title="Entité finale (facturation, jours autorisés…)" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Client</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
           <div style="font:400 12px/1.5 var(--font-ui);color:var(--color-text-muted)">Bureaux clients (ws_offices) + config livraison. Un office regroupe un ou plusieurs delivery sites ; seuls les offices <strong>validés</strong> sont livrables.</div>
           <button onClick="{{ addOffice }}" class="btn-primary" style="padding:9px 16px;font-size:12.5px;white-space:nowrap">+ Nouvel office</button>
@@ -802,6 +803,7 @@
       <!-- ===================== SITES DE LIVRAISON ===================== -->
       <sc-if value="{{ isSites }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:9px 14px;font:600 10.5px var(--font-ui)"><span style="color:var(--color-text-muted);letter-spacing:.06em;text-transform:uppercase">Hiérarchie</span><span title="Circuit de livraison (horaires, exceptions, cut-off) — racine" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Tournée</span><span style="color:var(--color-text-muted)">›</span><span title="Adresse physique rattachée à une tournée" style="border-radius:999px;padding:4px 11px;background:var(--color-primary);color:#fff;cursor:help">Site</span><span style="color:var(--color-text-muted)">›</span><span title="Point paramétrable au sein d\u2019un site" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Bureau</span><span style="color:var(--color-text-muted)">›</span><span title="Regroupement rattaché à un bureau (facultatif) — lié via le client" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Département</span><span style="color:var(--color-text-muted)">›</span><span title="Entité finale (facturation, jours autorisés…)" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Client</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
           <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Adresse physique · étage/local · tournée rattachée · temps d'accès (base du coût-temps)</div>
           <button onClick="{{ addSite }}" class="btn-primary" style="font-size:12px;flex:none">+ Site de livraison</button>
@@ -823,12 +825,18 @@
               </sc-if>
               <div style="display:flex;align-items:start;gap:12px">
                 <div style="width:38px;height:38px;flex:none;border-radius:10px;background:#eaf5ec;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2d7a3e" stroke-width="1.8"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
-                <div style="flex:1;min-width:0"><div style="font:600 13.5px var(--font-ui);color:var(--color-text)">{{ s.adr }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:1px">{{ s.etage }}</div></div>
+                <div style="flex:1;min-width:0"><div style="font:600 13.5px var(--font-ui);color:var(--color-text)">{{ s.siteName }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:1px">{{ s.subTitle }}</div></div>
                 <div style="flex:none;display:flex;align-items:center;gap:6px">
                   <div style="text-align:right;margin-right:2px"><div style="font:700 15px/1 var(--font-ui);color:#2d7a3e">{{ s.acc }}′</div><div style="font:400 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em">accès</div></div>
                   <button onClick="{{ s.edit }}" title="Éditer le site" style="border:.5px solid var(--color-border-tertiary);background:var(--color-surface);border-radius:7px;cursor:pointer;color:var(--color-text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h3l11-11-3-3L4 17z"/><path d="M14 5l3 3"/></svg></button>
                   <button onClick="{{ s.del }}" title="Supprimer" style="border:.5px solid var(--color-border-tertiary);background:var(--color-surface);border-radius:7px;cursor:pointer;color:var(--color-text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none;font-size:14px">✕</button>
                 </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
+                <span class="t-admin-label" style="flex:none">Tournée</span>
+                <select value="{{ s.tourVal }}" onChange="{{ s.tourSet }}" style="flex:1;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:7px 10px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);min-width:0">
+                  <sc-for list="{{ s.tourOpts }}" as="to" hint-placeholder-count="3"><option value="{{ to.value }}">{{ to.label }}</option></sc-for>
+                </select>
               </div>
               <div style="height:.5px;background:var(--color-border-tertiary);margin:14px 0"></div>
               <div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px">Chaîne logique de livraison</div>
@@ -1998,7 +2006,7 @@ class Component extends DCLogic {
         ]},
       site:{ title:'Site (building)', table:'ws_office_delivery_sites', tbl:'ws_office_delivery_sites', save:'Créer le site',
         fields:[
-          {k:'office',label:'Nom du site / bâtiment',type:'text',ph:'ex. Tour Bastion, Zoning Fleming',info:'Un site est un BUILDING (ou groupement de bureaux) : l\'arrêt physique de la tournée. Les bureaux (offices) s\'y rattachent depuis leur propre formulaire.',section:'Rattachement'},
+          {k:'name',label:'Nom du site / bâtiment',type:'text',ph:'ex. Tour Bastion, Zoning Fleming',info:'Un site est un BUILDING (ou groupement de bureaux) : l\'arrêt physique de la tournée. Les bureaux (offices) s\'y rattachent depuis leur propre formulaire.',section:'Rattachement'},
           {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Rattachement'},
           {k:'adr',label:'Adresse',type:'text',ph:'Rue, n°, code postal, ville',section:'Site'},
           {k:'etage',label:'Étage / local',type:'text',ph:'ex. Sous-sol / quai',section:'Site'},
@@ -2040,7 +2048,7 @@ class Component extends DCLogic {
           {k:'company',label:'Société (compte B2B)',type:'select',options:sel(bureaux),def:bureaux[0],section:'Rattachement'},
           {k:'site',label:'Delivery site',type:'text',ph:'Adresse du site',section:'Rattachement'},
           {k:'office',label:'Office / bâtiment',type:'text',ph:'ex. Siège, Cafétéria HQ',section:'Rattachement'},
-          {k:'dept',label:'Département (nom libre)',type:'text',ph:'ex. Marketing, Bureau, Production',section:'Département'},
+          {k:'dept',label:'Département (nom libre)',type:'text',ph:'ex. Marketing, Bureau, Production',info:'Un département est un regroupement rattaché à un BUREAU — rattachement FACULTATIF : le lien se fait via le CLIENT (les personnes qui commandent s\'y rattachent).',section:'Département'},
           {k:'effectif',label:'Effectif',type:'number',def:5,section:'Département'},
           {k:'contact',label:'Email du département',type:'text',ph:'dept@exemple.be',section:'Département'},
         ]},
@@ -2871,12 +2879,20 @@ class Component extends DCLogic {
       return {prim,sec};
     };
     const chipMini='border:none;cursor:pointer;font:500 10px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:4px 8px;color:var(--color-text);white-space:nowrap';
+    const siteTourNames=[...new Set(SRV('ws_tours').map(t=>t.name).filter(Boolean))];
     const sitesList=SRV('ws_office_delivery_sites').map((r,i)=>{
       const zc=zoneChain(r.tour,r.adr);
       const depts=deptRowsAll.map((d,gi)=>({d,gi})).filter(x=>x.d.site===r.adr);
       // Règle : un site SANS tournée est inactif → carte grisée jusqu'au rattachement.
       const noTour=!r.tour||r.tour==='—';
       return {...r, office:r.office||r.bureau, noTour,
+        // Le TITRE de la vignette = le NOM du site (l'adresse passe en sous-titre).
+        siteName:(r.name&&r.name!=='—')?r.name:((r.office&&r.office!=='—')?r.office:r.adr),
+        subTitle:(r.adr||'—')+(r.etage&&r.etage!=='—'?(' · '+r.etage):''),
+        // Rattachement tournée modifiable DIRECTEMENT sur la vignette.
+        tourVal:(r.tour&&r.tour!=='—')?r.tour:'',
+        tourOpts:[{value:'',label:'— Rattacher une tournée —'},...siteTourNames.map(n=>({value:n,label:n}))],
+        tourSet:(e)=>{ const v=e.target.value; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); if(rows[i]){ rows[i]={...rows[i],tour:v||'—'}; window.BOServer.save('ws_office_delivery_sites',rows); } } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob(v?('✓ Site rattaché à la tournée « '+v+' »'):'Tournée retirée — le site repasse inactif'); },
         cardStyle:'background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:16px 18px'+(noTour?';opacity:.5;filter:grayscale(.35)':''),
         canDrop:!!S.dndPick,
         dropHere:()=>{ const b=this.state.dndPick; if(!b) return; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); rows.push({bureau:b,office:b+' — site',tour:(r.tour&&r.tour!=='—')?r.tour:'',adr:r.adr,etage:'',acc:6}); window.BOServer.save('ws_office_delivery_sites',rows); } this.setState(s=>({dndPick:null,_rev:(s._rev||0)+1})); this.printJob('✓ Bureau « '+b+' » lié au site '+r.adr); },
