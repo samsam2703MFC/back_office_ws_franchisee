@@ -2455,9 +2455,11 @@ class Component extends DCLogic {
     const LIVE_ST=(s)=>s==='En route'?this.pill('var(--color-secondary)','var(--color-on-abricot)'):s==='Risque'?this.pill('#fbe9eb','var(--color-primary)'):this.pill('var(--color-background-secondary)','var(--color-text-muted)');
     const liveEta=SRV('fr_live_eta').map(e=>({...e,driftColor:/\+/.test(e.drift)?'var(--color-primary)':'#2d7a3e',statutStyle:LIVE_ST(e.statut)}));
     const selDriverIdx=S.selDriver||0;
+    // Repli : si la donnée (API live) n'a pas de stops détaillés, on les reconstruit depuis l'avancement « n/total ».
+    const synthStops=(dd)=>{ const m=String(dd.avancement||'').match(/(\d+)\D+(\d+)/); const done=m?+m[1]:0; const total=m?+m[2]:0; const out=[]; for(let k=0;k<total;k++){ const st=k<done?'done':(k===done?'current':'todo'); const cur=st==='current'; out.push({name:cur?(dd.next||('Arrêt '+(k+1))):('Livraison '+(k+1)),ville:cur?(dd.nextVille||''):'—',heure:cur?(dd.eta||''):'',state:st,incident:cur&&/risque/i.test(dd.statut||''),incidentLabel:dd.drift}); } return out; };
     const liveTable=SRV('fr_live_table').map((d,i)=>{
       const sel=i===selDriverIdx;
-      const raw=d.stops||[];
+      const raw=(Array.isArray(d.stops)&&d.stops.length)?d.stops:synthStops(d);
       const stops=raw.map((s,si)=>{ const done=s.state==='done'; const cur=s.state==='current';
         return {...s, done, cur, notLast:si<raw.length-1, hasIncident:!!s.incident,
           stateLabel:done?'Livré':(cur?'En cours':'À venir'),
