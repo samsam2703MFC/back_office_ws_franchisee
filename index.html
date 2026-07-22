@@ -797,9 +797,7 @@
       <!-- ===================== SITES DE LIVRAISON ===================== -->
       <sc-if value="{{ isSites }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:9px 14px;font:600 10.5px var(--font-ui)"><span style="color:var(--color-text-muted);letter-spacing:.06em;text-transform:uppercase">Hiérarchie</span><span title="Circuit de livraison (horaires, exceptions, cut-off) — racine" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Tournée</span><span style="color:var(--color-text-muted)">›</span><span title="Adresse physique rattachée à une tournée" style="border-radius:999px;padding:4px 11px;background:var(--color-primary);color:#fff;cursor:help">Site</span><span style="color:var(--color-text-muted)">›</span><span title="Point paramétrable au sein d\u2019un site" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Bureau</span><span style="color:var(--color-text-muted)">›</span><span title="Regroupement rattaché à un bureau (facultatif) — lié via le client" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Département</span><span style="color:var(--color-text-muted)">›</span><span title="Entité finale (facturation, jours autorisés…)" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Client</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
-          <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Adresse physique · étage/local · tournée rattachée · temps d'accès (base du coût-temps)</div>
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:16px">
           <button onClick="{{ addSite }}" class="btn-primary" style="font-size:12px;flex:none">+ Site de livraison</button>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
@@ -839,28 +837,10 @@
               </div>
               <div style="height:.5px;background:var(--color-border-tertiary);margin:14px 0"></div>
               <div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px">Chaîne logique de livraison</div>
-              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 4px;margin-bottom:14px">
-                <sc-for list="{{ s.chain }}" as="ch" hint-placeholder-count="5">
-                  <button onClick="{{ ch.go }}" style="{{ ch.style }}" title="Ouvrir · {{ ch.lbl }}">{{ ch.val }}</button>
-                  <span style="color:var(--color-text-muted);font-size:11px">›</span>
-                </sc-for>
-                <span style="font:500 10px var(--font-ui);background:#fbf1e3;border-radius:6px;padding:4px 8px;color:#b26a00;white-space:nowrap">{{ s.deptCount }} départ.</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <span style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted)">Départements</span>
-                <button onClick="{{ s.addDept }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:7px;cursor:pointer;color:var(--color-primary);font:600 11px var(--font-ui);padding:4px 10px;display:flex;align-items:center;gap:4px">+ Département</button>
-              </div>
-              <sc-if value="{{ s.deptEmpty }}" hint-placeholder-val="{{ false }}">
-                <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);padding:8px 0 2px">Aucun département rattaché — cliquez « + Département ».</div>
-              </sc-if>
-              <div style="display:flex;flex-direction:column;gap:6px">
-                <sc-for list="{{ s.depts }}" as="d" hint-placeholder-count="2">
-                  <div style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--color-background-secondary);border-radius:9px">
-                    <span style="width:26px;height:26px;flex:none;border-radius:7px;background:#fbf1e3;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b26a00" stroke-width="1.8"><path d="M3 21V8l6-4 6 4v13M9 21v-5h4v5M15 12h6v9H9"/></svg></span>
-                    <div style="flex:1;min-width:0"><div style="font:600 12px var(--font-ui);color:var(--color-text)">{{ d.dept }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ d.effectif }} pers. · {{ d.contact }}</div></div>
-                    <button onClick="{{ d.edit }}" style="border:none;background:transparent;cursor:pointer;color:var(--color-text-muted);width:24px;height:24px;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h3l11-11-3-3L4 17z"/><path d="M14 5l3 3"/></svg></button>
-                    <button onClick="{{ d.del }}" style="border:none;background:transparent;cursor:pointer;color:var(--color-text-muted);width:24px;height:24px;flex:none;font-size:15px">✕</button>
-                  </div>
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 4px">
+                <sc-for list="{{ s.chain }}" as="ch" hint-placeholder-count="4">
+                  <button onClick="{{ ch.go }}" style="{{ ch.style }}" title="{{ ch.lbl }}">{{ ch.val }}</button>
+                  <sc-if value="{{ ch.notLast }}" hint-placeholder-val="{{ true }}"><span style="color:var(--color-text-muted);font-size:11px">›</span></sc-if>
                 </sc-for>
               </div>
             </div>
@@ -2884,7 +2864,7 @@ class Component extends DCLogic {
     const fermetures=SRV('ws_tour_closures').map((f,i)=>{ const dm=splitDate(f.date); return {...f,d:dm.d,m:dm.m,edit:this.editForm('fermeture',f,i),del:this.deleteRow('ws_tour_closures',i,'cette fermeture'),pill:pill2(f.type==='Férié'?'#fbe9eb':(f.type==='Congé'?'var(--color-background-secondary)':'#fff4e5'),f.type==='Férié'?'var(--color-primary)':(f.type==='Congé'?'var(--color-text-muted)':'#b26a00'))}; });
     const addFermeture=this.openForm('fermeture');
 
-    // ---- Chaîne logique : tournée → zone primaire → zone secondaire → delivery site → office → département ----
+    // ---- Chaîne logique de livraison : Tournée → Site → Bureaux liés → Départements ----
     const deptRowsAll=SRV('b2b_client_company_department');
     const zoneChain=(tour,adr)=>{
       const cp=(String(adr||'').match(/\b(\d{4})\b/)||[])[1]||'';
@@ -2894,8 +2874,8 @@ class Component extends DCLogic {
     };
     const chipMini='border:none;cursor:pointer;font:500 10px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:4px 8px;color:var(--color-text);white-space:nowrap';
     const siteTourNames=[...new Set(SRV('ws_tours').map(t=>t.name).filter(Boolean))];
-    const sitesList=SRV('ws_office_delivery_sites').map((r,i)=>{
-      const zc=zoneChain(r.tour,r.adr);
+    const siteRowsAll=SRV('ws_office_delivery_sites');
+    const sitesList=siteRowsAll.map((r,i)=>{
       const depts=deptRowsAll.map((d,gi)=>({d,gi})).filter(x=>x.d.site===r.adr);
       // Règle : un site SANS tournée est inactif → carte grisée jusqu'au rattachement.
       const noTour=!r.tour||r.tour==='—';
@@ -2914,18 +2894,22 @@ class Component extends DCLogic {
         grabStyle:'width:100%;margin-bottom:10px;border:1.5px '+(grabbed?'solid':'dashed')+' '+(grabbed?'var(--color-primary)':'var(--color-border-secondary)')+';background:'+(grabbed?'var(--color-background-secondary)':'transparent')+';color:'+(grabbed?'var(--color-primary)':'var(--color-text-muted)')+';border-radius:9px;padding:8px;font:600 11.5px var(--font-ui);cursor:grab',
         grab:()=>this.setState(s=>({dndSite:s.dndSite===i?null:i})),
         edit:this.editForm('site',r,i), del:this.deleteRow('ws_office_delivery_sites',i,'le site « '+(r.name||r.adr)+' »'),
-        addDept:this.openFormWith('department',{company:r.bureau,site:r.adr,office:r.office||r.bureau}),
-        chain:[
-          {lbl:'Tournée',val:r.tour,style:chipMini,go:this.go('tournees')},
-          {lbl:'Chalandise',val:zc.prim,style:chipMini,go:this.go('zones')},
-          {lbl:'Code postal',val:zc.sec,style:chipMini,go:this.go('zones')},
-          {lbl:'Delivery site',val:r.adr,style:chipMini+';background:#eaf5ec;color:#2d7a3e',go:this.editForm('site',r,i)},
-          {lbl:'Office',val:r.office||r.bureau,style:chipMini+';background:#eef3fb;color:#2a5a9e',go:this.go('offices')},
-        ],
-        depts:depts.map(x=>({dept:x.d.dept,effectif:x.d.effectif,contact:x.d.contact,
-          edit:this.editForm('department',x.d,x.gi), del:this.deleteRow('b2b_client_company_department',x.gi,'ce département')})),
-        deptCount:String(depts.length),
-        deptEmpty:depts.length===0,
+        chain:(()=>{
+          // Chaîne conservée : Tournée → Site → Bureaux déjà liés → (si présents)
+          // Départements, + slots utilisés de la tournée (ex. 10/20).
+          const sName=(r.name&&r.name!=='—')?r.name:((r.office&&r.office!=='—')?r.office:r.adr);
+          const bureaux=[...new Set(siteRowsAll.filter(x=>x.adr===r.adr).map(x=>x.bureau||x.office).filter(v=>v&&v!=='—'))];
+          const bVal=bureaux.length===0?'Aucun bureau lié':(bureaux.length<=2?bureaux.join(', '):bureaux.length+' bureaux');
+          const items=[
+            {lbl:'Tournée',val:(r.tour&&r.tour!=='—')?r.tour:'Sans tournée',style:chipMini,go:this.go('tournees')},
+            {lbl:'Site',val:sName,style:chipMini+';background:#eaf5ec;color:#2d7a3e',go:this.editForm('site',r,i)},
+            {lbl:'Bureaux déjà liés',val:bVal,style:chipMini+(bureaux.length?';background:#eef3fb;color:#2a5a9e':';color:var(--color-text-muted)'),go:this.go('offices')},
+          ];
+          if(depts.length>0) items.push({lbl:'Départements',val:depts.length+' départ.',style:chipMini,go:this.go('offices')});
+          const sl=tSlots.find(tt=>tt.nom===r.tour);
+          if(sl) items.push({lbl:'Slots utilisés de la tournée',val:sl.used+'/'+sl.max+' slots',style:chipMini+';background:#fbe9eb;color:var(--color-primary)',go:this.go('tournees')});
+          return items.map((it,ix)=>({...it,notLast:ix<items.length-1}));
+        })(),
       };
     });
 
@@ -2944,9 +2928,8 @@ class Component extends DCLogic {
     // Ordre de mise en place : 1· tournées, 2· assignation des SITES aux tournées
     // (déplaçables pour optimiser la charge — les bureaux, eux, se rattachent au
     // site à l'onboarding du bureau). Tuiles tournée = capacité + charge actuelle.
-    const allSiteRows=SRV('ws_office_delivery_sites');
     const tourAssignTiles=this.tourneeSlots().map(tt=>{ const max=Math.max(1,Math.floor((tt.amplitude||240)/((tt.decharge||18)+(tt.trajet||12))));
-      const sitesOf=allSiteRows.filter(r=>r.tour===tt.nom);
+      const sitesOf=siteRowsAll.filter(r=>r.tour===tt.nom);
       const bx=new Set(sitesOf.map(r=>r.bureau||r.office).filter(v=>v&&v!=='—'));
       const canDrop=S.dndSite!=null;
       return {nom:tt.nom,cap:(tt.used||0)+' / '+max,charge:sitesOf.length+' site(s) · '+bx.size+' bureau(x)',canDrop,
