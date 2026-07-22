@@ -1460,9 +1460,9 @@
         <div style="min-width:0"><div class="t-page-title" style="font-size:18px">{{ formTitle }}</div><div style="display:inline-flex;align-items:center;gap:6px;margin-top:6px;background:var(--color-background-secondary);border-radius:6px;padding:4px 9px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.8"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span style="font:600 11px var(--font-mono,monospace);color:var(--color-text-muted);letter-spacing:.02em">{{ formTable }}</span></div></div>
         <button onClick="{{ formClose }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button>
       </div>
-      <div style="padding:18px 24px;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:18px 24px;display:grid;grid-template-columns:1fr 1fr;gap:13px 14px">
         <sc-for list="{{ formFields }}" as="f" hint-placeholder-count="4">
-          <div>
+          <div style="{{ f.wrapStyle }}">
             <sc-if value="{{ f.hasSection }}" hint-placeholder-val="{{ false }}"><div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:6px;margin-bottom:10px">{{ f.sectionLabel }}</div></sc-if>
             <label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">{{ f.label }}</label>
             <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
@@ -1927,11 +1927,11 @@ class Component extends DCLogic {
           {k:'vat',label:'N° TVA (validé via VIES)',type:'text',ph:'BE 0xxx.xxx.xxx',vies:true,section:'Identité'},
           {k:'status',label:'Statut',type:'toggle',options:[{value:'pending',label:'En attente'},{value:'validated',label:'Validé'}],def:'validated',section:'Identité'},
           {k:'address',label:'Adresse',type:'text',ph:'Rue, n°',section:'Coordonnées'},
-          {k:'postal_code',label:'Code postal',type:'text',ph:'1000',section:'Coordonnées'},
-          {k:'city',label:'Ville',type:'text',ph:'Bruxelles',section:'Coordonnées'},
-          {k:'contact',label:'Personne de contact',type:'text',ph:'ex. Facility',section:'Contact'},
-          {k:'email',label:'Email',type:'text',ph:'contact@exemple.be',section:'Contact'},
-          {k:'phone',label:'Téléphone',type:'text',ph:'+32 …',section:'Contact'},
+          {k:'postal_code',label:'Code postal',type:'text',ph:'1000',half:true,section:'Coordonnées'},
+          {k:'city',label:'Ville',type:'text',ph:'Bruxelles',half:true},
+          {k:'contact',label:'Personne de contact',type:'text',ph:'ex. Facility',half:true,section:'Contact'},
+          {k:'phone',label:'Téléphone',type:'text',ph:'+32 …',half:true},
+          {k:'email',label:'Email',type:'text',ph:'contact@exemple.be'},
           {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Livraison (ws_office_delivery_settings)'},
           {k:'allowed_days',label:'Jours autorisés — hérités de la tournée',readonly:true,ph:'choisissez une tournée',section:'Livraison (ws_office_delivery_settings)'},
           {k:'delivery_cutoff',label:'Cut-off commande — hérité de la tournée',readonly:true,ph:'choisissez une tournée',section:'Livraison (ws_office_delivery_settings)'},
@@ -2907,6 +2907,7 @@ class Component extends DCLogic {
         isText:f.type!=='select'&&f.type!=='number'&&!isToggle&&!f.readonly,
         toggleOpts, hasVies:!!f.vies, viesCheck, viesMsg:S.viesMsg||'',
         viesStyle:'font:500 12px var(--font-ui);color:'+(S.viesOk===true?'#2d7a3e':(S.viesOk===false?'var(--color-primary)':'var(--color-text-muted)')),
+        wrapStyle:(f.half?'min-width:0':'grid-column:1/-1;min-width:0'),
         options:(f.options||[]), inputStyle:inputBase };
     }):[];
 
