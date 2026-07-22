@@ -729,7 +729,8 @@
 
       <!-- ===================== HORAIRES DES TOURNÉES ===================== -->
       <sc-if value="{{ isHoraires }}" hint-placeholder-val="{{ false }}">
-      <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:18px">
+        <div style="display:flex;align-items:center;gap:8px;border-top:.5px solid var(--color-border-tertiary);padding-top:16px"><span style="font:600 11px var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-primary)">Paramètres de la tournée — horaires &amp; fermetures</span><span class="bo-tiph" style="position:relative;display:inline-flex"><span style="width:14px;height:14px;border-radius:50%;background:#E8A15C;color:#fff;font:700 9px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;cursor:help;flex:none">i</span><span class="bo-tip" style="position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);background:var(--color-text);color:var(--color-surface);font:400 11px/1.5 var(--font-ui);padding:8px 11px;border-radius:8px;width:250px;z-index:60;text-transform:none;letter-spacing:0;box-shadow:0 8px 24px rgba(0,0,0,.25)">Les horaires (jours, fenêtres, cut-off) et les exceptions/fermetures sont des paramètres DE LA TOURNÉE : les bureaux livrés en héritent automatiquement.</span></span></div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div class="t-section-title" style="font-size:15px;margin-bottom:3px">Fenêtres récurrentes par jour</div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Départ / fin, cut-off de prise de commande et capacité — par tournée × jour de semaine</div>
@@ -1999,7 +2000,7 @@ class Component extends DCLogic {
         ]},
       office:{ title:'Office (bureau)', table:'ws_offices', tbl:'ws_offices', save:'Enregistrer l\'office',
         fields:[
-          {k:'name',label:'Nom de l\'office (lieu de livraison)',type:'text',ph:'ex. KBC — Cafétéria HQ',info:'Un office est un LIEU DE LIVRAISON d\'un client. Un site (building) peut regrouper plusieurs offices ; un office contient plusieurs départements.',section:'Identité'},
+          {k:'name',label:'Nom de l\'office (lieu de livraison)',type:'text',ph:'ex. KBC — Cafétéria HQ',info:'Un office est un LIEU DE LIVRAISON d\'un client. Un site (building) peut regrouper plusieurs offices ; un office contient plusieurs départements, auxquels se rattachent les clients (personnes) qui commandent.',section:'Identité'},
           {k:'status',label:'Statut',type:'toggle',options:[{value:'pending',label:'En attente'},{value:'validated',label:'Validé'}],def:'validated',info:'À la création : Validé. Toute MODIFICATION repasse l\'office « En attente » jusqu\'à re-validation.',section:'Identité'},
           {k:'address',label:'Adresse',type:'text',ph:'Rue, n°',section:'Coordonnées'},
           {k:'postal_code',label:'Code postal',type:'text',ph:'1000',half:true,section:'Coordonnées'},
@@ -2425,7 +2426,7 @@ class Component extends DCLogic {
     ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{ nav[k]=this.go(k); navStyles[k]=this.navStyle(k); });
     const paramScreens=['tournees','horaires','fermetures','clients','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
     const paramsActive=paramScreens.includes(S.screen);
-    const livFlow=[['tournees','Tournées'],['horaires','Horaires'],['clients','Bureaux'],['sites','Sites'],['bureauParams','Param. bureau'],['frais','Frais']];
+    const livFlow=[['tournees','Tournées · horaires'],['clients','Bureaux'],['sites','Sites'],['bureauParams','Param. bureau'],['frais','Frais']];
     const livKeys=livFlow.map(x=>x[0]);
     const isLivProcess=livKeys.includes(S.screen);
     const curLiv=livKeys.indexOf(S.screen);
@@ -2795,7 +2796,7 @@ class Component extends DCLogic {
 
     // ===== LIVRAISONS — paramétrage : nav groups =====
     const groupsDef=[
-      {id:'g_liv',label:'Livraison',items:[['tournees','Tournées'],['horaires','Horaires & fermetures'],['zones','Zones'],['frais','Frais de livraison'],['params','Coût & temps']]},
+      {id:'g_liv',label:'Livraison',items:[['tournees','Tournées · horaires · fermetures'],['zones','Zones'],['frais','Frais de livraison'],['params','Coût & temps']]},
       {id:'g_b2b',label:'Clients B2B',items:[['clients','Bureaux & sites'],['offices','Offices'],['sites','Sites de livraison'],['bureauParams','Règles par bureau'],['emailsBureau','Contacts email']]},
       {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
     ];
@@ -3348,8 +3349,10 @@ class Component extends DCLogic {
       openForm:(k)=>this.openForm(k), addClientB2B:()=>this.obOpen(),
       addHoraire:this.openForm('horaire'), addFee:this.openForm('fee'), addCoutVersion:this.openForm('coutVersion'),
       addSite:this.openForm('site'), addCreneau:this.openForm('creneau'), addBureauParam:this.openForm('bureauParam'), addDispoProd:this.openForm('dispoProd'),
-      isHoraires:screen==='horaires',horaires,
-      isFermetures:screen==='horaires',fermetures,addFermeture,
+      // Sens de paramétrage : les horaires et fermetures sont des PARAMÈTRES DE
+      // TOURNÉE → rendus dans l'écran Tournées (l'entrée de menu dédiée disparaît).
+      isHoraires:screen==='horaires'||screen==='tournees',horaires,
+      isFermetures:screen==='horaires'||screen==='tournees',fermetures,addFermeture,
       isSites:screen==='sites',sitesList,
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
       isBureauParams:screen==='bureauParams',bureauParams,
