@@ -1932,6 +1932,8 @@ class Component extends DCLogic {
     const tours=toursReal.length?[...new Set(toursReal)]:['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
     const bureauxReal=(window.BOServer?window.BOServer.table('ws_offices'):[]).map(o=>o.name).filter(Boolean);
     const bureaux=bureauxReal.length?[...new Set(bureauxReal)]:['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
+    // Buildings (sites) existants : adresses distinctes de ws_office_delivery_sites.
+    const buildings=[...new Set((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(s=>s.adr||s.address).filter(Boolean))];
     const cats=['Pâtisserie fraîche','Boulangerie','Traiteur / plats','Chocolaterie','Glaces & surgelés','Épicerie fine'];
     const sel=(a)=>a.map(x=>({value:x,label:x}));
     const catchmentSel=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]).map(c=>({value:c.name,label:c.name}));
@@ -1975,10 +1977,9 @@ class Component extends DCLogic {
           {k:'type',label:'Type',type:'select',options:sel(['Fermé','Horaire spécial']),def:'Fermé'},
           {k:'detail',label:'Détail horaire',type:'text',ph:'ex. 07:00 – 15:00 · pas de livraison PM'},
         ]},
-      site:{ title:'Nouveau site de livraison', table:'ws_office_delivery_sites', tbl:'ws_office_delivery_sites', save:'Créer le site',
+      site:{ title:'Site (building)', table:'ws_office_delivery_sites', tbl:'ws_office_delivery_sites', save:'Créer le site',
         fields:[
-          {k:'bureau',label:'Bureau (compte B2B)',type:'select',options:sel(bureaux),def:bureaux[0],section:'Rattachement'},
-          {k:'office',label:'Office / bâtiment',type:'text',ph:'ex. Siège, Économat, Cafétéria HQ',section:'Rattachement'},
+          {k:'office',label:'Nom du site / bâtiment',type:'text',ph:'ex. Tour Bastion, Zoning Fleming',info:'Un site est un BUILDING (ou groupement de bureaux) : l\'arrêt physique de la tournée. Les bureaux (offices) s\'y rattachent depuis leur propre formulaire.',section:'Rattachement'},
           {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Rattachement'},
           {k:'adr',label:'Adresse',type:'text',ph:'Rue, n°, code postal, ville',section:'Site'},
           {k:'etage',label:'Étage / local',type:'text',ph:'ex. Sous-sol / quai',section:'Site'},
@@ -2002,6 +2003,7 @@ class Component extends DCLogic {
         fields:[
           {k:'name',label:'Nom de l\'office (lieu de livraison)',type:'text',ph:'ex. KBC — Cafétéria HQ',info:'Un office est un LIEU DE LIVRAISON d\'un client. Un site (building) peut regrouper plusieurs offices ; un office contient plusieurs départements, auxquels se rattachent les clients (personnes) qui commandent.',section:'Identité'},
           {k:'status',label:'Statut',type:'toggle',options:[{value:'pending',label:'En attente'},{value:'validated',label:'Validé'}],def:'validated',info:'À la création : Validé. Toute MODIFICATION repasse l\'office « En attente » jusqu\'à re-validation.',section:'Identité'},
+          {k:'site',label:'Site (building) du bureau',type:'select',options:[{value:'',label:'— Aucun building (site à créer) —'},...buildings.map(b=>({value:b,label:b}))],info:'Sens du paramétrage : c\'est le BUREAU qui choisit son building (site). Un site peut regrouper plusieurs bureaux — c\'est l\'arrêt physique de la tournée.',section:'Identité'},
           {k:'address',label:'Adresse',type:'text',ph:'Rue, n°',section:'Coordonnées'},
           {k:'postal_code',label:'Code postal',type:'text',ph:'1000',half:true,section:'Coordonnées'},
           {k:'city',label:'Ville',type:'text',ph:'Bruxelles',half:true},
@@ -2426,7 +2428,9 @@ class Component extends DCLogic {
     ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{ nav[k]=this.go(k); navStyles[k]=this.navStyle(k); });
     const paramScreens=['tournees','horaires','fermetures','clients','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
     const paramsActive=paramScreens.includes(S.screen);
-    const livFlow=[['tournees','Tournées · horaires'],['clients','Bureaux'],['sites','Sites'],['bureauParams','Param. bureau'],['frais','Frais']];
+    // Fil d'ariane dans le SENS du modèle : la tournée dessert des SITES
+    // (buildings), qui hébergent des BUREAUX (offices) — puis leurs paramètres.
+    const livFlow=[['tournees','Tournées · horaires'],['sites','Sites (buildings)'],['clients','Bureaux (offices)'],['bureauParams','Param. bureau'],['frais','Frais']];
     const livKeys=livFlow.map(x=>x[0]);
     const isLivProcess=livKeys.includes(S.screen);
     const curLiv=livKeys.indexOf(S.screen);
