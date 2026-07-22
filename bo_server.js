@@ -149,9 +149,12 @@
     ],
     // ---- Cadre marque : zone de chalandise (lecture seule côté franchisé, définie par le franchiseur) ----
     "ws_franchisor_catchment": [
-      {id:1,name:'Bruxelles Capitale (19 communes)',cp:'1000 · 1020 · 1030 · 1040 · 1050 · 1060 · 1070 · 1080 · 1081 · 1082 · 1083 · 1090 · 1120 · 1130 · 1140 · 1150 · 1160 · 1170 · 1180 · 1190 · 1200 · 1210',exclusif:true},
-      {id:2,name:'Brabant flamand — périphérie',cp:'1600 · 1700 · 1800 · 1930 · 1932 · 3000 · 3001 · 3010 · 3020',exclusif:true},
-      {id:3,name:'Brabant wallon nord',cp:'1300 · 1310 · 1320 · 1340 · 1348 · 1400 · 1410 · 1420',exclusif:false},
+      // shop_id/shop_name : mêmes champs que l'API (JOIN shops) — les tuiles
+      // « Magasins » de l'écran Zone de chalandise en dépendent. shop_id 2 =
+      // la boutique de démo (?shop=2) ; une zone reste non attribuée (gris).
+      {id:1,name:'Bruxelles Capitale (19 communes)',cp:'1000 · 1020 · 1030 · 1040 · 1050 · 1060 · 1070 · 1080 · 1081 · 1082 · 1083 · 1090 · 1120 · 1130 · 1140 · 1150 · 1160 · 1170 · 1180 · 1190 · 1200 · 1210',exclusif:true,shop_id:2,shop_name:'L\'Atelier — Bruxelles Centre',shop_city:'Bruxelles'},
+      {id:2,name:'Brabant flamand — périphérie',cp:'1600 · 1700 · 1800 · 1930 · 1932 · 3000 · 3001 · 3010 · 3020',exclusif:true,shop_id:3,shop_name:'L\'Atelier — Leuven',shop_city:'Leuven'},
+      {id:3,name:'Brabant wallon nord',cp:'1300 · 1310 · 1320 · 1340 · 1348 · 1400 · 1410 · 1420',exclusif:false,shop_id:null,shop_name:null,shop_city:null},
     ],
     // ---- Tournées : table unique (constructeur + capacité + validation + horaires lisent ici) ----
     "ws_tours": [

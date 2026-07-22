@@ -538,12 +538,18 @@
       <div style="display:flex;flex-direction:column;gap:18px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:0;overflow:hidden">
           <div style="padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-            <span class="t-admin-label">Carte du territoire</span>
-            <span style="font:11px var(--font-ui);color:var(--color-text-muted)"><span style="color:#8D1D2C;font-weight:700">●</span> office validé · <span style="color:#E8B93C;font-weight:700">●</span> office en attente · <span style="color:#c9a0a6;font-weight:700">·</span> CP de ma chalandise · <span style="color:#8a8378;font-weight:700">●</span> zone réseau</span>
-            <select value="{{ zmapVal }}" onChange="{{ zmapSet }}" style="margin-left:auto;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:7px 10px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:280px">
-              <sc-for list="{{ zmapOpts }}" as="zo" hint-placeholder-count="3"><option value="{{ zo.value }}">{{ zo.label }}</option></sc-for>
-            </select>
+            <span class="t-admin-label">Zones de chalandise du réseau</span>
+            <span style="font:11px var(--font-ui);color:var(--color-text-muted)"><span style="color:#2d7a3e;font-weight:700">●</span> chalandise du magasin sélectionné · <span style="color:#8a8378;font-weight:700">●</span> autres zones du réseau · <span style="color:#8D1D2C;font-weight:700">●</span> office validé · <span style="color:#E8B93C;font-weight:700">●</span> office en attente</span>
           </div>
+          <div style="padding:0 18px 10px;display:flex;gap:8px;overflow-x:auto">
+            <sc-for list="{{ zmapShops }}" as="zs" hint-placeholder-count="4">
+              <button type="button" onClick="{{ zs.pick }}" style="{{ zs.style }}">
+                <span style="display:block;font:600 12px var(--font-ui);white-space:nowrap">{{ zs.shopLbl }}</span>
+                <span style="display:block;font:400 10.5px var(--font-ui);opacity:.75;margin-top:2px;white-space:nowrap">{{ zs.zoneLbl }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ zmapMineSel }}" hint-placeholder-val="{{ true }}">
           <div style="padding:0 18px 12px;display:flex;gap:8px;overflow-x:auto">
             <sc-for list="{{ zmapTours }}" as="zt" hint-placeholder-count="4">
               <button type="button" onClick="{{ zt.pick }}" style="{{ zt.style }}">
@@ -552,13 +558,14 @@
               </button>
             </sc-for>
           </div>
+          </sc-if>
           <div id="map-zones-fr" style="width:100%;height:340px;background:var(--color-background-secondary)"></div>
         </div>
         <div style="background:var(--color-surface);border:.5px solid #e7d3b8;border-radius:12px;overflow:hidden">
           <div style="padding:14px 18px;background:#fbf3e6;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
             <button type="button" onClick="{{ zchToggle }}" style="display:flex;align-items:center;gap:9px;background:transparent;border:none;cursor:pointer;padding:0;text-align:left">
               <span style="width:26px;height:26px;border-radius:7px;background:#f3e2c6;color:#a06a12;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
-              <span><span class="t-section-title" style="font-size:15px;color:#7a4e0a;display:block">{{ zchCaret }} Zone de chalandise — cadre marque</span><span style="font:400 11px var(--font-ui);color:#a06a12;display:block;margin-top:2px">ws_franchisor_catchment · lecture seule · cliquez pour déplier</span></span>
+              <span><span class="t-section-title" style="font-size:15px;color:#7a4e0a;display:block">{{ zchCaret }} Zone de chalandise — cadre marque</span><span style="font:400 11px var(--font-ui);color:#a06a12;display:block;margin-top:2px">ws_franchisor_catchment · lecture seule · dépliez puis cliquez un franchisé : sa zone s'affiche sur la carte</span></span>
             </button>
             <div style="margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap">
               <input value="{{ zchQ }}" onInput="{{ zchSetQ }}" placeholder="Vérifier un CP… (ex. 1450)" inputmode="numeric" style="border:.5px solid #e0c9a4;border-radius:8px;padding:8px 11px;font:500 12px var(--font-ui);background:#fff;color:#7a4e0a;width:170px"/>
@@ -567,10 +574,11 @@
             </div>
           </div>
           <sc-if value="{{ zchOpen }}" hint-placeholder-val="{{ false }}">
-          <div style="display:grid;grid-template-columns:1.5fr 3fr .9fr;padding:10px 18px;border-bottom:.5px solid #f0e2cc;background:#fdf8f0"><span class="t-admin-label" style="color:#a06a12">Territoire</span><span class="t-admin-label" style="color:#a06a12">Codes postaux couverts</span><span class="t-admin-label" style="color:#a06a12;text-align:right">Exclusivité</span></div>
+          <div style="display:grid;grid-template-columns:1.4fr 1.4fr 2.6fr .8fr;padding:10px 18px;border-bottom:.5px solid #f0e2cc;background:#fdf8f0"><span class="t-admin-label" style="color:#a06a12">Territoire</span><span class="t-admin-label" style="color:#a06a12">Magasin</span><span class="t-admin-label" style="color:#a06a12">Codes postaux couverts</span><span class="t-admin-label" style="color:#a06a12;text-align:right">Exclusivité</span></div>
           <sc-for list="{{ catchmentZones }}" as="c" hint-placeholder-count="3">
-            <div style="display:grid;grid-template-columns:1.5fr 3fr .9fr;align-items:center;padding:12px 18px;border-bottom:.5px solid #f6ecda">
+            <div onClick="{{ c.pick }}" title="Afficher cette zone sur la carte" style="{{ c.rowStyle }}">
               <span style="font:600 12.5px var(--font-ui);color:#7a4e0a">{{ c.name }}</span>
+              <span style="font:500 11.5px var(--font-ui);color:#a06a12">{{ c.shopLbl }}</span>
               <span style="font:400 11px/1.5 var(--font-mono,monospace);color:#a06a12">{{ c.cp }}</span>
               <sc-if value="{{ c.exclusif }}" hint-placeholder-val="{{ true }}"><span style="justify-self:end;font:600 10.5px var(--font-ui);color:#2d7a3e;background:#eaf5ec;padding:3px 9px;border-radius:20px">Exclusive</span></sc-if>
               <sc-if value="{{ c.exclusif }}" hint-placeholder-val="{{ false }}"><span style="justify-self:end;font:500 10.5px var(--font-ui);color:var(--color-text-muted)">Partagée</span></sc-if>
@@ -2357,29 +2365,29 @@ class Component extends DCLogic {
     const S=this.state;
     const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
     const fr=window.__FR||{}; const myShop=parseInt(fr.shop,10)||null;
-    // MA chalandise (shop_id = ma boutique) ; repli : toutes si non renseigné.
-    const mineList=(myShop?cats.filter(c=>String(c.shop_id)===String(myShop)):[]);
-    const shown=mineList.length?mineList:cats;
-    // CP « validés » = couverts par au moins une tournée (ws_tour_postcodes).
-    const covered=new Set((window.BOServer?window.BOServer.table('ws_tour_postcodes'):[]).map(r=>String(r.postcode)));
-    if(!covered.size){ (window.BOServer?window.BOServer.table('ws_tours'):[]).forEach(t=>{ const raw=t.postcodes||t.cp; (Array.isArray(raw)?raw:String(raw||'').split(/[^0-9]+/)).forEach(cp=>{ if(/^\d{4}$/.test(cp)) covered.add(cp); }); }); }
-    const other=cats.find(c=>String(c.id)===String(S.zmapOther||''));
+    // Magasin sélectionné dans les tuiles (défaut : MA boutique).
+    const selShop=(S.zmapShop!=null&&S.zmapShop!=='')?S.zmapShop:myShop;
+    const mineSel=String(selShop)===String(myShop);
     const offSig=(window.BOServer?window.BOServer.table('ws_offices'):[]).map(o=>[o.id||o.name,o.status,o.tour,o.postal_code]);
-    const key=JSON.stringify([shown.map(c=>[c.id,c.cp]),offSig,S.zmapTour||'',S.zmapOther||'']);
+    const key=JSON.stringify([cats.map(c=>[c.id,c.cp,c.shop_id]),offSig,S.zmapTour||'',String(selShop)]);
     if(this._zfKey===key) return; this._zfKey=key;
     if(this._zfLayer) m.removeLayer(this._zfLayer);
     const offices=(window.BOServer?window.BOServer.table('ws_offices'):[]);
     const depts=(window.BOServer?window.BOServer.table('b2b_client_company_department'):[]);
-    const selTour=S.zmapTour||'';
-    const g=L.layerGroup(); const pts=[]; const otherPts=[]; const focusPts=[];
-    // Fond : les CP de MA chalandise en points pâles (contexte territoire).
-    shown.forEach(c=>{ this.zfCpsOf(c.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; pts.push([e.lat,e.lng]);
-      const mk=L.circleMarker([e.lat,e.lng],{radius:3.5,color:'#c9a0a6',weight:1,fillColor:'#c9a0a6',fillOpacity:.35});
-      mk.bindTooltip(cp+' '+e.city+' — chalandise « '+c.name+' »'); g.addLayer(mk); }); });
-    // Les POINTS = les OFFICES (rouge validé · jaune en attente), filtrés par la
-    // tuile Tournée sélectionnée ; en mode tournée, la taille du point = le
-    // cluster de clients (effectif cumulé des départements de l'office).
-    offices.filter(o=>!selTour||o.tour===selTour).forEach((o,oi)=>{
+    const selTour=mineSel?(S.zmapTour||''):'';
+    const g=L.layerGroup(); const selPts=[]; const allPts=[]; const focusPts=[];
+    // TOUTES les zones de chalandise du réseau : VERT = magasin sélectionné
+    // dans les tuiles « Magasins », GRIS = toutes les autres zones.
+    cats.forEach(c=>{ const isSel=(c.shop_id!=null)&&String(c.shop_id)===String(selShop);
+      const who=c.shop_name?c.shop_name:(c.shop_id?('Magasin #'+c.shop_id):'non attribuée');
+      this.zfCpsOf(c.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; allPts.push([e.lat,e.lng]); if(isSel) selPts.push([e.lat,e.lng]);
+        const col=isSel?'#2d7a3e':'#8a8378';
+        const mk=L.circleMarker([e.lat,e.lng],{radius:isSel?5.5:3.5,color:col,weight:isSel?1.5:1,fillColor:col,fillOpacity:isSel?.55:.25});
+        mk.bindTooltip(cp+' '+e.city+' — « '+c.name+' » · '+who); g.addLayer(mk); }); });
+    // Les OFFICES (rouge validé · jaune en attente) — uniquement sur MA
+    // chalandise, filtrés par la tuile Tournée ; en mode tournée, la taille
+    // du point = le cluster de clients (effectif cumulé des départements).
+    if(mineSel) offices.filter(o=>!selTour||o.tour===selTour).forEach((o,oi)=>{
       const cp=String(o.postal_code||'').replace(/\D/g,''); const e=geo.idx[cp]; if(!e) return;
       const lat=e.lat+(0.004*(oi%5)-0.008), lng=e.lng+(0.004*((oi*2)%5)-0.008);
       const ok=o.status==='validated'; const col=ok?'#8D1D2C':'#E8B93C';
@@ -2388,13 +2396,9 @@ class Component extends DCLogic {
       const mk=L.circleMarker([lat,lng],{radius:rad,color:col,weight:2,fillColor:col,fillOpacity:ok?.65:.55});
       mk.bindTooltip(o.name+' — '+(ok?'validé':'en attente')+(selTour?(' · '+(eff||0)+' clients (effectif)'):'')+((o.tour&&o.tour!=='—')?(' · '+o.tour):' · sans tournée'));
       g.addLayer(mk); focusPts.push([lat,lng]); });
-    // Zone réseau sélectionnée dans la liste déroulante : points gris.
-    if(other){ this.zfCpsOf(other.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; otherPts.push([e.lat,e.lng]);
-      const mk=L.circleMarker([e.lat,e.lng],{radius:5,color:'#8a8378',weight:1.5,fillColor:'#8a8378',fillOpacity:.35});
-      mk.bindTooltip(cp+' '+e.city+' — réseau « '+other.name+' »'); g.addLayer(mk); }); }
     g.addTo(m); this._zfLayer=g;
-    // Zoom auto : zone réseau choisie > tournée sélectionnée > ma chalandise.
-    const fit=(other&&otherPts.length)?otherPts:((selTour&&focusPts.length)?focusPts:(pts.length?pts:focusPts));
+    // Zoom auto : tournée sélectionnée > zone du magasin sélectionné > réseau.
+    const fit=(selTour&&focusPts.length)?focusPts:(selPts.length?selPts:allPts);
     if(fit.length) m.fitBounds(fit,{padding:[28,28],maxZoom:12});
   }
   ensureMaps(){
@@ -2480,7 +2484,7 @@ class Component extends DCLogic {
     const setLang={}, langStyles={};
     ['FR','NL','EN','PL'].forEach(l=>{ setLang[l]=()=>this.setState({lang:l}); langStyles[l]=this.langStyle(l); });
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams') };
-    const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',validations:t.navValidations,zones:'Zones & capacité tournées',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
+    const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop'};
     const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
@@ -2583,7 +2587,7 @@ class Component extends DCLogic {
     // Chaque CP porte sa localité (référentiel bpost, via /franchisee/catchment-postcodes).
     const rfLocByCp={};
     let rfPoolCps=(SRV('catchment_postcodes')||[]).map(x=>{ const cp=String(x.cp); if(x.loc) rfLocByCp[cp]=x.loc; return cp; });
-    if(!rfPoolCps.length){ SRV('ws_franchisor_catchment').forEach(c=>{ String(c.postcodes||'').split(/[^0-9]+/).forEach(cp=>{ if(/^\d{4}$/.test(cp)) rfPoolCps.push(cp); }); }); }
+    if(!rfPoolCps.length){ SRV('ws_franchisor_catchment').forEach(c=>{ String(c.cp||c.postcodes||'').split(/[^0-9]+/).forEach(cp=>{ if(/^\d{4}$/.test(cp)) rfPoolCps.push(cp); }); }); }
     rfPoolCps=[...new Set(rfPoolCps)].sort();
     const rfSelSet=new Set((S.rf.postcodes||[]).map(String));
     const rfPostcodeOpts=rfPoolCps.map(cp=>({cp, loc:rfLocByCp[cp]||'', style:(rfSelSet.has(cp)?pillActive:pillIdle), toggle:()=>this.setState(s=>{ const cur=new Set((s.rf.postcodes||[]).map(String)); if(cur.has(cp)) cur.delete(cp); else cur.add(cp); return {rf:{...s.rf,postcodes:[...cur]}}; })}));
@@ -2834,8 +2838,8 @@ class Component extends DCLogic {
 
     // ===== LIVRAISONS — paramétrage : nav groups =====
     const groupsDef=[
-      {id:'g_liv',label:'Livraison',items:[['tournees','Tournées · horaires · fermetures'],['zones','Zones'],['params','Coûts · temps · frais']]},
-      {id:'g_b2b',label:'Clients B2B',items:[['clients','Bureaux & sites'],['offices','Offices'],['sites','Sites de livraison'],['emailsBureau','Contacts email']]},
+      {id:'g_liv',label:'Livraison',items:[['tournees','Tournées · horaires · fermetures'],['params','Coûts · temps · frais']]},
+      {id:'g_b2b',label:'Clients B2B',items:[['clients','Bureaux & sites'],['offices','Offices'],['sites','Sites de livraison'],['zones','Zone de chalandise'],['emailsBureau','Contacts email']]},
       {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
     ];
     const navSub=(s)=>{ const active=S.screen===s; return 'display:flex;align-items:center;width:100%;padding:9px 12px 9px 32px;border:none;border-radius:8px;cursor:pointer;font:'+(active?'600':'400')+' 12.5px/1 var(--font-ui);text-align:left;'+(active?'background:var(--color-background-secondary);color:var(--color-primary)':'background:transparent;color:var(--color-text-muted)'); };
@@ -3483,11 +3487,28 @@ class Component extends DCLogic {
       b2bTabNouveauStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='nouveau'?'background:var(--color-primary);color:#fff':'background:transparent;color:var(--color-text-muted)'),
       setTabAcces:()=>this.setState({b2bTab:'acces'}),setTabRattach:()=>this.setState({b2bTab:'rattach'}),setTabNouveau:()=>this.setState({b2bTab:'nouveau'}),
       isZones:screen==='zones',zones:this.zonesData(),
-      catchmentZones:SRV('ws_franchisor_catchment'),catchmentOpts,
-      // Carte des zones : liste déroulante des autres chalandises du réseau.
-      zmapVal:S.zmapOther||'',
-      zmapOpts:[{value:'',label:'— Ma zone de chalandise —'},...SRV('ws_franchisor_catchment').filter(c=>{ const fr=window.__FR||{}; const my=parseInt(fr.shop,10)||null; return !(my&&String(c.shop_id)===String(my)); }).map(c=>({value:String(c.id),label:c.name+(c.shop_id?'':' (non attribuée)')}))],
-      zmapSet:(e)=>this.setState({zmapOther:e.target.value},()=>this.drawZonesMap()),
+      catchmentOpts,
+      // Tuiles « Magasins » : le magasin sélectionné voit sa zone en VERT sur
+      // la carte, toutes les autres zones du réseau restent en GRIS.
+      ...(()=>{ const cats=SRV('ws_franchisor_catchment'); const fr=window.__FR||{}; const my=parseInt(fr.shop,10)||null;
+        const sel=(S.zmapShop!=null&&S.zmapShop!=='')?S.zmapShop:my;
+        const byShop={};
+        cats.forEach(c=>{ if(c.shop_id==null) return; const k=String(c.shop_id);
+          (byShop[k]=byShop[k]||{id:c.shop_id,name:c.shop_name,city:c.shop_city,zones:[],cps:0});
+          byShop[k].zones.push(c.name); byShop[k].cps+=this.zfCpsOf(c.cp).length; });
+        const zmapShops=Object.values(byShop)
+          .sort((a,b)=>(String(a.id)===String(my)?-1:String(b.id)===String(my)?1:a.id-b.id))
+          .map(sh=>{ const on=String(sel)===String(sh.id); const mine=String(sh.id)===String(my);
+            return {shopLbl:(sh.name||('Magasin #'+sh.id))+(mine?' · ma boutique':''),
+              zoneLbl:sh.zones.join(' · ')+' — '+sh.cps+' CP',
+              style:'flex:none;text-align:left;border:1.5px solid '+(on?'#2d7a3e':'var(--color-border-tertiary)')+';background:'+(on?'#eaf5ec':'var(--color-surface)')+';color:'+(on?'#2d7a3e':'var(--color-text-muted)')+';border-radius:10px;padding:8px 14px;cursor:pointer',
+              pick:()=>this.setState({zmapShop:sh.id},()=>this.drawZonesMap())}; });
+        // Tableau récapitulatif du réseau : une ligne par zone, clic = affichage.
+        const catchmentZones=cats.map(c=>{ const on=(c.shop_id!=null)&&String(c.shop_id)===String(sel);
+          return {...c, shopLbl:c.shop_name||(c.shop_id?('Magasin #'+c.shop_id):'Non attribuée'),
+            pick:()=>{ if(c.shop_id!=null) this.setState({zmapShop:c.shop_id},()=>this.drawZonesMap()); },
+            rowStyle:'display:grid;grid-template-columns:1.4fr 1.4fr 2.6fr .8fr;align-items:center;padding:12px 18px;border-bottom:.5px solid #f6ecda;cursor:'+(c.shop_id!=null?'pointer':'default')+(on?';background:#eaf5ec':'')}; });
+        return {zmapShops,catchmentZones,zmapMineSel:String(sel)===String(my)}; })(),
       // Tuiles Tournée (capacité incluse) : filtrent la carte + clusters clients.
       zmapTours:this.tourneeSlots().map(tt=>{ const max=Math.max(1,Math.floor((tt.amplitude||240)/((tt.decharge||18)+(tt.trajet||12)))); const on=S.zmapTour===tt.nom;
         return {nom:tt.nom,cap:(tt.used||0)+' / '+max,
