@@ -2897,7 +2897,7 @@ class Component extends DCLogic {
       const viesCheck=()=>{ const raw=(this.state.formVals.vat||'').replace(/[^A-Za-z0-9]/g,''); if(!raw){ this.setState({viesOk:false,viesMsg:'Encodez d\'abord le n° TVA'}); return; }
         this.setState({viesOk:null,viesMsg:'Vérification VIES…'}); const fr=window.__FR||{};
         fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(raw)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
-          .then(r=>r.json()).then(j=>{ if(j&&j.valid){ this.setState(s=>({viesOk:true,viesMsg:'✓ TVA valide'+(j.name?(' — '+j.name):''),formVals:{...s.formVals,vies_name:j.name||'',name:(s.formVals.name&&s.formVals.name.trim())?s.formVals.name:(j.name||s.formVals.name),address:(s.formVals.address&&s.formVals.address.trim())?s.formVals.address:(j.address||s.formVals.address)}})); }
+          .then(r=>r.json()).then(j=>{ if(j&&j.valid){ const keep=(cur,nv)=>((cur&&String(cur).trim())?cur:(nv||cur||'')); this.setState(s=>({viesOk:true,viesMsg:'✓ TVA valide'+(j.name?(' — '+j.name):''),formVals:{...s.formVals,vies_name:j.name||'',name:keep(s.formVals.name,j.name),address:keep(s.formVals.address,j.street||j.address),postal_code:keep(s.formVals.postal_code,j.zip),city:keep(s.formVals.city,j.city)}})); }
             else if(j&&j.error==='vies_unavailable'){ this.setState({viesOk:false,viesMsg:'Service VIES indisponible — réessayez'}); }
             else { this.setState({viesOk:false,viesMsg:'✕ N° TVA introuvable via VIES'}); } })
           .catch(()=>this.setState({viesOk:false,viesMsg:'Réseau indisponible'})); };
