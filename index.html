@@ -537,7 +537,13 @@
       <sc-if value="{{ isZones }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:18px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:0;overflow:hidden">
-          <div style="padding:12px 18px;display:flex;align-items:center;gap:10px"><span class="t-admin-label">Carte du territoire</span><span style="font:11px var(--font-ui);color:var(--color-text-muted)">rubis pâle = votre zone de chalandise (cadre marque) · couleurs pleines = vos tournées</span></div>
+          <div style="padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span class="t-admin-label">Carte du territoire</span>
+            <span style="font:11px var(--font-ui);color:var(--color-text-muted)"><span style="color:#8D1D2C;font-weight:700">●</span> validée (couverte par une tournée) · <span style="color:#E8B93C;font-weight:700">●</span> en attente · <span style="color:#8a8378;font-weight:700">●</span> zone réseau sélectionnée</span>
+            <select value="{{ zmapVal }}" onChange="{{ zmapSet }}" style="margin-left:auto;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:7px 10px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:280px">
+              <sc-for list="{{ zmapOpts }}" as="zo" hint-placeholder-count="3"><option value="{{ zo.value }}">{{ zo.label }}</option></sc-for>
+            </select>
+          </div>
           <div id="map-zones-fr" style="width:100%;height:340px;background:var(--color-background-secondary)"></div>
         </div>
         <div style="background:var(--color-surface);border:.5px solid #e7d3b8;border-radius:12px;overflow:hidden">
@@ -2361,20 +2367,33 @@ class Component extends DCLogic {
   zfPick(cp){ return ()=>this.zfAppendCps([String(cp)],''); }
   zfPickGroup(cps,label){ return ()=>this.zfAppendCps(cps.map(String),label); }
   drawZonesMap(){ const L=window.L,m=this._zonesFrMap,geo=window.__CPGEO; if(!L||!m||!geo) return;
-    const zones=this.zonesData(); const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
-    const key=JSON.stringify([zones.map(z=>[z.id,z.cp]),cats.map(c=>[c.id,c.cp])]);
+    const S=this.state;
+    const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
+    const fr=window.__FR||{}; const myShop=parseInt(fr.shop,10)||null;
+    // MA chalandise (shop_id = ma boutique) ; repli : toutes si non renseigné.
+    const mineList=(myShop?cats.filter(c=>String(c.shop_id)===String(myShop)):[]);
+    const shown=mineList.length?mineList:cats;
+    // CP « validés » = couverts par au moins une tournée (ws_tour_postcodes).
+    const covered=new Set((window.BOServer?window.BOServer.table('ws_tour_postcodes'):[]).map(r=>String(r.postcode)));
+    if(!covered.size){ (window.BOServer?window.BOServer.table('ws_tours'):[]).forEach(t=>{ const raw=t.postcodes||t.cp; (Array.isArray(raw)?raw:String(raw||'').split(/[^0-9]+/)).forEach(cp=>{ if(/^\d{4}$/.test(cp)) covered.add(cp); }); }); }
+    const other=cats.find(c=>String(c.id)===String(S.zmapOther||''));
+    const key=JSON.stringify([shown.map(c=>[c.id,c.cp]),[...covered].sort(),S.zmapOther||'']);
     if(this._zfKey===key) return; this._zfKey=key;
     if(this._zfLayer) m.removeLayer(this._zfLayer);
-    const g=L.layerGroup(); const pts=[];
-    cats.forEach(c=>{ this.zfCpsOf(c.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; pts.push([e.lat,e.lng]);
-      const mk=L.circleMarker([e.lat,e.lng],{radius:6,color:'#8D1D2C',weight:1.5,fillColor:'#8D1D2C',fillOpacity:.28});
-      mk.bindTooltip(cp+' '+e.city+' — zone primaire « '+c.name+' »'); g.addLayer(mk); }); });
-    const palette=['#C87A3F','#3B3468','#2d7a3e','#b26a00','#8C4A2F'];
-    zones.forEach((z,i)=>{ const col=palette[i%palette.length]; this.zfCpsOf(z.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; pts.push([e.lat,e.lng]);
-      const mk=L.circleMarker([e.lat,e.lng],{radius:7,color:col,weight:2,fillColor:col,fillOpacity:.6});
-      mk.bindTooltip(cp+' '+e.city+' — '+z.nom); g.addLayer(mk); }); });
+    const g=L.layerGroup(); const pts=[]; const otherPts=[];
+    // Ma chalandise : rouge = validé (couvert par une tournée) · jaune = en attente.
+    shown.forEach(c=>{ this.zfCpsOf(c.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; pts.push([e.lat,e.lng]);
+      const ok=covered.has(String(cp)); const col=ok?'#8D1D2C':'#E8B93C';
+      const mk=L.circleMarker([e.lat,e.lng],{radius:7,color:col,weight:2,fillColor:col,fillOpacity:ok?.65:.55});
+      mk.bindTooltip(cp+' '+e.city+' — '+(ok?'validée · couverte par une tournée':'en attente · aucune tournée')+' («'+c.name+'»)'); g.addLayer(mk); }); });
+    // Zone réseau sélectionnée dans la liste déroulante : points gris.
+    if(other){ this.zfCpsOf(other.cp).forEach(cp=>{ const e=geo.idx[cp]; if(!e) return; otherPts.push([e.lat,e.lng]);
+      const mk=L.circleMarker([e.lat,e.lng],{radius:5,color:'#8a8378',weight:1.5,fillColor:'#8a8378',fillOpacity:.35});
+      mk.bindTooltip(cp+' '+e.city+' — réseau « '+other.name+' »'); g.addLayer(mk); }); }
     g.addTo(m); this._zfLayer=g;
-    if(pts.length) m.fitBounds(pts,{padding:[28,28],maxZoom:11});
+    // Zoom auto : ma chalandise — ou la zone réseau choisie.
+    const fit=(other&&otherPts.length)?otherPts:pts;
+    if(fit.length) m.fitBounds(fit,{padding:[28,28],maxZoom:11});
   }
   ensureMaps(){
     if(this.state.screen==='zones') this.zfGeoEnsure();
@@ -3442,6 +3461,10 @@ class Component extends DCLogic {
       setTabAcces:()=>this.setState({b2bTab:'acces'}),setTabRattach:()=>this.setState({b2bTab:'rattach'}),setTabNouveau:()=>this.setState({b2bTab:'nouveau'}),
       isZones:screen==='zones',zones:this.zonesData(),
       catchmentZones:SRV('ws_franchisor_catchment'),catchmentOpts,
+      // Carte des zones : liste déroulante des autres chalandises du réseau.
+      zmapVal:S.zmapOther||'',
+      zmapOpts:[{value:'',label:'— Ma zone de chalandise —'},...SRV('ws_franchisor_catchment').filter(c=>{ const fr=window.__FR||{}; const my=parseInt(fr.shop,10)||null; return !(my&&String(c.shop_id)===String(my)); }).map(c=>({value:String(c.id),label:c.name+(c.shop_id?'':' (non attribuée)')}))],
+      zmapSet:(e)=>this.setState({zmapOther:e.target.value},()=>this.drawZonesMap()),
       tourPostcodeRows:(()=>{ const tp={}; (SRV('ws_tour_postcodes')||[]).forEach(r=>{ const k=String(r.tour_id); (tp[k]=tp[k]||[]).push(r.postcode); }); return SRV('ws_tours').map(t=>{ const k=String(t.id).replace(/^r/,''); let arr=tp[k]||tp[String(t.id)]; if(!arr){ const raw=t.postcodes||t.cp; arr=Array.isArray(raw)?raw:String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } return {nom:t.name||t.short||t.nom||('Tournée '+t.id), cp:(arr&&arr.length)?arr.join(' · '):'—', count:(arr||[]).length}; }); })(),
       deliveryZones:(()=>{ const catchAll=new Set(); SRV('ws_franchisor_catchment').forEach(c=>String(c.cp||'').split('·').forEach(x=>{const t=x.trim(); if(t) catchAll.add(t);})); return SRV('ws_delivery_zones').map((z,i)=>{ const cps=String(z.cp||'').split('·').map(x=>x.trim()).filter(Boolean); const outside=cps.filter(cp=>!catchAll.has(cp)); return {...z,activeOn:(z.active===true||z.active==='Active'),outOfScope:outside.length>0,outOfScopeTxt:'Hors périmètre : '+outside.join(' · '),edit:this.editForm('deliveryZone',z,i),del:this.deleteRow('ws_delivery_zones',i,'la zone « '+z.name+' »')}; }); })(),
       addDeliveryZone:this.openForm('deliveryZone'),
