@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072327"></script>
-<script src="bo_server.js?v=2026072327"></script>
+<script src="api-config.js?v=2026072328"></script>
+<script src="bo_server.js?v=2026072328"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072327'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072328'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072327">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072327"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072328">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072328"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1175,6 +1175,11 @@
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px">
             <div class="t-section-title" style="font-size:15px">Stock du jour</div>
+            <div style="display:flex;align-items:center;gap:8px;flex:none">
+              <span style="font:600 11px var(--font-ui);color:var(--color-text-muted)">Afficher en cas de rupture</span>
+              <span class="bo-tiph" style="position:relative;display:inline-flex"><span style="width:14px;height:14px;border-radius:50%;background:#E8A15C;color:#fff;font:700 9px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;cursor:help;flex:none">i</span><span class="bo-tip" style="position:absolute;right:0;bottom:calc(100% + 7px);background:var(--color-text);color:var(--color-surface);font:400 11px/1.5 var(--font-ui);padding:8px 11px;border-radius:8px;width:250px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25)">Activé : la modale « Alerte stock bas » s'ouvre automatiquement à l'arrivée sur cet écran dès qu'un produit passe sous son seuil minimum. Désactivé : seule le bandeau d'alerte reste visible (cliquable pour ouvrir le détail par catégorie).</span></span>
+              <button onClick="{{ stkModalToggle }}" style="{{ stkModalTrack }}"><span style="{{ stkModalKnob }}"></span></button>
+            </div>
           </div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Produits <strong>actifs</strong> de l'assortiment uniquement · dispo online (webshop) + en shop (comptoir) · seuil <strong>stock minimum</strong> · <strong>clic sur un produit</strong> → commandes du jour <span style="color:var(--color-primary);font-weight:600">Ruby (Click &amp; Collect)</span> / <span style="color:var(--color-secondary);font-weight:600">Apricot (Delivery)</span> + ajustement ±. ws_product_stock · ws_order_lines</div>
           <sc-if value="{{ stkAlertShow }}" hint-placeholder-val="{{ false }}">
@@ -1184,9 +1189,13 @@
             <span style="flex:none;font:600 11px var(--font-ui);color:var(--color-primary);text-decoration:underline">Voir le détail par catégorie</span>
           </button>
           </sc-if>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center">
             <sc-for list="{{ stockBadges }}" as="b" hint-placeholder-count="4">
               <button onClick="{{ b.set }}" style="{{ b.style }}">{{ b.label }}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:9px;background:rgba(255,255,255,.35);padding:0 4px;font-size:10px">{{ b.count }}</span></button>
+            </sc-for>
+            <span style="width:1px;height:20px;background:var(--color-border-tertiary);flex:none"></span>
+            <sc-for list="{{ stkModeBadges }}" as="b" hint-placeholder-count="2">
+              <button onClick="{{ b.set }}" style="{{ b.style }}"><span style="width:8px;height:8px;border-radius:50%;background:currentColor;flex:none"></span>{{ b.label }}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:9px;background:rgba(0,0,0,.08);padding:0 4px;font-size:10px">{{ b.count }}</span></button>
             </sc-for>
           </div>
           <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Produit</span><span class="t-admin-label">Catégorie</span><span class="t-admin-label" style="text-align:right">Online</span><span class="t-admin-label" style="text-align:right">En shop</span><span class="t-admin-label" style="text-align:right">Dispo</span><span class="t-admin-label" style="text-align:right">Min.</span><span class="t-admin-label" style="text-align:center">État</span></div>
@@ -3961,9 +3970,30 @@ class Component extends DCLogic {
       return ord.map(k=>({cat:g[k].cat,count:g[k].items.length+' produit(s)',items:g[k].items})); })();
     const stkLowCount=stockAll.filter(r=>r.status==='below').length;
     const stkAlertShow=stkLowCount>0;
-    const stkAlertModal=(S.stkAlert===true)||(S.stkAlert==null&&stkLowCount>0&&S.screen==='stockJour');
+    // Toggle « Afficher en cas de rupture » — PERSISTÉ (ws_param stock.alert_modal) :
+    // contrôle l'ouverture AUTOMATIQUE de la modale d'alerte à l'arrivée sur l'écran.
+    const stkModalStored=window.BOServer?window.BOServer.getParam('stock.alert_modal',undefined):undefined;
+    const stkModalPref=S.flags['stk_modal']!==undefined?S.flags['stk_modal']:((stkModalStored!==undefined&&stkModalStored!==null&&stkModalStored!=='')?(stkModalStored===true||stkModalStored==='1'||stkModalStored===1):true);
+    const stkModalToggle=()=>{ const nv=!stkModalPref; if(window.BOServer) window.BOServer.setParam('stock.alert_modal',nv?'1':'0'); this.setState(s=>({flags:{...s.flags,stk_modal:nv}})); this.printJob(nv?'✓ La modale d’alerte s’ouvrira en cas de rupture (ws_param)':'Modale d’alerte désactivée — le bandeau reste visible (ws_param)'); };
+    const stkModalTrack='position:relative;width:34px;height:19px;border-radius:20px;border:none;cursor:pointer;flex:none;background:'+(stkModalPref?'var(--color-primary)':'var(--color-border-secondary)');
+    const stkModalKnob='position:absolute;top:2px;left:'+(stkModalPref?'17px':'2px')+';width:15px;height:15px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)';
+    const stkAlertModal=(S.stkAlert===true)||(S.stkAlert==null&&stkLowCount>0&&S.screen==='stockJour'&&stkModalPref);
     const stkAlertTitle='⚠ Alerte stock bas — '+stkLowCount+' produit(s) sous le seuil minimum';
-    const stockFiltered=stockAll.filter(r=>stockFilter==='all'||r.status===stockFilter);
+    // Filtre par CANAL : Ruby (Click & Collect · stock comptoir) / Apricot
+    // (Delivery · stock online) — combinable avec les filtres d'état.
+    const stockMode=S.stockMode||'all';
+    const stkModeChip=(k,bg,fg)=>{ const on=stockMode===k;
+      return 'cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:1.5px solid '+fg+';border-radius:20px;padding:5px 12px;font:600 11px var(--font-ui);'+(on?('background:'+fg+';color:#fff'):('background:'+bg+';color:'+fg)); };
+    const stkModeBadges=[
+      {label:'Ruby · Click & Collect',count:String(stockAll.filter(r=>r.shop>0).length),
+        style:stkModeChip('collect','#fbe9eb','var(--color-primary)'),
+        set:()=>this.setState({stockMode:stockMode==='collect'?'all':'collect'})},
+      {label:'Apricot · Delivery',count:String(stockAll.filter(r=>r.online>0).length),
+        style:stkModeChip('delivery','#f6ecdf','var(--color-secondary)'),
+        set:()=>this.setState({stockMode:stockMode==='delivery'?'all':'delivery'})},
+    ];
+    const stockFiltered=stockAll.filter(r=>(stockFilter==='all'||r.status===stockFilter)
+      &&(stockMode==='all'||(stockMode==='collect'?r.shop>0:r.online>0)));
     let _lastCat=null;
     const stockRows=stockFiltered.map(r=>{ const hasCat=r.catLabel!==_lastCat; _lastCat=r.catLabel; return {...r,hasCat}; });
     const stockEmpty=stockRows.length===0;
@@ -4523,6 +4553,7 @@ class Component extends DCLogic {
       tdbViewTree:tdbView==='tree',tdbViewList:tdbView==='list',tdbSegTreeStyle:tdbSeg('tree'),tdbSegListStyle:tdbSeg('list'),tdbSetTree:()=>this.setState({tdbView:'tree'}),tdbSetList:()=>this.setState({tdbView:'list'}),
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
       stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
+      stkModalTrack,stkModalKnob,stkModalToggle,stkModeBadges,
       stkAlertOpen:()=>this.setState({stkAlert:true}),
       stkAlertClose:()=>this.setState({stkAlert:false}),
       isDemandesBureau:screen==='demandesB2B'&&(S.b2bTab||'acces')==='rattach',joinRequests,joinCount,joinBadgeStyle,
