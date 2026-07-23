@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072302"></script>
-<script src="bo_server.js?v=2026072302"></script>
+<script src="api-config.js?v=2026072303"></script>
+<script src="bo_server.js?v=2026072303"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072302'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072303'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072302">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072302"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072303">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072303"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -842,25 +842,38 @@
           </sc-for>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
-          <div style="display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;gap:10px;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Client</span><span class="t-admin-label">Rattachement — bureau · département (site &amp; tournée hérités du bureau)</span><span class="t-admin-label">Badges</span><span class="t-admin-label" style="text-align:right">Fiche</span></div>
+          <div style="display:grid;grid-template-columns:1.7fr 1.5fr 2.4fr .6fr;gap:10px;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Client</span><span class="t-admin-label">Rattachement — bureau · département (site &amp; tournée hérités du bureau)</span><span class="t-admin-label">Badges</span><span class="t-admin-label" style="text-align:right">Actions</span></div>
           <sc-for list="{{ bcList }}" as="c" hint-placeholder-count="5">
             <div style="{{ c.rowStyle }}">
-              <div style="min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.nm }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.email }}</div></div>
+              <div style="min-width:0;display:flex;flex-direction:column;justify-content:center">
+                <div title="{{ c.nm }}" style="font:600 13px/1.3 var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.nm }}</div>
+                <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.email }}</div>
+              </div>
               <div style="min-width:0">
                 <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted)">{{ c.ratt }}</div>
                 <div style="display:flex;flex-direction:column;gap:4px;margin-top:5px">
-                  <select value="{{ c.offSel }}" onChange="{{ c.offSet }}" style="border:.5px solid var(--color-border-secondary);border-radius:7px;padding:5px 7px;font:500 10.5px var(--font-ui);background:var(--color-surface);color:var(--color-text-muted);max-width:100%;min-width:0">
+                  <select value="{{ c.offSel }}" onChange="{{ c.offSet }}" style="border:.5px solid var(--color-border-secondary);border-radius:7px;padding:6px 8px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:100%;min-width:0;white-space:nowrap">
                     <sc-for list="{{ c.offOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
                   </select>
-                  <sc-if value="{{ c.hasDeptOpts }}" hint-placeholder-val="{{ false }}">
-                    <select value="{{ c.deptSel }}" onChange="{{ c.deptSet }}" style="border:.5px solid var(--color-border-secondary);border-radius:7px;padding:5px 7px;font:500 10.5px var(--font-ui);background:var(--color-surface);color:var(--color-text-muted);max-width:100%;min-width:0">
+                  <sc-if value="{{ c.hasDeptBadge }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:#f1ebfa;color:#6a3f9e;border-radius:20px;padding:4px 10px;font:600 11px var(--font-ui)">{{ c.deptBadge }}<button onClick="{{ c.deptRemove }}" title="Retirer le département" style="border:none;background:transparent;color:#6a3f9e;cursor:pointer;font-size:12px;padding:0;line-height:1">×</button></span>
+                  </sc-if>
+                  <sc-if value="{{ c.showDeptSel }}" hint-placeholder-val="{{ false }}">
+                    <select value="{{ c.deptSel }}" onChange="{{ c.deptSet }}" style="border:.5px solid var(--color-border-secondary);border-radius:7px;padding:6px 8px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:100%;min-width:0">
                       <sc-for list="{{ c.deptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
                     </select>
                   </sc-if>
                 </div>
               </div>
               <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center"><sc-for list="{{ c.badges }}" as="bg" hint-placeholder-count="4"><span style="{{ bg.style }}">{{ bg.t }}</span></sc-for></div>
-              <div style="display:flex;justify-content:flex-end"><button onClick="{{ c.open }}" class="btn-secondary" style="font-size:11.5px;padding:7px 13px">Fiche</button></div>
+              <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap">
+                <sc-if value="{{ c.delAsk }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ c.delConfirm }}" title="Confirmer la désactivation (active=0)" style="border:none;background:var(--color-primary);color:#fff;border-radius:7px;padding:7px 10px;font:600 11px var(--font-ui);cursor:pointer">Désactiver</button>
+                  <button onClick="{{ c.delCancel }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);color:var(--color-text-muted);border-radius:7px;padding:7px 10px;font:600 11px var(--font-ui);cursor:pointer">Annuler</button>
+                </sc-if>
+                <button onClick="{{ c.open }}" class="btn-secondary" style="font-size:11.5px;padding:7px 13px">Fiche</button>
+                <button onClick="{{ c.delStart }}" title="Supprimer (désactivation — le client passe à active=0, rien n'est effacé)" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+              </div>
             </div>
           </sc-for>
           <sc-if value="{{ bcEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 18px;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun client ne correspond aux filtres.</div></sc-if>
@@ -1680,6 +1693,11 @@
         </div>
         <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:9px">🏪 {{ fcShopBuys }} · 📱 {{ fcPwa }}</div>
       </div>
+      <div style="padding:12px 24px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Code postal</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">client.zip — ajout ou édition directe</div></div>
+        <input value="{{ fcZip }}" onInput="{{ fcSetZip }}" placeholder="ex. 1300" inputmode="numeric" maxlength="4" style="width:90px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:600 13px var(--font-ui);text-align:center;box-sizing:border-box"/>
+        <button onClick="{{ fcSaveZip }}" class="btn-secondary" style="font-size:11.5px;padding:9px 14px;flex:none">Enregistrer</button>
+      </div>
       <div style="padding:14px 24px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;gap:11px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
           <div><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Client bloqué</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">client.blocked — un client bloqué ne peut plus commander</div></div>
@@ -1709,7 +1727,7 @@
         <sc-if value="{{ fcVoucherHasMsg }}" hint-placeholder-val="{{ false }}"><div style="font:600 11.5px var(--font-ui);color:#2d7a3e;margin-top:7px">{{ fcVoucherMsg }}</div></sc-if>
       </div>
       <div style="padding:14px 24px 18px">
-        <div class="t-admin-label" style="margin-bottom:8px">Réclamation client (mécontent) — remonte dans « Réclamations », distincte d'un incident de livraison (déclaré lors d'un achat)</div>
+        <div class="t-admin-label" style="margin-bottom:8px">Réclamation client (mécontent) — remonte dans « Réclamations », distincte d'un incident de livraison</div>
         <sc-if value="{{ fcHasComplaint }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
             <span style="{{ fcCompTag }}">⚠ Réclamation en cours</span>
@@ -1717,13 +1735,7 @@
           </div>
         </sc-if>
         <sc-if value="{{ fcNoComplaint }}" hint-placeholder-val="{{ false }}">
-          <select value="{{ fcCompOrder }}" onChange="{{ fcSetCompOrder }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 10px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);margin-bottom:8px;box-sizing:border-box">
-            <sc-for list="{{ fcOrderOpts }}" as="op" hint-placeholder-count="3"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
-          </select>
-          <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
-            <input value="{{ fcCompTitle }}" onInput="{{ fcSetCompTitle }}" placeholder="Motif (ex. produit non conforme)" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
-            <button onClick="{{ fcAddComplaint }}" class="btn-secondary" style="font-size:11.5px;padding:0 14px">Signaler</button>
-          </div>
+          <div style="font:400 12px/1.6 var(--font-ui);color:var(--color-text-muted)">Aucune réclamation en cours. Une réclamation se crée uniquement depuis le <strong>formulaire d'une commande effectuée</strong>, côté profil client (utilisateur) — pas depuis cette fiche.</div>
         </sc-if>
       </div>
     </div>
@@ -3674,9 +3686,8 @@ class Component extends DCLogic {
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
       // calcule QUE sur l'écran Clients — sinon il ralentit toute l'app.
       ...(()=>{ const noop2=()=>{};
-        if(screen!=='b2bClients') return {isB2bClients:false,bcQ:'',bcSetQ:noop2,bcSelStyle:'',bcDept:'',bcSetDept:noop2,bcDeptOpts:[],bcOff:'',bcSetOff:noop2,bcOffOpts:[],bcSite:'',bcSetSite:noop2,bcSiteOpts:[],bcTour:'',bcSetTour:noop2,bcTourOpts:[],bcCounts:[],bcList:[],bcEmpty:false,bcTotalTxt:'',bcHasMore:false,bcMore:noop2,bcMoreTxt:'',bcFicheOpen:false,bcFicheClose:noop2,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCompTitle:'',fcSetCompTitle:noop2,fcCompOrder:'',fcSetCompOrder:noop2,fcOrderOpts:[],fcAddComplaint:noop2,fcCloseComplaint:noop2};
+        if(screen!=='b2bClients') return {isB2bClients:false,bcQ:'',bcSetQ:noop2,bcSelStyle:'',bcDept:'',bcSetDept:noop2,bcDeptOpts:[],bcOff:'',bcSetOff:noop2,bcOffOpts:[],bcSite:'',bcSetSite:noop2,bcSiteOpts:[],bcTour:'',bcSetTour:noop2,bcTourOpts:[],bcCounts:[],bcList:[],bcEmpty:false,bcTotalTxt:'',bcHasMore:false,bcMore:noop2,bcMoreTxt:'',bcFicheOpen:false,bcFicheClose:noop2,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcCloseComplaint:noop2};
         const rowsC=SRV('b2b_clients');
-        const avByTour={}; SRV('ws_tour_availability').forEach(a=>{ if(a.tour) avByTour[a.tour]=a.jour; });
         // Affichage : « Nom Prénom — Société (si rattachée) » ; client.name =
         // prénom, client.surname = nom de famille.
         const cnm=(c)=>{ const pers=((c.surname||'')+' '+(c.name||'')).trim();
@@ -3685,7 +3696,8 @@ class Component extends DCLogic {
         const distinct=(f)=>[...new Set(rowsC.map(c=>c[f]).filter(v=>v&&v!=='—'))].sort();
         const opts=(list,ph)=>[{value:'',label:ph},...list.map(v=>({value:v,label:v}))];
         const q=String(S.bcQ||'').toLowerCase();
-        const match=(c)=>{ if(q&&![cnm(c),c.email,c.city,c.zip].some(v=>String(v||'').toLowerCase().includes(q))) return false;
+        const match=(c)=>{ if(c.active!=null&&Number(c.active)===0) return false; // soft delete
+          if(q&&![cnm(c),c.email,c.city,c.zip].some(v=>String(v||'').toLowerCase().includes(q))) return false;
           if(S.bcDept&&c.department!==S.bcDept) return false;
           if(S.bcOff&&c.office_name!==S.bcOff) return false;
           if(S.bcSite&&c.site_name!==S.bcSite) return false;
@@ -3703,7 +3715,6 @@ class Component extends DCLogic {
           if(Number(c.voucher_active)) B.push({t:'Voucher actif',style:tag('#eaf5ec','#2d7a3e')});
           else if(Number(c.voucher_used)) B.push({t:'Voucher utilisé',style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
           B.push(Number(c.status)?{t:'Pending',style:tag('#fff4e5','#b26a00')}:{t:'Validé',style:tag('#eaf5ec','#2d7a3e')});
-          const jrs=c.tour_name&&avByTour[c.tour_name]; if(jrs) B.push({t:'Jours : '+jrs,style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
           const dd=c.last_order||c.created_at; if(dd) B.push({t:(c.last_order?'Dern. cmd ':'Depuis ')+String(dd).slice(0,10),style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
           return B; };
         const filt=rowsC.filter(match);
@@ -3734,15 +3745,26 @@ class Component extends DCLogic {
             postAtt(c.id,{office_id:o&&o.id!=null?o.id:null,department_id:null},
               {office_id:o?o.id:null,office_name:o?o.name:null,site_name:siteLbl,tour_name:tourLbl,department:null,department_id:null,
                deferred:(o&&(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui'||o.deferred_billing_enabled===1))?1:0}); },
-          hasDeptOpts:dOpts.length>0,
+          // Département : sélectionné → BADGE avec « × » ; sinon droplist si
+          // le bureau choisi possède des départements.
+          hasDeptBadge:!!c.department,
+          deptBadge:c.department||'',
+          deptRemove:()=>postAtt(c.id,{department_id:null},{department_id:null,department:null}),
+          showDeptSel:!c.department&&dOpts.length>0,
           deptSel:'',
           deptOpts:[{value:'',label:'— Département (facultatif) —'},...dOpts.map(x=>({value:String(x.d.id!=null?x.d.id:x.di),label:x.d.name||x.d.dept||'Département'}))],
           deptSet:(e)=>{ const v=e.target.value; const x=dOpts.find(y=>String(y.d.id!=null?y.d.id:y.di)===v)||null;
             postAtt(c.id,{department_id:x&&x.d.id!=null?x.d.id:null},{department_id:x&&x.d.id!=null?x.d.id:null,department:x?(x.d.name||x.d.dept):null}); },
           badges:badgesOf(c),
-          rowStyle:'display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;align-items:start;gap:10px;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
-          open:()=>{ this.setState({bcFiche:c.id,bcVat:c.invoice_vat||c.tax_number||'',bcCorp:!!(Number(c.is_b2b)||c.invoice_vat),bcVoucherVal:'',bcVoucherMsg:'',bcCompTitle:'',bcCompOrder:'',bcOrders:null}); this.bcLoadOrders(c.id); }};});
-        const cnt={}; rowsC.forEach(c=>{ const k1='Office · '+(c.office_name||'sans bureau'); cnt[k1]=(cnt[k1]||0)+1; if(c.department){ const k2='Dépt · '+c.department; cnt[k2]=(cnt[k2]||0)+1; } });
+          rowStyle:'display:grid;grid-template-columns:1.7fr 1.5fr 2.4fr .6fr;align-items:center;gap:10px;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
+          // « Suppression » = soft delete (client.active=0) avec confirmation
+          // inline (pas de vraie destruction de la ligne en base).
+          delAsk:S.bcDelAsk===c.id,
+          delStart:()=>this.setState({bcDelAsk:c.id}),
+          delCancel:()=>this.setState({bcDelAsk:null}),
+          delConfirm:()=>{ post('client-active',{id:c.id,active:0},(j)=>{ if(j&&j.ok){ patchLocal(c.id,{active:0}); this.setState({bcDelAsk:null,bcFiche:null}); this.printJob('✓ Client désactivé (active=0) — récupérable en base'); } else this.printJob((j&&j.error)||'Erreur suppression'); }); },
+          open:()=>this.setState({bcFiche:c.id,bcVat:c.invoice_vat||c.tax_number||'',bcCorp:!!(Number(c.is_b2b)||c.invoice_vat),bcZip:c.zip||'',bcVoucherVal:'',bcVoucherMsg:''})};});
+        const cnt={}; rowsC.forEach(c=>{ if(c.active!=null&&Number(c.active)===0) return; const k1='Bureau · '+(c.office_name||'sans bureau'); cnt[k1]=(cnt[k1]||0)+1; if(c.department){ const k2='Dépt · '+c.department; cnt[k2]=(cnt[k2]||0)+1; } });
         const bcCounts=Object.keys(cnt).sort().map(k=>({label:k,n:String(cnt[k])}));
         const fc=rowsC.find(c=>String(c.id)===String(S.bcFiche))||null;
         const post=(path,body,after)=>{ const fr=window.__FR||{};
@@ -3765,7 +3787,7 @@ class Component extends DCLogic {
           bcMore:()=>this.setState(s=>({bcShown:(s.bcShown||100)+200})),
           bcMoreTxt:'+ Afficher 200 de plus ('+Math.max(0,filt.length-shown)+' restants)',
           bcFicheOpen:!!fc,bcFicheClose:()=>this.setState({bcFiche:null}) };
-        if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCompTitle:'',fcSetCompTitle:noop2,fcCompOrder:'',fcSetCompOrder:noop2,fcOrderOpts:[],fcAddComplaint:noop2,fcCloseComplaint:noop2};
+        if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCloseComplaint:noop2};
         const rec=Number(fc.orders_90d)>=2?'Récurrent (2+ cmd / 90 j)':(Number(fc.orders_count)>=3?'Récurrent':'Ponctuel');
         return {...base,
           fcNm:cnm(fc),fcMail:fc.email||'—',fcTel:fc.phone_e164||fc.phone||'—',
@@ -3797,18 +3819,17 @@ class Component extends DCLogic {
             if(!(v>0)){ this.printJob('Montant du voucher requis (> 0)'); return; }
             post('client-voucher',{client_id:fc.id,value:v,type:'fixed'},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{voucher_active:(Number(fc.voucher_active)||0)+1}); this.setState({bcVoucherMsg:'✓ Voucher '+j.code+' — '+v.toFixed(2).replace('.',',')+' € (usage unique)',bcVoucherVal:''}); } else this.printJob((j&&j.error)||'Erreur voucher'); }); },
           fcVoucherMsg:S.bcVoucherMsg||'',fcVoucherHasMsg:!!S.bcVoucherMsg,
+          // Code postal : ajout / édition directe depuis la fiche (client.zip).
+          fcZip:S.bcZip!==undefined?S.bcZip:(fc.zip||''),
+          fcSetZip:(e)=>this.setState({bcZip:e.target.value}),
+          fcSaveZip:()=>{ const z=String(this.state.bcZip||'').replace(/\D/g,'');
+            if(z.length!==4){ this.printJob('Code postal : 4 chiffres attendus'); return; }
+            post('client-zip',{id:fc.id,zip:z},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{zip:j.zip}); this.printJob('✓ Code postal enregistré : '+j.zip); } else this.printJob((j&&j.error)||'Erreur code postal'); }); },
+          // Réclamation : PAS de création ici — elle naît du formulaire d'une
+          // commande, côté profil client (utilisateur). La fiche affiche l'état
+          // et permet seulement de clore.
           fcHasComplaint:Number(fc.complaint_open)>0,fcNoComplaint:!Number(fc.complaint_open),
           fcCompTag:tag('#fff4e5','#b26a00'),
-          fcCompTitle:S.bcCompTitle||'',fcSetCompTitle:(e)=>this.setState({bcCompTitle:e.target.value}),
-          // Droplist des commandes (achats) du client — note ★1-5 si laissée.
-          ...(()=>{ const ords=Array.isArray(S.bcOrders)?S.bcOrders:null;
-            return { fcCompOrder:S.bcCompOrder||'', fcSetCompOrder:(e)=>this.setState({bcCompOrder:e.target.value}),
-              fcOrderOpts:[{value:'',label:ords===null?'— Chargement des commandes… —':(ords.length?'— Rattacher à un achat (commande) —':'— Aucune commande webshop pour ce client —')},
-                ...(ords||[]).map(o=>({value:String(o.id),
-                  label:(o.order_ref||('CMD-'+o.id))+' · '+String(o.created_at||'').slice(0,10)+' · '+(Number(o.total||0)).toFixed(2).replace('.',',')+' €'+(o.rating!=null?(' · ★ '+o.rating+'/5'):' · sans note')}))] }; })(),
-          fcAddComplaint:()=>{ const t2=String(this.state.bcCompTitle||'').trim()||'Réclamation client';
-            const oid=parseInt(this.state.bcCompOrder,10)||0;
-            post('client-complaint',{client_id:fc.id,title:t2,...(oid?{order_id:oid}:{})},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:(Number(fc.complaint_open)||0)+1}); this.setState({bcCompTitle:'',bcCompOrder:''}); this.printJob('✓ Réclamation enregistrée'+(j.order_ref?(' — achat '+j.order_ref):'')+' — visible dans la section Réclamations'); } else this.printJob((j&&j.error)||'Erreur réclamation'); }); },
           fcCloseComplaint:()=>{ post('client-complaint',{resolve_client_id:fc.id},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:0}); this.printJob('✓ Réclamation close'); } else this.printJob((j&&j.error)||'Erreur'); }); } };
       })(),
       isBureauParams:screen==='bureauParams',bureauParams,
