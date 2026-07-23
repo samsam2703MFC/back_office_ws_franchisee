@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072314"></script>
-<script src="bo_server.js?v=2026072314"></script>
+<script src="api-config.js?v=2026072315"></script>
+<script src="bo_server.js?v=2026072315"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072314'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072315'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072314">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072314"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072315">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072315"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -777,7 +777,6 @@
       <!-- ===================== OFFICES (BUREAUX) ===================== -->
       <sc-if value="{{ isOffices }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:9px 14px;font:600 10.5px var(--font-ui)"><span style="color:var(--color-text-muted);letter-spacing:.06em;text-transform:uppercase">Hiérarchie</span><span title="Circuit de livraison (horaires, exceptions, cut-off) — racine" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Tournée</span><span style="color:var(--color-text-muted)">›</span><span title="Adresse physique rattachée à une tournée" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Site</span><span style="color:var(--color-text-muted)">›</span><span title="Point paramétrable au sein d\u2019un site" style="border-radius:999px;padding:4px 11px;background:var(--color-primary);color:#fff;cursor:help">Bureau</span><span style="color:var(--color-text-muted)">›</span><span title="Regroupement rattaché à un bureau (facultatif) — lié via le client" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Département</span><span style="color:var(--color-text-muted)">›</span><span title="Entité finale (facturation, jours autorisés…)" style="border-radius:999px;padding:4px 11px;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:help">Client</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
           <div style="font:400 12px/1.5 var(--font-ui);color:var(--color-text-muted)">Bureaux clients (ws_offices) + config livraison. Un office regroupe un ou plusieurs delivery sites ; seuls les offices <strong>validés</strong> sont livrables.</div>
           <button onClick="{{ addOffice }}" class="btn-primary" style="padding:9px 16px;font-size:12.5px;white-space:nowrap">+ Nouvel office</button>
