@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072303"></script>
-<script src="bo_server.js?v=2026072303"></script>
+<script src="api-config.js?v=2026072304"></script>
+<script src="bo_server.js?v=2026072304"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072303'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072304'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072303">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072303"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072304">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072304"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -832,6 +832,7 @@
           <select value="{{ bcOff }}" onChange="{{ bcSetOff }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcOffOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
           <select value="{{ bcDept }}" onChange="{{ bcSetDept }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcDeptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
           <span style="font:600 11px var(--font-ui);color:var(--color-text-muted);flex:none">{{ bcTotalTxt }}</span>
+          <button onClick="{{ addClientB2B }}" class="btn-primary" style="padding:9px 14px;font-size:12px;flex:none">+ Nouveau client B2B</button>
         </div>
         <div style="display:flex;gap:8px;overflow-x:auto">
           <sc-for list="{{ bcCounts }}" as="bk" hint-placeholder-count="4">
@@ -1716,6 +1717,12 @@
         </sc-if>
         <sc-if value="{{ fcCorpOff }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;justify-content:flex-end"><button onClick="{{ fcSaveBilling }}" class="btn-secondary" style="font-size:11.5px;padding:7px 14px">Enregistrer (particulier)</button></div>
+        </sc-if>
+        <sc-if value="{{ fcOffDelShow }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <div><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Livraison au bureau</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">client.office_delivery — personne morale validée ; activer crée/réactive l'office (trigger)</div></div>
+            <button onClick="{{ fcOffDelToggle }}" style="{{ fcOffDelStyle }}">{{ fcOffDelLbl }}</button>
+          </div>
         </sc-if>
       </div>
       <div style="padding:14px 24px;border-bottom:.5px solid var(--color-border-tertiary)">
@@ -3021,7 +3028,10 @@ class Component extends DCLogic {
     // ===== LIVRAISONS — paramétrage : nav groups =====
     const groupsDef=[
       {id:'g_liv',label:'Livraison',items:[['tournees','Tournées · horaires · fermetures'],['params','Coûts · temps · frais']]},
-      {id:'g_b2b',label:'Clients B2B',items:[['clients','Bureaux & sites'],['offices','Offices'],['b2bClients','Clients'],['sites','Sites de livraison'],['zones','Zone de chalandise'],['emailsBureau','Contacts email']]},
+      // « Bureaux & sites » (écran clients) et « Contacts email » (emailsBureau)
+      // sortent du menu : doublons — la création B2B vit dans Clients, les
+      // contacts email dans le formulaire d'édition de l'Office (engrenage).
+      {id:'g_b2b',label:'Clients B2B',items:[['offices','Offices'],['b2bClients','Clients'],['sites','Sites de livraison'],['zones','Zone de chalandise']]},
       {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
     ];
     const navSub=(s)=>{ const active=S.screen===s; return 'display:flex;align-items:center;width:100%;padding:9px 12px 9px 32px;border:none;border-radius:8px;cursor:pointer;font:'+(active?'600':'400')+' 12.5px/1 var(--font-ui);text-align:left;'+(active?'background:var(--color-background-secondary);color:var(--color-primary)':'background:transparent;color:var(--color-text-muted)'); };
@@ -3686,7 +3696,7 @@ class Component extends DCLogic {
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
       // calcule QUE sur l'écran Clients — sinon il ralentit toute l'app.
       ...(()=>{ const noop2=()=>{};
-        if(screen!=='b2bClients') return {isB2bClients:false,bcQ:'',bcSetQ:noop2,bcSelStyle:'',bcDept:'',bcSetDept:noop2,bcDeptOpts:[],bcOff:'',bcSetOff:noop2,bcOffOpts:[],bcSite:'',bcSetSite:noop2,bcSiteOpts:[],bcTour:'',bcSetTour:noop2,bcTourOpts:[],bcCounts:[],bcList:[],bcEmpty:false,bcTotalTxt:'',bcHasMore:false,bcMore:noop2,bcMoreTxt:'',bcFicheOpen:false,bcFicheClose:noop2,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcCloseComplaint:noop2};
+        if(screen!=='b2bClients') return {isB2bClients:false,bcQ:'',bcSetQ:noop2,bcSelStyle:'',bcDept:'',bcSetDept:noop2,bcDeptOpts:[],bcOff:'',bcSetOff:noop2,bcOffOpts:[],bcSite:'',bcSetSite:noop2,bcSiteOpts:[],bcTour:'',bcSetTour:noop2,bcTourOpts:[],bcCounts:[],bcList:[],bcEmpty:false,bcTotalTxt:'',bcHasMore:false,bcMore:noop2,bcMoreTxt:'',bcFicheOpen:false,bcFicheClose:noop2,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcOffDelShow:false,fcOffDelOn:false,fcOffDelLbl:'',fcOffDelStyle:'',fcOffDelToggle:noop2,fcCloseComplaint:noop2};
         const rowsC=SRV('b2b_clients');
         // Affichage : « Nom Prénom — Société (si rattachée) » ; client.name =
         // prénom, client.surname = nom de famille.
@@ -3710,6 +3720,8 @@ class Component extends DCLogic {
           B.push((Number(c.is_b2b)||c.invoice_vat)?{t:'Personne morale',style:tag('#f1ebfa','#6a3f9e')}:{t:'Particulier',style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
           if(Number(c.orders_90d)>=2||Number(c.orders_count)>=3) B.push({t:'Récurrent',style:tag('#eaf5ec','#2d7a3e')});
           if(c.deferred===1||c.deferred===true||c.deferred==='1') B.push({t:'Paiement différé',style:tag('#fff4e5','#b26a00')});
+          // Rattaché à un office AVEC livraison au bureau active → badge dédié.
+          if(c.office_name&&Number(c.office_delivery)) B.push({t:'Livraison au bureau',style:tag('#f6ead9','#8C4A2F')});
           if(Number(c.blocked)) B.push({t:'BLOQUÉ',style:tag('#fbe9eb','var(--color-primary)')});
           if(Number(c.complaint_open)) B.push({t:'Réclamation en cours',style:tag('#fff4e5','#b26a00')});
           if(Number(c.voucher_active)) B.push({t:'Voucher actif',style:tag('#eaf5ec','#2d7a3e')});
@@ -3787,7 +3799,7 @@ class Component extends DCLogic {
           bcMore:()=>this.setState(s=>({bcShown:(s.bcShown||100)+200})),
           bcMoreTxt:'+ Afficher 200 de plus ('+Math.max(0,filt.length-shown)+' restants)',
           bcFicheOpen:!!fc,bcFicheClose:()=>this.setState({bcFiche:null}) };
-        if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCloseComplaint:noop2};
+        if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcOffDelShow:false,fcOffDelOn:false,fcOffDelLbl:'',fcOffDelStyle:'',fcOffDelToggle:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCloseComplaint:noop2};
         const rec=Number(fc.orders_90d)>=2?'Récurrent (2+ cmd / 90 j)':(Number(fc.orders_count)>=3?'Récurrent':'Ponctuel');
         return {...base,
           fcNm:cnm(fc),fcMail:fc.email||'—',fcTel:fc.phone_e164||fc.phone||'—',
@@ -3819,6 +3831,14 @@ class Component extends DCLogic {
             if(!(v>0)){ this.printJob('Montant du voucher requis (> 0)'); return; }
             post('client-voucher',{client_id:fc.id,value:v,type:'fixed'},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{voucher_active:(Number(fc.voucher_active)||0)+1}); this.setState({bcVoucherMsg:'✓ Voucher '+j.code+' — '+v.toFixed(2).replace('.',',')+' € (usage unique)',bcVoucherVal:''}); } else this.printJob((j&&j.error)||'Erreur voucher'); }); },
           fcVoucherMsg:S.bcVoucherMsg||'',fcVoucherHasMsg:!!S.bcVoucherMsg,
+          // Livraison au bureau (client.office_delivery) : réservé aux personnes
+          // morales VALIDÉES ; le trigger crée/désactive l'office en base.
+          fcOffDelShow:!!((Number(fc.is_b2b)||fc.invoice_vat)&&!Number(fc.status)),
+          fcOffDelOn:!!Number(fc.office_delivery),
+          fcOffDelLbl:Number(fc.office_delivery)?'Activée':'Désactivée',
+          fcOffDelStyle:togStyle(!!Number(fc.office_delivery),'#f6ead9','#8C4A2F'),
+          fcOffDelToggle:()=>{ const on=Number(fc.office_delivery)?0:1;
+            post('client-office-delivery',{id:fc.id,enabled:on},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{office_delivery:on}); this.printJob(on?'✓ Livraison au bureau ACTIVÉE — l\'office est créé/réactivé (trigger)':'Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur livraison au bureau'); }); },
           // Code postal : ajout / édition directe depuis la fiche (client.zip).
           fcZip:S.bcZip!==undefined?S.bcZip:(fc.zip||''),
           fcSetZip:(e)=>this.setState({bcZip:e.target.value}),
