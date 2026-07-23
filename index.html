@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072346"></script>
-<script src="bo_server.js?v=2026072346"></script>
+<script src="api-config.js?v=2026072348"></script>
+<script src="bo_server.js?v=2026072348"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072346'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072348'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072346">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072346"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072348">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072348"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1235,7 +1235,7 @@
           <sc-for list="{{ stockRows }}" as="s" hint-placeholder-count="6">
             <sc-if value="{{ s.hasCat }}" hint-placeholder-val="{{ false }}"><div style="font:600 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);background:var(--color-background-secondary);padding:6px 8px;margin-top:6px;border-radius:6px">{{ s.catLabel }}</div></sc-if>
             <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <button onClick="{{ s.toggleLines }}" title="Voir les lignes de commande du jour (Click &amp; Collect / Livraison)" style="display:flex;align-items:center;gap:7px;border:none;background:none;padding:0;cursor:pointer;text-align:left;min-width:0"><span style="{{ s.caretStyle }}">▶</span><span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.nom }}</span></button>
+              <button onClick="{{ s.toggleLines }}" title="Voir les lignes de commande du jour (Click &amp; Collect / Livraison)" style="display:flex;align-items:center;gap:7px;border:none;background:none;padding:0;cursor:pointer;text-align:left;min-width:0"><span style="{{ s.caretStyle }}">▶</span><span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.nom }}</span><sc-if value="{{ s.hasPort }}" hint-placeholder-val="{{ false }}"><span title="{{ s.portTitle }}" style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 9.5px var(--font-ui);cursor:help;flex:none">◔</span></sc-if></button>
               <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ s.cat }}</span>
               <div style="display:flex;justify-content:flex-end"><input type="number" value="{{ s.online }}" onChange="{{ s.setOnline }}" style="{{ s.inputStyle }}"/></div>
               <div style="display:flex;justify-content:flex-end"><input type="number" value="{{ s.shop }}" onChange="{{ s.setShop }}" style="{{ s.inputStyle }}"/></div>
@@ -1383,6 +1383,22 @@
             </div>
           </sc-for>
         </div>
+
+        <!-- Portions — règles RÉSEAU issues de l'ERP (lecture seule). -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="t-section-title" style="font-size:15px">Portions — règles réseau (ERP)</div><span style="display:inline-flex;align-items:center;padding:4px 11px;border-radius:999px;font:600 10.5px var(--font-ui);background:var(--color-background-secondary);color:var(--color-text-muted)">👁 Lecture seule</span></div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">product_portion (ERP) — tailles proposées au webshop par produit · facturation <strong>quart ×0.27 · demi ×0.52 · entière ×1</strong> du prix magasin</div>
+          <div style="display:grid;grid-template-columns:1.5fr .9fr 1fr 1.6fr;gap:12px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Produit</span><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Portions proposées</span><span class="t-admin-label">Prix des portions</span></div>
+          <sc-for list="{{ erpPortions }}" as="ep" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:1.5fr .9fr 1fr 1.6fr;gap:12px;align-items:center;padding:10px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+              <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ ep.produit }}">{{ ep.produit }}</span>
+              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ ep.cat }}</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ ep.badges }}" as="b" hint-placeholder-count="3"><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font:600 10.5px var(--font-ui);background:#eef3fb;color:#2a5a9e">{{ b.label }}</span></sc-for></div>
+              <span style="font:500 11.5px var(--font-ui);color:var(--color-text)" title="{{ ep.facteurs }}">{{ ep.prix }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ erpPortionsEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:18px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune règle de portions dans l'ERP (product_portion) — les produits à portions gardent les 3 tailles par défaut.</div></sc-if>
+        </div>
         </sc-if>
 
         <sc-if value="{{ promoTabBons }}" hint-placeholder-val="{{ false }}">
@@ -1437,7 +1453,7 @@
             </sc-if>
             <sc-if value="{{ a.isProd }}" hint-placeholder-val="{{ false }}">
               <div style="{{ a.rowStyle }}">
-                <div style="display:flex;align-items:center;gap:7px"><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ a.label }}</span><sc-if value="{{ a.lockShow }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.9"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></sc-if></div>
+                <div style="display:flex;align-items:center;gap:7px"><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ a.label }}</span><sc-if value="{{ a.lockShow }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.9"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></sc-if><sc-if value="{{ a.hasPort }}" hint-placeholder-val="{{ false }}"><span title="{{ a.portTitle }}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 10px var(--font-ui);cursor:help;flex:none">◔ portions</span></sc-if></div>
                 <span style="font:400 11px var(--font-ui);color:{{ a.stateColor }}">{{ a.stateTxt }}</span>
                 <div style="display:flex;justify-content:center;align-items:center;gap:7px"><sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if><button onClick="{{ a.toggle }}" style="{{ a.swStyle }}"><span style="{{ a.swKnob }}"></span></button></div>
               </div>
@@ -4459,8 +4475,18 @@ class Component extends DCLogic {
           this.printJob('✓ '+parts.join(' + ')+' de « '+stkFsel+' » enregistré(s)');
         }).catch(()=>this.printJob('Réseau indisponible — stock non enregistré')); },
     };
+    // Portions — règles RÉSEAU issues de l'ERP (product_portion, lecture seule).
+    const PORTION_LBL={quart:'1/4',demi:'1/2',entier:'Entière'};
+    const erpPortions=SRV('fr_erp_portions').map(r=>({produit:r.produit,cat:r.cat||'—',
+      badges:(r.portions||[]).map(t=>({label:PORTION_LBL[t]||t})),facteurs:r.facteurs||'—',prix:r.prix||'—'}));
+    const erpPortionsEmpty=erpPortions.length===0;
+    // Index par produit pour marquer d'une icône ◔ les produits portionnables
+    // dans les catalogues (Assortiment, Stock du jour) — info-bulle : catégorie
+    // · types de portions · prix de chaque portion.
+    const erpPortIdx={}; erpPortions.forEach(r=>{ erpPortIdx[r.produit]=r.cat+' · '+(r.prix!=='—'?r.prix:r.facteurs); });
     let _lastCat=null;
-    const stockRows=stockFiltered.map(r=>{ const hasCat=r.catLabel!==_lastCat; _lastCat=r.catLabel; return {...r,hasCat}; });
+    const stockRows=stockFiltered.map(r=>{ const hasCat=r.catLabel!==_lastCat; _lastCat=r.catLabel;
+      return {...r,hasCat,hasPort:!!erpPortIdx[r.nom],portTitle:erpPortIdx[r.nom]||''}; });
     const stockEmpty=stockRows.length===0;
 
     // Assortiment — arbre catégories → produits, toggles actif + verrou marque
@@ -4495,6 +4521,7 @@ class Component extends DCLogic {
           asrPost({cat:c.cat,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>(x.cat||'Autres')===k,nv); asrReloadStock(); this.printJob((nv?'✓ Catégorie « ':'Catégorie « ')+c.cat+' » '+(nv?'activée':'désactivée')+' — '+(j.n||0)+' produit(s) (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
       c.prods.forEach(p=>{ const pAct=p.defA!==false; const ps2=swT(pAct,p.locked);
         assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
+          hasPort:!!erpPortIdx[p.nom],portTitle:erpPortIdx[p.nom]||'',
           help:p.locked?('Produit « '+p.nom+' » VERROUILLÉ (marque obligatoire) : toujours proposé.'):(pAct?('Produit « '+p.nom+' » ACTIF (ws_product_shops). Le désactiver le retire de la vente pour cette boutique.'):('Produit « '+p.nom+' » INACTIF pour cette boutique. L\'activer le rend commandable.')),
           rowStyle:'display:grid;grid-template-columns:2.4fr 1.2fr .7fr;align-items:center;padding:10px 6px 10px 22px;border-bottom:.5px solid var(--color-border-tertiary)'+(pAct?'':';opacity:.5'),
           stateTxt:pAct?'Actif · vendable':'Inactif (boutique)',stateColor:pAct?'#2d7a3e':'var(--color-text-muted)',
@@ -5034,7 +5061,7 @@ class Component extends DCLogic {
       isStatsReseau:screen==='statsReseau',netStats,exportCA:()=>this.printJob('Export CA (CSV) généré'),exportTop:()=>this.printJob('Export top produits généré'),exportLivr:()=>this.printJob('Export taux livraison vs retrait généré'),
       isEmailsBureau:screen==='emailsBureau',officeEmails,
       isCalendarRules:screen==='calendarRules',calRules,addCalRule:this.openForm('calRule'),
-      isPricingRules:screen==='pricingRules',priceRules,addPricing:this.openForm('pricing'),
+      isPricingRules:screen==='pricingRules',priceRules,addPricing:this.openForm('pricing'),erpPortions,erpPortionsEmpty,
       promoTabPrix:(S.promoTab||'prix')==='prix',promoTabBons:(S.promoTab||'prix')==='bons',promoTabRemise:(S.promoTab||'prix')==='remise',
       promoSegPrix:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.promoTab||'prix')==='prix'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       promoSegBons:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.promoTab||'prix')==='bons'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
