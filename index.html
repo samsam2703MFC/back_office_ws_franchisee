@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072323"></script>
-<script src="bo_server.js?v=2026072323"></script>
+<script src="api-config.js?v=2026072324"></script>
+<script src="bo_server.js?v=2026072324"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072323'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072324'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072323">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072323"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072324">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072324"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -96,6 +96,7 @@
       <button onClick="{{ nav.capacite }}" style="{{ navStyles.capacite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span>Capacité · remplissage</span></button>
       <button onClick="{{ nav.rentabilite }}" style="{{ navStyles.rentabilite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/></svg><span>{{ t.navRentabilite }}</span></button>
       <button onClick="{{ nav.geoAnalyse }}" style="{{ navStyles.geoAnalyse }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="10" r="3"/><path d="M12 21c4-4.5 7-8 7-11a7 7 0 1 0-14 0c0 3 3 6.5 7 11z"/></svg><span>Analyse géo</span></button>
+      <button onClick="{{ nav.statsReseau }}" style="{{ navStyles.statsReseau }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg><span>Stats réseau</span></button>
       <button onClick="{{ toggleParams }}" style="{{ paramsHeadStyle }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="{{ paramsChevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase">Paramétrage</span></button>
       <sc-if value="{{ paramsOpen }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="6">
@@ -170,8 +171,8 @@
           </div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
             <div class="t-admin-label">Cut-off restant</div>
-            <div style="font:700 30px/1 var(--font-ui);color:var(--color-primary);margin:8px 0 4px">2 h 14</div>
-            <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">clôture saisie à 12:00</div>
+            <div style="font:700 30px/1 var(--font-ui);color:var(--color-primary);margin:8px 0 4px">{{ kTdbCutRemain }}</div>
+            <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ kTdbCutTxt }}</div>
           </div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
             <div class="t-admin-label">Tournées du jour</div>
@@ -229,7 +230,7 @@
         </sc-if>
         <sc-if value="{{ tdbViewList }}" hint-placeholder-val="{{ false }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="t-section-title" style="font-size:15px">Commandes — jeudi 17 juillet</div><div style="display:flex;gap:7px"><span style="{{ ordFilterAll }}">Toutes</span><span style="{{ ordFilterDeliv }}">Livraison</span><span style="{{ ordFilterPickup }}">Retrait</span></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="t-section-title" style="font-size:15px">Commandes — {{ ordTitleDate }}</div><div style="display:flex;gap:7px"><span style="{{ ordFilterAll }}">Toutes</span><span style="{{ ordFilterDeliv }}">Livraison</span><span style="{{ ordFilterPickup }}">Retrait</span></div></div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Cliquer sur le statut pour le faire avancer · écrit dans ws_orders</div>
           <div style="display:grid;grid-template-columns:.8fr 1.5fr .8fr 1.1fr 1.1fr .8fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Mode</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Total</span></div>
           <sc-for list="{{ ordersList }}" as="o" hint-placeholder-count="6">
@@ -242,6 +243,7 @@
               <span style="font:600 12.5px var(--font-ui);color:var(--color-text);text-align:right">{{ o.total }}</span>
             </div>
           </sc-for>
+          <sc-if value="{{ ordersEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:26px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune commande aujourd'hui (ws_orders).</div></sc-if>
         </div>
         </sc-if>
       </div>
@@ -1483,10 +1485,10 @@
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="t-section-title" style="font-size:15px">Coordonnées & horaires</div><button onClick="{{ editShop }}" class="btn-secondary" style="font-size:12px;flex:none">Modifier</button></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">L'Atelier — Bruxelles-Centre</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">Rue du Marché 12, 1000 BXL</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">07:00</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">18:30</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopEnseigne }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopAdresse }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopOpen }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopClose }}</div></div>
           </div>
         </div>
       </div>
@@ -2086,8 +2088,8 @@
   <div onClick="{{ closeProfile }}" style="position:fixed;inset:0;background:rgba(34,34,34,.5);display:flex;align-items:center;justify-content:center;z-index:2300;padding:24px">
     <div onClick="{{ stop }}" style="background:var(--color-surface);border-radius:16px;width:560px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(0,0,0,.32);overflow:hidden">
       <div style="padding:22px 26px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:14px">
-        <span style="width:46px;height:46px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px var(--font-ui);flex:none">TL</span>
-        <div style="flex:1"><div class="t-page-title" style="font-size:18px">Thomas Legrand</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Admin réseau · Dev · Siège · thomas.legrand@latelierby.be</div></div>
+        <span style="width:46px;height:46px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px var(--font-ui);flex:none">F</span>
+        <div style="flex:1"><div class="t-page-title" style="font-size:18px">Compte franchisé</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ shopEnseigne }} · console franchisé</div></div>
         <button onClick="{{ closeProfile }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:24px;line-height:1;padding:0">×</button>
       </div>
       <div style="padding:18px 26px;overflow-y:auto;flex:1">
@@ -2284,9 +2286,9 @@ class Component extends DCLogic {
   }; return M[screen]||{table:'ws_param · tables du module',origin:'Données de démonstration servies par la couche BOServer (localStorage)',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
   formDefs(){
     const toursReal=(window.BOServer?window.BOServer.table('ws_tours'):[]).map(t=>t.name).filter(Boolean);
-    const tours=toursReal.length?[...new Set(toursReal)]:['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
+    const tours=[...new Set(toursReal)]; // RÉEL uniquement — pas de liste de démo
     const bureauxReal=(window.BOServer?window.BOServer.table('ws_offices'):[]).map(o=>o.name).filter(Boolean);
-    const bureaux=bureauxReal.length?[...new Set(bureauxReal)]:['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
+    const bureaux=[...new Set(bureauxReal)];
     // Buildings (sites) existants : adresses distinctes de ws_office_delivery_sites.
     const buildings=[...new Set((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(s=>s.adr||s.address).filter(v=>v&&v!=='—'))];
     const cats=['Pâtisserie fraîche','Boulangerie','Traiteur / plats','Chocolaterie','Glaces & surgelés','Épicerie fine'];
@@ -2447,12 +2449,12 @@ class Component extends DCLogic {
           {k:'valeur',label:'Valeur / effet',type:'text',ph:'ex. −10 % dès 40 €'},
           {k:'validite',label:'Validité',type:'text',ph:'ex. jusqu\'au 31/08'},
         ]},
-      shop:{ title:'Paramètres du shop', table:'ws_shops', save:'Enregistrer',
+      shop:{ title:'Paramètres du shop', table:'ws_param', save:'Enregistrer',
         fields:[
-          {k:'enseigne',label:'Enseigne',type:'text',def:'L\'Atelier — Bruxelles-Centre'},
-          {k:'adresse',label:'Adresse',type:'text',def:'Rue du Marché 12, 1000 BXL'},
-          {k:'open',label:'Ouverture',type:'text',def:'07:00'},
-          {k:'close',label:'Fermeture',type:'text',def:'18:30'},
+          {k:'enseigne',label:'Enseigne',type:'text',def:(window.BOServer?String(window.BOServer.getParam('shop.name','')||''):'')},
+          {k:'adresse',label:'Adresse',type:'text',def:(window.BOServer?String(window.BOServer.getParam('shop.address','')||''):'')},
+          {k:'open',label:'Ouverture',type:'text',def:(window.BOServer?String(window.BOServer.getParam('shop.open','07:00')||''):'07:00')},
+          {k:'close',label:'Fermeture',type:'text',def:(window.BOServer?String(window.BOServer.getParam('shop.close','18:30')||''):'18:30')},
         ]},
     };
   }
@@ -2581,20 +2583,28 @@ class Component extends DCLogic {
 
   eur(n){ return new Intl.NumberFormat('fr-BE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n); }
 
-  points(){ return [
-    {id:1, libelle:'Brasserie Le Cirio', ville:'Grand-Place', client:'Le Cirio SA', lat:50.8467, lng:4.3525, ca:420, couts:190, colis:8, kg:96, vol:640, seg:'horeca'},
-    {id:2, libelle:'Hôtel Amigo', ville:'Sablon', client:'Rocco Forte', lat:50.8451, lng:4.3520, ca:380, couts:175, colis:6, kg:72, vol:520, seg:'horeca'},
-    {id:3, libelle:'Café Belga', ville:'Ixelles', client:'Belga SPRL', lat:50.8275, lng:4.3705, ca:210, couts:150, colis:4, kg:48, vol:360, seg:'horeca'},
-    {id:4, libelle:'Maison Dandoy', ville:'Sablon', client:'Dandoy', lat:50.8410, lng:4.3560, ca:340, couts:160, colis:5, kg:60, vol:420, seg:'retail'},
-    {id:5, libelle:'Resto Le Chalet', ville:'Uccle', client:'Chalet SPRL', lat:50.8003, lng:4.3376, ca:165, couts:145, colis:3, kg:36, vol:280, seg:'horeca'},
-    {id:6, libelle:'Traiteur Delcourt', ville:'Etterbeek', client:'Delcourt', lat:50.8367, lng:4.3897, ca:290, couts:170, colis:5, kg:60, vol:420, seg:'horeca'},
-    {id:7, libelle:'Boulangerie du Parc', ville:'Schaerbeek', client:'Franchise BXL-N', lat:50.8676, lng:4.3737, ca:260, couts:140, colis:4, kg:48, vol:340, seg:'boutique_franchise'},
-    {id:8, libelle:'Event Château', ville:'Waterloo', client:'Événements Sud', lat:50.7147, lng:4.3990, ca:40, couts:118, colis:1, kg:12, vol:90, seg:'event'},
-    {id:9, libelle:'Corporate KBC', ville:'Leuven', client:'KBC Group', lat:50.8798, lng:4.7005, ca:150, couts:165, colis:3, kg:36, vol:260, seg:'corporate'},
-    {id:10, libelle:'Horeca Cureghem', ville:'Anderlecht', client:'Cureghem SPRL', lat:50.8367, lng:4.3080, ca:300, couts:160, colis:5, kg:60, vol:420, seg:'horeca'},
-  ]; }
+  // Points de livraison — RÉELS : offices de /franchisee/geo-clients (CA =
+  // somme ws_orders par office), géolocalisés par CP (__CPGEO). Les COÛTS sont
+  // un MODÈLE calculé sur les paramètres de coût réels (écran Coûts) : emballage
+  // par colis + préparation (10 min/colis) + chargement (4 min/colis).
+  rentaEnsure(){ if(this._rentaPts!==undefined||this._rentaLoading) return; const fr=window.__FR||{};
+    if(!fr.base){ this._rentaPts=[]; return; }
+    this._rentaLoading=true;
+    fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(j=>{ this._rentaPts=(j&&Array.isArray(j.clients))?j.clients.filter(c=>c.type==='office'):[]; this._rentaLoading=false; this.setState(s=>({_rev:(s._rev||0)+1})); })
+      .catch(()=>{ this._rentaPts=[]; this._rentaLoading=false; }); }
+  points(){ const rows=this._rentaPts||[]; const geo=(typeof window!=='undefined'&&window.__CPGEO&&window.__CPGEO.idx)||null;
+    const gp=(k,d)=>{ const v=window.BOServer?window.BOServer.getParam(k,d):d; const n=parseFloat(v); return isNaN(n)?d:n; };
+    const P={prep:gp('cost_prep',26),emb:gp('cost_emb',0.42),charg:gp('cost_charg',24)};
+    return rows.map((o,i)=>{ const e=geo?geo[String(o.cp||'').trim()]:null;
+      const ca=Math.round(+o.ca||0); const colis=Math.max(0,Math.round(+o.n||0));
+      const couts=Math.round(colis*(P.emb+P.prep*10/60+P.charg*4/60));
+      return {id:o.id||('pt'+i),libelle:o.name||'—',ville:o.city||(o.cp||'—'),client:o.name||'—',
+        lat:e?e.lat:50.85,lng:e?e.lng:4.35,ca,couts,colis,kg:0,vol:0,seg:'horeca'}; }); }
 
-  depot(){ return {lat:50.8100, lng:4.3200, libelle:"L'Atelier — Forest"}; }
+  depot(){ const nm=(window.BOServer?window.BOServer.getParam('shop.name',''):'')||'Ma boutique';
+    return {lat:50.85, lng:4.35, libelle:nm}; }
 
   T = {
     navTdb:{FR:'Tableau de bord',NL:'Dashboard',EN:'Dashboard',PL:'Pulpit'},
@@ -2620,6 +2630,8 @@ class Component extends DCLogic {
     // Stock du jour : à l'ARRIVÉE sur l'écran, si des produits sont sous le
     // seuil bas, la modale d'alerte se rouvre (état null = automatique).
     if(s==='stockJour') st.stkAlert=null;
+    // Rentabilité : charge (une fois) les points réels (geo-clients).
+    if(s==='rentabilite') setTimeout(()=>this.rentaEnsure(),0);
     this.setState(st); }; }
 
   navStyle(s){
@@ -2638,14 +2650,26 @@ class Component extends DCLogic {
   pill(bg,color){ return `display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font:600 10.5px var(--font-ui);white-space:nowrap;background:${bg};color:${color}`; }
 
   // ---- charts ----
+  // Cascade de marge — RÉELLE : CA = somme des commandes des points (geo-clients),
+  // composantes = modèle de coûts sur les paramètres réels (écran Coûts).
   waterfall(){
+    const pts=this.points();
+    if(!pts.length) return React.createElement('div',{style:{padding:'34px',textAlign:'center',font:'400 12px var(--font-ui)',color:'var(--color-text-muted)'}},'Pas encore de commandes livrées — la cascade de marge se construira avec les données réelles (ws_orders).');
+    const gp=(k,d)=>{ const v=window.BOServer?window.BOServer.getParam(k,d):d; const n=parseFloat(v); return isNaN(n)?d:n; };
+    const P={prep:gp('cost_prep',26),emb:gp('cost_emb',0.42),charg:gp('cost_charg',24),struct:gp('cost_struct',38)};
+    const colis=pts.reduce((a,p)=>a+p.colis,0);
+    const caT=pts.reduce((a,p)=>a+p.ca,0);
+    const nT=Math.max(1,(window.BOServer?window.BOServer.table('ws_tours'):[]).filter(t=>t.name).length);
+    const vPrep=-Math.round(colis*P.prep*10/60), vEmb=-Math.round(colis*P.emb),
+          vCharg=-Math.round(colis*P.charg*4/60), vStruct=-Math.round(nT*P.struct);
+    const margeT=caT+vPrep+vEmb+vCharg+vStruct;
     const steps=[
-      {label:'CA livré',v:2555,type:'total'},
-      {label:'Chauffeur',v:-470},{label:'Véhicule',v:-385},{label:'Prépa.',v:-240},
-      {label:'Emballage',v:-92},{label:'Incidents',v:-66},{label:'Structure',v:-320},
-      {label:'Marge',v:982,type:'result'},
+      {label:'CA livré',v:caT,type:'total'},
+      {label:'Prépa.',v:vPrep},{label:'Emballage',v:vEmb},
+      {label:'Chargement',v:vCharg},{label:'Structure',v:vStruct},
+      {label:'Marge',v:margeT,type:'result'},
     ];
-    const W=640,H=250,top=12,botPad=46,plotH=H-top-botPad,max=2600,scale=plotH/max,base=top+plotH;
+    const W=640,H=250,top=12,botPad=46,plotH=H-top-botPad,max=Math.max(100,caT*1.05),scale=plotH/max,base=top+plotH;
     const slot=W/steps.length, bw=Math.min(52,slot-14);
     let run=0; const rects=[];
     steps.forEach((s,i)=>{
@@ -2665,6 +2689,9 @@ class Component extends DCLogic {
     );
   }
   evolution(){
+    // GO-LIVE : pas encore de série hebdomadaire réelle (analytique en cours de
+    // collecte) — pas de courbe inventée.
+    return React.createElement('div',{style:{padding:'34px',textAlign:'center',font:'400 12px var(--font-ui)',color:'var(--color-text-muted)'}},'Historique en cours de collecte — la courbe de marge hebdomadaire apparaîtra après quelques semaines de commandes réelles.');
     const data=[{w:'S1',v:28},{w:'S2',v:31},{w:'S3',v:26},{w:'S4',v:35},{w:'S5',v:33},{w:'S6',v:38}];
     const W=520,H=230,top=14,botPad=34,left=30,plotH=H-top-botPad,plotW=W-left-14,minV=10,maxV=45,rng=maxV-minV;
     const xf=i=>left+(plotW*i/(data.length-1)); const yf=v=>top+plotH*(1-(v-minV)/rng);
@@ -2774,8 +2801,7 @@ class Component extends DCLogic {
   zfPickGroup(cps,label){ return ()=>this.zfAppendCps(cps.map(String),label); }
   // Fiche client : commandes du client (droplist réclamation, note ★1-5).
   bcLoadOrders(id){ const fr=window.__FR||{};
-    if(!fr.base){ // mode démo : petit échantillon cohérent avec le seed
-      this.setState({bcOrders:[{id:9001,order_ref:'CMD-9001',created_at:'2026-07-18 11:05:00',total:64.20,status:'delivered',rating:4},{id:9002,order_ref:'CMD-9002',created_at:'2026-06-30 09:40:00',total:38.50,status:'delivered',rating:null}]}); return; }
+    if(!fr.base){ this.setState({bcOrders:[]}); return; } // sans API : aucune donnée (pas de démo)
     fetch(fr.base+'/franchisee/client-orders?client_id='+encodeURIComponent(id)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
       .then(r=>r.ok?r.json():[]).then(a=>this.setState({bcOrders:Array.isArray(a)?a:[]}))
       .catch(()=>this.setState({bcOrders:[]})); }
@@ -2852,13 +2878,14 @@ class Component extends DCLogic {
         const d=this.depot();
         L.marker([d.lat,d.lng]).addTo(m).bindPopup("<b>"+d.libelle+"</b><br>Dépôt magasin");
         const stat={livre:'#2d7a3e',en_cours:'#8D1D2C',attendu:'#c9a24b'};
-        this.points().forEach((p,i)=>{
-          const st=i<3?'livre':(i<6?'en_cours':'attendu');
-          L.circleMarker([p.lat,p.lng],{radius:8,color:'#fff',weight:2,fillColor:stat[st],fillOpacity:.95}).addTo(m).bindPopup("<b>"+p.libelle+"</b><br>"+p.ville);
+        // Points RÉELS (geo-clients) — statut neutre (pas de télémétrie inventée).
+        this.points().forEach((p)=>{
+          L.circleMarker([p.lat,p.lng],{radius:8,color:'#fff',weight:2,fillColor:stat['attendu'],fillOpacity:.95}).addTo(m).bindPopup("<b>"+p.libelle+"</b><br>"+p.ville);
         });
-        // 2 drivers
-        L.circleMarker([50.845,4.352],{radius:10,color:'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(m).bindPopup("<b>Marek Kowalski</b><br>Renault Master frigo");
-        L.circleMarker([50.812,4.360],{radius:10,color:'#3B3468',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(m).bindPopup("<b>Julien Dubois</b><br>Iveco Daily");
+        // Chauffeurs RÉELS (fr_live_drivers) — placés uniquement s'ils ont un GPS.
+        (window.BOServer?window.BOServer.table('fr_live_drivers'):[]).forEach(d=>{
+          if(d.lat&&d.lng) L.circleMarker([d.lat,d.lng],{radius:10,color:'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(m).bindPopup("<b>"+(d.name||d.nom||'Chauffeur')+"</b><br>"+(d.vehicule||''));
+        });
       }
     }
     if(this.state.screen==='tournees'){
@@ -2967,8 +2994,8 @@ class Component extends DCLogic {
     const tdbToggleAll=()=>this.setState(()=>{ const nc={}; if(!allCollapsed){ allKeys.forEach(k=>nc[k]=true); } return {tdbCollapsed:nc}; });
     const tdbToggleAllLabel=allCollapsed?'⊕ Tout déplier':'⊖ Tout replier';
 
-    // PREP
-    const scanTotal=23, scanDone=S.scan;
+    // PREP — total à scanner = somme RÉELLE des colis des points de préparation.
+    const scanTotal=Math.max(0,SRV('fr_prep_points').reduce((a,p)=>a+(parseInt(p.colis,10)||0),0)), scanDone=Math.min(S.scan,scanTotal||S.scan);
     const complete=scanDone>=scanTotal;
     const prepPoints=SRV('fr_prep_points').map((p,i)=>i===0?{...p,dotBg:'var(--color-primary)',dotColor:'#fff',stateLabel:complete?'✓':'En cours',stateColor:complete?'#2d7a3e':'var(--color-primary)'}:{...p,dotBg:'var(--color-background-secondary)',dotColor:'var(--color-text-muted)',stateLabel:'À faire',stateColor:'var(--color-text-muted)'});
     const ecart=scanTotal-scanDone;
@@ -3054,7 +3081,9 @@ class Component extends DCLogic {
     const liveEta=SRV('fr_live_eta').map(e=>({...e,driftColor:/\+/.test(e.drift)?'var(--color-primary)':'#2d7a3e',statutStyle:LIVE_ST(e.statut)}));
     const selDriverIdx=S.selDriver||0;
     // Repli : si la donnée (API live) n'a pas de stops détaillés, on les reconstruit depuis l'avancement « n/total ».
-    const synthStops=(dd)=>{ const m=String(dd.avancement||'').match(/(\d+)\D+(\d+)/); const done=m?+m[1]:0; const total=m?+m[2]:0; const out=[]; for(let k=0;k<total;k++){ const st=k<done?'done':(k===done?'current':'todo'); const cur=st==='current'; out.push({name:cur?(dd.next||('Arrêt '+(k+1))):('Livraison '+(k+1)),ville:cur?(dd.nextVille||''):'—',heure:cur?(dd.eta||''):'',state:st,incident:cur&&/risque/i.test(dd.statut||''),incidentLabel:dd.drift}); } return out; };
+    // GO-LIVE : plus d'arrêts synthétiques (« Livraison N ») — seuls les stops
+    // réellement fournis par l'API (fr_live_table.stops) sont affichés.
+    const synthStops=()=>[];
     const liveTable=SRV('fr_live_table').map((d,i)=>{
       const sel=i===selDriverIdx;
       const raw=(Array.isArray(d.stops)&&d.stops.length)?d.stops:synthStops(d);
@@ -3084,15 +3113,19 @@ class Component extends DCLogic {
       rowStyle:'display:grid;grid-template-columns:1.3fr 1fr .8fr .9fr .7fr;align-items:center;padding:11px 18px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer;'+(i===S.selClient?'background:var(--color-background-secondary)':''),
       select:()=>this.setState({selClient:i}),
     }));
-    const tourByCode={'CL-0021':'Tournée Bruxelles-Centre','CL-0044':'Tournée Bruxelles-Centre','CL-0052':'Tournée Uccle / Waterloo','CL-0060':'Tournée Bruxelles-Centre','CL-0071':'Tournée Etterbeek / Leuven','CL-0088':null};
+    // Tournée du client — RÉELLE : via son office (ws_offices.tour), plus de
+    // mapping de codes en dur. Cut-off affiché = paramètre réel.
+    const cutoffTxt=(window.BOServer?window.BOServer.getParam('order.cutoff_default','17:00'):'17:00');
     const eligOf=(statut,tour)=>{
       if(statut==='prospect') return {state:'Non rattaché',bg:'var(--color-background-secondary)',c:'var(--color-text-muted)',reason:'Prospect — aucun bureau validé rattaché. État : unlinked.',deliverable:false};
       if(statut==='suspendu') return {state:'Non livrable',bg:'#fbe9eb',c:'var(--color-primary)',reason:'Compte suspendu — livraison bloquée. État : pending.',deliverable:false};
       if(!tour) return {state:'Non livrable',bg:'#fbe9eb',c:'var(--color-primary)',reason:'Bureau validé, mais aucune tournée affectée (tourId manquant). État : pending.',deliverable:false};
-      return {state:'Livrable',bg:'#eaf5ec',c:'#2d7a3e',reason:'Bureau validé · '+tour+' · avant cut-off livraison 10:00. État : active.',deliverable:true};
+      return {state:'Livrable',bg:'#eaf5ec',c:'#2d7a3e',reason:'Bureau validé · '+tour+' · avant cut-off livraison '+cutoffTxt+'. État : active.',deliverable:true};
     };
-    const sc=clientsData[S.selClient];
-    const scTour=tourByCode[sc.code];
+    // Garde-fou go-live : liste vide (plus de seed) → fiche placeholder inerte.
+    const sc=clientsData[S.selClient]||{raison:'—',code:'',tva:'—',seg:'—',statut:'prospect',paiement:'—',plafond:0,franco:'—',remise:'—',fact:'—',points:[]};
+    const scOffReal=SRV('ws_offices').find(o=>o.name===sc.raison)||null;
+    const scTour=scOffReal?(scOffReal.tour||null):null;
     const scE=eligOf(sc.statut,scTour);
     // Delivery sites + départements rattachés à ce client (via client_id ou raison sociale)
     const scSites=SRV('ws_office_delivery_sites').map((r,idx)=>({r,idx})).filter(x=>x.r.client_id===sc.code||x.r.bureau===sc.raison);
@@ -3119,12 +3152,14 @@ class Component extends DCLogic {
       statutStyle:this.pill(i.statut==='Résolu'?'#eaf5ec':i.statut==='En cours'?'var(--color-secondary)':'#fbe9eb',i.statut==='Résolu'?'#2d7a3e':i.statut==='En cours'?'var(--color-on-abricot)':'var(--color-primary)'),
       rowStyle:'display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer;'+(idx===S.selInc?'background:var(--color-background-secondary)':''),
       select:()=>this.setState({selInc:idx})}));
-    const si=incData[S.selInc];
+    // Garde-fou go-live : aucun incident → fiche placeholder inerte (pas de crash).
+    const si=incData[S.selInc]||{statut:'—',ref:'—',type:'—',titre:'—',client:'—',desc:'',ts:'',photos:[]};
     const selInc={...si,statutStyle:this.pill(si.statut==='Résolu'?'#eaf5ec':si.statut==='En cours'?'var(--color-secondary)':'#fbe9eb',si.statut==='Résolu'?'#2d7a3e':si.statut==='En cours'?'var(--color-on-abricot)':'var(--color-primary)')};
 
-    // RENTABILITE
-    const CA=2555, couts=1573, marge=CA-couts;
-    const TODAY='2026-07-17';
+    // RENTABILITE — RÉEL : totaux = somme des points réels (geo-clients ×
+    // modèle de coûts paramétré). Plus aucune valeur inventée.
+    const CA=pts.reduce((a,p)=>a+p.ca,0), couts=pts.reduce((a,p)=>a+p.couts,0), marge=CA-couts;
+    const TODAY=new Date().toISOString().slice(0,10);
     const periodDate=S.periodDate||TODAY;
     const periodDateSet=(e)=>{ const v=e.target.value; this.setState({periodDate:v}); };
     const periodToday=()=>this.setState({periodDate:TODAY});
@@ -3137,8 +3172,16 @@ class Component extends DCLogic {
     const periodSegs=[ seg('per_wk','Semaine','Cette sem.','Sem. -1'), seg('per_mo','Mois','Ce mois','Mois -1'), seg('per_tr','Trimestre','Ce trim.','Trim. -1') ];
     const periodDaysSet=(e)=>{ const v=+e.target.value; this.setState({periodDays:v}); };
     const kd=(txt,col)=>({delta:txt,deltaColor:col});
-    const kpis=SRV('fr_renta_kpis').map(r=>({label:this.tr(r.key),value:r.computed==='marge'?this.eur(marge):r.computed==='ca'?this.eur(CA):r.computed==='couts'?this.eur(couts):r.value,valColor:'var(--color-text)',...kd(r.delta,r.ok===false?'var(--color-primary)':'#2d7a3e')}));
-    const maxAbs=Math.max(...pts.map(p=>Math.abs(p.ca-p.couts)));
+    // KPI rentabilité — CALCULÉS sur les points réels (plus de fr_renta_kpis démo).
+    const colisT=pts.reduce((a,p)=>a+p.colis,0);
+    const kpis=pts.length?[
+      {label:this.tr('kCA'),value:this.eur(CA),valColor:'var(--color-text)',...kd('commandes réelles','#2d7a3e')},
+      {label:this.tr('kCouts'),value:this.eur(couts),valColor:'var(--color-text)',...kd('modèle de coûts','var(--color-text-muted)')},
+      {label:this.tr('kMarge'),value:this.eur(marge),valColor:marge>=0?'#2d7a3e':'var(--color-primary)',...kd(marge>=0?'positive':'négative',marge>=0?'#2d7a3e':'var(--color-primary)')},
+      {label:this.tr('kMargePct'),value:CA>0?Math.round(100*marge/CA)+' %':'—',valColor:'var(--color-text)',...kd('du CA','var(--color-text-muted)')},
+      {label:this.tr('kColis'),value:colisT>0?this.eur(couts/colisT):'—',valColor:'var(--color-text)',...kd(colisT+' colis','var(--color-text-muted)')},
+    ]:[];
+    const maxAbs=Math.max(1,...pts.map(p=>Math.abs(p.ca-p.couts)));
     const classement=[...pts].map(p=>({...p,m:p.ca-p.couts})).sort((a,b)=>b.m-a.m).map(p=>{
       const neg=p.m<0; const w=Math.abs(p.m)/maxAbs*50;
       return {libelle:p.libelle,ville:p.ville,ca:this.eur(p.ca),colis:p.colis,
@@ -3182,48 +3225,43 @@ class Component extends DCLogic {
     let tblCols,tblHead,tblRows;
     const R='text-align:right;',rf='500 12px var(--font-ui)',cf='400 12px var(--font-ui)',ct='var(--color-text)',cm='var(--color-text-muted)';
     const cell=(v,o={})=>({v,font:o.font||cf,color:o.color||ct,align:o.align||''});
+    // Pivots — RÉELS : tournées depuis fr_rentabilite (agrégat serveur),
+    // chauffeurs depuis fr_tdb_tournees, clients depuis les points réels.
     if(A==='tournee'){
-      tblCols='1.2fr .8fr .5fr .5fr .8fr';
-      tblHead=[{label:'Tournée',align:''},{label:'Chauffeur',align:''},{label:'km',align:R},{label:'CA',align:R},{label:'Marge %',align:R}];
-      tblRows=[
-        {cells:[cell('BXL-Centre',{font:rf}),cell('Kowalski',{color:cm}),cell('42',{align:R}),cell('1 400 €',{align:R}),cell('52 %',{font:'600 12px var(--font-ui)',color:'#2d7a3e',align:R})]},
-        {cells:[cell('Sud',{font:rf}),cell('Dubois',{color:cm}),cell('68',{align:R}),cell('415 €',{align:R}),cell('0,5 %',{font:'600 12px var(--font-ui)',color:'var(--color-primary)',align:R})]},
-        {cells:[cell('Est',{font:rf}),cell('Peeters',{color:cm}),cell('95',{align:R}),cell('740 €',{align:R}),cell('33 %',{font:'600 12px var(--font-ui)',color:'#2d7a3e',align:R})]},
-      ];
+      tblCols='1.2fr .8fr .8fr .8fr';
+      tblHead=[{label:'Tournée',align:''},{label:'CA',align:R},{label:'Coûts',align:R},{label:'Marge %',align:R}];
+      tblRows=SRV('fr_rentabilite').map(t=>{ const tca=(t.sites||[]).reduce((a,s)=>a+(s.offices||[]).reduce((x,o)=>x+(+o.ca||0),0),0);
+        const tco=(t.sites||[]).reduce((a,s)=>a+(s.offices||[]).reduce((x,o)=>x+(+o.couts||0),0),0);
+        const pc=tca>0?Math.round(100*(tca-tco)/tca):0;
+        return {cells:[cell(t.nom||'\u2014',{font:rf}),cell(this.eur(tca),{align:R}),cell(this.eur(tco),{align:R}),cell(pc+' %',{font:'600 12px var(--font-ui)',color:pc>=0?'#2d7a3e':'var(--color-primary)',align:R})]}; });
     } else if(A==='chauffeur'){
-      tblCols='1fr .6fr .7fr .7fr .6fr';
-      tblHead=[{label:'Chauffeur',align:''},{label:'Pts/h',align:R},{label:'Coût/pt',align:R},{label:'Incid.',align:R},{label:'ETA',align:R}];
-      tblRows=[
-        {cells:[cell('M. Kowalski',{font:rf}),cell('5,2',{align:R}),cell('28 €',{align:R}),cell('2 %',{align:R,color:'#2d7a3e'}),cell('+4 min',{align:R})]},
-        {cells:[cell('J. Dubois',{font:rf}),cell('3,1',{align:R}),cell('41 €',{align:R}),cell('6 %',{align:R,color:'var(--color-primary)'}),cell('+11 min',{align:R,color:'var(--color-primary)'})]},
-        {cells:[cell('S. Peeters',{font:rf}),cell('4,4',{align:R}),cell('33 €',{align:R}),cell('3 %',{align:R}),cell('+2 min',{align:R,color:'#2d7a3e'})]},
-      ];
+      tblCols='1.2fr 1fr .8fr';
+      tblHead=[{label:'Chauffeur',align:''},{label:'Tourn\u00e9e',align:''},{label:'Points',align:R}];
+      tblRows=SRV('fr_tdb_tournees').map(t=>({cells:[cell(t.driver||'\u2014',{font:rf}),cell(t.nom||t.name||'\u2014',{color:cm}),cell(String(t.pts!=null?t.pts:(t.points!=null?t.points:'\u2014')),{align:R})]}));
     } else {
       tblCols='1.2fr .8fr .8fr .8fr';
-      tblHead=[{label:'Client',align:''},{label:'CA an.',align:R},{label:'Coût serv.',align:R},{label:'Marge an.',align:R}];
-      tblRows=[
-        {cells:[cell('Le Cirio SA',{font:rf}),cell('48 200 €',{align:R}),cell('19 400 €',{align:R}),cell('+28 800 €',{font:'600 12px var(--font-ui)',color:'#2d7a3e',align:R})]},
-        {cells:[cell('KBC Group',{font:rf}),cell('31 500 €',{align:R}),cell('33 100 €',{align:R}),cell('−1 600 €',{font:'600 12px var(--font-ui)',color:'var(--color-primary)',align:R})]},
-        {cells:[cell('Événements Sud',{font:rf}),cell('6 400 €',{align:R}),cell('9 900 €',{align:R}),cell('−3 500 €',{font:'600 12px var(--font-ui)',color:'var(--color-primary)',align:R})]},
-      ];
+      tblHead=[{label:'Client',align:''},{label:'CA',align:R},{label:'Co\u00fbt serv. (mod\u00e8le)',align:R},{label:'Marge',align:R}];
+      tblRows=[...pts].sort((a,b)=>(b.ca-b.couts)-(a.ca-a.couts)).slice(0,12).map(p=>{ const m=p.ca-p.couts;
+        return {cells:[cell(p.libelle,{font:rf}),cell(this.eur(p.ca),{align:R}),cell(this.eur(p.couts),{align:R}),cell((m>=0?'+':'\u2212')+this.eur(Math.abs(m)),{font:'600 12px var(--font-ui)',color:m>=0?'#2d7a3e':'var(--color-primary)',align:R})]}; });
     }
 
-    // SIMULATEUR
-    const simCandidates=[8,9,5];
-    const simInfo={8:{marge:-78,delta:184,after:196},9:{marge:-15,delta:98,after:110},5:{marge:20,delta:-40,after:-28}};
-    const simPoints=simCandidates.map(id=>{ const p=pts.find(x=>x.id===id); const m=p.ca-p.couts; const on=S.sim===id;
-      return {libelle:p.libelle,marge:(m>=0?'+':'−')+this.eur(Math.abs(m)),margeColor:m>=0?'#2d7a3e':'var(--color-primary)',
-        pick:()=>this.setState({sim:id}),
+    // SIMULATEUR — candidats R\u00c9ELS : les 3 points \u00e0 la plus faible marge.
+    const simSorted=[...pts].map(p=>({...p,m:p.ca-p.couts})).sort((a,b)=>a.m-b.m).slice(0,3);
+    const simCandidates=simSorted.map(p=>p.id);
+    const simInfo={}; simSorted.forEach(p=>{ simInfo[p.id]={marge:p.m,delta:-p.m,after:marge-p.m}; });
+    const simSel=(S.sim!=null&&simInfo[S.sim])?S.sim:(simCandidates[0]!=null?simCandidates[0]:null);
+    const simPoints=simSorted.map(p=>{ const m=p.m; const on=simSel===p.id;
+      return {libelle:p.libelle,marge:(m>=0?'+':'\u2212')+this.eur(Math.abs(m)),margeColor:m>=0?'#2d7a3e':'var(--color-primary)',
+        pick:()=>this.setState({sim:p.id}),
         style:'display:flex;justify-content:space-between;align-items:center;width:100%;padding:11px 12px;margin-bottom:7px;border-radius:9px;cursor:pointer;font:500 12.5px var(--font-ui);color:var(--color-text);border:1.5px solid '+(on?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(on?'var(--color-background-secondary)':'transparent')};
     });
-    const simInf=simInfo[S.sim]; const simP=pts.find(x=>x.id===S.sim);
-    const simBeforeVal=12, simAfterVal=12+ (simInf.delta/ ( -simInf.marge||1)); // display only
-    const simBefore='0,5 %', simAfter=simInf.after>=0? '+'+this.eur(simInf.after):'−'+this.eur(Math.abs(simInf.after));
+    const simInf=simSel!=null?simInfo[simSel]:{marge:0,delta:0,after:marge};
+    const simP=simSel!=null?pts.find(x=>x.id===simSel):null;
+    const simBefore=this.eur(marge), simAfter=simInf.after>=0? '+'+this.eur(simInf.after):'\u2212'+this.eur(Math.abs(simInf.after));
     const simDeltaPos=simInf.delta>=0;
-    const simHint=simInf.delta>=0
-      ? 'Retirer '+simP.libelle+' fait passer la tournée en positif : les km marginaux de ce détour pèsent plus que son CA. Suggestion : refacturer le port ou regrouper sur un autre jour.'
-      : 'Retirer '+simP.libelle+' dégrade la marge : ce point est rentable, le conserver. Le routage recalculé sans lui rallonge les autres segments.';
-
+    const simHint=!simP?'Pas encore de points de livraison r\u00e9els \u00e0 simuler.':(simInf.delta>=0
+      ? 'Retirer '+simP.libelle+' am\u00e9liore la marge : son co\u00fbt de service (mod\u00e8le) d\u00e9passe son CA. Suggestion : refacturer le port ou regrouper sur un autre jour.'
+      : 'Retirer '+simP.libelle+' d\u00e9grade la marge : ce point est rentable, le conserver.');
     // PARAMS
     const setCout=(k)=>(e)=>{ const v=parseFloat(e.target.value); this.setState(s=>({couts:{...s.couts,[k]:isNaN(v)?0:v}})); };
     const coutParams=SRV('fr_cout_params').map(p=>({...p,val:S.couts[p.key],onInput:setCout(p.key)}));
@@ -3234,12 +3272,9 @@ class Component extends DCLogic {
       {label:'β — temps de service',val:(S.beta/100).toFixed(2).replace('.',','),pct:S.beta,onInput:setW('beta')},
       {label:'γ — volume',val:(S.gamma/100).toFixed(2).replace('.',','),pct:S.gamma,onInput:setW('gamma')},
     ];
-    const users=[
-      {init:'TL',nom:'Thomas Legrand',email:'t.legrand@atelier.be',role:'Gérant franchisé'},
-      {init:'AP',nom:'Anna Piotrowska',email:'a.piotrowska@atelier.be',role:'Resp. production'},
-      {init:'YM',nom:'Youssef Merzouk',email:'y.merzouk@atelier.be',role:'Préparateur'},
-      {init:'DR',nom:'Dispatch Réseau',email:'dispatch@atelier.be',role:'Dispatch (consolidé)'},
-    ];
+    // Utilisateurs — plus de liste de démo : vide tant qu'aucune source réelle
+    // (bo_users) n'est branchée côté franchisé.
+    const users=[];
 
     // VALIDATIONS Office Client
     const pendingRaw=SRV('fr_validations');
@@ -3247,15 +3282,23 @@ class Component extends DCLogic {
     const pendingList=pendingRaw.filter(p=>!S.valHandled[p.id]);
     const pendingClients=pendingList.map(p=>{ const vm=viesMeta[p.vies]; return {...p,
       viesLabel:vm.l,viesStyle:this.pill(vm.bg,vm.c),
-      valider:()=>this.setState({valModal:p.id,valSite:p.id+'-a',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''}),
-      refuser:()=>this.setState(s=>({valHandled:{...s.valHandled,[p.id]:'refuse'}})),
+      valider:()=>this.setState({valModal:p.id,valSite:'__none__',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''}),
+      // Refus RÉEL : POST validation-decide → ws_offices.active=0.
+      refuser:()=>{ const fr=window.__FR||{};
+        if(!fr.base){ this.printJob('API indisponible — refus non enregistré'); return; }
+        fetch(fr.base+'/franchisee/validation-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({id:p.id,action:'reject'})})
+          .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({valHandled:{...s.valHandled,[p.id]:'refuse'}})); this.printJob('Demande refusée — bureau désactivé (ws_offices)'); } else this.printJob((j&&j.error)||'Erreur refus'); })
+          .catch(()=>this.printJob('Réseau indisponible — refus non enregistré')); },
     }; });
 
-    // Validation modal — choix site + tournée avec contrôle de slots
+    // Validation modal — choix du site RÉEL (bâtiments ws_office_delivery_sites)
+    // + tournée avec contrôle de slots. Plus de sites fictifs.
     const vClient=pendingRaw.find(p=>p.id===S.valModal)||null;
+    const valBldSeen=new Set();
     const valSites=vClient?[
-      {id:vClient.id+'-a',libelle:'Site principal',adr:vClient.raison},
-      {id:vClient.id+'-b',libelle:'Point secondaire — quai de service',adr:vClient.raison},
+      {id:'__none__',libelle:'Aucun site pour l’instant',adr:'à assigner à l’étape 3 (écran Offices)'},
+      ...SRV('ws_office_delivery_sites').filter(st=>{ const a=(st.adr&&st.adr!=='—')?String(st.adr).toLowerCase().replace(/\s+/g,' ').trim():null; if(!a||valBldSeen.has(a)) return false; valBldSeen.add(a); return true; })
+        .map(st=>({id:st.adr,libelle:(st.name&&st.name!=='—')?st.name:st.adr,adr:st.adr+((st.tour&&st.tour!=='—')?(' · '+st.tour):'')})),
     ].map(st=>({...st,onPick:()=>this.setState({valSite:st.id}),
       style:'display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;padding:11px 13px;margin-bottom:8px;border-radius:9px;cursor:pointer;border:1.5px solid '+(S.valSite===st.id?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(S.valSite===st.id?'var(--color-background-secondary)':'transparent')})):[];
     const tSlots=this.tourneeSlots().map(tt=>({...tt,max:Math.floor(tt.amplitude/(tt.decharge+tt.trajet))}));
@@ -3318,10 +3361,14 @@ class Component extends DCLogic {
 
     // ---- Chaîne logique de livraison : Tournée → Site → Bureaux liés → Départements ----
     const deptRowsAll=SRV('b2b_client_company_department');
+    // Chaîne de zones — RÉELLE : localité via catchment_postcodes (référentiel
+    // CP), zone primaire via ws_franchisor_catchment (CP contenu dans la zone).
     const zoneChain=(tour,adr)=>{
       const cp=(String(adr||'').match(/\b(\d{4})\b/)||[])[1]||'';
-      const sec={'1000':'Bruxelles Centre','1050':'Ixelles','1180':'Uccle','1030':'Schaerbeek','1070':'Anderlecht','3000':'Leuven','1410':'Waterloo','1040':'Etterbeek'}[cp]||'—';
-      const prim={'Tournée Centre-ville':'Bruxelles Capitale','Tournée Uccle / Ixelles':'Bruxelles Sud','Tournée Nord (Schaerbeek)':'Bruxelles Nord','Tournée Brabant':'Brabant','Tournée Express midi':'Express','Tournée Brabant flamand':'Brabant'}[tour]||'Réseau';
+      const cpRow=SRV('catchment_postcodes').find(x=>String(x.cp)===cp);
+      const sec=cpRow?(cpRow.loc||cpRow.locality||'—'):'—';
+      const cz=SRV('ws_franchisor_catchment').find(z=>cp&&new RegExp('\\b'+cp+'\\b').test(String(z.cp||z.postcodes||'')));
+      const prim=cz?(cz.name||'—'):'—';
       return {prim,sec};
     };
     const chipMini='border:none;cursor:pointer;font:500 10px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:4px 8px;color:var(--color-text);white-space:nowrap';
@@ -3553,14 +3600,15 @@ class Component extends DCLogic {
     const sgActive=sgList.filter(x=>x.active).length;
     const toggleSlotGrid=()=>this.setState(s=>({slotGridOpen:!(s.slotGridOpen!==undefined?s.slotGridOpen:true)}));
 
-    const capaDays=['Lun 21','Mar 22','Mer 23','Jeu 24','Ven 25'];
-    const capaData=[
-      {label:'Matin',v:[[9,10],[7,10],[10,10],[5,10],[8,10]]},
-      {label:'Après-midi',v:[[6,8],[8,8],[4,8],[3,8],[7,8]]},
-      {label:'Express midi',v:[[5,6],[6,6],[2,6],[1,6],[4,6]]},
-      {label:'Retrait',v:[[20,60],[35,60],[18,60],[12,60],[40,60]]},
-    ];
-    const capaRows=capaData.map(r=>({label:r.label,cells:r.v.map(([res,max])=>{ const pct=res/max; let bg='var(--color-background-secondary)',c='var(--color-text)'; if(pct>=1){bg='#fbe9eb';c='var(--color-primary)';} else if(pct>=0.8){bg='#fff4e5';c='#b26a00';} return {txt:res+'/'+max,style:'text-align:center;border-radius:8px;padding:11px 0;font:600 12px var(--font-ui);background:'+bg+';color:'+c}; })}));
+    // Capacité — RÉEL : /franchisee/fr-capacity (ws_slots × ws_orders.slot_id
+    // par delivery_date, plafonds ws_slot_capacity). Plus aucune matrice de démo.
+    const capaSrc=SRV('fr_capacity');
+    const capaDays=(capaSrc[0]&&capaSrc[0].days)?capaSrc[0].days.map(d=>d.label):[];
+    const capaRows=capaSrc.map(r=>({label:r.slot,cells:(r.days||[]).map(d=>{ const max=d.max||r.max||0; const res=d.res||0;
+      const pct=max>0?res/max:0; let bg='var(--color-background-secondary)',c='var(--color-text)';
+      if(max>0&&pct>=1){bg='#fbe9eb';c='var(--color-primary)';} else if(max>0&&pct>=0.8){bg='#fff4e5';c='#b26a00';}
+      return {txt:max>0?(res+'/'+max):String(res),style:'text-align:center;border-radius:8px;padding:11px 0;font:600 12px var(--font-ui);background:'+bg+';color:'+c}; })}));
+    const capaEmpty=capaRows.length===0;
 
     const APRICOT='#E8A15C', COPPER='#8C4A2F';
     const shopDefs=[
@@ -3573,10 +3621,13 @@ class Component extends DCLogic {
       {jour:'Dimanche',web:false,am:false, pm:false},
     ];
     const shopCell=(jour,slot,def,fade)=>{
+      // Ouverture par jour × créneau — PERSISTÉE en ws_param (setParam).
       const k='shop_'+jour+'_'+slot;
-      const on=S.flags[k]!==undefined?S.flags[k]:def;
+      const stored=window.BOServer?window.BOServer.getParam('shopopen.'+jour+'.'+slot,undefined):undefined;
+      const base=(stored!==undefined&&stored!==null&&stored!=='')?(stored===true||stored==='1'||stored===1):def;
+      const on=S.flags[k]!==undefined?S.flags[k]:base;
       return { on, label:on?'Ouvert':'Fermé',
-        toggle:()=>this.setState(st=>({flags:{...st.flags,[k]:!(st.flags[k]!==undefined?st.flags[k]:def)}})),
+        toggle:()=>{ const nv=!on; if(window.BOServer) window.BOServer.setParam('shopopen.'+jour+'.'+slot,nv?'1':'0'); this.setState(st=>({flags:{...st.flags,[k]:nv}})); },
         style:'justify-self:center;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border-radius:20px;padding:5px 11px;font:600 11px var(--font-ui);background:'+fade+';border:.5px solid '+(on?'rgba(45,122,62,.4)':'var(--color-border-tertiary)')+';color:'+(on?'#2d7a3e':'var(--color-text-muted)'),
         dot:'width:7px;height:7px;border-radius:50%;background:'+(on?'#2d7a3e':'var(--color-border-secondary)') };
     };
@@ -3588,7 +3639,10 @@ class Component extends DCLogic {
     }));
 
     // ===== Coordonnées & horaires boutique — édition inline dans la modale Profil =====
-    const shopDefaults={enseigne:"L'Atelier — Bruxelles-Centre",adresse:'Rue du Marché 12, 1000 BXL',open:'07:00',close:'18:30'};
+    // Coordonnées boutique — RÉELLES : paramètres persistés (ws_param via
+    // setParam). Plus d'enseigne/adresse de démonstration.
+    const gpTxt=(k,d)=>{ const v=window.BOServer?window.BOServer.getParam(k,d):d; return (v===undefined||v===null||v==='')?d:String(v); };
+    const shopDefaults={enseigne:gpTxt('shop.name','—'),adresse:gpTxt('shop.address','—'),open:gpTxt('shop.open','07:00'),close:gpTxt('shop.close','18:30')};
     const shopValOf=(k)=>S.flags['shop_'+k]!==undefined?S.flags['shop_'+k]:shopDefaults[k];
     const shopEditing=!!S.shopEdit;
     const shopDraft0=S.shopDraft||{};
@@ -3596,7 +3650,12 @@ class Component extends DCLogic {
     const shopSetK=(k)=>(e)=>{ const v=e.target.value; this.setState(st=>({shopDraft:{...(st.shopDraft||{}),[k]:v}})); };
     const shopEnter=()=>this.setState({shopEdit:true,shopDraft:{enseigne:shopValOf('enseigne'),adresse:shopValOf('adresse'),open:shopValOf('open'),close:shopValOf('close')}});
     const shopCancel=()=>this.setState({shopEdit:false,shopDraft:null});
-    const shopSave=()=>{ const d=this.state.shopDraft||{}; this.setState(st=>({shopEdit:false,shopDraft:null,flags:{...st.flags,shop_enseigne:d.enseigne!==undefined?d.enseigne:shopValOf('enseigne'),shop_adresse:d.adresse!==undefined?d.adresse:shopValOf('adresse'),shop_open:d.open!==undefined?d.open:shopValOf('open'),shop_close:d.close!==undefined?d.close:shopValOf('close')}})); this.printJob('✔ Coordonnées & horaires enregistrés'); };
+    const shopSave=()=>{ const d=this.state.shopDraft||{};
+      const vals={enseigne:d.enseigne!==undefined?d.enseigne:shopValOf('enseigne'),adresse:d.adresse!==undefined?d.adresse:shopValOf('adresse'),open:d.open!==undefined?d.open:shopValOf('open'),close:d.close!==undefined?d.close:shopValOf('close')};
+      // PERSISTANCE RÉELLE : ws_param (save typé params) — plus de flags volatils.
+      if(window.BOServer){ window.BOServer.setParam('shop.name',vals.enseigne); window.BOServer.setParam('shop.address',vals.adresse); window.BOServer.setParam('shop.open',vals.open); window.BOServer.setParam('shop.close',vals.close); }
+      this.setState(st=>({shopEdit:false,shopDraft:null,flags:{...st.flags,shop_enseigne:vals.enseigne,shop_adresse:vals.adresse,shop_open:vals.open,shop_close:vals.close}}));
+      this.printJob('✔ Coordonnées & horaires enregistrés (ws_param)'); };
 
     const joursExcept=SRV('ws_shop_exceptions').map((j,i)=>{ const dm=splitDate(j.date); const fermé=j.type==='Fermé'; const bg=fermé?'#fbe9eb':'#fff4e5'; const c=fermé?'var(--color-primary)':'#b26a00'; const hasRange=!!(j.dateFin&&String(j.dateFin).trim()); return {...j,d:dm.d,m:dm.m,hasRange,rangeTxt:hasRange?('du '+j.date+' au '+j.dateFin):'',edit:this.editForm('except',j,i),del:this.deleteRow('ws_shop_exceptions',i),pill:pill2(bg,c)}; });
     const addExcept=this.openForm('except');
@@ -3664,22 +3723,25 @@ class Component extends DCLogic {
     const ordFilter=S.ordFilter||'all';
     const ordSetFilter=(f)=>()=>this.setState({ordFilter:f});
     const fPill=(f)=>'cursor:pointer;'+pill2(ordFilter===f?'var(--color-primary)':'var(--color-background-secondary)',ordFilter===f?'#fff':'var(--color-text-muted)');
-    const ordSteps=['En préparation','Prête','Remise/Livrée'];
-    const ordStatColor=(s)=>({'En préparation':['#fff4e5','#b26a00'],'Prête':['#eaf5ec','#2d7a3e'],'Remise/Livrée':['var(--color-background-secondary)','var(--color-text-muted)']}[s]);
-    let ordersRaw=[
-      {ref:'#2041',client:'Boucherie Charlier',mode:'Livraison',slot:'Matin 08–12',total:'146,20 €'},
-      {ref:'#2042',client:'Marie Dupuis',mode:'Retrait',slot:'Retrait 14:00',total:'32,50 €'},
-      {ref:'#2043',client:'Hôtel Nord SA',mode:'Livraison',slot:'Matin 08–12',total:'298,00 €'},
-      {ref:'#2044',client:'Café des Arts',mode:'Livraison',slot:'Après-midi 13–17',total:'87,40 €'},
-      {ref:'#2045',client:'Jan Kowalski',mode:'Retrait',slot:'Click & collect',total:'18,90 €'},
-      {ref:'#2046',client:'Traiteur Piotrowski',mode:'Livraison',slot:'Express midi',total:'204,60 €'},
-    ];
+    // Commandes du jour — RÉEL (ws_orders via /franchisee/fr-orders). Le clic
+    // sur le statut AVANCE la commande et l'ÉCRIT en base (POST order-status).
+    const ordStatFR={pending:'En attente',confirmed:'Confirmée',preparing:'En préparation',ready:'Prête',delivered:'Livrée',completed:'Remise',cancelled:'Annulée'};
+    const ordNext={pending:'confirmed',confirmed:'preparing',preparing:'ready'};
+    const ordStatColor=(s)=>({pending:['#fbe9eb','var(--color-primary)'],confirmed:['#eef3fb','#2a5a9e'],preparing:['#fff4e5','#b26a00'],ready:['#eaf5ec','#2d7a3e'],delivered:['var(--color-background-secondary)','var(--color-text-muted)'],completed:['var(--color-background-secondary)','var(--color-text-muted)'],cancelled:['#fbe9eb','var(--color-primary)']}[s]||['var(--color-background-secondary)','var(--color-text-muted)']);
+    const ordersRaw=SRV('fr_orders');
+    const ordAdvance=(o)=>{ const nx=ordNext[o.statut]; if(!nx) return; const fr=window.__FR||{};
+      if(!fr.base){ this.printJob('API indisponible — statut non modifié'); return; }
+      const nxMode=nx==='ready'&&o.mode==='Livraison'?'ready':nx;
+      fetch(fr.base+'/franchisee/order-status'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({ref:o.ref,status:nxMode})})
+        .then(r=>r.json()).then(j=>{ if(j&&j.ok){ const st2=j.status||nxMode; const rows=SRV('fr_orders'); const i2=rows.findIndex(x=>x.ref===o.ref); if(i2>=0){ rows[i2]={...rows[i2],statut:st2}; if(window.BOServer) window.BOServer.refresh('fr_orders',rows); } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob('✓ Commande '+o.ref+' → « '+(ordStatFR[st2]||st2)+' » (ws_orders)'); } else this.printJob((j&&j.error)||'Erreur statut'); })
+        .catch(()=>this.printJob('Réseau indisponible — statut non modifié')); };
     const ordersList=ordersRaw.filter(o=>ordFilter==='all'||(ordFilter==='deliv'&&o.mode==='Livraison')||(ordFilter==='pickup'&&o.mode==='Retrait')).map(o=>{
-      const cur=S.flags['ord_'+o.ref]!==undefined?S.flags['ord_'+o.ref]:0; const st=ordSteps[cur]; const [bg,c]=ordStatColor(st);
-      return {...o, modePill:modePill(o.mode), statut:st,
+      const [bg,c]=ordStatColor(o.statut);
+      return {...o, slot:o.creneau||'—', total:o.montant, modePill:modePill(o.mode), statut:(ordStatFR[o.statut]||o.statut)+(ordNext[o.statut]?' →':''),
         statutStyle:'border:none;cursor:pointer;'+pill2(bg,c),
-        advance:()=>this.setState(s=>({flags:{...s.flags,['ord_'+o.ref]:((s.flags['ord_'+o.ref]!==undefined?s.flags['ord_'+o.ref]:0)+1)%3}})) };
+        advance:()=>ordAdvance(o) };
     });
+    const ordersEmpty=ordersList.length===0;
 
     // ===== Catalogue partagé : catégories → produits (Assortiment + Stock) =====
     const CATALOG=SRV('fr_stock_catalog');
@@ -3793,38 +3855,31 @@ class Component extends DCLogic {
       });
     });
 
-    // Demandes de rattachement bureau — personnel déjà validé/intégré → Lier ou Rejeter seulement
+    // Demandes de rattachement bureau — Lier/Rejeter ÉCRIVENT en base
+    // (POST /franchisee/join-decide → ws_office_join_requests.status).
     const jrHandled=S.jrHandled||{};
     const joinRaw=SRV('fr_join_requests').filter(r=>!jrHandled[r.id]);
-    const jrResolve=(id,msg)=>()=>{ this.setState(s=>({jrHandled:{...s.jrHandled,[id]:true}})); this.printJob(msg); };
+    const jrDecide=(id,action,msg)=>()=>{ const fr=window.__FR||{};
+      if(!fr.base){ this.printJob('API indisponible — décision non enregistrée'); return; }
+      fetch(fr.base+'/franchisee/join-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({id,action})})
+        .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({jrHandled:{...s.jrHandled,[id]:true}})); this.printJob(msg); } else this.printJob((j&&j.error)||'Erreur décision'); })
+        .catch(()=>this.printJob('Réseau indisponible — décision non enregistrée')); };
     const joinRequests=joinRaw.map(r=>({...r,
       dupPill:r.dup?pill2('#fff4e5','#b26a00'):pill2('#eaf5ec','#2d7a3e'), dupTxt:r.dup?'Doublon possible':'Nouveau',
-      lier:jrResolve(r.id,'✔ Client lié au bureau → ws_offices.office_id'),
-      lier:jrResolve(r.id,'✔ Personnel lié au bureau → ws_offices.office_id'),
-      rejeter:jrResolve(r.id,'Demande rejetée → reject_reason') }));
+      lier:jrDecide(r.id,'link','✔ Personnel lié au bureau (ws_office_join_requests → linked)'),
+      rejeter:jrDecide(r.id,'reject','Demande rejetée (ws_office_join_requests → rejected)') }));
     const joinCount=joinRaw.length;
     const joinBadgeStyle=joinCount?'margin-left:auto;background:var(--color-primary);color:#fff;font:600 10px var(--font-ui);border-radius:9px;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px':'display:none';
 
-    // Demandes de NOUVEAU bureau — une entreprise demande la création d'un compte → Créer (onboarding) ou Rejeter
-    const nbHandled=S.nbHandled||{};
-    const newBureauRaw=[
-      {id:'nb1',client:'Restaurant Le Nord',demande:'« Créer un compte entreprise »',info:'HORECA · TVA BE 0699.112.334 · 3 sites potentiels',dup:false},
-      {id:'nb2',client:'Clinique Saint-Luc',demande:'« Ouvrir un bureau B2B livraison »',info:'Corporate · ~120 employés · cafétéria + étages',dup:false},
-    ].filter(r=>!nbHandled[r.id]);
-    const nbResolve=(id,msg)=>()=>{ this.setState(s=>({nbHandled:{...s.nbHandled,[id]:true}})); this.printJob(msg); };
-    const newBureauRequests=newBureauRaw.map(r=>({...r,
-      creer:()=>{ this.setState(s=>({nbHandled:{...s.nbHandled,[r.id]:true}})); this.obOpen(); this.setState(s=>({ob:{...s.ob,raison:r.client||'',contactNom:r.client||''}})); },
-      rejeter:nbResolve(r.id,'Demande de nouveau bureau rejetée → reject_reason') }));
-    const newBureauCount=newBureauRaw.length;
-    const newBureauEmpty=newBureauRaw.length===0;
+    // Demandes de NOUVEAU bureau — onglet retiré (double emploi avec Accès
+    // comptes Office). Plus AUCUNE donnée de démo : liste vide.
+    const newBureauRequests=[];
+    const newBureauCount=0;
+    const newBureauEmpty=true;
 
-    // Stats réseau
-    const netStats=[
-      {label:'CA réseau (mois)',value:'428 k€',delta:'▲ +6,4 %',deltaColor:'#2d7a3e'},
-      {label:'Boutiques actives',value:'14',delta:'▲ +1',deltaColor:'#2d7a3e'},
-      {label:'Taux livraison',value:'38 %',delta:'▲ +2,1 pts',deltaColor:'#2d7a3e'},
-      {label:'Panier moyen',value:'54,20 €',delta:'▼ −1,3 %',deltaColor:'var(--color-primary)'},
-    ];
+    // Stats réseau — RÉEL : agrégats 30 j de ws_orders + shops (fr-net-stats).
+    const netStats=SRV('fr_net_stats').map(s=>({label:s.k,value:s.v,delta:s.sub||'',deltaColor:'var(--color-text-muted)'}));
+    const netStatsEmpty=netStats.length===0;
 
     // Emails bureau
     const emailTag=(role)=>pill2(role==='Facturation'?'#eef3fb':'var(--color-background-secondary)',role==='Facturation'?'#2a5a9e':'var(--color-text-muted)');
@@ -3844,14 +3899,16 @@ class Component extends DCLogic {
     const vouchersList=SRV('ws_vouchers_local').map((v,i)=>({...v,scope:v.loc?'Locale':'Marque',scopePill:scopePill(v.loc),edit:this.editForm('voucher',v,i),del:this.deleteRow('ws_vouchers_local',i,'le bon « '+(v.nom||v.code||'')+' »')}));
 
     // Remise webshop
-    const remiseOn=S.flags['remise_web']!==undefined?S.flags['remise_web']:true;
+    // Remise webshop — PERSISTÉE en ws_param (setParam → save typé params).
+    const remiseStored=window.BOServer?window.BOServer.getParam('remise.web.enabled',undefined):undefined;
+    const remiseOn=S.flags['remise_web']!==undefined?S.flags['remise_web']:((remiseStored!==undefined&&remiseStored!==null&&remiseStored!=='')?(remiseStored===true||remiseStored==='1'||remiseStored===1):false);
     const remiseTrack='position:relative;width:44px;height:24px;border-radius:20px;border:none;cursor:pointer;background:'+(remiseOn?'var(--color-primary)':'var(--color-border-secondary)');
     const remiseKnob='position:absolute;top:2px;left:'+(remiseOn?'22px':'2px')+';width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2)';
-    const remiseToggle=()=>this.setState(s=>({flags:{...s.flags,remise_web:!(s.flags['remise_web']!==undefined?s.flags['remise_web']:true)}}));
-    const remiseRate=S.flags['remise_rate']!==undefined?S.flags['remise_rate']:'8';
-    const remiseMin=S.flags['remise_min']!==undefined?S.flags['remise_min']:'35,00';
-    const remiseSetRate=(e)=>{ const v=e.target.value; this.setState(s=>({flags:{...s.flags,remise_rate:v}})); };
-    const remiseSetMin=(e)=>{ const v=e.target.value; this.setState(s=>({flags:{...s.flags,remise_min:v}})); };
+    const remiseToggle=()=>{ const nv=!remiseOn; if(window.BOServer) window.BOServer.setParam('remise.web.enabled',nv?'1':'0'); this.setState(s=>({flags:{...s.flags,remise_web:nv}})); this.printJob('✓ Remise webshop '+(nv?'activée':'désactivée')+' (ws_param)'); };
+    const remiseRate=S.flags['remise_rate']!==undefined?S.flags['remise_rate']:String((window.BOServer?window.BOServer.getParam('remise.web.rate','0'):'0')||'0');
+    const remiseMin=S.flags['remise_min']!==undefined?S.flags['remise_min']:String((window.BOServer?window.BOServer.getParam('remise.web.min','0'):'0')||'0');
+    const remiseSetRate=(e)=>{ const v=e.target.value; if(window.BOServer) window.BOServer.setParam('remise.web.rate',v); this.setState(s=>({flags:{...s.flags,remise_rate:v}})); };
+    const remiseSetMin=(e)=>{ const v=e.target.value; if(window.BOServer) window.BOServer.setParam('remise.web.min',v); this.setState(s=>({flags:{...s.flags,remise_min:v}})); };
 
     // Assortiment
     const assortRaw=SRV('fr_assortiment');
@@ -3859,19 +3916,34 @@ class Component extends DCLogic {
       return {...a, activeStyle:A.style+(a.locked?';opacity:.4;pointer-events:none':''),activeKnob:A.knob,toggleActive:A.toggle,
         ndStyle:N.style+(a.locked?';opacity:.4;pointer-events:none':''),ndKnob:N.knob,toggleNoDeliv:N.toggle }; });
 
-    // Paiements
-    const payMethods=SRV('ws_payment_methods').map((m,i)=>{ const w=toggle3('payW_'+i,m.dw),c=toggle3('payC_'+i,m.dc),b=toggle3('payB_'+i,m.db);
+    // Paiements — bascules PERSISTÉES en ws_param (setParam → save typé params),
+    // plus de flags volatils perdus au reload.
+    const payT=(key,def)=>{ const stored=window.BOServer?window.BOServer.getParam(key,undefined):undefined;
+      const base=(stored!==undefined&&stored!==null&&stored!=='')?(stored===true||stored==='1'||stored===1):def;
+      const on=S.flags[key]!==undefined?S.flags[key]:base;
+      return { on,
+        style:'position:relative;width:38px;height:21px;border-radius:20px;border:none;cursor:pointer;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)'),
+        knob:'position:absolute;top:2px;left:'+(on?'19px':'2px')+';width:17px;height:17px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)',
+        toggle:()=>{ const nv=!on; if(window.BOServer) window.BOServer.setParam(key,nv?'1':'0'); this.setState(s=>({flags:{...s.flags,[key]:nv}})); } }; };
+    const payMethods=SRV('ws_payment_methods').map((m,i)=>{ const nk=String(m.nom||i).replace(/[^A-Za-z0-9]+/g,'_'); const w=payT('pay.'+nk+'.web',m.dw),c=payT('pay.'+nk+'.cpt',m.dc),b=payT('pay.'+nk+'.b2b',m.db);
       const isDefer=m.nom.indexOf('Virement')===0;
       return {nom:m.nom, help:'Active le paiement « '+m.nom+' » par profil : Webshop (client en ligne), Comptoir (vente en boutique), B2B (comptes bureau). Un profil désactivé masque ce moyen de paiement au checkout correspondant.', webStyle:w.style,webKnob:w.knob,tWeb:w.toggle, cptStyle:c.style,cptKnob:c.knob,tCpt:c.toggle, b2bStyle:b.style,b2bKnob:b.knob,tB2b:b.toggle, isDefer, isStd:!isDefer }; });
-    const deferCli=['Le Cirio SA','Rocco Forte','Hôtel Nord SA','Boucherie Charlier','Traiteur Piotrowski','Café des Arts'];
-    const deferDef=[true,true,false,true,false,false];
-    const deferList=deferCli.map((nom,i)=>{ const on=S.flags['defer_'+i]!==undefined?S.flags['defer_'+i]:deferDef[i]; const t=toggle3('defer_'+i,deferDef[i]); return {nom,on,val:on?'1':'0',help:on?('« '+nom+' » AUTORISÉ au paiement différé : peut régler par virement / facturation différée (encours suivi). Désactiver = paiement immédiat exigé à la commande.'):('« '+nom+' » NON autorisé au différé : doit payer immédiatement. Activer pour ouvrir la facturation différée (dans la limite de son encours).'),valColor:on?'#2d7a3e':'var(--color-text-muted)',style:t.style,knob:t.knob,toggle:t.toggle}; });
+    // Paiement différé par bureau — RÉEL : ws_offices.deferred_billing_enabled,
+    // bascule ÉCRITE via BOServer.save('ws_offices') (save typé). Plus de liste démo.
+    const deferList=SRV('ws_offices').map((o,i)=>{ const on=(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui');
+      const nom=o.name||'—';
+      return {nom,on,val:on?'1':'0',
+        help:on?('« '+nom+' » AUTORISÉ au paiement différé : peut régler par virement / facturation différée (encours suivi). Désactiver = paiement immédiat exigé à la commande.'):('« '+nom+' » NON autorisé au différé : doit payer immédiatement. Activer pour ouvrir la facturation différée (dans la limite de son encours).'),
+        valColor:on?'#2d7a3e':'var(--color-text-muted)',
+        style:'position:relative;width:38px;height:21px;border-radius:20px;border:none;cursor:pointer;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)'),
+        knob:'position:absolute;top:2px;left:'+(on?'19px':'2px')+';width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2)',
+        toggle:()=>{ if(window.BOServer){ const rows=window.BOServer.table('ws_offices'); if(rows[i]){ rows[i]={...rows[i],deferred_billing_enabled:on?'Non':'Oui'}; window.BOServer.save('ws_offices',rows); } } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob('✓ « '+nom+' » — facturation différée '+(on?'désactivée':'activée')+' (ws_offices)'); }}; });
     const deferCount=deferList.filter(x=>x.on).length, deferTotal=deferList.length;
     const deferBadge=pill2('#eef3fb','#2a5a9e');
 
     // ===== Assistant onboarding bureau =====
     const O=S.ob, obStep=S.obStep;
-    const obTours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
+    const obTours=[...new Set(SRV('ws_tours').map(t=>t.name).filter(Boolean))]; // RÉEL uniquement
     const obZc=zoneChain(O.tour,O.adr);
     const obIn='width:100%;padding:11px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface);box-sizing:border-box';
     const obSteps=this.OB_STEPS.map((label,i)=>({label,n:String(i+1),done:i<obStep,active:i===obStep,
@@ -3981,6 +4053,12 @@ class Component extends DCLogic {
       kTdbOrders:tdbRaw.reduce((a,t)=>a+t.zones.reduce((b,z)=>b+z.sites.reduce((c,s)=>c+s.users.reduce((d,u)=>d+(u.cmd||0),0),0),0),0),
       kTdbReady:tournees.filter(t=>t.statutLabel==='Prête').length,
       kTdbPrep:tournees.filter(t=>t.statutLabel!=='Prête').length,
+      // Cut-off — RÉEL : paramètre order.cutoff_default vs heure courante.
+      ...(()=>{ const co=String((window.BOServer?window.BOServer.getParam('order.cutoff_default','17:00'):'17:00')||'17:00');
+        const mm=co.match(/^(\d{1,2}):(\d{2})$/); const now=new Date();
+        const rem=mm?((+mm[1])*60+(+mm[2]))-(now.getHours()*60+now.getMinutes()):null;
+        return { kTdbCutRemain:(rem===null)?'—':(rem>0?(Math.floor(rem/60)+' h '+String(rem%60).padStart(2,'0')):'dépassé'),
+                 kTdbCutTxt:'clôture saisie à '+co }; })(),
       ...obVals,
       ...profileVals,
       isLivProcess,livSteps,
@@ -4286,7 +4364,8 @@ class Component extends DCLogic {
       calRules,addCalRule:this.openForm('calRule'),
       isJoursExcept:screen==='reglesBoutique'&&(S.dispoTab||'dispo')==='except',joursExcept,addExcept,
       isFrais:screen==='frais'||screen==='params',feeRules,
-      isCommandes:screen==='commandes',ordersList,ordFilterAll:fPill('all'),ordFilterDeliv:fPill('deliv'),ordFilterPickup:fPill('pickup'),
+      isCommandes:screen==='commandes',ordersList,ordersEmpty,ordFilterAll:fPill('all'),ordFilterDeliv:fPill('deliv'),ordFilterPickup:fPill('pickup'),
+      ordTitleDate:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'}),
       tdbViewTree:tdbView==='tree',tdbViewList:tdbView==='list',tdbSegTreeStyle:tdbSeg('tree'),tdbSegListStyle:tdbSeg('list'),tdbSetTree:()=>this.setState({tdbView:'tree'}),tdbSetList:()=>this.setState({tdbView:'list'}),
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
       stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
@@ -4315,12 +4394,17 @@ class Component extends DCLogic {
       setAssortAssort:()=>this.setState({assortTab:'assort'}),setAssortCat:()=>this.setState({assortTab:'cat'}),setAssortProd:()=>this.setState({assortTab:'prod'}),
       addDispoProd:this.openForm('dispoProd'),
       isPaiements:screen==='paiements',payMethods,deferList,deferCount,deferTotal,deferBadge,
-      stripeToggle:()=>this.setState(s=>({stripeOn:!s.stripeOn})),
-      stripeBadge:S.stripeOn?'Connecté':'Non connecté',
-      stripeBadgeStyle:pill2(S.stripeOn?'#eaf5ec':'#f2f2f2',S.stripeOn?'#2d7a3e':'var(--color-text-muted)'),
-      stripeAcct:S.stripeOn?'acct_1Nz…BXL':'— non relié —',
-      stripeBtnLabel:S.stripeOn?'Gérer le compte':'Connecter Stripe',
-      stripeBtnStyle:'flex:none;border:none;cursor:pointer;border-radius:9px;padding:10px 18px;font:600 12.5px var(--font-ui);'+(S.stripeOn?'background:var(--color-background-secondary);color:var(--color-text)':'background:#635bff;color:#fff'),
+      // Stripe — état + compte depuis ws_param (persisté) ; plus d'identifiant fictif.
+      ...(()=>{ const sOn=(()=>{ const v=window.BOServer?window.BOServer.getParam('stripe.enabled',undefined):undefined; return S.flags['stripe_on']!==undefined?S.flags['stripe_on']:((v!==undefined&&v!==null&&v!=='')?(v===true||v==='1'||v===1):false); })();
+        const acct=String((window.BOServer?window.BOServer.getParam('stripe.account',''):'')||'');
+        return {
+          stripeToggle:()=>{ const nv=!sOn; if(window.BOServer) window.BOServer.setParam('stripe.enabled',nv?'1':'0'); this.setState(s=>({flags:{...s.flags,stripe_on:nv}})); this.printJob(nv?'✓ Stripe activé (ws_param) — reliez le compte via stripe.account':'Stripe désactivé (ws_param)'); },
+          stripeBadge:sOn?'Activé':'Non connecté',
+          stripeBadgeStyle:pill2(sOn?'#eaf5ec':'#f2f2f2',sOn?'#2d7a3e':'var(--color-text-muted)'),
+          stripeAcct:sOn?(acct||'compte à relier (param stripe.account)'):'— non relié —',
+          stripeBtnLabel:sOn?'Gérer le compte':'Connecter Stripe',
+          stripeBtnStyle:'flex:none;border:none;cursor:pointer;border-radius:9px;padding:10px 18px;font:600 12.5px var(--font-ui);'+(sOn?'background:var(--color-background-secondary);color:var(--color-text)':'background:#635bff;color:#fff'),
+        }; })(),
       isShopParams:screen==='shopParams',editShop:this.openForm('shop'),
       nav,navStyles,setLang,langStyles,t,
       pageTitle:titles[screen],pageSub:subs[screen],
@@ -4382,7 +4466,17 @@ class Component extends DCLogic {
       valIsNewZone:isNewZone,valNewZone:S.valNewZone,valSetNewZone:(e)=>this.setState({valNewZone:e.target.value}),
       valHasT,valUsed,valMaxSlots,valFree,valFreeTxt:valFree+' emplacement(s) libre(s)',valAmpl,valPerPoint,valDecharge,valTrajet,valFull,
       valCanConfirm,valConfirmExtra:valCanConfirm?'':'opacity:.45;pointer-events:none',
-      valConfirm:()=>{ if(!valCanConfirm) return; const id=S.valModal; this.setState(s=>({valHandled:{...s.valHandled,[id]:'valide'},valModal:null,valSite:'',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''})); },
+      // Validation RÉELLE : POST validation-decide → ws_offices.status='validated'
+      // (+ tournée choisie et site choisi transmis pour rattachement immédiat).
+      valConfirm:()=>{ if(!valCanConfirm) return; const id=S.valModal; const fr=window.__FR||{};
+        const tSel=tSlots.find(tt=>String(tt.id)===String(S.valTournee));
+        const tourName=isNewT?(S.valNewName||''):(tSel?tSel.nom:'');
+        const siteAdr=(S.valSite&&S.valSite!=='__none__')?S.valSite:'';
+        if(!fr.base){ this.printJob('API indisponible — validation non enregistrée'); return; }
+        if(isNewT&&tourName&&window.BOServer){ const tr=window.BOServer.table('ws_tours'); tr.push({name:tourName,short:tourName,ret:true}); window.BOServer.save('ws_tours',tr); }
+        fetch(fr.base+'/franchisee/validation-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({id,action:'accept',tour:tourName,site_adr:siteAdr})})
+          .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({valHandled:{...s.valHandled,[id]:'valide'},valModal:null,valSite:'',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''})); setTimeout(()=>this.bcRefreshOffices(),150); this.printJob('✓ Compte Office validé — bureau livrable (ws_offices)'+(tourName?(' · tournée « '+tourName+' »'):'')); } else this.printJob((j&&j.error)||'Erreur validation'); })
+          .catch(()=>this.printJob('Réseau indisponible — validation non enregistrée')); },
       valClose:()=>this.setState({valModal:null,valSite:'',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''}),
       incCount:incData.filter(i=>i.statut!=='Résolu').length,
       incBadgeStyle:'margin-left:auto;background:var(--color-primary);color:#fff;font:600 9px var(--font-ui);border-radius:9px;min-width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px',
@@ -4408,14 +4502,17 @@ class Component extends DCLogic {
       
       tdbTree,prepTree,tdbToggleAll,tdbToggleAllLabel,
       toast:S.toast,toastShow:!!S.toast,
-      prints:{
-        etqClients:()=>this.printJob('🖨 Étiquettes clients envoyées à l\'imprimante (6 offices)'),
-        etqColis:()=>this.printJob('🖨 Étiquettes colis QR/Code128 — 44 colis'),
-        etqSite:()=>this.printJob('🖨 Étiquettes delivery site — 10 points'),
-        prodProduit:()=>this.printJob('🖨 Liste de production par produit (cat / produit / heure de sortie)'),
-        prodTournee:()=>this.printJob('🖨 Liste de production par tournée — 3 tournées'),
-      },
-      prepPoints,scanTotal,scanDone,scanPct:Math.round(scanDone/scanTotal*100)+'%',
+      // Impressions — compteurs RÉELS (offices actifs, colis du jour, points, tournées).
+      prints:(()=>{ const nOff=SRV('ws_offices').length, nPts=SRV('fr_prep_points').length,
+        nTours=SRV('ws_tours').filter(t=>t.name).length;
+        return {
+          etqClients:()=>this.printJob('🖨 Étiquettes clients envoyées à l\'imprimante ('+nOff+' office'+(nOff>1?'s':'')+')'),
+          etqColis:()=>this.printJob('🖨 Étiquettes colis QR/Code128 — '+scanTotal+' colis'),
+          etqSite:()=>this.printJob('🖨 Étiquettes delivery site — '+nPts+' point'+(nPts>1?'s':'')),
+          prodProduit:()=>this.printJob('🖨 Liste de production par produit (cat / produit / heure de sortie)'),
+          prodTournee:()=>this.printJob('🖨 Liste de production par tournée — '+nTours+' tournée'+(nTours>1?'s':'')),
+        }; })(),
+      prepPoints,scanTotal,scanDone,scanPct:(scanTotal>0?Math.round(scanDone/scanTotal*100):0)+'%',
       scanOne:()=>this.setState(s=>({scan:Math.min(scanTotal,s.scan+1)})),scanReset:()=>this.setState({scan:0,bonValide:false}),
       ecartTxt:ecart===0?'aucun':('−'+ecart),ecartColor:ecart===0?'#2d7a3e':'var(--color-primary)',
       scanComplete:complete,scanIncomplete:!complete,bonValide:S.bonValide,bonNonValide:!S.bonValide,
@@ -4481,7 +4578,7 @@ class Component extends DCLogic {
       setAnalyse:{tournee:()=>this.setState({analyse:'tournee'}),chauffeur:()=>this.setState({analyse:'chauffeur'}),client:()=>this.setState({analyse:'client'})},
       tabStyles:{tournee:tabStyle('tournee'),chauffeur:tabStyle('chauffeur'),client:tabStyle('client')},
       tblCols,tblHead,tblRows,
-      simPoints,simBefore,simAfter,simName:simP.libelle,simDelta:(simDeltaPos?'+':'')+this.eur(simInf.delta),
+      simPoints,simBefore,simAfter,simName:simP?simP.libelle:'—',simDelta:(simDeltaPos?'+':'')+this.eur(simInf.delta),
       simAfterColor:simInf.after>=0?'#2d7a3e':'var(--color-primary)',simHint,
       coutParams,abg,abgSum,abgColor:(S.alpha+S.beta+S.gamma)===100?'#2d7a3e':'var(--color-primary)',users,
     };
