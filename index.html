@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072324"></script>
-<script src="bo_server.js?v=2026072324"></script>
+<script src="api-config.js?v=2026072325"></script>
+<script src="bo_server.js?v=2026072325"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072324'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072325'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072324">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072324"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072325">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072325"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -302,64 +302,58 @@
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px"><div><div class="t-section-title" style="font-size:15px">Sites non assignés</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">« Ajouter » → tournée surlignée</div></div><div style="display:flex;align-items:center;gap:8px;flex:none"><button onClick="{{ goParams }}" title="Coûts · temps · frais — paramètres de coût des tournées" style="width:34px;height:34px;border-radius:8px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#b26a00;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button onClick="{{ openRouteForm }}" class="btn-primary" style="padding:9px 16px;font-size:12px;flex:none">+ Nouvelle tournée</button></div></div>
           <div style="display:flex;flex-wrap:wrap;gap:10px">
             <sc-for list="{{ unassignedSites }}" as="u" hint-placeholder-count="2">
-              <div style="border:.5px dashed var(--color-border-secondary);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:12px;min-width:236px">
-                <div style="min-width:0;flex:1"><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ u.name }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ u.zone }} · {{ u.nbOffices }} offices · {{ u.siteTime }}</div></div>
-                <button onClick="{{ u.add }}" class="btn-primary" style="padding:8px 14px;font-size:12px;flex:none">+ Ajouter</button>
+              <div style="{{ u.cardStyle }}">
+                <div style="min-width:0;flex:1"><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ u.name }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ u.zone }} · {{ u.nbOffices }} bureau(x) · accès {{ u.siteTime }}</div></div>
+                <button onClick="{{ u.add }}" class="btn-primary" style="padding:8px 14px;font-size:12px;flex:none;{{ u.addStyle }}">{{ u.addLabel }}</button>
               </div>
             </sc-for>
+            <sc-if value="{{ unassignedEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:#2d7a3e;align-self:center">✓ tous les sites sont assignés à une tournée</span></sc-if>
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">
-          <sc-for list="{{ routesView }}" as="r" hint-placeholder-count="6">
-            <div onClick="{{ r.select }}" style="{{ r.sumStyle }}">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:10px"><div style="font:600 13px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.short }}</div><sc-if value="{{ r.hasWarn }}" hint-placeholder-val="{{ false }}"><span style="color:var(--color-primary);font-size:12px;flex:none">⚠</span></sc-if></div>
-              <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:10px">
-                <div><div style="font:600 8.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Début</div><div style="font:700 15px var(--font-ui);color:var(--color-text)">{{ r.start }}</div></div>
-                <div><div style="font:600 8.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">1re livr.</div><div style="font:700 15px var(--font-ui);color:var(--color-text)">{{ r.firstDelivery }}</div></div>
-                <div><div style="font:600 8.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">ETA fin</div><div style="font:700 15px var(--font-ui);color:var(--color-primary)">{{ r.etaEnd }}</div></div>
+        <!-- Tuiles tournées : 4 par ligne, composition exacte (sites + bureaux). -->
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+          <sc-for list="{{ tourTiles }}" as="r" hint-placeholder-count="4">
+            <div onClick="{{ r.dropHere }}" style="{{ r.tileStyle }}">
+              <div style="display:flex;align-items:center;gap:9px;min-width:0">
+                <span style="{{ r.colDot }}"></span>
+                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px">{{ r.driver }} · départ {{ r.start }}</div></div>
+                <div style="flex:none;display:flex;gap:5px">
+                  <button onClick="{{ r.editTile }}" title="Modifier la tournée" style="width:27px;height:27px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-text-muted);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+                  <button onClick="{{ r.delTile }}" title="Supprimer la tournée" style="width:27px;height:27px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+                </div>
               </div>
-              <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Drops <b style="color:{{ r.dropsColor }}">{{ r.drops }}/{{ r.max }}</b> · {{ r.nbSites }} sites</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                <span style="{{ r.capPill }}">{{ r.capTxt }}</span>
+                <span style="display:inline-flex;align-items:center;height:20px;border-radius:20px;padding:0 9px;font:600 10px/1 var(--font-ui);background:var(--color-background-secondary);color:var(--color-text-muted)">{{ r.nbSites }} site(s)</span>
+                <sc-if value="{{ r.overWarn }}" hint-placeholder-val="{{ false }}"><span style="font:700 11px var(--font-ui);color:var(--color-primary)">⚠ surcharge</span></sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:7px;flex:1">
+                <sc-for list="{{ r.sites }}" as="st" hint-placeholder-count="2">
+                  <div style="border:.5px solid var(--color-border-tertiary);border-radius:9px;padding:9px 11px;background:var(--color-background-secondary)">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0">
+                      <span style="font:600 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ st.nom }}</span>
+                      <span style="flex:none;display:inline-flex;align-items:center;gap:6px"><span style="font:600 10px var(--font-ui);color:var(--color-text-muted)">{{ st.offCount }}</span><button onClick="{{ st.remove }}" title="Retirer ce site de la tournée" style="border:none;background:transparent;color:var(--color-text-muted);cursor:pointer;font-size:13px;padding:0;line-height:1">×</button></span>
+                    </div>
+                    <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ st.offNames }}">{{ st.offNames }}</div>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ r.sitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);padding:6px 2px">Aucun site sur cette tournée.</div></sc-if>
+              </div>
+              <select value="" onChange="{{ r.addSet }}" style="height:29px;border:.5px dashed var(--color-border-secondary);border-radius:8px;padding:0 8px;font:500 11.5px var(--font-ui);background:transparent;color:var(--color-text-muted);max-width:100%;cursor:pointer">
+                <sc-for list="{{ r.addOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+              </select>
+              <sc-if value="{{ r.canDrop }}" hint-placeholder-val="{{ false }}"><span style="font:600 10px var(--font-ui);color:var(--color-primary)">⤓ Déposer le site saisi ici</span></sc-if>
             </div>
           </sc-for>
         </div>
+        <sc-if value="{{ tourTilesEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:26px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée — créez-en une avec « + Nouvelle tournée ».</div></sc-if>
 
-        <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start">
-          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
-            <div style="background:var(--color-primary);color:#fff;padding:14px 16px">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="min-width:0"><div style="display:flex;align-items:center;gap:8px"><div style="font:600 15px var(--font-ui)">{{ selR.name }}</div><span style="font:600 9.5px var(--font-ui);border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:2px 8px">{{ selR.short }}</span></div><div style="font:400 11px var(--font-ui);color:rgba(255,255,255,.8)">{{ selR.driver }} · départ {{ selR.start }}</div></div><div style="display:flex;align-items:flex-start;gap:12px;flex:none"><div style="text-align:right"><div style="font:700 24px var(--font-ui)">{{ selR.etaEnd }}</div><div style="font:400 9px var(--font-ui);color:rgba(255,255,255,.8)">ETA fin</div></div><button onClick="{{ editRoute }}" title="Modifier la tournée" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button><button onClick="{{ deleteRoute }}" title="Supprimer la tournée" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none" style-hover="background:rgba(255,255,255,.25)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div></div>
-              <div style="display:flex;gap:14px;margin-top:8px;font:500 11px var(--font-ui);color:rgba(255,255,255,.85)"><span>Drops {{ selR.drops }}/{{ selR.max }}</span><span>{{ selR.km }} km</span><span>ampl. {{ selR.amplTxt }}</span><span>forfait {{ selR.forfaitTxt }}</span></div>
-            </div>
-            <sc-if value="{{ selR.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="background:#fbe9eb;padding:8px 14px"><sc-for list="{{ selR.warns }}" as="w" hint-placeholder-count="1"><div style="font:500 10.5px/1.4 var(--font-ui);color:var(--color-primary)">⚠ {{ w }}</div></sc-for></div></sc-if>
-            <div style="padding:10px">
-              <sc-for list="{{ selR.stops }}" as="s" hint-placeholder-count="4">
-                <div style="border:.5px solid var(--color-border-tertiary);border-radius:9px;margin-bottom:7px;background:{{ s.rowBg }}">
-                  <div style="display:flex;align-items:center;gap:8px;padding:10px 12px">
-                    <div style="display:flex;flex-direction:column;gap:2px;flex:none">
-                      <button onClick="{{ s.up }}" style="width:34px;height:22px;border:.5px solid var(--color-border-tertiary);background:var(--color-surface);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:{{ s.upOp }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text)" stroke-width="2.4"><path d="M6 15l6-6 6 6"/></svg></button>
-                      <button onClick="{{ s.down }}" style="width:34px;height:22px;border:.5px solid var(--color-border-tertiary);background:var(--color-surface);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:{{ s.downOp }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text)" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg></button>
-                    </div>
-                    <div onClick="{{ s.toggle }}" style="flex:1;min-width:0;cursor:pointer"><div style="font:500 13px var(--font-ui);color:var(--color-text)">{{ s.caret }} {{ s.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ s.zone }} · arr. {{ s.arrival }} · {{ s.siteTotalTxt }} · dép. {{ s.departure }}</div></div>
-                    <button onClick="{{ s.gear }}" title="Paramètres du site" style="width:30px;height:30px;border:none;background:transparent;color:var(--color-text-muted);cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button>
-                    <button onClick="{{ s.remove }}" style="width:30px;height:30px;border:none;background:transparent;color:var(--color-text-muted);cursor:pointer;flex:none;font-size:16px">✕</button>
-                  </div>
-                  <sc-if value="{{ s.open }}" hint-placeholder-val="{{ false }}">
-                    <div style="padding:0 12px 10px 52px">
-                      <sc-for list="{{ s.offices }}" as="o" hint-placeholder-count="1">
-                        <div style="display:flex;justify-content:space-between;padding:4px 0;font:400 11.5px var(--font-ui);color:var(--color-text-muted)"><span>• {{ o.name }}</span><span>{{ o.drop }} min · {{ o.eta }}</span></div>
-                      </sc-for>
-                      <div style="margin-top:8px"><div style="font:600 9px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:5px">Déplacer vers</div><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ s.moves }}" as="mv" hint-placeholder-count="2"><button onClick="{{ mv.go }}" style="border:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);border-radius:6px;padding:7px 11px;font:500 11px var(--font-ui);color:var(--color-text);cursor:pointer">{{ mv.label }}</button></sc-for></div></div>
-                    </div>
-                  </sc-if>
-                </div>
-              </sc-for>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:14px">
-            <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden"><div id="map-tournees" style="width:100%;height:420px;background:var(--color-background-secondary)"></div></div>
-            <button onClick="{{ publier }}" class="btn-primary" style="padding:13px">{{ publierLabel }}</button>
-          </div>
+        <!-- Carte sous la grille : une couleur par tournée, sites gris = non assignés. -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+          <div id="map-tournees" style="width:100%;height:440px;background:var(--color-background-secondary)"></div>
         </div>
+        <button onClick="{{ publier }}" class="btn-primary" style="padding:13px">{{ publierLabel }}</button>
       </div>
       </sc-if>
 
@@ -2897,18 +2891,30 @@ class Component extends DCLogic {
       }
     }
   }
+  // Carte des tournées — RÉELLE : une couleur par tournée, sites depuis
+  // ws_office_delivery_sites (sitesData), tracé dépôt → sites → dépôt.
+  // Les sites sans tournée apparaissent en gris.
   drawRoute(){
     const L=window.L, m=this._tourneesMap; if(!L||!m) return;
     if(this._routeLayer) m.removeLayer(this._routeLayer);
-    const g=L.layerGroup(); const d=this.depot(); const sd={}; this.sitesData().forEach(s=>sd[s.id]=s);
-    const seq=(this.state.routeAssign[this.state.selRoute]||[]).map(id=>sd[id]).filter(Boolean);
-    const coords=[[d.lat,d.lng],...seq.map(p=>[p.lat,p.lng]),[d.lat,d.lng]];
-    L.polyline(coords,{color:'#8D1D2C',weight:3,opacity:.7,dashArray:'6 5'}).addTo(g);
-    L.marker([d.lat,d.lng]).addTo(g).bindPopup("<b>"+d.libelle+"</b>");
-    seq.forEach((p,i)=>{
-      const icon=L.divIcon({className:'',html:`<div style="width:26px;height:26px;border-radius:50%;background:#8D1D2C;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${i+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
-      L.marker([p.lat,p.lng],{icon}).addTo(g).bindPopup("<b>"+p.name+"</b><br>"+p.ville);
+    const g=L.layerGroup(); const d=this.depot();
+    const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+    const sites=this.sitesData(); const tours=this.routesMeta();
+    const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
+    L.circleMarker([d.lat,d.lng],{radius:9,color:'#222',weight:2,fillColor:'#fff',fillOpacity:1}).addTo(g).bindPopup("<b>"+d.libelle+"</b><br>Dépôt");
+    tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length];
+      const pts=sites.filter(s=>norm(s.zone)===norm(t.name));
+      if(!pts.length) return;
+      const coords=[[d.lat,d.lng],...pts.map(p=>[p.lat,p.lng])];
+      if(t.ret!==false) coords.push([d.lat,d.lng]);
+      L.polyline(coords,{color:col,weight:3,opacity:.7,dashArray:'6 5'}).addTo(g);
+      pts.forEach((p,k)=>{
+        const icon=L.divIcon({className:'',html:`<div style="width:26px;height:26px;border-radius:50%;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${k+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+        L.marker([p.lat,p.lng],{icon}).addTo(g).bindPopup("<b>"+p.name+"</b><br>"+t.name);
+      });
     });
+    sites.filter(s=>!s.zone||s.zone==='—').forEach(p=>
+      L.circleMarker([p.lat,p.lng],{radius:7,color:'#fff',weight:2,fillColor:'#9a9a9a',fillOpacity:.9}).addTo(g).bindPopup("<b>"+p.name+"</b><br>Sans tournée"));
     g.addTo(m); this._routeLayer=g;
   }
   componentDidMount(){ this.ensureMaps(); }
@@ -3029,7 +3035,67 @@ class Component extends DCLogic {
         headerStyle:'background:'+(sel?'var(--color-primary)':'var(--color-background-secondary)')+';color:'+(sel?'#fff':'var(--color-text)')+';border-radius:11px 11px 0 0;padding:14px 16px;cursor:pointer',
         etaColor:sel?'#fff':'var(--color-primary)',subColor:sel?'rgba(255,255,255,.8)':'var(--color-text-muted)',
         select:()=>this.setState({selRoute:m.id},()=>this.drawRoute()),stops}; });
-    const unassignedSites=allSites.filter(s=>!assignedIds.includes(s.id)).map(s=>({name:s.name,ville:s.ville,zone:s.zone,nbOffices:s.offices.length,siteTime:siteTimeOf(s)+' min',add:()=>addToRoute(s.id)}));
+    // ===== TOURNÉES v2 — composition RÉELLE et PERSISTÉE =====
+    // Un « site » = un bâtiment (adresse normalisée) de ws_office_delivery_sites.
+    // Assigner un site à une tournée ÉCRIT tournee_id sur toutes ses lignes
+    // (save typé) — plus d'état de session (routeAssign) qui se perdait.
+    const tNorm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+    const tvRows=SRV('ws_office_delivery_sites');
+    const tvBlds={}; const tvOrder=[];
+    tvRows.forEach(r=>{ const key=(r.adr&&r.adr!=='—')?('a:'+tNorm(r.adr)):((r.name&&r.name!=='—')?('n:'+tNorm(r.name)):null); if(!key) return;
+      if(!tvBlds[key]){ tvBlds[key]={key,name:(r.name&&r.name!=='—')?r.name:r.adr,adr:(r.adr&&r.adr!=='—')?r.adr:'',tour:(r.tour&&r.tour!=='—')?r.tour:null,acc:parseFloat(r.acc)||10,offices:[]}; tvOrder.push(key); }
+      const b=tvBlds[key]; if(!b.tour&&r.tour&&r.tour!=='—') b.tour=r.tour;
+      const off=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
+      if(off&&!b.offices.some(x=>tNorm(x)===tNorm(off))) b.offices.push(off); });
+    const tvList=tvOrder.map(k=>tvBlds[k]);
+    const armKey=(S.armSite&&tvBlds[S.armSite])?S.armSite:null;
+    // Écrit la tournée d'un BÂTIMENT (toutes ses lignes) — save typé + refetch.
+    const tourSetBld=(bld,tourName)=>{ if(!window.BOServer) return;
+      const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false;
+      rows.forEach((x,xi)=>{ const kx=(x.adr&&x.adr!=='—')?('a:'+tNorm(x.adr)):((x.name&&x.name!=='—')?('n:'+tNorm(x.name)):null);
+        if(kx===bld.key){ rows[xi]={...x,tour:tourName||'—'}; ch=true; } });
+      if(ch) window.BOServer.save('ws_office_delivery_sites',rows);
+      this.setState(s=>({armSite:null,_rev:(s._rev||0)+1}));
+      setTimeout(()=>this.bcRefreshOffices(),150);
+      setTimeout(()=>this.drawRoute(),400);
+      this.printJob(tourName?('✓ Site « '+bld.name+' » → tournée « '+tourName+' » (ws_office_delivery_sites)'):('Site « '+bld.name+' » retiré de sa tournée — non desservi')); };
+    const unassignedSites=tvList.filter(b=>!b.tour).map(b=>{ const armed=armKey===b.key;
+      return {name:b.name,zone:b.adr||'—',nbOffices:b.offices.length,siteTime:(b.acc||10)+' min',
+        cardStyle:'border:1.5px '+(armed?'solid var(--color-primary);box-shadow:0 0 0 3px rgba(141,29,44,.08)':'dashed var(--color-border-secondary)')+';border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:12px;min-width:236px;background:'+(armed?'var(--color-background-secondary)':'transparent'),
+        addLabel:armed?'⠿ Choisissez une tuile tournée':'+ Ajouter',
+        addStyle:armed?'padding:8px 14px;font-size:12px;flex:none;border:none;border-radius:9px;cursor:pointer;background:var(--color-primary);color:#fff;font-weight:600':'',
+        add:()=>this.setState(s=>({armSite:s.armSite===b.key?null:b.key}))}; });
+    const unassignedEmpty=unassignedSites.length===0;
+    const tvArmOn=!!armKey;
+    // TUILES tournées (4 par ligne) : composition exacte sites + bureaux.
+    const tourTiles=rMeta.filter(t=>t.name).map((t,ti)=>{
+      const sites=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(t.name));
+      const nbOff=sites.reduce((a,b)=>a+b.offices.length,0);
+      const max=parseInt(t.max,10)||10; const over=nbOff>max;
+      const tColors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
+      const col=tColors[ti%tColors.length];
+      const addable=tvList.filter(b=>!b.tour||tNorm(b.tour)!==tNorm(t.name));
+      const tvPill=(bg,c)=>'display:inline-flex;align-items:center;height:20px;border-radius:20px;padding:0 9px;font:600 10px/1 var(--font-ui);white-space:nowrap;background:'+bg+';color:'+c;
+      return {name:t.name,short:t.short||'',driver:t.driver||'— non assigné',start:this.hhmm(t.start!=null?t.start:360),
+        col, colDot:'width:10px;height:10px;border-radius:50%;flex:none;background:'+col,
+        drops:String(nbOff),max:String(max),nbSites:String(sites.length),
+        capPill:tvPill(over?'#fbe9eb':(nbOff/max>=0.8?'#fff4e5':'#eaf5ec'),over?'var(--color-primary)':(nbOff/max>=0.8?'#b26a00':'#2d7a3e')),
+        capTxt:nbOff+'/'+max+' bureaux',
+        overWarn:over,
+        tileStyle:'display:flex;flex-direction:column;gap:12px;background:var(--color-surface);border:'+(tvArmOn?'1.5px dashed var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:14px;padding:18px 20px;min-height:190px;cursor:'+(tvArmOn?'copy':'default'),
+        dropHere:()=>{ if(!tvArmOn) return; const b=tvBlds[armKey]; if(b) tourSetBld(b,t.name); },
+        canDrop:tvArmOn,
+        sites:sites.map(b=>({nom:b.name,offCount:b.offices.length+' bureau'+(b.offices.length>1?'x':''),
+          offNames:b.offices.length?b.offices.join(' · '):'aucun bureau rattaché',
+          remove:()=>tourSetBld(b,null)})),
+        sitesEmpty:sites.length===0,
+        addOpts:[{value:'',label:'+ Assigner un site…'},...addable.map(b=>({value:b.key,label:b.name+(b.tour?(' ← '+b.tour):'')}))],
+        addSet:(e)=>{ const v=e.target.value; const b=tvBlds[v]; if(b) tourSetBld(b,t.name); },
+        edit:()=>{ this.setState({selRoute:t.id},()=>{ const fn=this._editRouteById; if(fn) fn(t.id); }); },
+        editTile:()=>{ if(this._editRouteById) this._editRouteById(t.id); },
+        delTile:()=>this.setState({delRoute:t.id})};
+    });
+    const tourTilesEmpty=tourTiles.length===0;
     // modale édition site (temps d'accès + dépôts)
     const dS=S.siteModal!=null?sMap[S.siteModal]:null;
     const modalSite=dS?{name:dS.name,zone:dS.zone,ville:dS.ville,notes:dS.notes,
@@ -4517,7 +4583,7 @@ class Component extends DCLogic {
       ecartTxt:ecart===0?'aucun':('−'+ecart),ecartColor:ecart===0?'#2d7a3e':'var(--color-primary)',
       scanComplete:complete,scanIncomplete:!complete,bonValide:S.bonValide,bonNonValide:!S.bonValide,
       validerBon:()=>this.setState({bonValide:true}),
-      routesView,selR:routesView.find(r=>r.sel)||routesView[0],unassignedSites,modalSite,siteModalOpen:S.siteModal!=null,closeSiteModal:()=>this.setState({siteModal:null}),
+      routesView,selR:routesView.find(r=>r.sel)||routesView[0]||{stops:[],warns:[]},unassignedSites,unassignedEmpty,tourTiles,tourTilesEmpty,modalSite,siteModalOpen:S.siteModal!=null,closeSiteModal:()=>this.setState({siteModal:null}),
       deleteRoute:()=>this.setState({delRoute:S.selRoute}),
       delRouteOpen:S.delRoute!=null,
       delRouteName:(rMeta.find(r=>r.id===S.delRoute)||{}).name||'',
@@ -4531,7 +4597,8 @@ class Component extends DCLogic {
       openRouteForm:()=>this.setState({rfOpen:true,rfEditId:null,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),
       rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false,rfEditId:null}),
       rfTitle:(S.rfEditId?'Modifier la tournée':'Nouvelle tournée'),rfSubmitLabel:(S.rfEditId?'Enregistrer':'Créer la tournée'),
-      editRoute:()=>{ const id=S.selRoute; const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:t.max||10,forfait:(t.forfait!=null?t.forfait:45),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); },
+      editRoute:(()=>{ const byId=(id)=>{ const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:t.max||10,forfait:(t.forfait!=null?t.forfait:45),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); };
+        this._editRouteById=byId; return ()=>byId(this.state.selRoute); })(),
       rfPostcodeOpts,rfPostEmpty,rfPostCount,
       rfSet:{name:rfSet('name'),short:rfSet('short'),start:rfSet('start'),max:rfSet('max'),forfait:rfSet('forfait'),driver:rfSet('driver'),vehicule:rfSet('vehicule')},
       rfZoneOpts:SRV('ws_delivery_zones').filter(z=>z.active===true||z.active==='Active').map(z=>({value:z.name,label:z.name})),
