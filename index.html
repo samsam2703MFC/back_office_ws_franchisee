@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072338"></script>
-<script src="bo_server.js?v=2026072338"></script>
+<script src="api-config.js?v=2026072339"></script>
+<script src="bo_server.js?v=2026072339"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072338'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072339'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072338">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072338"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072339">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072339"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -270,20 +270,19 @@
               <button onClick="{{ pd.set }}" style="{{ pd.style }}">{{ pd.label }}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:9px;background:rgba(0,0,0,.12);padding:0 5px;font-size:10px">{{ pd.count }}</span></button>
             </sc-for>
           </div>
+          <div class="t-admin-label" style="margin-bottom:8px">À produire</div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden;margin-bottom:16px">
-            <div style="display:grid;grid-template-columns:.8fr 1.4fr .9fr .6fr 1.1fr .8fr .8fr;padding:8px 12px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Mode</span><span class="t-admin-label" style="text-align:right">Pièces</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Paiement</span><span class="t-admin-label">Statut</span></div>
-            <sc-for list="{{ prepDayOrders }}" as="po" hint-placeholder-count="4">
-              <div style="display:grid;grid-template-columns:.8fr 1.4fr .9fr .6fr 1.1fr .8fr .8fr;align-items:center;padding:9px 12px;border-bottom:.5px solid var(--color-border-tertiary)">
-                <span style="font:600 11.5px var(--font-mono,monospace);color:var(--color-text-muted)">{{ po.ref }}</span>
-                <span style="font:500 12px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ po.client }}">{{ po.client }}</span>
-                <div style="min-width:0"><span style="{{ po.modePill }};max-width:100%">{{ po.modeTxt }}</span></div>
-                <span style="font:600 12px var(--font-ui);color:var(--color-text);text-align:right">{{ po.pieces }}</span>
-                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ po.creneau }}</span>
-                <span style="font:500 11px var(--font-ui);color:var(--color-text-muted)">{{ po.paye }}</span>
-                <span style="font:500 11px var(--font-ui);color:var(--color-text)">{{ po.statutTxt }}</span>
+            <div style="display:grid;grid-template-columns:1fr 1.5fr .5fr 1fr 1fr;padding:8px 12px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Produit</span><span class="t-admin-label" style="text-align:right">Qty</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Tournée</span></div>
+            <sc-for list="{{ prepProdLines }}" as="pl" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1fr 1.5fr .5fr 1fr 1fr;align-items:center;padding:9px 12px;border-bottom:.5px solid var(--color-border-tertiary)">
+                <span style="font:500 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pl.cat }}</span>
+                <span style="font:500 12px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ pl.produit }}">{{ pl.produit }}</span>
+                <span style="font:700 12.5px var(--font-ui);color:var(--color-primary);text-align:right">{{ pl.qty }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ pl.creneau }}</span>
+                <span style="font:500 11px var(--font-ui);color:var(--color-text)">{{ pl.tournee }}</span>
               </div>
             </sc-for>
-            <sc-if value="{{ prepDayEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucune commande pour ce jour (ws_orders).</div></sc-if>
+            <sc-if value="{{ prepProdEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Rien à produire pour ce jour (ws_order_lines).</div></sc-if>
           </div>
           <div class="t-admin-label" style="margin-bottom:10px">Impression étiquettes</div>
           <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
@@ -2774,7 +2773,7 @@ class Component extends DCLogic {
     if(this._ordBusy) return Promise.resolve(); this._ordBusy=true;
     const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'};
     const KEYS={fr_orders:'fr-orders',fr_tdb_tree:'fr-tdb-tree',fr_prep_points:'fr-prep-points',
-      fr_net_stats:'fr-net-stats',fr_capacity:'fr-capacity',kpis:'kpis',
+      fr_prep_lines:'fr-prep-lines',fr_net_stats:'fr-net-stats',fr_capacity:'fr-capacity',kpis:'kpis',
       fr_tdb_tournees:'fr-tdb-tournees',fr_stock_catalog:'fr-stock-catalog'};
     const fl=(window.BOServer&&window.BOServer.flush)?window.BOServer.flush():Promise.resolve();
     return fl.then(()=>Promise.all(Object.keys(KEYS).map(k=>
@@ -4103,6 +4102,12 @@ class Component extends DCLogic {
         modeTxt:isDeliv?'Livraison':'Collect',modePill:pill2(isDeliv?'#F2C9A0':'#F2D3D8','#222'),
         statutTxt:ordStatFR[o.statut]||o.statut,paye:o.paye||'—'}; });
     const prepDayEmpty=prepDayOrders.length===0;
+    // À PRODUIRE — lignes de commande agrégées (catégorie × produit × créneau
+    // × tournée) du jour sélectionné : /franchisee/fr-prep-lines (ws_order_lines).
+    const prepProdLines=SRV('fr_prep_lines').filter(r=>(r.date||todayIso)===prepDaySel)
+      .map(r=>({cat:r.cat||'—',produit:r.produit||'—',qty:String(r.qty!=null?r.qty:'—'),
+                creneau:r.creneau||'—',tournee:r.tournee||'—'}));
+    const prepProdEmpty=prepProdLines.length===0;
 
     // ===== Catalogue partagé : catégories → produits (Assortiment + Stock) =====
     const CATALOG=SRV('fr_stock_catalog');
@@ -4798,7 +4803,7 @@ class Component extends DCLogic {
       tdbSegTreeStyle:tdbSeg('tree'),tdbSegListStyle:tdbSeg('list'),tdbSegCollectStyle:tdbSeg('collect'),
       tdbSetTree:()=>this.setState({tdbView:'tree'}),tdbSetList:()=>this.setState({tdbView:'list'}),tdbSetCollect:()=>this.setState({tdbView:'collect'}),
       ordListTitle:tdbView==='collect'?'Commandes Collect':'Commandes',
-      ordRangeChips,prepDayBadges,prepDayOrders,prepDayEmpty,
+      ordRangeChips,prepDayBadges,prepDayOrders,prepDayEmpty,prepProdLines,prepProdEmpty,
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
       stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
       stkModalTrack,stkModalKnob,stkModalToggle,stkModeBadges,
