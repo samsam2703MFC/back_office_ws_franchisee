@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072325"></script>
-<script src="bo_server.js?v=2026072325"></script>
+<script src="api-config.js?v=2026072326"></script>
+<script src="bo_server.js?v=2026072326"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072325'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072326'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072325">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072325"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072326">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072326"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -3899,6 +3899,14 @@ class Component extends DCLogic {
     const asrPost=(bodyA,after)=>{ const fr=window.__FR||{};
       fetch((fr.base||'')+'/franchisee/assortiment-toggle'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify(bodyA)})
         .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — bascule non enregistrée')); };
+    // Après CHAQUE bascule d'assortiment : refetch du catalogue Stock du jour —
+    // un produit retiré de l'assortiment disparaît IMMÉDIATEMENT des stocks
+    // (avant, il restait affiché jusqu'au rechargement de la page).
+    const asrReloadStock=()=>{ const fr=window.__FR||{}; if(!fr.base) return;
+      fetch(fr.base+'/franchisee/fr-stock-catalog'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+        .then(r=>r.ok?r.json():null)
+        .then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_stock_catalog',a); this.setState(s=>({_rev:(s._rev||0)+1})); } })
+        .catch(()=>{}); };
     const asrSetLocal=(pred,act)=>{ if(window.BOServer){ const rows=window.BOServer.table('fr_assortiment'); rows.forEach(x=>{ if(pred(x)&&!(x.locked&&!act)) x.defA=act; }); window.BOServer.refresh('fr_assortiment',rows); } this.setState(st=>({_rev:(st._rev||0)+1})); };
     const assortRows=[];
     asrOrder.forEach(k=>{ const c=asrCats[k];
@@ -3909,7 +3917,7 @@ class Component extends DCLogic {
         help:cAct?('Catégorie « '+c.cat+' » ACTIVE : ses produits sont vendables (ws_product_shops). La désactiver retire tous ses produits non verrouillés de la vente.'):('Catégorie « '+c.cat+' » DÉSACTIVÉE : ses produits sont retirés de la vente. La réactiver les rétablit.'),
         swStyle:cs.style,swKnob:cs.knob,
         toggle:allLocked?(()=>{}):(()=>{ const nv=!cAct;
-          asrPost({cat:c.cat,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>(x.cat||'Autres')===k,nv); this.printJob((nv?'✓ Catégorie « ':'Catégorie « ')+c.cat+' » '+(nv?'activée':'désactivée')+' — '+(j.n||0)+' produit(s) (ws_product_shops)'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
+          asrPost({cat:c.cat,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>(x.cat||'Autres')===k,nv); asrReloadStock(); this.printJob((nv?'✓ Catégorie « ':'Catégorie « ')+c.cat+' » '+(nv?'activée':'désactivée')+' — '+(j.n||0)+' produit(s) (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
       c.prods.forEach(p=>{ const pAct=p.defA!==false; const ps2=swT(pAct,p.locked);
         assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
           help:p.locked?('Produit « '+p.nom+' » VERROUILLÉ (marque obligatoire) : toujours proposé.'):(pAct?('Produit « '+p.nom+' » ACTIF (ws_product_shops). Le désactiver le retire de la vente pour cette boutique.'):('Produit « '+p.nom+' » INACTIF pour cette boutique. L\'activer le rend commandable.')),
@@ -3917,7 +3925,7 @@ class Component extends DCLogic {
           stateTxt:pAct?'Actif · vendable':'Inactif (boutique)',stateColor:pAct?'#2d7a3e':'var(--color-text-muted)',
           swStyle:ps2.style,swKnob:ps2.knob,
           toggle:p.locked?(()=>{}):(()=>{ const nv=!pAct;
-            asrPost({product:p.nom,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>x.nom===p.nom,nv); this.printJob('✓ « '+p.nom+' » '+(nv?'activé':'désactivé')+' (ws_product_shops)'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
+            asrPost({product:p.nom,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>x.nom===p.nom,nv); asrReloadStock(); this.printJob('✓ « '+p.nom+' » '+(nv?'activé':'désactivé')+' (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
       });
     });
 
