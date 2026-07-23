@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072322"></script>
-<script src="bo_server.js?v=2026072322"></script>
+<script src="api-config.js?v=2026072323"></script>
+<script src="bo_server.js?v=2026072323"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072322'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072323'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072322">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072322"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072323">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072323"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -787,13 +787,25 @@
           <button onClick="{{ addOffice }}" class="btn-primary" style="padding:9px 16px;font-size:12.5px;white-space:nowrap">+ Nouvel office</button>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
-          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Étape 3 · Assigner les bureaux (offices) aux sites — fin du paramétrage des tournées</div>
+          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Étape 3 sur 4 · Assigner les bureaux (offices) aux sites — ensuite : étape 4, les clients se rattachent à leur bureau</div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:10px">Ajoutez un bureau via le sélecteur <strong>+ Ajouter un bureau…</strong> de chaque carte site, retirez-le d'un simple <strong>×</strong> sur sa chip, ou saisissez (⠿) un bureau sans site et cliquez la carte de destination. Le bureau hérite de la tournée du site.</div>
+          <sc-if value="{{ offHasFree }}" hint-placeholder-val="{{ false }}">
+          <div style="border:1.5px dashed #d9a441;background:#fff8ee;border-radius:12px;padding:12px 14px;margin-bottom:11px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px"><span style="width:18px;height:18px;flex:none;border-radius:50%;background:#b26a00;color:#fff;font:700 11px var(--font-ui);display:inline-flex;align-items:center;justify-content:center">!</span><span style="font:600 11.5px var(--font-ui);color:#b26a00">{{ offFreeTitle }}</span></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:9px">
+              <sc-for list="{{ offAssignChips }}" as="oc" hint-placeholder-count="3">
+                <div style="{{ oc.cardStyle }}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0"><span style="font:600 12px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ oc.name }}</span><button type="button" onClick="{{ oc.grab }}" style="{{ oc.grabStyle }}">{{ oc.grabLabel }}</button></div>
+                  <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ oc.city }} · aucun site de livraison</div>
+                  <select value="" onChange="{{ oc.siteSet }}" style="height:28px;border:.5px solid var(--color-border-secondary);border-radius:7px;padding:0 8px;font:500 11px var(--font-ui);background:var(--color-surface);color:var(--color-text);cursor:pointer;max-width:100%">
+                    <sc-for list="{{ oc.siteOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+                  </select>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px;align-items:center">
-            <span style="font:600 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);flex:none">Bureaux validés sans site :</span>
-            <sc-for list="{{ offAssignChips }}" as="oc" hint-placeholder-count="3">
-              <button type="button" onClick="{{ oc.grab }}" style="{{ oc.style }}">⠿ {{ oc.name }}</button>
-            </sc-for>
             <sc-if value="{{ offNoFree }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:#2d7a3e">✓ tous les bureaux validés ont un site</span></sc-if>
             <sc-if value="{{ offAssignEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucun office validé — validez d'abord vos offices.</span></sc-if>
           </div>
@@ -933,8 +945,8 @@
           <button onClick="{{ addSite }}" class="btn-primary" style="font-size:12px;flex:none">+ Site de livraison</button>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
-          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Assigner les sites aux tournées — 1 · créez vos tournées · 2 · assignez / déplacez les sites pour optimiser la charge</div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:9px">Saisissez un site (bouton « ⠿ Déplacer » sur sa carte) puis déposez-le sur une tournée. Le rattachement des bureaux à un site se fait à l'onboarding du bureau, pas ici.</div>
+          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Étape 2 sur 4 · Assigner les sites (buildings) aux tournées — les tournées viennent de l'étape 1 · déplacez les sites pour optimiser la charge</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:9px">Saisissez un site (bouton « ⠿ Déplacer » sur sa carte) puis déposez-le sur une tournée — toutes les lignes du bâtiment suivent. Le rattachement des bureaux aux sites se fait à l'étape 3 (écran Offices) ; les clients se rattachent ensuite à leur bureau (étape 4).</div>
           <div style="display:flex;gap:8px;overflow-x:auto">
             <sc-for list="{{ tourAssignTiles }}" as="ta" hint-placeholder-count="4">
               <button type="button" onClick="{{ ta.drop }}" style="{{ ta.style }}">
@@ -1163,6 +1175,13 @@
             <div class="t-section-title" style="font-size:15px">Stock du jour</div>
           </div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Produits <strong>actifs</strong> de l'assortiment uniquement · dispo online (webshop) + en shop (comptoir) · seuil <strong>stock minimum</strong> · <strong>clic sur un produit</strong> → commandes du jour <span style="color:var(--color-primary);font-weight:600">Ruby (Click &amp; Collect)</span> / <span style="color:var(--color-secondary);font-weight:600">Apricot (Delivery)</span> + ajustement ±. ws_product_stock · ws_order_lines</div>
+          <sc-if value="{{ stkAlertShow }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ stkAlertOpen }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1.5px solid var(--color-primary);background:#fbe9eb;border-radius:11px;padding:11px 14px;margin-bottom:12px;cursor:pointer">
+            <span style="width:22px;height:22px;flex:none;border-radius:50%;background:var(--color-primary);color:#fff;font:700 13px var(--font-ui);display:inline-flex;align-items:center;justify-content:center">!</span>
+            <span style="flex:1;font:600 12.5px var(--font-ui);color:var(--color-primary)">{{ stkAlertTitle }}</span>
+            <span style="flex:none;font:600 11px var(--font-ui);color:var(--color-primary);text-decoration:underline">Voir le détail par catégorie</span>
+          </button>
+          </sc-if>
           <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
             <sc-for list="{{ stockBadges }}" as="b" hint-placeholder-count="4">
               <button onClick="{{ b.set }}" style="{{ b.style }}">{{ b.label }}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:9px;background:rgba(255,255,255,.35);padding:0 4px;font-size:10px">{{ b.count }}</span></button>
@@ -1540,6 +1559,33 @@
         <div style="font:400 12.5px/1.6 var(--font-ui);color:var(--color-text)">Cette action retire la tournée du constructeur. <sc-if value="{{ delRouteHasSites }}" hint-placeholder-val="{{ false }}"><strong>{{ delRouteSitesTxt }}</strong> seront désassignés et remis dans « Sites non assignés ».</sc-if><sc-if value="{{ delRouteNoSites }}" hint-placeholder-val="{{ false }}">Aucun site n'y est actuellement assigné.</sc-if></div>
       </div>
       <div style="padding:14px 26px 20px;display:flex;gap:10px"><button onClick="{{ delRouteCancel }}" class="btn-secondary" style="flex:1;font-size:13px">Annuler</button><button onClick="{{ delRouteConfirm }}" style="flex:1;font-size:13px;background:var(--color-primary);color:#fff;border:none;border-radius:9px;padding:11px;font-weight:600;cursor:pointer">Supprimer</button></div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ===================== MODALE ALERTE STOCK BAS ===================== -->
+  <sc-if value="{{ stkAlertModal }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ stkAlertClose }}" style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:2100;padding:24px">
+    <div onClick="{{ stop }}" style="background:var(--color-surface);border-radius:14px;width:520px;max-width:100%;max-height:82vh;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;display:flex;flex-direction:column">
+      <div style="padding:22px 26px 14px;border-bottom:.5px solid var(--color-border-tertiary)">
+        <div style="display:flex;align-items:center;gap:12px"><span style="width:40px;height:40px;border-radius:10px;background:#fbe9eb;color:var(--color-primary);display:flex;align-items:center;justify-content:center;flex:none;font:700 19px var(--font-ui)">!</span><div style="min-width:0"><div class="t-page-title" style="font-size:16px">{{ stkAlertTitle }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Produits regroupés par catégorie · dispo = online + en shop · seuil = stock minimum</div></div></div>
+      </div>
+      <div style="padding:14px 26px;overflow-y:auto;flex:1">
+        <sc-for list="{{ stkLowGroups }}" as="g" hint-placeholder-count="2">
+          <div style="margin-bottom:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--color-background-secondary);border-radius:8px;padding:7px 11px;margin-bottom:6px"><span style="font:600 10.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text)">{{ g.cat }}</span><span style="font:600 10.5px var(--font-ui);color:var(--color-primary)">{{ g.count }}</span></div>
+            <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="2">
+              <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;padding:8px 11px;border-bottom:.5px solid var(--color-border-tertiary)">
+                <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ it.nom }}</span>
+                <span style="font:700 12.5px var(--font-ui);color:var(--color-primary)">{{ it.dispo }} dispo</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">min. {{ it.min }}</span>
+                <span style="display:inline-flex;align-items:center;height:20px;border-radius:20px;padding:0 9px;font:700 10.5px/1 var(--font-ui);background:#fbe9eb;color:var(--color-primary)">{{ it.manque }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <div style="padding:14px 26px 18px;border-top:.5px solid var(--color-border-tertiary)"><button onClick="{{ stkAlertClose }}" class="btn-primary" style="width:100%;font-size:13px">Compris — fermer</button></div>
     </div>
   </div>
   </sc-if>
@@ -2242,7 +2288,7 @@ class Component extends DCLogic {
     const bureauxReal=(window.BOServer?window.BOServer.table('ws_offices'):[]).map(o=>o.name).filter(Boolean);
     const bureaux=bureauxReal.length?[...new Set(bureauxReal)]:['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
     // Buildings (sites) existants : adresses distinctes de ws_office_delivery_sites.
-    const buildings=[...new Set((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(s=>s.adr||s.address).filter(Boolean))];
+    const buildings=[...new Set((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(s=>s.adr||s.address).filter(v=>v&&v!=='—'))];
     const cats=['Pâtisserie fraîche','Boulangerie','Traiteur / plats','Chocolaterie','Glaces & surgelés','Épicerie fine'];
     const sel=(a)=>a.map(x=>({value:x,label:x}));
     const catchmentSel=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]).map(c=>({value:c.name,label:c.name}));
@@ -2420,6 +2466,11 @@ class Component extends DCLogic {
     this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   closeForm(){ this.setState({formKey:null}); }
   submitForm(){ const S=this.state, cfg=this.formDefs()[S.formKey]; if(!cfg){ return; } const v={...S.formVals};
+    // Le champ « Site (building) » d'un office ne doit déclencher l'appariement
+    // serveur (création/déplacement de ligne site) QUE sur une action explicite
+    // de l'utilisateur — le marqueur site_touch protège des round-trips périmés
+    // qui ressuscitaient des sites supprimés.
+    if(S.formKey==='office') v.site_touch=1;
     // Contrôle TVA (client B2B) : un office/lieu déjà desservi au même CP porte
     // une AUTRE TVA → deux choix (renvoi vers le franchisé du CP / département).
     if(S.formKey==='clientEdit'){
@@ -2440,7 +2491,7 @@ class Component extends DCLogic {
     // Après un save OFFICE ou SITE : refetch des tables serveur → la ligne
     // locale récupère son id DB (évite un doublon si on ré-édite/renomme
     // avant reload) et la liste reflète l'état réellement écrit.
-    if(S.formKey==='office'||S.formKey==='site'){ setTimeout(()=>this.bcRefreshOffices(),700); }
+    if(S.formKey==='office'||S.formKey==='site'){ setTimeout(()=>this.bcRefreshOffices(),150); }
     // Modale « livraison au bureau » : si la création de SITE vient du bouton
     // « + Créer un site » de la modale, on la rouvre avec le nouveau site
     // présélectionné — ses données sont injectées dans la fiche client.
@@ -2451,16 +2502,25 @@ class Component extends DCLogic {
   // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
   bcRefreshOffices(){ const fr=window.__FR||{}; if(!fr.base){ this.setState(s=>({_rev:(s._rev||0)+1})); return; }
     const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'};
+    // ATTENDRE d'abord que les écritures en vol soient commitées (flush) —
+    // sinon le GET gagne la course contre le POST /save et écrase l'état
+    // local avec la donnée d'AVANT (toggle Validé perdu, site supprimé qui
+    // « revient » à l'écran alors que la base est correcte).
+    const fl=(window.BOServer&&window.BOServer.flush)?window.BOServer.flush():Promise.resolve();
+    fl.then(()=>
     Promise.all([
       fetch(fr.base+'/franchisee/ws-offices'+qs,H).then(r=>r.ok?r.json():null).catch(()=>null),
       fetch(fr.base+'/franchisee/ws-office-delivery-sites'+qs,H).then(r=>r.ok?r.json():null).catch(()=>null),
       fetch(fr.base+'/franchisee/b2b-clients'+qs,H).then(r=>r.ok?r.json():null).catch(()=>null),
-    ]).then(([offs,sites,cls])=>{ if(window.BOServer){ if(Array.isArray(offs)) window.BOServer.refresh('ws_offices',offs); if(Array.isArray(sites)) window.BOServer.refresh('ws_office_delivery_sites',sites); if(Array.isArray(cls)) window.BOServer.refresh('b2b_clients',cls); } this.setState(s=>({_rev:(s._rev||0)+1})); }); }
+    ]).then(([offs,sites,cls])=>{ if(window.BOServer){ if(Array.isArray(offs)) window.BOServer.refresh('ws_offices',offs); if(Array.isArray(sites)) window.BOServer.refresh('ws_office_delivery_sites',sites); if(Array.isArray(cls)) window.BOServer.refresh('b2b_clients',cls); } this.setState(s=>({_rev:(s._rev||0)+1})); })); }
   deleteRow(tbl,idx,label){ return ()=>{ this.setState({confirmDel:{tbl,idx,label:label||'cet élément'}}); }; }
   confirmDelDo(){ const c=this.state.confirmDel; let delAdr=null;
     if(c&&c.tbl&&window.BOServer){ const rows=window.BOServer.table(c.tbl);
       if(c.tbl==='ws_office_delivery_sites'&&rows[c.idx]) delAdr=rows[c.idx].adr;
-      rows.splice(c.idx,1); window.BOServer.save(c.tbl,rows);
+      // Suppression d'un BÂTIMENT : toutes ses lignes de liaison partent
+      // ensemble (idxs) — sinon les lignes restantes le font « revenir ».
+      const dl=(c.idxs&&c.idxs.length)?c.idxs.slice().sort((a,b)=>b-a):[c.idx];
+      dl.forEach(ix=>rows.splice(ix,1)); window.BOServer.save(c.tbl,rows);
       // Anti-résurrection : les offices qui portaient ce site en mémoire ne
       // doivent plus le renvoyer au prochain enregistrement (pairing PHP).
       if(delAdr&&delAdr!=='—'){ const offs=window.BOServer.table('ws_offices'); let ch=false;
@@ -2470,7 +2530,7 @@ class Component extends DCLogic {
     if(c&&(c.tbl==='ws_offices'||c.tbl==='ws_office_delivery_sites')){
       // Retirer un office coupe sa livraison au bureau côté serveur mais le
       // CLIENT reste dans le menu Clients — refetch pour refléter l'état réel.
-      setTimeout(()=>this.bcRefreshOffices(),1400);
+      setTimeout(()=>this.bcRefreshOffices(),150);
       this.printJob(c.tbl==='ws_offices'?'✖ Office retiré — livraison au bureau coupée · le client reste dans le menu Clients':'✖ Supprimé');
     } else this.printJob('✖ Supprimé'); }
   NEW_PERPOINT = 30; NEW_AMPL = 240;
@@ -2556,7 +2616,11 @@ class Component extends DCLogic {
   };
   tr(k){ const lang=this.state.lang; return (this.T[k]&&this.T[k][lang])||(this.T[k]&&this.T[k].FR)||k; }
 
-  go(s){ return ()=>this.setState({screen:s}); }
+  go(s){ return ()=>{ const st={screen:s};
+    // Stock du jour : à l'ARRIVÉE sur l'écran, si des produits sont sous le
+    // seuil bas, la modale d'alerte se rouvre (état null = automatique).
+    if(s==='stockJour') st.stkAlert=null;
+    this.setState(st); }; }
 
   navStyle(s){
     const active = this.state.screen===s;
@@ -3223,7 +3287,7 @@ class Component extends DCLogic {
       // contacts email dans le formulaire d'édition de l'Office (engrenage).
       // « Zone de chalandise » retirée du menu : double emploi avec l'Analyse
       // géographique (l'écran reste dans le code, réversible).
-      {id:'g_b2b',label:'Clients B2B',items:[['offices','Offices'],['b2bClients','Clients'],['sites','Sites de livraison']]},
+      {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['b2bClients','Clients']]},
       {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
     ];
     const navSub=(s)=>{ const active=S.screen===s; return 'display:flex;align-items:center;width:100%;padding:9px 12px 9px 32px;border:none;border-radius:8px;cursor:pointer;font:'+(active?'600':'400')+' 12.5px/1 var(--font-ui);text-align:left;'+(active?'background:var(--color-background-secondary);color:var(--color-primary)':'background:transparent;color:var(--color-text-muted)'); };
@@ -3263,7 +3327,20 @@ class Component extends DCLogic {
     const chipMini='border:none;cursor:pointer;font:500 10px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:4px 8px;color:var(--color-text);white-space:nowrap';
     const siteTourNames=[...new Set(SRV('ws_tours').map(t=>t.name).filter(Boolean))];
     const siteRowsAll=SRV('ws_office_delivery_sites');
-    const sitesList=siteRowsAll.map((r,i)=>{
+    // Adresse/nom NORMALISÉS (casse, espaces) : deux variantes de la même
+    // adresse = UN SEUL bâtiment — sinon cartes et tags apparaissent en double.
+    const normA=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+    const sameA=(a,b)=>normA(a)!==''&&normA(a)===normA(b);
+    // UNE vignette par BÂTIMENT (adresse normalisée) — pas par ligne de
+    // liaison bureau↔site : un building partagé par N bureaux apparaissait N
+    // fois, et supprimer une vignette ne retirait qu'UNE ligne (les autres
+    // « revenaient »). La suppression retire désormais TOUTES les lignes du
+    // bâtiment ; la tournée s'applique aussi à toutes.
+    const siteGroups=[]; const siteGroupIdx={};
+    siteRowsAll.forEach((r,i)=>{ const k=(r.adr&&r.adr!=='—')?('a:'+normA(r.adr)):((r.name&&r.name!=='—')?('n:'+normA(r.name)):('i:'+i));
+      if(siteGroupIdx[k]===undefined){ siteGroupIdx[k]=siteGroups.length; siteGroups.push({idxs:[i],rep:r,repIdx:i}); }
+      else { const g=siteGroups[siteGroupIdx[k]]; g.idxs.push(i); if((!g.rep.name||g.rep.name==='—')&&r.name&&r.name!=='—'){ g.rep=r; g.repIdx=i; } } });
+    const sitesList=siteGroups.map(g=>{ const r=g.rep, i=g.repIdx, idxs=g.idxs;
       const depts=deptRowsAll.map((d,gi)=>({d,gi})).filter(x=>x.d.site===r.adr);
       // Règle : un site SANS tournée est inactif → carte grisée jusqu'au rattachement.
       const noTour=!r.tour||r.tour==='—';
@@ -3275,18 +3352,21 @@ class Component extends DCLogic {
         // Rattachement tournée modifiable DIRECTEMENT sur la vignette.
         tourVal:(r.tour&&r.tour!=='—')?r.tour:'',
         tourOpts:[{value:'',label:'— Rattacher une tournée —'},...siteTourNames.map(n=>({value:n,label:n}))],
-        tourSet:(e)=>{ const v=e.target.value; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); if(rows[i]){ rows[i]={...rows[i],tour:v||'—'}; window.BOServer.save('ws_office_delivery_sites',rows); } } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob(v?('✓ Site rattaché à la tournée « '+v+' »'):'Tournée retirée — le site repasse inactif'); },
+        tourSet:(e)=>{ const v=e.target.value; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false; idxs.forEach(ix=>{ if(rows[ix]){ rows[ix]={...rows[ix],tour:v||'—'}; ch=true; } }); if(ch) window.BOServer.save('ws_office_delivery_sites',rows); } this.setState(s=>({_rev:(s._rev||0)+1})); setTimeout(()=>this.bcRefreshOffices(),150); this.printJob(v?('✓ Site rattaché à la tournée « '+v+' »'):'Tournée retirée — le site repasse inactif'); },
         cardStyle:'background:var(--color-surface);border:'+(grabbed?'2px solid var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:14px;padding:16px 18px'+(noTour&&!grabbed?';opacity:.5;filter:grayscale(.35)':''),
         // « Prendre → déposer » : on saisit LE SITE puis on le dépose sur une tuile Tournée.
         grabbed, grabLabel:grabbed?'⠿ Saisi — choisissez une tournée ci-dessus':'⠿ Déplacer vers une tournée',
         grabStyle:'width:100%;margin-bottom:10px;border:1.5px '+(grabbed?'solid':'dashed')+' '+(grabbed?'var(--color-primary)':'var(--color-border-secondary)')+';background:'+(grabbed?'var(--color-background-secondary)':'transparent')+';color:'+(grabbed?'var(--color-primary)':'var(--color-text-muted)')+';border-radius:9px;padding:8px;font:600 11.5px var(--font-ui);cursor:grab',
         grab:()=>this.setState(s=>({dndSite:s.dndSite===i?null:i})),
-        edit:this.editForm('site',r,i), del:this.deleteRow('ws_office_delivery_sites',i,'le site « '+(r.name||r.adr)+' »'),
+        edit:this.editForm('site',r,i),
+        // Supprimer le BÂTIMENT = retirer TOUTES ses lignes de liaison (sinon
+        // les lignes restantes refont apparaître la vignette au refetch).
+        del:()=>this.setState({confirmDel:{tbl:'ws_office_delivery_sites',idx:i,idxs:idxs.slice(),label:'le site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' » (et ses '+idxs.length+' ligne(s) de liaison)'}}),
         chain:(()=>{
           // Chaîne conservée : Tournée → Site → Bureaux déjà liés → (si présents)
           // Départements, + slots utilisés de la tournée (ex. 10/20).
           const sName=(r.name&&r.name!=='—')?r.name:((r.office&&r.office!=='—')?r.office:r.adr);
-          const bureaux=[...new Set(siteRowsAll.filter(x=>x.adr===r.adr).map(x=>x.bureau||x.office).filter(v=>v&&v!=='—'))];
+          const bureaux=[...new Set(siteRowsAll.filter(x=>sameA(x.adr,r.adr)).map(x=>x.bureau||x.office).filter(v=>v&&v!=='—'))];
           const bVal=bureaux.length===0?'Aucun bureau lié':(bureaux.length<=2?bureaux.join(', '):bureaux.length+' bureaux');
           const items=[
             {lbl:'Tournée',val:(r.tour&&r.tour!=='—')?r.tour:'Sans tournée',style:chipMini,go:this.go('tournees')},
@@ -3319,56 +3399,74 @@ class Component extends DCLogic {
     const offValid=SRV('ws_offices').filter(o=>o.status==='validated');
     const offKey=(o)=>String(o.id!=null?o.id:o.name);
     const offPairedKeys=new Set();
-    siteRowsAll.forEach(r=>{ const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null); if(b) offPairedKeys.add(b); });
+    siteRowsAll.forEach(r=>{ const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null); if(b) offPairedKeys.add(normA(b)); });
     // Rattacher un office à un site (partagé : drop après saisie + sélecteur).
     const offAttach=(r,key)=>{ const off=SRV('ws_offices').find(o=>offKey(o)===String(key)); if(!off) return;
       if(window.BOServer){
         const rows=window.BOServer.table('ws_office_delivery_sites');
-        const tpl=rows.find(x=>x.adr===r.adr)||r;
+        const tpl=rows.find(x=>sameA(x.adr,r.adr))||r;
         const ex=rows.findIndex(x=>(x.office_client_id!=null&&off.id!=null&&x.office_client_id===off.id)||x.bureau===off.name||x.office===off.name);
         if(ex>=0){
           const oldAdr=rows[ex].adr;
-          if(oldAdr&&oldAdr!=='—'&&oldAdr!==tpl.adr&&!rows.some((x,xi)=>xi!==ex&&x.adr===oldAdr))
+          if(oldAdr&&oldAdr!=='—'&&!sameA(oldAdr,tpl.adr)&&!rows.some((x,xi)=>xi!==ex&&sameA(x.adr,oldAdr)))
             rows.push({...rows[ex],id:undefined,bureau:'—',office:'—',office_client_id:null});
           rows[ex]={...rows[ex],name:tpl.name,adr:tpl.adr,etage:tpl.etage,acc:tpl.acc,tour:tpl.tour,bureau:off.name,office:off.name,office_client_id:(off.id!=null?off.id:rows[ex].office_client_id)};
         }
-        else{ const free=rows.findIndex(x=>x.adr===r.adr&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
+        else{ const free=rows.findIndex(x=>sameA(x.adr,r.adr)&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
           if(free>=0) rows[free]={...rows[free],bureau:off.name,office:off.name,office_client_id:off.id};
           else rows.push({name:tpl.name,adr:tpl.adr,etage:tpl.etage||'—',acc:tpl.acc||'5',tour:tpl.tour||'—',bureau:off.name,office:off.name,office_client_id:off.id}); }
         window.BOServer.save('ws_office_delivery_sites',rows);
         const offs=window.BOServer.table('ws_offices'); const oi=offs.findIndex(x=>offKey(x)===String(key));
-        if(oi>=0){ const p2={site:tpl.adr}; if(tpl.tour&&tpl.tour!=='—') p2.tour=tpl.tour;
+        if(oi>=0){ const p2={site:tpl.adr,site_touch:1}; if(tpl.tour&&tpl.tour!=='—') p2.tour=tpl.tour;
           offs[oi]={...offs[oi],...p2}; window.BOServer.save('ws_offices',offs); }
       }
       this.setState(st=>({dndOff:null,_rev:(st._rev||0)+1}));
+      // Refetch APRÈS flush : les nouvelles lignes de liaison récupèrent leur
+      // id DB (pas de doublon au save suivant) et l'affichage reflète la base.
+      setTimeout(()=>this.bcRefreshOffices(),150);
       this.printJob('✓ Bureau « '+off.name+' » → site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' »'+((r.tour&&r.tour!=='—')?' · tournée « '+r.tour+' » héritée':'')); };
     // Retirer un bureau d'un site (× sur la chip).
     const offDetach=(r,bName)=>{ if(!window.BOServer) return;
       const rows=window.BOServer.table('ws_office_delivery_sites');
-      const idx=rows.findIndex(x=>x.adr===r.adr&&(x.bureau===bName||x.office===bName));
+      const idx=rows.findIndex(x=>sameA(x.adr,r.adr)&&(x.bureau===bName||x.office===bName));
       if(idx<0) return;
-      const others=rows.some((x,xi)=>xi!==idx&&x.adr===r.adr);
+      const others=rows.some((x,xi)=>xi!==idx&&sameA(x.adr,r.adr));
       if(others) rows.splice(idx,1);
       else rows[idx]={...rows[idx],bureau:'—',office:'—',office_client_id:null};
       window.BOServer.save('ws_office_delivery_sites',rows);
       const off=SRV('ws_offices').find(o=>o.name===bName);
       if(off){ const offs=window.BOServer.table('ws_offices'); const oi=offs.findIndex(x=>offKey(x)===offKey(off)); if(oi>=0){ offs[oi]={...offs[oi],site:''}; window.BOServer.save('ws_offices',offs); } }
       this.setState(st=>({_rev:(st._rev||0)+1}));
+      setTimeout(()=>this.bcRefreshOffices(),150);
       this.printJob('Bureau « '+bName+' » retiré du site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' »'); };
-    // File du haut : bureaux validés SANS site (saisir ⠿ puis cliquer une carte).
-    const offAssignChips=offValid.filter(o=>!offPairedKeys.has(o.name)).map(o=>{ const g=S.dndOff!=null&&String(S.dndOff)===offKey(o);
-      return {name:o.name,
-        style:'border:1.5px '+(g?'solid var(--color-primary)':'dashed var(--color-border-secondary)')+';background:'+(g?'var(--color-background-secondary)':'transparent')+';color:'+(g?'var(--color-primary)':'var(--color-text)')+';border-radius:9px;padding:7px 11px;font:600 11.5px var(--font-ui);cursor:grab',
-        grab:()=>this.setState(st=>({dndOff:(st.dndOff!=null&&String(st.dndOff)===offKey(o))?null:offKey(o)}))};
+    // Bâtiments distincts (adresse normalisée) — sert au sélecteur « → site »
+    // des bureaux sans site ET aux cartes de l'étape 3.
+    const bldSeen=new Set(); const bldList=[];
+    siteRowsAll.forEach(r=>{ if(!r.adr||r.adr==='—'||bldSeen.has(normA(r.adr))) return; bldSeen.add(normA(r.adr)); bldList.push(r); });
+    // VUE VISUELLE : bureaux validés SANS site — mini-cartes dans un panneau
+    // d'alerte ambre, avec assignation directe (sélecteur de site) OU saisie ⠿.
+    const offAssignChips=offValid.filter(o=>!offPairedKeys.has(normA(o.name))).map(o=>{ const g=S.dndOff!=null&&String(S.dndOff)===offKey(o);
+      return {name:o.name, city:((o.postal_code||'')+' '+(o.city||'')).trim()||'—',
+        cardStyle:'display:flex;flex-direction:column;gap:7px;background:var(--color-surface);border:1.5px '+(g?'solid var(--color-primary)':'solid #ecd9b8')+';border-radius:10px;padding:10px 12px'+(g?';box-shadow:0 0 0 3px rgba(141,29,44,.08)':''),
+        grabLabel:g?'⠿ Saisi — cliquez une carte site':'⠿ Saisir',
+        grabStyle:'border:1px dashed '+(g?'var(--color-primary)':'var(--color-border-secondary)')+';background:transparent;color:'+(g?'var(--color-primary)':'var(--color-text-muted)')+';border-radius:7px;padding:5px 9px;font:600 10.5px var(--font-ui);cursor:grab;flex:none',
+        grab:()=>this.setState(st=>({dndOff:(st.dndOff!=null&&String(st.dndOff)===offKey(o))?null:offKey(o)})),
+        siteOpts:[{value:'',label:'→ Assigner à un site…'},...bldList.map(b=>({value:b.adr,label:((b.name&&b.name!=='—')?b.name:b.adr)+((b.tour&&b.tour!=='—')?(' · '+b.tour):'')}))],
+        siteSet:(e)=>{ const a=e.target.value; if(!a) return; const b=bldList.find(x=>sameA(x.adr,a)); if(b) offAttach(b,offKey(o)); }};
     });
     const offAssignEmpty=offValid.length===0;
     const offNoFree=offValid.length>0&&offAssignChips.length===0;
+    const offHasFree=offAssignChips.length>0;
+    const offFreeTitle=offAssignChips.length+' bureau(x) validé(s) sans site de livraison — non desservis tant qu’ils ne sont pas assignés';
     // Cartes SITES : chips bureaux (× = retirer) + sélecteur d'ajout direct.
     const offSeenAdr=new Set(); const offSiteCards=[];
-    siteRowsAll.forEach(r=>{ if(!r.adr||r.adr==='—'||offSeenAdr.has(r.adr)) return; offSeenAdr.add(r.adr);
-      const bx=[...new Set(siteRowsAll.filter(x=>x.adr===r.adr).map(x=>(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null)).filter(Boolean))];
+    siteRowsAll.forEach(r=>{ if(!r.adr||r.adr==='—'||offSeenAdr.has(normA(r.adr))) return; offSeenAdr.add(normA(r.adr));
+      // Bureaux du bâtiment, dédupliqués par nom NORMALISÉ (deux graphies du
+      // même bureau = un seul tag).
+      const bxSeen=new Set(); const bx=[];
+      siteRowsAll.filter(x=>sameA(x.adr,r.adr)).forEach(x=>{ const b=(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null); if(b&&!bxSeen.has(normA(b))){ bxSeen.add(normA(b)); bx.push(b); } });
       const canDrop=S.dndOff!=null;
-      const addable=offValid.filter(o=>!bx.includes(o.name));
+      const addable=offValid.filter(o=>!bxSeen.has(normA(o.name)));
       offSiteCards.push({nom:(r.name&&r.name!=='—')?r.name:r.adr,adr:r.adr,
         tourLbl:(r.tour&&r.tour!=='—')?r.tour:'⏸ sans tournée',
         tourOn:!!(r.tour&&r.tour!=='—'),
@@ -3391,7 +3489,10 @@ class Component extends DCLogic {
       const canDrop=S.dndSite!=null;
       return {nom:tt.nom,cap:(tt.used||0)+' / '+max,charge:sitesOf.length+' site(s) · '+bx.size+' bureau(x)',canDrop,
         style:'flex:none;text-align:left;border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';background:var(--color-surface);color:var(--color-text);border-radius:10px;padding:8px 14px;cursor:'+(canDrop?'copy':'default'),
-        drop:()=>{ const idx=this.state.dndSite; if(idx==null) return; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); if(rows[idx]){ rows[idx]={...rows[idx],tour:tt.nom}; window.BOServer.save('ws_office_delivery_sites',rows); } } this.setState(s=>({dndSite:null,_rev:(s._rev||0)+1})); this.printJob('✓ Site déplacé vers la tournée « '+tt.nom+' »'); }};
+        drop:()=>{ const idx=this.state.dndSite; if(idx==null) return; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites');
+          // Déplacer le BÂTIMENT : toutes les lignes de la même adresse suivent.
+          if(rows[idx]){ const a=rows[idx].adr; rows.forEach((x,xi)=>{ if(xi===idx||sameA(x.adr,a)) rows[xi]={...x,tour:tt.nom}; }); window.BOServer.save('ws_office_delivery_sites',rows); } }
+          this.setState(s=>({dndSite:null,_rev:(s._rev||0)+1})); setTimeout(()=>this.bcRefreshOffices(),150); this.printJob('✓ Site déplacé vers la tournée « '+tt.nom+' »'); }};
     });
 
     const bpDays=(arr)=>['L','Ma','Me','J','V','S','D'].map((k,i)=>({k,style:dayPill((arr||[]).includes(i))}));
@@ -3643,6 +3744,17 @@ class Component extends DCLogic {
       {key:'near',label:'Tension',count:String(stkCount.near),style:stkFilterPill('near','#fff4e5','#b26a00'),set:()=>this.setState({stockFilter:'near'})},
       {key:'ok',label:'OK',count:String(stkCount.ok),style:stkFilterPill('ok','#eaf5ec','#2d7a3e'),set:()=>this.setState({stockFilter:'ok'})},
     ];
+    // ALERTE STOCK BAS : produits sous seuil regroupés PAR CATÉGORIE + modale
+    // d'information (ouverte automatiquement à l'arrivée sur l'écran, ré-ouvrable
+    // depuis le bandeau d'alerte).
+    const stkLowGroups=(()=>{ const g={},ord=[];
+      stockAll.filter(r=>r.status==='below').forEach(r=>{ if(!g[r.cat]){ g[r.cat]={cat:r.cat,items:[]}; ord.push(r.cat); }
+        g[r.cat].items.push({nom:r.nom,dispo:String(r.dispo),min:String(r.min),manque:'−'+Math.max(0,r.min-r.dispo)}); });
+      return ord.map(k=>({cat:g[k].cat,count:g[k].items.length+' produit(s)',items:g[k].items})); })();
+    const stkLowCount=stockAll.filter(r=>r.status==='below').length;
+    const stkAlertShow=stkLowCount>0;
+    const stkAlertModal=(S.stkAlert===true)||(S.stkAlert==null&&stkLowCount>0&&S.screen==='stockJour');
+    const stkAlertTitle='⚠ Alerte stock bas — '+stkLowCount+' produit(s) sous le seuil minimum';
     const stockFiltered=stockAll.filter(r=>stockFilter==='all'||r.status===stockFilter);
     let _lastCat=null;
     const stockRows=stockFiltered.map(r=>{ const hasCat=r.catLabel!==_lastCat; _lastCat=r.catLabel; return {...r,hasCat}; });
@@ -3946,7 +4058,7 @@ class Component extends DCLogic {
       isFermetures:screen==='horaires'||screen==='tournees',fermetures,addFermeture,
       isSites:screen==='sites',sitesList,tourAssignTiles,
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
-      offAssignChips,offAssignEmpty,offNoFree,offSiteCards,
+      offAssignChips,offAssignEmpty,offNoFree,offHasFree,offFreeTitle,offSiteCards,
       // ===== Menu « Clients » — table client via GET /franchisee/b2b-clients =====
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
       // calcule QUE sur l'écran Clients — sinon il ralentit toute l'app.
@@ -4177,6 +4289,9 @@ class Component extends DCLogic {
       isCommandes:screen==='commandes',ordersList,ordFilterAll:fPill('all'),ordFilterDeliv:fPill('deliv'),ordFilterPickup:fPill('pickup'),
       tdbViewTree:tdbView==='tree',tdbViewList:tdbView==='list',tdbSegTreeStyle:tdbSeg('tree'),tdbSegListStyle:tdbSeg('list'),tdbSetTree:()=>this.setState({tdbView:'tree'}),tdbSetList:()=>this.setState({tdbView:'list'}),
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
+      stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
+      stkAlertOpen:()=>this.setState({stkAlert:true}),
+      stkAlertClose:()=>this.setState({stkAlert:false}),
       isDemandesBureau:screen==='demandesB2B'&&(S.b2bTab||'acces')==='rattach',joinRequests,joinCount,joinBadgeStyle,
       isNouveauxBureaux:screen==='demandesB2B'&&(S.b2bTab||'acces')==='nouveau',newBureauRequests,newBureauCount,newBureauEmpty,
       isStatsReseau:screen==='statsReseau',netStats,exportCA:()=>this.printJob('Export CA (CSV) généré'),exportTop:()=>this.printJob('Export top produits généré'),exportLivr:()=>this.printJob('Export taux livraison vs retrait généré'),

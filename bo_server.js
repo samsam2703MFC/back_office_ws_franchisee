@@ -392,17 +392,26 @@
   // Tables à mapping propre → écrites dans les vraies tables ; les autres →
   // journal serveur ws_bo_store (état du BO persisté côté serveur, plus
   // seulement localStorage). Best-effort : hors-ligne/401 ⇒ localStorage seul.
+  // Écritures EN VOL : chaque POST /franchisee/save est suivi jusqu'à sa
+  // réponse. flush() permet d'ATTENDRE que tout soit commité côté serveur
+  // avant un refetch — sinon le GET gagne la course et écrase l'état local
+  // (toggle « Validé » qui « ne marche pas », site supprimé qui « revient »).
+  var PENDING = [];
   function syncSave(n, rows){
     try {
       var fr = (typeof window !== 'undefined' && window.__FR) || {};
-      if (!fr.base || !fr.token) return;
-      fetch(fr.base + '/franchisee/save' + (fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : ''), {
+      if (!fr.base || !fr.token) return Promise.resolve();
+      var p = fetch(fr.base + '/franchisee/save' + (fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : ''), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Token': fr.token },
         credentials: 'omit',
         body: JSON.stringify({ table: n, rows: rows })
       }).catch(function(){});
-    } catch(e){}
+      PENDING.push(p);
+      var drop = function(){ var i = PENDING.indexOf(p); if (i >= 0) PENDING.splice(i, 1); };
+      p.then(drop, drop);
+      return p;
+    } catch(e){ return Promise.resolve(); }
   }
   window.BOServer = {
     table: function(n){ var db = ensure(); return db[n] ? JSON.parse(JSON.stringify(db[n])) : []; },
@@ -410,6 +419,9 @@
     getParam: function(key, dflt){ var db = ensure(); var rows = db.params || []; for (var i=0;i<rows.length;i++){ if (rows[i].cle===key){ var r=rows[i]; return (r.val!==undefined ? r.val : (r.def!==undefined ? r.def : dflt)); } } return dflt; },
     setParam: function(key, val){ ensure(); var rows = DB.params || (DB.params = []); var found=false; for (var i=0;i<rows.length;i++){ if (rows[i].cle===key){ rows[i].val=val; found=true; } } if (!found) rows.push({cle:key, type:'bool', val:val}); syncSave('params', rows); return persist(); },
     save: function(n, rows){ ensure(); DB[n] = JSON.parse(JSON.stringify(rows)); syncSave(n, DB[n]); return persist(); },
+    // Attend la fin de TOUTES les écritures serveur en vol (POST /save) —
+    // à appeler avant tout refetch GET pour ne jamais lire un état périmé.
+    flush: function(){ return Promise.all(PENDING.slice()).then(function(){ return true; }, function(){ return true; }); },
     // Mise à jour LOCALE seulement (pas de syncSave) : utilisée pour refléter
     // en mémoire une donnée déjà écrite côté serveur (ex. office créé par le
     // toggle « livraison au bureau » — GET refetché puis injecté ici).
