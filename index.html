@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072341"></script>
-<script src="bo_server.js?v=2026072341"></script>
+<script src="api-config.js?v=2026072342"></script>
+<script src="bo_server.js?v=2026072342"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072341'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072342'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072341">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072341"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072342">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072342"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -272,14 +272,14 @@
           </div>
           <div class="t-admin-label" style="margin-bottom:8px">À produire</div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden;margin-bottom:16px">
-            <div style="display:grid;grid-template-columns:1fr 1.5fr .5fr 1fr 1fr;padding:8px 12px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Produit</span><span class="t-admin-label" style="text-align:right">Qty</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Tournée</span></div>
+            <div style="display:grid;grid-template-columns:1.1fr 1.7fr .6fr 1.2fr 1.2fr;gap:14px;width:100%;padding:8px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Produit</span><span class="t-admin-label" style="text-align:center">Qty</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Tournée</span></div>
             <sc-for list="{{ prepProdLines }}" as="pl" hint-placeholder-count="4">
-              <div style="display:grid;grid-template-columns:1fr 1.5fr .5fr 1fr 1fr;align-items:center;padding:9px 12px;border-bottom:.5px solid var(--color-border-tertiary)">
+              <div style="display:grid;grid-template-columns:1.1fr 1.7fr .6fr 1.2fr 1.2fr;gap:14px;width:100%;align-items:center;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary)">
                 <span style="font:500 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pl.cat }}</span>
                 <span style="font:500 12px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ pl.produit }}">{{ pl.produit }}</span>
-                <span style="font:700 12.5px var(--font-ui);color:var(--color-primary);text-align:right">{{ pl.qty }}</span>
-                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ pl.creneau }}</span>
-                <span style="font:500 11px var(--font-ui);color:var(--color-text)">{{ pl.tournee }}</span>
+                <span style="font:700 13px var(--font-ui);color:var(--color-primary);text-align:center">{{ pl.qty }}</span>
+                <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pl.creneau }}</span>
+                <span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pl.tournee }}</span>
               </div>
             </sc-for>
             <sc-if value="{{ prepProdEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Rien à produire pour ce jour (ws_order_lines).</div></sc-if>
