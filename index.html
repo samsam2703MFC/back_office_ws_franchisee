@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072310"></script>
-<script src="bo_server.js?v=2026072310"></script>
+<script src="api-config.js?v=2026072311"></script>
+<script src="bo_server.js?v=2026072311"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072310'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072311'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072310">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072310"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072311">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072311"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -2042,7 +2042,7 @@ class Component extends DCLogic {
     screen: 'tdb', lang: 'FR', scan: 18, bonValide: false,
     seqIds: [1,2,4,7], selClient: 0, selInc: 0, analyse: 'tournee',
     sim: 8, alpha: 40, beta: 40, gamma: 20, dragFrom: null,
-    routeAssign: { r1:[1,2,4], r2:[3,5,8], r3:[6,9], r4:[7,10], r5:[], r6:[] }, selRoute: 'r1',
+    routeAssign: {}, selRoute: 'r1',
     siteOpen: {}, selSiteId: 1, siteAcc: {}, drop: {}, siteModal: null,
     valHandled: {}, valModal: null, valSite: '', valTournee: '',
     valNewName: '', valZone: '', valZone2: '', valNewZone: '',
@@ -2411,10 +2411,28 @@ class Component extends DCLogic {
   toMin(s){ const [h,m]=s.split(':').map(Number); return h*60+m; }
   travelMin(a,b){ const R=6371,toR=x=>x*Math.PI/180; const dLa=toR(b.lat-a.lat),dLo=toR(b.lng-a.lng); const s=Math.sin(dLa/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLo/2)**2; const km=2*R*Math.asin(Math.sqrt(s)); return {min:Math.max(4,Math.round(km*2.2)),km}; }
   routesMeta(){ return (window.BOServer?window.BOServer.table('ws_tours'):[]); }
+  // Sites du constructeur de tournées : DONNÉES RÉELLES uniquement —
+  // dérivés de ws_office_delivery_sites (1 site = 1 bâtiment distinct),
+  // bureaux = lignes de liaison partageant la même adresse, géo via __CPGEO.
   sitesData(){
-    const zoneById={1:'Bruxelles Centre',2:'Sablon',4:'Sablon',7:'Schaerbeek',3:'Ixelles',5:'Uccle',8:'Waterloo',6:'Etterbeek',9:'Leuven',10:'Anderlecht'};
-    const off={1:[{name:'Le Cirio — Bar',drop:5},{name:'Le Cirio — Cuisine',drop:6},{name:'Le Cirio — Cave',drop:4}],2:[{name:'Rocco Forte — Économat',drop:5}],4:[{name:'Dandoy — Boutique',drop:4},{name:'Dandoy — Réserve',drop:3}],7:[{name:'Boulangerie du Parc',drop:5}],3:[{name:'Belga — Comptoir',drop:5}],5:[{name:'Le Chalet — Cuisine',drop:6}],8:[{name:'Event Château — Traiteur',drop:8,ws:'11:00',we:'13:00'}],6:[{name:'Delcourt — Atelier',drop:6}],9:[{name:'KBC — Cafétéria HQ',drop:7,ws:'07:00',we:'09:00'},{name:'KBC — Étage direction',drop:4},{name:'KBC — Accueil',drop:3}],10:[{name:'Cureghem — Cuisine',drop:6}]};
-    return this.points().map(p=>({id:p.id,name:p.libelle,ville:p.ville,lat:p.lat,lng:p.lng,zone:zoneById[p.id]||'—',access:10,offices:off[p.id]||[{name:p.client,drop:5}],notes:p.id===8?'Accès traiteur par l\'arrière · badge requis':'Quai de service · sonner interphone'}));
+    const rows=(window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]);
+    const geo=(typeof window!=='undefined'&&window.__CPGEO)||null;
+    const seen={}; const out=[];
+    rows.forEach(r=>{ const adr=(r.adr&&r.adr!=='—')?r.adr:null; if(!adr) return;
+      if(seen[adr]===undefined){ const cp=(String(adr).match(/\b(\d{4})\b/)||[])[1]||'';
+        const e=(geo&&geo.idx)?geo.idx[cp]:null;
+        seen[adr]=out.length;
+        out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,
+          ville:e?e.city:(cp||'—'),lat:e?e.lat:50.85,lng:e?e.lng:4.35,
+          zone:(r.tour&&r.tour!=='—')?r.tour:'—',access:parseFloat(r.acc)||10,offices:[],
+          notes:(r.etage&&r.etage!=='—')?('Étage/local : '+r.etage):''});
+      }
+      const st=out[seen[adr]];
+      const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
+      if(b&&!st.offices.some(o=>o.name===b)) st.offices.push({name:b,drop:5});
+    });
+    out.forEach(st=>{ if(!st.offices.length) st.offices=[{name:'— aucun bureau lié —',drop:5}]; });
+    return out;
   }
   computeRoute(rid){
     const S=this.state, sites=this.sitesData(), sm={}; sites.forEach(s=>sm[s.id]=s);
