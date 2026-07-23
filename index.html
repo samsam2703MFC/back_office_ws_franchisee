@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072337"></script>
-<script src="bo_server.js?v=2026072337"></script>
+<script src="api-config.js?v=2026072338"></script>
+<script src="bo_server.js?v=2026072338"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072337'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072338'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072337">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072337"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072338">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072338"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -240,13 +240,14 @@
             <sc-for list="{{ ordRangeChips }}" as="rc" hint-placeholder-count="3"><button onClick="{{ rc.set }}" style="{{ rc.style }};border:none">{{ rc.label }}</button></sc-for>
           </div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Cliquer sur le statut pour le faire avancer · écrit dans ws_orders</div>
-          <div style="display:grid;grid-template-columns:.75fr 1.3fr .65fr .8fr 1.1fr .7fr 1fr .65fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Source</span><span class="t-admin-label">Mode</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Paiement</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Total</span></div>
+          <div style="display:grid;grid-template-columns:.75fr 1.25fr .6fr .75fr .7fr .85fr .7fr 1fr .6fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Source</span><span class="t-admin-label">Mode</span><span class="t-admin-label">Date</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Paiement</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Total</span></div>
           <sc-for list="{{ ordersList }}" as="o" hint-placeholder-count="6">
-            <div style="display:grid;grid-template-columns:.75fr 1.3fr .65fr .8fr 1.1fr .7fr 1fr .65fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+            <div style="display:grid;grid-template-columns:.75fr 1.25fr .6fr .75fr .7fr .85fr .7fr 1fr .6fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
               <span style="font:600 12px var(--font-mono,monospace);color:var(--color-text-muted)">{{ o.ref }}</span>
               <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ o.client }}">{{ o.client }}</span>
               <div style="min-width:0"><span style="{{ o.srcPill }};max-width:100%">{{ o.srcTxt }}</span></div>
               <div style="min-width:0"><span style="{{ o.modePill }};max-width:100%">{{ o.modeTxt }}</span></div>
+              <span style="font:500 11.5px var(--font-ui);color:var(--color-text)">{{ o.dateTxt }}</span>
               <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ o.slot }}</span>
               <div style="min-width:0"><span style="{{ o.payePill }};max-width:100%">{{ o.payeTxt }}</span></div>
               <div><button onClick="{{ o.advance }}" style="{{ o.statutStyle }}">{{ o.statut }}</button></div>
@@ -4068,10 +4069,10 @@ class Component extends DCLogic {
       .map(o=>{
         const [bg,c]=ordStatColor(o.statut);
         const isDeliv=o.mode==='Livraison';
-        // La DATE (jj/mm) apparaît TOUJOURS dans la colonne Créneau — jour de
-        // livraison de la commande ; les jours futurs gardent le jour de semaine.
+        // Colonnes SÉPARÉES Date et Créneau : date jj/mm (jour de semaine en
+        // plus pour les jours futurs), créneau seul à côté.
         const jl=o.date?(o.date===todayIso?(o.date.slice(8,10)+'/'+o.date.slice(5,7)):jourLbl(o.date)):'';
-        return {...o, slot:(jl?(jl+' · '):'')+(o.creneau||'—'), total:o.montant,
+        return {...o, dateTxt:jl||'—', slot:o.creneau||'—', total:o.montant,
           // Modes : Livraison = texte noir sur fond abricot · Collect = fond bordeaux clair.
           modeTxt:isDeliv?'Livraison':'Collect',
           modePill:pill2(isDeliv?'#F2C9A0':'#F2D3D8','#222'),
