@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072308"></script>
-<script src="bo_server.js?v=2026072308"></script>
+<script src="api-config.js?v=2026072309"></script>
+<script src="bo_server.js?v=2026072309"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072308'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072309'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072308">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072308"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072309">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072309"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -842,49 +842,69 @@
             </div>
           </sc-for>
         </div>
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
-          <div style="display:grid;grid-template-columns:1.8fr 1.6fr 2.2fr auto;gap:12px;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Client</span><span class="t-admin-label">Rattachement — bureau · département (site &amp; tournée hérités du bureau)</span><span class="t-admin-label">Badges</span><span class="t-admin-label" style="text-align:right;padding-right:2px">Actions</span></div>
-          <sc-for list="{{ bcList }}" as="c" hint-placeholder-count="5">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:var(--radius-lg,12px);overflow-x:auto">
+          <div style="min-width:1120px">
+          <div style="display:grid;grid-template-columns:minmax(190px,1.4fr) 150px minmax(200px,1.2fr) minmax(240px,1.3fr) 150px 100px auto;align-items:center;column-gap:20px;padding:14px 24px;border-bottom:.5px solid var(--color-border-secondary);background:var(--color-background-secondary)">
+            <span class="t-admin-label">Nom</span>
+            <span class="t-admin-label">Société</span>
+            <span class="t-admin-label">Contact</span>
+            <span class="t-admin-label">Bureau</span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <sc-for list="{{ bcList }}" as="c" hint-placeholder-count="6">
             <div style="{{ c.rowStyle }}">
-              <div style="min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px">
-                <div style="display:flex;align-items:center;gap:7px;min-width:0">
-                  <span title="{{ c.nm }}" style="font:700 14px/1.3 var(--font-ui);letter-spacing:.01em;color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.pname }}</span>
-                  <sc-if value="{{ c.hasCompany }}" hint-placeholder-val="{{ false }}"><span title="{{ c.companyChip }}" style="flex:none;display:inline-flex;align-items:center;height:26px;background:#f1ebfa;color:#6a3f9e;border-radius:20px;padding:0 10px;font:600 10.5px/1 var(--font-ui);white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis">{{ c.companyChip }}</span></sc-if>
-                </div>
-                <div style="font:400 11.5px/1.4 var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.email }}</div>
-              </div>
-              <div style="min-width:0;display:flex;flex-direction:column;justify-content:center;gap:5px">
-                <div style="font:400 11.5px/1.4 var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.ratt }}</div>
-                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                  <select value="{{ c.offSel }}" onChange="{{ c.offSet }}" style="height:26px;border:.5px solid var(--color-border-secondary);border-radius:7px;padding:0 8px;font:500 11.5px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:200px;min-width:0">
-                    <sc-for list="{{ c.offOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
-                  </select>
-                  <sc-if value="{{ c.hasDeptBadge }}" hint-placeholder-val="{{ false }}">
-                    <span style="display:inline-flex;align-items:center;gap:6px;height:26px;background:#f1ebfa;color:#6a3f9e;border-radius:20px;padding:0 11px;font:600 10.5px/1 var(--font-ui);white-space:nowrap">{{ c.deptBadge }}<button onClick="{{ c.deptRemove }}" title="Retirer le département" style="border:none;background:transparent;color:#6a3f9e;cursor:pointer;font-size:13px;padding:0;line-height:1">×</button></span>
-                  </sc-if>
-                  <sc-if value="{{ c.showDeptSel }}" hint-placeholder-val="{{ false }}">
-                    <select value="{{ c.deptSel }}" onChange="{{ c.deptSet }}" style="height:26px;border:.5px solid var(--color-border-secondary);border-radius:7px;padding:0 8px;font:500 11.5px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:180px;min-width:0">
-                      <sc-for list="{{ c.deptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
-                    </select>
-                  </sc-if>
-                  <sc-if value="{{ c.offDelShow }}" hint-placeholder-val="{{ false }}">
-                    <button onClick="{{ c.offDelToggle }}" title="Validation manuelle du franchisé — activer rend l'office livrable (client.office_delivery)" style="{{ c.offDelStyle }}">{{ c.offDelLbl }}</button>
-                  </sc-if>
-                </div>
-              </div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;align-content:center"><sc-for list="{{ c.badges }}" as="bg" hint-placeholder-count="4"><span style="{{ bg.style }}">{{ bg.t }}</span></sc-for></div>
-              <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap">
-                <sc-if value="{{ c.delAsk }}" hint-placeholder-val="{{ false }}">
-                  <button onClick="{{ c.delConfirm }}" title="Confirmer la désactivation (active=0)" style="border:none;background:var(--color-primary);color:#fff;border-radius:7px;padding:7px 10px;font:600 11px var(--font-ui);cursor:pointer">Désactiver</button>
-                  <button onClick="{{ c.delCancel }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);color:var(--color-text-muted);border-radius:7px;padding:7px 10px;font:600 11px var(--font-ui);cursor:pointer">Annuler</button>
+              <span title="{{ c.nm }}" style="font-weight:var(--weight-medium,500);font-size:15px;color:var(--color-text-primary,var(--color-text));white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.pname }}</span>
+              <div>
+                <sc-if value="{{ c.hasCompany }}" hint-placeholder-val="{{ false }}">
+                  <span title="{{ c.companyChip }}" style="display:inline-flex;align-items:center;border-radius:var(--radius-pill,20px);padding:3px 10px;font-size:var(--font-size-small,12px);font-weight:var(--weight-medium,500);color:var(--color-popup,#6a3f9e);background:color-mix(in srgb, var(--color-popup,#6a3f9e) 14%, transparent);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis">{{ c.companyChip }}</span>
                 </sc-if>
-                <button onClick="{{ c.open }}" class="btn-secondary" style="font-size:11.5px;height:26px;padding:0 13px;display:inline-flex;align-items:center">Fiche</button>
-                <button onClick="{{ c.delStart }}" title="Supprimer (désactivation — le client passe à active=0, rien n'est effacé)" style="width:26px;height:26px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+                <sc-if value="{{ c.noCompany }}" hint-placeholder-val="{{ false }}"><span class="t-label" style="color:var(--color-border-secondary)">—</span></sc-if>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                <span class="t-label" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.emailDisplay }}</span>
+                <sc-if value="{{ c.hasPostal }}" hint-placeholder-val="{{ false }}">
+                  <span title="{{ c.postalTitle }}" style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb, #2d7a3e 14%, transparent);color:#2d7a3e"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                </sc-if>
+                <sc-if value="{{ c.noPostal }}" hint-placeholder-val="{{ false }}">
+                  <span title="{{ c.postalTitle }}" style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:1px dashed var(--color-border-secondary);color:var(--color-text-secondary,var(--color-text-muted))"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg></span>
+                </sc-if>
+              </div>
+              <div title="{{ c.ratt }}" style="display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0">
+                <select value="{{ c.offSel }}" onChange="{{ c.offSet }}" style="flex:1;min-width:0;appearance:none;-webkit-appearance:none;background-color:var(--color-surface);border:.5px solid var(--color-border-secondary);border-radius:var(--radius-md,8px);padding:9px 34px 9px 14px;font-family:var(--font-ui);font-size:14px;color:var(--color-text-primary,var(--color-text));cursor:pointer;background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%221.6%22><path d=%22M6 9l6 6 6-6%22/></svg>');background-repeat:no-repeat;background-position:right 12px center;background-size:16px">
+                  <sc-for list="{{ c.offOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+                </select>
+                <sc-if value="{{ c.hasDeptBadge }}" hint-placeholder-val="{{ false }}">
+                  <span style="flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;border-radius:var(--radius-pill,20px);padding:4px 11px;font-size:var(--font-size-small,12px);font-weight:var(--weight-medium,500);color:var(--color-popup,#6a3f9e);background:color-mix(in srgb, var(--color-popup,#6a3f9e) 14%, transparent);white-space:nowrap">{{ c.deptBadge }}<button onClick="{{ c.deptRemove }}" title="Retirer le département" style="border:none;background:transparent;color:inherit;cursor:pointer;font-size:13px;padding:0;line-height:1">×</button></span>
+                </sc-if>
+                <sc-if value="{{ c.showDeptSel }}" hint-placeholder-val="{{ false }}">
+                  <select value="{{ c.deptSel }}" onChange="{{ c.deptSet }}" style="flex:0 0 auto;max-width:150px;appearance:none;-webkit-appearance:none;background-color:var(--color-surface);border:.5px solid var(--color-border-secondary);border-radius:var(--radius-md,8px);padding:9px 28px 9px 12px;font-family:var(--font-ui);font-size:12.5px;color:var(--color-text-secondary,var(--color-text-muted));cursor:pointer;background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%221.6%22><path d=%22M6 9l6 6 6-6%22/></svg>');background-repeat:no-repeat;background-position:right 10px center;background-size:14px">
+                    <sc-for list="{{ c.deptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+                  </select>
+                </sc-if>
+                <sc-if value="{{ c.delivery }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ c.offDelToggle }}" title="Livraison au bureau ACTIVE — cliquer pour désactiver" style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;background:var(--color-secondary,#C87A3F);color:var(--color-on-abricot,#fff)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></button>
+                </sc-if>
+                <sc-if value="{{ c.noDelivery }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ c.offDelToggle }}" title="{{ c.truckOffTitle }}" style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-secondary,var(--color-text-muted));opacity:.55"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h1"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg></button>
+                </sc-if>
+              </div>
+              <div><span style="display:inline-flex;align-items:center;border-radius:var(--radius-pill,20px);padding:4px 12px;font-size:var(--font-size-small,12px);font-weight:var(--weight-medium,500);color:{{ c.typeColor }};background:{{ c.typeBg }};white-space:nowrap">{{ c.typeLabel }}</span></div>
+              <div><span style="display:inline-flex;align-items:center;border-radius:var(--radius-pill,20px);padding:4px 12px;font-size:var(--font-size-small,12px);font-weight:var(--weight-medium,500);color:{{ c.statusColor }};background:{{ c.statusBg }};white-space:nowrap">{{ c.statusLabel }}</span></div>
+              <div style="display:flex;align-items:center;gap:10px;justify-self:end">
+                <sc-if value="{{ c.delAsk }}" hint-placeholder-val="{{ false }}">
+                  <button onClick="{{ c.delConfirm }}" title="Confirmer la désactivation (active=0)" style="border:none;background:var(--color-primary);color:#fff;border-radius:var(--radius-md,8px);padding:8px 12px;font:600 12px var(--font-ui);cursor:pointer">Désactiver</button>
+                  <button onClick="{{ c.delCancel }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);color:var(--color-text-muted);border-radius:var(--radius-md,8px);padding:8px 12px;font:600 12px var(--font-ui);cursor:pointer">Annuler</button>
+                </sc-if>
+                <button class="btn-secondary" style="padding:8px 18px" onClick="{{ c.open }}">Fiche</button>
+                <button onClick="{{ c.delStart }}" aria-label="Supprimer" title="Supprimer (désactivation — le client passe à active=0, rien n'est effacé)" style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:.5px solid var(--color-border-secondary);border-radius:var(--radius-md,8px);background:transparent;color:var(--color-primary);cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button>
               </div>
             </div>
           </sc-for>
-          <sc-if value="{{ bcEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 18px;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun client ne correspond aux filtres.</div></sc-if>
-          <sc-if value="{{ bcHasMore }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 18px"><button onClick="{{ bcMore }}" class="btn-secondary" style="width:100%;font-size:12px">{{ bcMoreTxt }}</button></div></sc-if>
+          <sc-if value="{{ bcEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 24px;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun client ne correspond aux filtres.</div></sc-if>
+          <sc-if value="{{ bcHasMore }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 24px"><button onClick="{{ bcMore }}" class="btn-secondary" style="width:100%;font-size:12px">{{ bcMoreTxt }}</button></div></sc-if>
+          </div>
         </div>
       </div>
       </sc-if>
@@ -3796,10 +3816,25 @@ class Component extends DCLogic {
           const curOff=offRows.find(o=>(c.office_id!=null&&o.id===c.office_id)||(c.office_name&&o.name===c.office_name));
           const deptOf=(oName)=>deptRowsAll.map((d,di)=>({d,di})).filter(x=>x.d.office===oName||x.d.company===oName);
           const dOpts=curOff?deptOf(curOff.name):[];
-          return {id:c.id,nm:cnm(c),email:c.email||'—',
+          const morale=!!(Number(c.is_b2b)||c.invoice_vat);
+          return {id:c.id,nm:cnm(c),
           pname:pnameOf(c),
           hasCompany:!!(c.company_name&&pnameOf(c)!==c.company_name),
+          noCompany:!(c.company_name&&pnameOf(c)!==c.company_name),
           companyChip:c.company_name||'',
+          emailDisplay:c.email||'—',
+          hasPostal:!!(c.zip&&String(c.zip).trim()),
+          noPostal:!(c.zip&&String(c.zip).trim()),
+          postalTitle:(c.zip&&String(c.zip).trim())?('Code postal renseigné : '+c.zip):'Code postal manquant — éditable dans la fiche',
+          delivery:!!Number(c.office_delivery),
+          noDelivery:!Number(c.office_delivery),
+          truckOffTitle:morale?'Activer la livraison au bureau (validation manuelle — choix du site)':'Livraison au bureau : réservée aux personnes morales',
+          typeLabel:morale?'Personne morale':'Particulier',
+          typeColor:morale?'var(--color-popup,#6a3f9e)':'var(--color-text-secondary,var(--color-text-muted))',
+          typeBg:morale?'color-mix(in srgb, var(--color-popup,#6a3f9e) 14%, transparent)':'var(--color-background-secondary)',
+          statusLabel:Number(c.blocked)?'BLOQUÉ':(Number(c.status)?'Pending':'Validé'),
+          statusColor:Number(c.blocked)?'var(--color-primary)':(Number(c.status)?'var(--color-collection-icon,#b26a00)':'#2d7a3e'),
+          statusBg:Number(c.blocked)?'color-mix(in srgb, var(--color-primary) 12%, transparent)':(Number(c.status)?'color-mix(in srgb, var(--color-collection-fill,#f3e2c6) 55%, transparent)':'color-mix(in srgb, #2d7a3e 12%, transparent)'),
           ratt:[c.office_name,c.site_name,c.tour_name,c.department].filter(v=>v&&v!=='—').join(' · ')||'— non rattaché',
           offSel:curOff?String(curOff.id!=null?curOff.id:curOff.name):'',
           offOpts:offOptsShared,
@@ -3812,20 +3847,13 @@ class Component extends DCLogic {
             postAtt(c.id,{office_id:o&&o.id!=null?o.id:null,department_id:null},
               {office_id:o?o.id:null,office_name:o?o.name:null,site_name:siteLbl,tour_name:tourLbl,department:null,department_id:null,
                deferred:(o&&(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui'||o.deferred_billing_enabled===1))?1:0}); },
-          // Toggle DISCRET « Livraison au bureau » sur la ligne (si is_b2b) :
-          // c'est la VALIDATION MANUELLE du franchisé — l'activer valide le
-          // client et rend son office livrable (créé/validé côté serveur).
-          offDelShow:!!(Number(c.is_b2b)||c.invoice_vat),
-          offDelOn:!!Number(c.office_delivery),
-          offDelStyle:(Number(c.office_delivery)
-            ?'display:inline-flex;align-items:center;gap:5px;height:26px;background:#f6ead9;color:#8C4A2F;border:1px solid #e0c9a4;border-radius:20px;padding:0 11px;font:600 11px/1 var(--font-ui);white-space:nowrap;cursor:pointer'
-            :'display:inline-flex;align-items:center;gap:5px;height:26px;background:transparent;color:var(--color-text-muted);border:1px dashed var(--color-border-secondary);border-radius:20px;padding:0 11px;font:600 11px/1 var(--font-ui);white-space:nowrap;cursor:pointer'),
-          offDelLbl:Number(c.office_delivery)?'● Livraison au bureau':'○ Livraison au bureau',
-          // ACTIVER → modale de choix du SITE (la tournée en découle) ;
-          // désactiver → direct.
+          // Camion « Livraison au bureau » (design) : plein = actif (clic →
+          // désactiver) ; grisé = inactif (clic → modale de choix du site si
+          // personne morale, sinon rappel de la règle).
           offDelToggle:()=>{ if(Number(c.office_delivery)){
               post('client-office-delivery',{id:c.id,enabled:0},(j)=>{ if(j&&j.ok){ patchLocal(c.id,{office_delivery:0}); this.bcRefreshOffices(); this.printJob('Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur'); }); }
-            else this.setState({odClient:c.id,odSite:''}); },
+            else if(morale) this.setState({odClient:c.id,odSite:''});
+            else this.printJob('Livraison au bureau : réservée aux personnes morales (activez d\'abord la facturation personne morale dans la fiche)'); },
           // Département : sélectionné → BADGE avec « × » ; sinon droplist si
           // le bureau choisi possède des départements.
           hasDeptBadge:!!c.department,
@@ -3836,8 +3864,7 @@ class Component extends DCLogic {
           deptOpts:[{value:'',label:'— Département (facultatif) —'},...dOpts.map(x=>({value:String(x.d.id!=null?x.d.id:x.di),label:x.d.name||x.d.dept||'Département'}))],
           deptSet:(e)=>{ const v=e.target.value; const x=dOpts.find(y=>String(y.d.id!=null?y.d.id:y.di)===v)||null;
             postAtt(c.id,{department_id:x&&x.d.id!=null?x.d.id:null},{department_id:x&&x.d.id!=null?x.d.id:null,department:x?(x.d.name||x.d.dept):null}); },
-          badges:badgesOf(c),
-          rowStyle:'display:grid;grid-template-columns:1.8fr 1.6fr 2.2fr auto;align-items:center;gap:12px;padding:10px 18px;min-height:72px;box-sizing:border-box;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
+          rowStyle:'display:grid;grid-template-columns:minmax(190px,1.4fr) 150px minmax(200px,1.2fr) minmax(240px,1.3fr) 150px 100px auto;align-items:center;column-gap:20px;padding:16px 24px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
           // « Suppression » = soft delete (client.active=0) avec confirmation
           // inline (pas de vraie destruction de la ligne en base).
           delAsk:S.bcDelAsk===c.id,
