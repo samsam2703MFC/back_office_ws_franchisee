@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072332"></script>
-<script src="bo_server.js?v=2026072332"></script>
+<script src="api-config.js?v=2026072333"></script>
+<script src="bo_server.js?v=2026072333"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072332'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072333'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072332">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072332"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072333">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072333"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -184,7 +184,7 @@
             <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ kTdbReady }} prête · {{ kTdbPrep }} en préparation</div>
           </div>
         </div>
-        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;margin-bottom:16px"><button onClick="{{ tdbSetTree }}" style="{{ tdbSegTreeStyle }}">Par tournée</button><button onClick="{{ tdbSetList }}" style="{{ tdbSegListStyle }}">Liste commandes</button></div>
+        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;margin-bottom:16px"><button onClick="{{ tdbSetTree }}" style="{{ tdbSegTreeStyle }}">Par tournée</button><button onClick="{{ tdbSetCollect }}" style="{{ tdbSegCollectStyle }}">Collect</button><button onClick="{{ tdbSetList }}" style="{{ tdbSegListStyle }}">Liste commandes</button></div>
         <sc-if value="{{ tdbViewTree }}" hint-placeholder-val="{{ true }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px"><div class="t-section-title" style="font-size:16px">Commandes — tournée › zone › site › office › utilisateur</div><div style="display:flex;align-items:center;gap:10px"><button onClick="{{ tdbToggleAll }}" style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-text);font:500 12px var(--font-ui);cursor:pointer;padding:9px 16px;min-height:40px">{{ tdbToggleAllLabel }}</button><button onClick="{{ nav.tournees }}" style="background:transparent;border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-primary);font:500 12px var(--font-ui);cursor:pointer;padding:9px 16px;min-height:40px">Constructeur →</button></div></div>
@@ -234,16 +234,21 @@
         </sc-if>
         <sc-if value="{{ tdbViewList }}" hint-placeholder-val="{{ false }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="t-section-title" style="font-size:15px">Commandes — {{ ordTitleDate }}</div><div style="display:flex;gap:7px"><span style="{{ ordFilterAll }}">Toutes</span><span style="{{ ordFilterDeliv }}">Livraison</span><span style="{{ ordFilterPickup }}">Retrait</span></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:10px;flex-wrap:wrap"><div class="t-section-title" style="font-size:15px">{{ ordListTitle }} — {{ ordTitleDate }}</div><div style="display:flex;gap:7px"><span style="{{ ordFilterAll }}">Toutes</span><span style="{{ ordFilterDeliv }}">Livraison</span><span style="{{ ordFilterPickup }}">Collect</span></div></div>
+          <div style="display:flex;gap:7px;align-items:center;margin:6px 0 10px">
+            <span style="font:600 10px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Période</span>
+            <sc-for list="{{ ordRangeChips }}" as="rc" hint-placeholder-count="3"><button onClick="{{ rc.set }}" style="{{ rc.style }};border:none">{{ rc.label }}</button></sc-for>
+          </div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Cliquer sur le statut pour le faire avancer · écrit dans ws_orders</div>
-          <div style="display:grid;grid-template-columns:.8fr 1.4fr .7fr 1fr 1fr 1fr .7fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Source</span><span class="t-admin-label">Mode</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Total</span></div>
+          <div style="display:grid;grid-template-columns:.75fr 1.3fr .65fr .8fr 1.1fr .7fr 1fr .65fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Source</span><span class="t-admin-label">Mode</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Paiement</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Total</span></div>
           <sc-for list="{{ ordersList }}" as="o" hint-placeholder-count="6">
-            <div style="display:grid;grid-template-columns:.8fr 1.4fr .7fr 1fr 1fr 1fr .7fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+            <div style="display:grid;grid-template-columns:.75fr 1.3fr .65fr .8fr 1.1fr .7fr 1fr .65fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
               <span style="font:600 12px var(--font-mono,monospace);color:var(--color-text-muted)">{{ o.ref }}</span>
               <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ o.client }}">{{ o.client }}</span>
               <div style="min-width:0"><span style="{{ o.srcPill }};max-width:100%">{{ o.srcTxt }}</span></div>
               <div style="min-width:0"><span style="{{ o.modePill }};max-width:100%">{{ o.modeTxt }}</span></div>
               <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ o.slot }}</span>
+              <div style="min-width:0"><span style="{{ o.payePill }};max-width:100%">{{ o.payeTxt }}</span></div>
               <div><button onClick="{{ o.advance }}" style="{{ o.statutStyle }}">{{ o.statut }}</button></div>
               <span style="font:600 12.5px var(--font-ui);color:var(--color-text);text-align:right">{{ o.total }}</span>
             </div>
@@ -258,6 +263,27 @@
       <sc-if value="{{ isPrep }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:18px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px 20px">
+          <div class="t-admin-label" style="margin-bottom:10px">Jour de préparation</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+            <sc-for list="{{ prepDayBadges }}" as="pd" hint-placeholder-count="3">
+              <button onClick="{{ pd.set }}" style="{{ pd.style }}">{{ pd.label }}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;border-radius:9px;background:rgba(0,0,0,.12);padding:0 5px;font-size:10px">{{ pd.count }}</span></button>
+            </sc-for>
+          </div>
+          <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden;margin-bottom:16px">
+            <div style="display:grid;grid-template-columns:.8fr 1.4fr .9fr .6fr 1.1fr .8fr .8fr;padding:8px 12px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Mode</span><span class="t-admin-label" style="text-align:right">Pièces</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Paiement</span><span class="t-admin-label">Statut</span></div>
+            <sc-for list="{{ prepDayOrders }}" as="po" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:.8fr 1.4fr .9fr .6fr 1.1fr .8fr .8fr;align-items:center;padding:9px 12px;border-bottom:.5px solid var(--color-border-tertiary)">
+                <span style="font:600 11.5px var(--font-mono,monospace);color:var(--color-text-muted)">{{ po.ref }}</span>
+                <span style="font:500 12px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ po.client }}">{{ po.client }}</span>
+                <div style="min-width:0"><span style="{{ po.modePill }};max-width:100%">{{ po.modeTxt }}</span></div>
+                <span style="font:600 12px var(--font-ui);color:var(--color-text);text-align:right">{{ po.pieces }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ po.creneau }}</span>
+                <span style="font:500 11px var(--font-ui);color:var(--color-text-muted)">{{ po.paye }}</span>
+                <span style="font:500 11px var(--font-ui);color:var(--color-text)">{{ po.statutTxt }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ prepDayEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;text-align:center;font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucune commande pour ce jour (ws_orders).</div></sc-if>
+          </div>
           <div class="t-admin-label" style="margin-bottom:10px">Impression étiquettes</div>
           <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
             <button onClick="{{ prints.etqClients }}" class="btn-secondary" style="display:flex;align-items:center;gap:9px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9V3h12v6M6 18h12v3H6zM6 14h12v4H6z"/></svg>Étiquettes clients</button>
@@ -3979,21 +4005,58 @@ class Component extends DCLogic {
       fetch(fr.base+'/franchisee/order-status'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({ref:o.ref,status:nxMode})})
         .then(r=>r.json()).then(j=>{ if(j&&j.ok){ const st2=j.status||nxMode; const rows=SRV('fr_orders'); const i2=rows.findIndex(x=>x.ref===o.ref); if(i2>=0){ rows[i2]={...rows[i2],statut:st2}; if(window.BOServer) window.BOServer.refresh('fr_orders',rows); } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob('✓ Commande '+o.ref+' → « '+(ordStatFR[st2]||st2)+' » (ws_orders)'); } else this.printJob((j&&j.error)||'Erreur statut'); })
         .catch(()=>this.printJob('Réseau indisponible — statut non modifié')); };
-    const ordersList=ordersRaw.filter(o=>ordFilter==='all'||(ordFilter==='deliv'&&o.mode==='Livraison')||(ordFilter==='pickup'&&o.mode==='Retrait')).map(o=>{
-      const [bg,c]=ordStatColor(o.statut);
-      const isDeliv=o.mode==='Livraison';
-      return {...o, slot:o.creneau||'—', total:o.montant,
-        // Mode avec canal couleur : Retrait = Ruby (bordeaux) · Livraison = Apricot.
-        modeTxt:isDeliv?'Livraison · Apricot':'Retrait · Ruby',
-        modePill:pill2(isDeliv?'#f6ecdf':'#fbe9eb',isDeliv?'var(--color-secondary)':'var(--color-primary)'),
-        // Source : POS (comptoir / espèces) ou Webshop.
-        srcTxt:o.source||'Webshop',
-        srcPill:pill2(o.source==='POS'?'var(--color-background-secondary)':'#eef3fb',o.source==='POS'?'var(--color-text)':'#2a5a9e'),
-        statut:(ordStatFR[o.statut]||o.statut)+(ordNext[o.statut]?' →':''),
-        statutStyle:'border:none;cursor:pointer;'+pill2(bg,c),
-        advance:()=>ordAdvance(o) };
-    });
+    // Filtres de DATE : Aujourd'hui / Cette semaine / Ce mois-ci — l'API
+    // renvoie les commandes du jour ET des prochains jours (31 j).
+    const ordRange=S.ordRange||'today';
+    const d0=new Date(); const isoOf=(dt)=>dt.toISOString().slice(0,10);
+    const todayIso=isoOf(d0);
+    const eow=new Date(d0); eow.setDate(d0.getDate()+((7-((d0.getDay()+6)%7))-1)); // dimanche
+    const eom=new Date(d0.getFullYear(),d0.getMonth()+1,0);
+    const rangeMax=ordRange==='today'?todayIso:(ordRange==='week'?isoOf(eow):isoOf(eom));
+    const JJ=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    const jourLbl=(iso)=>{ if(!iso||iso===todayIso) return ''; const dt=new Date(iso+'T00:00:00'); return JJ[dt.getDay()]+' '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0'); };
+    const ordRangeChip=(k,label)=>({label,style:'cursor:pointer;'+pill2(ordRange===k?'var(--color-primary)':'var(--color-background-secondary)',ordRange===k?'#fff':'var(--color-text-muted)'),set:()=>this.setState({ordRange:k})});
+    const ordRangeChips=[ordRangeChip('today','Aujourd’hui'),ordRangeChip('week','Cette semaine'),ordRangeChip('month','Ce mois-ci')];
+    const isCollectView=(S.tdbView||'tree')==='collect';
+    const ordersList=ordersRaw
+      .filter(o=>!o.date||(o.date>=todayIso&&o.date<=rangeMax))
+      .filter(o=>isCollectView?o.mode!=='Livraison':true)
+      .filter(o=>ordFilter==='all'||(ordFilter==='deliv'&&o.mode==='Livraison')||(ordFilter==='pickup'&&o.mode!=='Livraison'))
+      .map(o=>{
+        const [bg,c]=ordStatColor(o.statut);
+        const isDeliv=o.mode==='Livraison';
+        const jl=jourLbl(o.date);
+        return {...o, slot:(jl?(jl+' · '):'')+(o.creneau||'—'), total:o.montant,
+          // Modes : Livraison = texte noir sur fond abricot · Collect = fond bordeaux clair.
+          modeTxt:isDeliv?'Livraison':'Collect',
+          modePill:pill2(isDeliv?'#F2C9A0':'#F2D3D8','#222'),
+          srcTxt:o.source||'Webshop',
+          srcPill:pill2(o.source==='POS'?'var(--color-background-secondary)':'#eef3fb',o.source==='POS'?'var(--color-text)':'#2a5a9e'),
+          payeTxt:o.paye||'—',
+          payePill:pill2(o.paye==='Payé'?'#eaf5ec':(o.paye==='Facturé'?'#eef3fb':'#fbe9eb'),o.paye==='Payé'?'#2d7a3e':(o.paye==='Facturé'?'#2a5a9e':'var(--color-primary)')),
+          statut:(ordStatFR[o.statut]||o.statut)+(ordNext[o.statut]?' →':''),
+          statutStyle:'border:none;cursor:pointer;'+pill2(bg,c),
+          advance:()=>ordAdvance(o) };
+      });
     const ordersEmpty=ordersList.length===0;
+    // Préparation : badges par JOUR (Aujourd'hui, puis jours suivants ayant des
+    // commandes) — le clic affiche les commandes correspondantes.
+    const prepDaysSeen={}; const prepDays=[];
+    ordersRaw.forEach(o=>{ const dte=o.date||todayIso; if(!prepDaysSeen[dte]){ prepDaysSeen[dte]=0; prepDays.push(dte); } prepDaysSeen[dte]++; });
+    if(!prepDaysSeen[todayIso]){ prepDays.unshift(todayIso); prepDaysSeen[todayIso]=0; }
+    prepDays.sort();
+    const prepDaySel=S.prepDay&&prepDaysSeen[S.prepDay]!==undefined?S.prepDay:todayIso;
+    const prepDayBadges=prepDays.map(dte=>{ const on=prepDaySel===dte;
+      const dt=new Date(dte+'T00:00:00');
+      const lbl=dte===todayIso?'Aujourd’hui':(['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][dt.getDay()]+' — '+String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0'));
+      return {label:lbl,count:String(prepDaysSeen[dte]),
+        style:'cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:1.5px solid '+(on?'var(--color-primary)':'var(--color-border-tertiary)')+';border-radius:20px;padding:6px 13px;font:600 11.5px var(--font-ui);'+(on?'background:var(--color-primary);color:#fff':'background:var(--color-surface);color:var(--color-text)'),
+        set:()=>this.setState({prepDay:dte})}; });
+    const prepDayOrders=ordersRaw.filter(o=>(o.date||todayIso)===prepDaySel).map(o=>{ const isDeliv=o.mode==='Livraison';
+      return {ref:o.ref,client:o.client,pieces:String(o.pieces!=null?o.pieces:'—'),creneau:o.creneau||'—',
+        modeTxt:isDeliv?'Livraison':'Collect',modePill:pill2(isDeliv?'#F2C9A0':'#F2D3D8','#222'),
+        statutTxt:ordStatFR[o.statut]||o.statut,paye:o.paye||'—'}; });
+    const prepDayEmpty=prepDayOrders.length===0;
 
     // ===== Catalogue partagé : catégories → produits (Assortiment + Stock) =====
     const CATALOG=SRV('fr_stock_catalog');
@@ -4684,7 +4747,11 @@ class Component extends DCLogic {
       isFrais:screen==='frais'||screen==='params',feeRules,
       isCommandes:screen==='commandes',ordersList,ordersEmpty,ordFilterAll:fPill('all'),ordFilterDeliv:fPill('deliv'),ordFilterPickup:fPill('pickup'),
       ordTitleDate:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'}),
-      tdbViewTree:tdbView==='tree',tdbViewList:tdbView==='list',tdbSegTreeStyle:tdbSeg('tree'),tdbSegListStyle:tdbSeg('list'),tdbSetTree:()=>this.setState({tdbView:'tree'}),tdbSetList:()=>this.setState({tdbView:'list'}),
+      tdbViewTree:tdbView==='tree',tdbViewList:tdbView==='list'||tdbView==='collect',
+      tdbSegTreeStyle:tdbSeg('tree'),tdbSegListStyle:tdbSeg('list'),tdbSegCollectStyle:tdbSeg('collect'),
+      tdbSetTree:()=>this.setState({tdbView:'tree'}),tdbSetList:()=>this.setState({tdbView:'list'}),tdbSetCollect:()=>this.setState({tdbView:'collect'}),
+      ordListTitle:tdbView==='collect'?'Commandes Collect':'Commandes',
+      ordRangeChips,prepDayBadges,prepDayOrders,prepDayEmpty,
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
       stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
       stkModalTrack,stkModalKnob,stkModalToggle,stkModeBadges,
