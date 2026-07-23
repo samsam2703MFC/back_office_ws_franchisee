@@ -720,7 +720,7 @@
 
       <!-- ===================== PARAMÉTRAGE ===================== -->
       <sc-if value="{{ isParams }}" hint-placeholder-val="{{ true }}">
-      <div style="max-width:640px">
+      <div style="max-width:840px;margin-bottom:18px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:22px">
           <div class="t-section-title" style="font-size:16px;margin-bottom:3px;display:inline-flex;align-items:center;gap:6px">Paramètres de coûts <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">Coûts de référence utilisés pour le calcul de rentabilité (coût au km, coût horaire chauffeur, forfaits…). Chaque valeur est versionnée par date d'effet : la modifier crée une nouvelle version et ne réécrit jamais les calculs passés.</span></span></sc-if></div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:16px">Versionnés avec date d'effet — modifiables ; un recalcul historique ne réécrit jamais le passé</div>
@@ -782,6 +782,26 @@
           <div style="font:400 12px/1.5 var(--font-ui);color:var(--color-text-muted)">Bureaux clients (ws_offices) + config livraison. Un office regroupe un ou plusieurs delivery sites ; seuls les offices <strong>validés</strong> sont livrables.</div>
           <button onClick="{{ addOffice }}" class="btn-primary" style="padding:9px 16px;font-size:12.5px;white-space:nowrap">+ Nouvel office</button>
         </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
+          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Étape 3 · Assigner les bureaux (offices) aux sites — fin du paramétrage des tournées</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:9px">Seuls les offices <strong>validés</strong> (Client B2B → Office) apparaissent ici. Saisissez un office (⠿) puis déposez-le sur un site : le bureau rejoint le site et hérite de sa tournée.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px">
+            <sc-for list="{{ offAssignChips }}" as="oc" hint-placeholder-count="4">
+              <button type="button" onClick="{{ oc.grab }}" style="{{ oc.style }}">⠿ {{ oc.name }}</button>
+            </sc-for>
+            <sc-if value="{{ offAssignEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucun office validé à assigner — validez d'abord vos offices.</span></sc-if>
+          </div>
+          <div style="display:flex;gap:8px;overflow-x:auto">
+            <sc-for list="{{ offSiteTiles }}" as="ot" hint-placeholder-count="4">
+              <button type="button" onClick="{{ ot.drop }}" style="{{ ot.style }}">
+                <span style="display:block;font:600 12px var(--font-ui);white-space:nowrap">{{ ot.nom }}</span>
+                <span style="display:block;font:400 10px var(--font-ui);opacity:.75;margin-top:2px;white-space:nowrap">{{ ot.tourLbl }}</span>
+                <span style="display:block;font:400 10.5px var(--font-ui);margin-top:3px;max-width:230px;white-space:normal">{{ ot.bureauxLbl }}</span>
+                <sc-if value="{{ ot.canDrop }}" hint-placeholder-val="{{ false }}"><span style="display:block;font:600 10px var(--font-ui);margin-top:3px;color:var(--color-primary)">⤓ Déposer l'office ici</span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div style="display:grid;grid-template-columns:1.6fr 1.2fr .8fr .7fr .7fr .8fr;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Office</span><span class="t-admin-label">Ville · TVA</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:center">Sites</span><span class="t-admin-label" style="text-align:center">Dépts</span><span class="t-admin-label" style="text-align:right">Actions</span></div>
           <sc-for list="{{ officesList }}" as="o" hint-placeholder-count="4">
@@ -798,6 +818,40 @@
               </div>
             </div>
           </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== CLIENTS (rattachés aux bureaux) ===================== -->
+      <sc-if value="{{ isB2bClients }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
+          <input value="{{ bcQ }}" onInput="{{ bcSetQ }}" placeholder="Rechercher un client (nom, société, email, ville…)" style="flex:1;min-width:180px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:400 12.5px var(--font-ui);background:var(--color-background-secondary);box-sizing:border-box"/>
+          <select value="{{ bcDept }}" onChange="{{ bcSetDept }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcDeptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
+          <select value="{{ bcOff }}" onChange="{{ bcSetOff }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcOffOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
+          <select value="{{ bcSite }}" onChange="{{ bcSetSite }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcSiteOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
+          <select value="{{ bcTour }}" onChange="{{ bcSetTour }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcTourOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
+          <span style="font:600 11px var(--font-ui);color:var(--color-text-muted);flex:none">{{ bcTotalTxt }}</span>
+        </div>
+        <div style="display:flex;gap:8px;overflow-x:auto">
+          <sc-for list="{{ bcCounts }}" as="bk" hint-placeholder-count="4">
+            <div style="flex:none;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:7px 13px;display:flex;align-items:baseline;gap:8px">
+              <span style="font:600 11px var(--font-ui);color:var(--color-text)">{{ bk.label }}</span>
+              <span style="font:700 14px var(--font-ui);color:var(--color-primary)">{{ bk.n }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;gap:10px;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Client</span><span class="t-admin-label">Rattachement (office · site · tournée · dépt)</span><span class="t-admin-label">Badges</span><span class="t-admin-label" style="text-align:right">Fiche</span></div>
+          <sc-for list="{{ bcList }}" as="c" hint-placeholder-count="5">
+            <div style="{{ c.rowStyle }}">
+              <div style="min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.nm }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.email }}</div></div>
+              <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);min-width:0">{{ c.ratt }}</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center"><sc-for list="{{ c.badges }}" as="bg" hint-placeholder-count="4"><span style="{{ bg.style }}">{{ bg.t }}</span></sc-for></div>
+              <div style="display:flex;justify-content:flex-end"><button onClick="{{ c.open }}" class="btn-secondary" style="font-size:11.5px;padding:7px 13px">Fiche</button></div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ bcEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 18px;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun client ne correspond aux filtres.</div></sc-if>
         </div>
       </div>
       </sc-if>
@@ -1010,7 +1064,7 @@
 
       <!-- ===================== FRAIS DE LIVRAISON (CASCADE) ===================== -->
       <sc-if value="{{ isFrais }}" hint-placeholder-val="{{ false }}">
-      <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:16px;max-width:840px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div class="t-section-title" style="font-size:15px;margin-bottom:3px">Règles de frais en cascade</div>
           <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Résolution du plus précis au plus large : <strong>site → bureau → tournée → boutique</strong>. La première règle qui matche s'applique.</div>
@@ -1531,6 +1585,27 @@
               <input value="{{ osNote }}" onInput="{{ osSetNote }}" placeholder="Note (étage, accès…)" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:10px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
               <button type="button" onClick="{{ osAddSite }}" class="btn-secondary" style="font-size:12px;padding:0 16px">+ Site</button>
             </div>
+            <div style="margin-top:14px;border-top:.5px solid var(--color-border-tertiary);padding-top:12px;display:flex;align-items:center;gap:9px">
+              <button type="button" onClick="{{ oeToggle }}" style="display:inline-flex;align-items:center;gap:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:8px;padding:7px 12px;font:600 11.5px var(--font-ui);color:#b26a00;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>{{ oeCaret }} Adresses de contact / facturation {{ oeCountTxt }}</button>
+              <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">ws_office_emails — par bureau</span>
+            </div>
+            <sc-if value="{{ oeOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:9px">
+                <sc-for list="{{ oeList }}" as="oe" hint-placeholder-count="2">
+                  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 11px;border:.5px solid var(--color-border-tertiary);border-radius:8px;margin-bottom:6px">
+                    <span style="font:500 12px var(--font-ui);color:var(--color-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ oe.mail }}</span>
+                    <span style="{{ oe.tagStyle }}">{{ oe.role }}</span>
+                    <button type="button" onClick="{{ oe.del }}" title="Retirer" style="border:none;background:transparent;color:var(--color-text-muted);cursor:pointer;font-size:13px;flex:none">✕</button>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ oeEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:2px 0 4px">Aucune adresse pour ce bureau — ajoutez la première.</div></sc-if>
+                <div style="display:grid;grid-template-columns:1.5fr 1fr auto;gap:8px;margin-top:8px">
+                  <input value="{{ oeMail }}" onInput="{{ oeSetMail }}" placeholder="email@societe.be" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:10px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
+                  <select value="{{ oeRole }}" onChange="{{ oeSetRole }}" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:10px 12px;font:400 12.5px var(--font-ui);background:var(--color-surface)"><option value="Principal">Principal</option><option value="Facturation">Facturation</option><option value="Livraison">Livraison</option></select>
+                  <button type="button" onClick="{{ oeAdd }}" class="btn-secondary" style="font-size:12px;padding:0 16px">+ Ajouter</button>
+                </div>
+              </div>
+            </sc-if>
           </div>
         </sc-if>
         <sc-if value="{{ formIsZone }}" hint-placeholder-val="{{ false }}">
@@ -1563,6 +1638,78 @@
         <div style="font:400 12.5px/1.6 var(--font-ui);color:var(--color-text)">{{ formAlertMsg }}</div></div>
       </div>
       <div style="padding:10px 24px 20px"><button onClick="{{ formAlertOk }}" class="btn-primary" style="width:100%;font-size:13px">Compris</button></div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ===================== FICHE CLIENT COMPLÈTE ===================== -->
+  <sc-if value="{{ bcFicheOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.5);display:flex;align-items:center;justify-content:center;z-index:2300;padding:24px">
+    <div style="background:var(--color-surface);border-radius:14px;width:640px;max-width:100%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+      <div style="padding:20px 24px 14px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:start;gap:12px">
+        <div style="min-width:0">
+          <div class="t-page-title" style="font-size:18px">{{ fcNm }}</div>
+          <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:3px">{{ fcMail }} · {{ fcTel }} · {{ fcAdr }}</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ fcRatt }}</div>
+        </div>
+        <button onClick="{{ bcFicheClose }}" style="border:none;background:transparent;font-size:17px;color:var(--color-text-muted);cursor:pointer;flex:none">✕</button>
+      </div>
+      <div style="padding:14px 24px;display:flex;flex-wrap:wrap;gap:5px;border-bottom:.5px solid var(--color-border-tertiary)">
+        <sc-for list="{{ fcBadges }}" as="bg" hint-placeholder-count="5"><span style="{{ bg.style }}">{{ bg.t }}</span></sc-for>
+      </div>
+      <div style="padding:14px 24px;border-bottom:.5px solid var(--color-border-tertiary)">
+        <div class="t-admin-label" style="margin-bottom:8px">Données de commande</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div><div style="font:700 16px var(--font-ui);color:var(--color-text)">{{ fcOrders }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">commandes</div></div>
+          <div><div style="font:700 16px var(--font-ui);color:var(--color-text)">{{ fcTotal }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">total webshop</div></div>
+          <div><div style="font:700 16px var(--font-ui);color:var(--color-text)">{{ fcLast }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">dernière commande</div></div>
+          <div><div style="font:700 13px var(--font-ui);color:var(--color-primary);padding-top:2px">{{ fcRec }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">récurrence</div></div>
+        </div>
+        <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:9px">🏪 {{ fcShopBuys }} · 📱 {{ fcPwa }}</div>
+      </div>
+      <div style="padding:14px 24px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;gap:11px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Client bloqué</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">client.blocked — un client bloqué ne peut plus commander</div></div>
+          <button onClick="{{ fcToggleBlock }}" style="{{ fcBlockStyle }}">{{ fcBlockLbl }}</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Facturation personne morale</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">si oui → TVA (VIES) obligatoire — client.invoice_vat</div></div>
+          <button onClick="{{ fcToggleCorp }}" style="{{ fcCorpStyle }}">{{ fcCorpLbl }}</button>
+        </div>
+        <sc-if value="{{ fcCorp }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:1.4fr auto auto;gap:8px">
+            <input value="{{ fcVat }}" onInput="{{ fcSetVat }}" placeholder="BE0123456789" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
+            <button onClick="{{ fcViesCheck }}" style="border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:8px;padding:0 12px;font:600 11.5px var(--font-ui);cursor:pointer">Vérifier VIES</button>
+            <button onClick="{{ fcSaveBilling }}" class="btn-primary" style="font-size:11.5px;padding:0 14px">Enregistrer</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ fcCorpOff }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:flex-end"><button onClick="{{ fcSaveBilling }}" class="btn-secondary" style="font-size:11.5px;padding:7px 14px">Enregistrer (particulier)</button></div>
+        </sc-if>
+      </div>
+      <div style="padding:14px 24px;border-bottom:.5px solid var(--color-border-tertiary)">
+        <div class="t-admin-label" style="margin-bottom:8px">Voucher / remboursement — rattaché à l'ID client (ws_vouchers.client_id)</div>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
+          <input value="{{ fcVoucherVal }}" onInput="{{ fcSetVoucherVal }}" placeholder="Montant € (ex. 12,50)" inputmode="decimal" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
+          <button onClick="{{ fcCreateVoucher }}" class="btn-primary" style="font-size:11.5px;padding:0 14px">+ Créer un voucher</button>
+        </div>
+        <sc-if value="{{ fcVoucherHasMsg }}" hint-placeholder-val="{{ false }}"><div style="font:600 11.5px var(--font-ui);color:#2d7a3e;margin-top:7px">{{ fcVoucherMsg }}</div></sc-if>
+      </div>
+      <div style="padding:14px 24px 18px">
+        <div class="t-admin-label" style="margin-bottom:8px">Réclamation client (mécontent) — remonte dans « Réclamations », distincte d'un incident de livraison</div>
+        <sc-if value="{{ fcHasComplaint }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <span style="{{ fcCompTag }}">⚠ Réclamation en cours</span>
+            <button onClick="{{ fcCloseComplaint }}" class="btn-secondary" style="font-size:11.5px;padding:7px 14px">Clore la réclamation</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ fcNoComplaint }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
+            <input value="{{ fcCompTitle }}" onInput="{{ fcSetCompTitle }}" placeholder="Motif (ex. produit non conforme)" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
+            <button onClick="{{ fcAddComplaint }}" class="btn-secondary" style="font-size:11.5px;padding:0 14px">Signaler</button>
+          </div>
+        </sc-if>
+      </div>
     </div>
   </div>
   </sc-if>
@@ -2116,12 +2263,12 @@ class Component extends DCLogic {
   }
   // Office : la tournée choisie impose cut-off + jours autorisés (ws_tour_availability).
   officeAutofill(v){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v.tour); if(av){ v.delivery_cutoff=av.cut||''; v.allowed_days=av.jour||''; } return v; }
-  openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:''}); }; }
-  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:''}); }; }
+  openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
+  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   editForm(key,vals,idx){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(vals&&vals[f.k]!==undefined&&vals[f.k]!=='')?vals[f.k]:(f.def!==undefined?f.def:''); });
     // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
     if(key==='office'){ v.status='pending'; this.officeAutofill(v); }
-    this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:''}); }; }
+    this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   closeForm(){ this.setState({formKey:null}); }
   submitForm(){ const S=this.state, cfg=this.formDefs()[S.formKey]; if(!cfg){ return; } const v={...S.formVals};
     // Contrôle TVA (client B2B) : un office/lieu déjà desservi au même CP porte
@@ -2464,11 +2611,11 @@ class Component extends DCLogic {
     // nav
     const nav={}, navStyles={};
     ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{ nav[k]=this.go(k); navStyles[k]=this.navStyle(k); });
-    const paramScreens=['tournees','horaires','fermetures','clients','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
+    const paramScreens=['tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
     const paramsActive=paramScreens.includes(S.screen);
     // Fil d'ariane dans le SENS du modèle : la tournée dessert des SITES
     // (buildings), qui hébergent des BUREAUX (offices) — puis leurs paramètres.
-    const livFlow=[['tournees','Tournées · horaires'],['sites','Sites (buildings)'],['clients','Bureaux (offices)']];
+    const livFlow=[['tournees','Tournées · horaires'],['sites','Sites (buildings)'],['offices','Bureaux (offices)']];
     const livKeys=livFlow.map(x=>x[0]);
     const isLivProcess=livKeys.includes(S.screen);
     const curLiv=livKeys.indexOf(S.screen);
@@ -2484,10 +2631,10 @@ class Component extends DCLogic {
     const setLang={}, langStyles={};
     ['FR','NL','EN','PL'].forEach(l=>{ setLang[l]=()=>this.setState({lang:l}); langStyles[l]=this.langStyle(l); });
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams') };
-    const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
+    const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop'};
-    const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
+    const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding'};
 
@@ -2839,7 +2986,7 @@ class Component extends DCLogic {
     // ===== LIVRAISONS — paramétrage : nav groups =====
     const groupsDef=[
       {id:'g_liv',label:'Livraison',items:[['tournees','Tournées · horaires · fermetures'],['params','Coûts · temps · frais']]},
-      {id:'g_b2b',label:'Clients B2B',items:[['clients','Bureaux & sites'],['offices','Offices'],['sites','Sites de livraison'],['zones','Zone de chalandise'],['emailsBureau','Contacts email']]},
+      {id:'g_b2b',label:'Clients B2B',items:[['clients','Bureaux & sites'],['offices','Offices'],['b2bClients','Clients'],['sites','Sites de livraison'],['zones','Zone de chalandise'],['emailsBureau','Contacts email']]},
       {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
     ];
     const navSub=(s)=>{ const active=S.screen===s; return 'display:flex;align-items:center;width:100%;padding:9px 12px 9px 32px;border:none;border-radius:8px;cursor:pointer;font:'+(active?'600':'400')+' 12.5px/1 var(--font-ui);text-align:left;'+(active?'background:var(--color-background-secondary);color:var(--color-primary)':'background:transparent;color:var(--color-text-muted)'); };
@@ -2928,6 +3075,58 @@ class Component extends DCLogic {
         billLabel:(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui')?'Facturation différée':'Paiement immédiat',
         gear:this.openFormWith('bureauParam',{bureau:o.name}),
         edit:this.editForm('office',o,i), del:this.deleteRow('ws_offices',i,'l\'office « '+o.name+' »') };
+    });
+    // Étape 3 du sens de paramétrage : les offices VALIDÉS s'assignent aux
+    // sites en « prendre → déposer » ; le bureau hérite de la tournée du site.
+    const offValid=SRV('ws_offices').filter(o=>o.status==='validated');
+    const offKey=(o)=>String(o.id!=null?o.id:o.name);
+    const offAssignChips=offValid.map(o=>{ const g=S.dndOff!=null&&String(S.dndOff)===offKey(o);
+      const cur=siteRowsAll.find(r=>(r.office_client_id!=null&&o.id!=null&&r.office_client_id===o.id)||r.bureau===o.name||r.office===o.name);
+      const curLbl=cur?((cur.name&&cur.name!=='—')?cur.name:cur.adr):'sans site';
+      return {name:o.name+' — '+curLbl,
+        style:'border:1.5px '+(g?'solid var(--color-primary)':'dashed var(--color-border-secondary)')+';background:'+(g?'var(--color-background-secondary)':'transparent')+';color:'+(g?'var(--color-primary)':'var(--color-text)')+';border-radius:9px;padding:7px 11px;font:600 11.5px var(--font-ui);cursor:grab',
+        grab:()=>this.setState(s=>({dndOff:(s.dndOff!=null&&String(s.dndOff)===offKey(o))?null:offKey(o)}))};
+    });
+    const offAssignEmpty=offValid.length===0;
+    const offSeenAdr=new Set(); const offSiteTiles=[];
+    siteRowsAll.forEach(r=>{ if(!r.adr||r.adr==='—'||offSeenAdr.has(r.adr)) return; offSeenAdr.add(r.adr);
+      const bx=[...new Set(siteRowsAll.filter(x=>x.adr===r.adr).map(x=>x.bureau||x.office).filter(v=>v&&v!=='—'))];
+      const canDrop=S.dndOff!=null;
+      offSiteTiles.push({nom:(r.name&&r.name!=='—')?r.name:r.adr,
+        tourLbl:(r.tour&&r.tour!=='—')?r.tour:'⏸ sans tournée',
+        bureauxLbl:bx.length?('Bureaux actifs : '+bx.join(', ')):'Aucun bureau actif',
+        canDrop,
+        style:'flex:none;max-width:260px;text-align:left;border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';background:var(--color-surface);color:var(--color-text);border-radius:10px;padding:8px 14px;cursor:'+(canDrop?'copy':'default'),
+        drop:()=>{ const key=this.state.dndOff; if(key==null) return;
+          const off=SRV('ws_offices').find(o=>offKey(o)===String(key)); if(!off) return;
+          if(window.BOServer){
+            const rows=window.BOServer.table('ws_office_delivery_sites');
+            const tpl=rows.find(x=>x.adr===r.adr)||r;
+            // Pairing existant de CET office → déplacé vers ce site ; sinon on
+            // remplit une ligne libre du site, sinon nouvelle ligne de liaison.
+            const ex=rows.findIndex(x=>(x.office_client_id!=null&&off.id!=null&&x.office_client_id===off.id)||x.bureau===off.name||x.office===off.name);
+            if(ex>=0){
+              // Si la ligne déplacée était la SEULE du site d'origine, on laisse
+              // une ligne sans bureau derrière elle — le site ne disparaît pas.
+              const oldAdr=rows[ex].adr;
+              if(oldAdr&&oldAdr!=='—'&&oldAdr!==tpl.adr&&!rows.some((x,xi)=>xi!==ex&&x.adr===oldAdr))
+                rows.push({...rows[ex],id:undefined,bureau:'—',office:'—',office_client_id:null});
+              rows[ex]={...rows[ex],name:tpl.name,adr:tpl.adr,etage:tpl.etage,acc:tpl.acc,tour:tpl.tour,bureau:off.name,office:off.name,office_client_id:(off.id!=null?off.id:rows[ex].office_client_id)};
+            }
+            else{ const free=rows.findIndex(x=>x.adr===r.adr&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
+              if(free>=0) rows[free]={...rows[free],bureau:off.name,office:off.name,office_client_id:off.id};
+              else rows.push({name:tpl.name,adr:tpl.adr,etage:tpl.etage||'—',acc:tpl.acc||'5',tour:tpl.tour||'—',bureau:off.name,office:off.name,office_client_id:off.id}); }
+            window.BOServer.save('ws_office_delivery_sites',rows);
+            // Fin du paramétrage : la tournée du bureau suit celle du site.
+            // IMPORTANT : on rafraîchit aussi le champ `site` de l'office —
+            // sinon le save renverrait l'ANCIENNE adresse et le pairing PHP
+            // annulerait le déplacement qu'on vient de faire.
+            const offs=window.BOServer.table('ws_offices'); const oi=offs.findIndex(x=>offKey(x)===String(key));
+            if(oi>=0){ const p2={site:tpl.adr}; if(tpl.tour&&tpl.tour!=='—') p2.tour=tpl.tour;
+              offs[oi]={...offs[oi],...p2}; window.BOServer.save('ws_offices',offs); }
+          }
+          this.setState(s=>({dndOff:null,_rev:(s._rev||0)+1}));
+          this.printJob('✓ Office « '+off.name+' » assigné au site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' »'+((r.tour&&r.tour!=='—')?' — tournée « '+r.tour+' » héritée':'')); }});
     });
     // Ordre de mise en place : 1· tournées, 2· assignation des SITES aux tournées
     // (déplaçables pour optimiser la charge — les bureaux, eux, se rattachent au
@@ -3387,7 +3586,8 @@ class Component extends DCLogic {
             // L'adresse encodée devient un LIEU DE LIVRAISON (office) du client.
             pendingOffice:{name:String(s.formVals.raison||s.formVals.name||'Client')+(c.encCity?(' — '+c.encCity):' — site'),address:c.encAdr,postal_code:c.encZip,city:c.encCity,status:'pending'}}; },()=>this.submitForm()); },
       siegeKeepSite:()=>this.setState({siegeChoice:null},()=>this.submitForm()),
-      ...(()=>{ const noop=()=>{}; if(S.formKey!=='office') return {formIsOffice:false,osShowSearch:false,osq:'',osSetQ:noop,osSug:[],osHasSug:false,osSites:[],osHasSites:false,osNoSites:false,osCountTxt:'',osAdr:'',osSetAdr:noop,osNote:'',osSetNote:noop,osAddSite:noop};
+      ...(()=>{ const noop=()=>{}; if(S.formKey!=='office') return {formIsOffice:false,osShowSearch:false,osq:'',osSetQ:noop,osSug:[],osHasSug:false,osSites:[],osHasSites:false,osNoSites:false,osCountTxt:'',osAdr:'',osSetAdr:noop,osNote:'',osSetNote:noop,osAddSite:noop,
+        oeOpen:false,oeToggle:noop,oeCaret:'▸',oeCountTxt:'',oeList:[],oeEmpty:false,oeMail:'',oeSetMail:noop,oeRole:'Principal',oeSetRole:noop,oeAdd:noop};
         const q=String(S.osq||'').toLowerCase();
         const offices=SRV('ws_offices');
         const osSug=(q.length>=2)?offices.map((o,i)=>({o,i})).filter(x=>[x.o.name,x.o.vat,x.o.city].some(vv=>String(vv||'').toLowerCase().includes(q))).slice(0,6)
@@ -3404,7 +3604,24 @@ class Component extends DCLogic {
             if(!nm2){ this.printJob('Encodez d\'abord le nom de la société (ou choisissez un siège)'); return; }
             if(!adr){ this.printJob('Adresse du site requise'); return; }
             if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); rows.push({bureau:nm2,office:nm2+' — site',tour:this.state.formVals.tour||'',adr:adr,etage:String(this.state.osNote||''),acc:6}); window.BOServer.save('ws_office_delivery_sites',rows); }
-            this.setState(s=>({osAdr:'',osNote:'',_rev:(s._rev||0)+1})); this.printJob('✓ Site ajouté pour « '+nm2+' »'); }};
+            this.setState(s=>({osAdr:'',osNote:'',_rev:(s._rev||0)+1})); this.printJob('✓ Site ajouté pour « '+nm2+' »'); },
+          // Engrenage « Adresses de contact / facturation » (ws_office_emails)
+          // du bureau en cours de création / modification.
+          ...(()=>{ const oeAll=SRV('ws_office_emails');
+            const oeMine=nm?oeAll.map((e,gi)=>({e,gi})).filter(x=>x.e.bureau===nm):[];
+            const roleTag=(r)=>r==='Facturation'?pill2('#fff4e5','#b26a00'):(r==='Livraison'?pill2('#eaf5ec','#2d7a3e'):pill2('var(--color-background-secondary)','var(--color-text-muted)'));
+            return { oeOpen:!!S.oeOpen, oeToggle:()=>this.setState(s=>({oeOpen:!s.oeOpen})), oeCaret:S.oeOpen?'▾':'▸',
+              oeCountTxt:'('+oeMine.length+')', oeEmpty:nm!==''&&oeMine.length===0,
+              oeList:oeMine.map(x=>({mail:x.e.email||x.e.addr||'—',role:x.e.role||'Principal',tagStyle:roleTag(x.e.role),
+                del:()=>{ if(window.BOServer){ const rows=window.BOServer.table('ws_office_emails'); rows.splice(x.gi,1); window.BOServer.save('ws_office_emails',rows); } this.setState(s=>({_rev:(s._rev||0)+1})); }})),
+              oeMail:S.oeMail||'', oeSetMail:(e)=>this.setState({oeMail:e.target.value}),
+              oeRole:S.oeRole||'Principal', oeSetRole:(e)=>this.setState({oeRole:e.target.value}),
+              oeAdd:()=>{ const nm2=String(this.state.formVals.name||'').trim(); const mail=String(this.state.oeMail||'').trim();
+                if(!nm2){ this.printJob('Encodez d\'abord le nom du bureau'); return; }
+                if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){ this.printJob('Adresse email invalide'); return; }
+                if(window.BOServer){ const rows=window.BOServer.table('ws_office_emails'); rows.push({bureau:nm2,email:mail,addr:mail,role:this.state.oeRole||'Principal'}); window.BOServer.save('ws_office_emails',rows); }
+                this.setState(s=>({oeMail:'',_rev:(s._rev||0)+1})); this.printJob('✓ Adresse ajoutée pour « '+nm2+' »'); } };
+          })()};
       })(),
       officeClashOpen:!!S.officeClash,
       officeClashMsg:S.officeClash?('La tournée « '+(S.officeClash.vals.tour||'—')+' » dessert déjà « '+S.officeClash.existing.name+' » (CP '+(S.officeClash.existing.postal_code||'—')+') avec la TVA '+(S.officeClash.existing.vat||'—')+' — différente de celle saisie ('+(S.officeClash.vals.vat||'—')+'). Choisissez comment traiter ce client :'):'',
@@ -3429,6 +3646,100 @@ class Component extends DCLogic {
       isFermetures:screen==='horaires'||screen==='tournees',fermetures,addFermeture,
       isSites:screen==='sites',sitesList,tourAssignTiles,
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
+      offAssignChips,offAssignEmpty,offSiteTiles,
+      // ===== Menu « Clients » — table client via GET /franchisee/b2b-clients =====
+      ...(()=>{ const noop2=()=>{};
+        const rowsC=SRV('b2b_clients');
+        const avByTour={}; SRV('ws_tour_availability').forEach(a=>{ if(a.tour) avByTour[a.tour]=a.jour; });
+        const cnm=(c)=>String(c.company_name||((c.name||'')+' '+(c.surname||'')).trim()||c.email||('Client #'+c.id));
+        const distinct=(f)=>[...new Set(rowsC.map(c=>c[f]).filter(v=>v&&v!=='—'))].sort();
+        const opts=(list,ph)=>[{value:'',label:ph},...list.map(v=>({value:v,label:v}))];
+        const q=String(S.bcQ||'').toLowerCase();
+        const match=(c)=>{ if(q&&![cnm(c),c.email,c.city,c.zip].some(v=>String(v||'').toLowerCase().includes(q))) return false;
+          if(S.bcDept&&c.department!==S.bcDept) return false;
+          if(S.bcOff&&c.office_name!==S.bcOff) return false;
+          if(S.bcSite&&c.site_name!==S.bcSite) return false;
+          if(S.bcTour&&c.tour_name!==S.bcTour) return false;
+          return true; };
+        const tag=(bg,c2)=>'display:inline-flex;align-items:center;font:600 9.5px var(--font-ui);border-radius:20px;padding:3px 8px;background:'+bg+';color:'+c2;
+        const badgesOf=(c)=>{ const B=[];
+          if(c.shop_buys!=null&&Number(c.shop_buys)>0) B.push({t:'Client magasin ('+c.shop_buys+')',style:tag('#eef3fb','#2a5a9e')});
+          if(Number(c.pwa_user)||Number(c.fidelity_active)) B.push({t:'PWA fidélité',style:tag('#eaf5ec','#2d7a3e')});
+          B.push((Number(c.is_b2b)||c.invoice_vat)?{t:'Personne morale',style:tag('#f1ebfa','#6a3f9e')}:{t:'Particulier',style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
+          if(Number(c.orders_90d)>=2||Number(c.orders_count)>=3) B.push({t:'Récurrent',style:tag('#eaf5ec','#2d7a3e')});
+          if(c.deferred===1||c.deferred===true||c.deferred==='1') B.push({t:'Paiement différé',style:tag('#fff4e5','#b26a00')});
+          if(Number(c.blocked)) B.push({t:'BLOQUÉ',style:tag('#fbe9eb','var(--color-primary)')});
+          if(Number(c.complaint_open)) B.push({t:'Réclamation en cours',style:tag('#fff4e5','#b26a00')});
+          if(Number(c.voucher_active)) B.push({t:'Voucher actif',style:tag('#eaf5ec','#2d7a3e')});
+          else if(Number(c.voucher_used)) B.push({t:'Voucher utilisé',style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
+          B.push(Number(c.status)?{t:'Pending',style:tag('#fff4e5','#b26a00')}:{t:'Validé',style:tag('#eaf5ec','#2d7a3e')});
+          const jrs=c.tour_name&&avByTour[c.tour_name]; if(jrs) B.push({t:'Jours : '+jrs,style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
+          const dd=c.last_order||c.created_at; if(dd) B.push({t:(c.last_order?'Dern. cmd ':'Depuis ')+String(dd).slice(0,10),style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
+          return B; };
+        const filt=rowsC.filter(match);
+        const bcList=filt.map(c=>({id:c.id,nm:cnm(c),email:c.email||'—',
+          ratt:[c.office_name,c.site_name,c.tour_name,c.department].filter(v=>v&&v!=='—').join(' · ')||'— non rattaché',
+          badges:badgesOf(c),
+          rowStyle:'display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;align-items:center;gap:10px;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
+          open:()=>this.setState({bcFiche:c.id,bcVat:c.invoice_vat||c.tax_number||'',bcCorp:!!(Number(c.is_b2b)||c.invoice_vat),bcVoucherVal:'',bcVoucherMsg:'',bcCompTitle:''})}));
+        const cnt={}; rowsC.forEach(c=>{ const k1='Office · '+(c.office_name||'sans bureau'); cnt[k1]=(cnt[k1]||0)+1; if(c.department){ const k2='Dépt · '+c.department; cnt[k2]=(cnt[k2]||0)+1; } });
+        const bcCounts=Object.keys(cnt).sort().map(k=>({label:k,n:String(cnt[k])}));
+        const fc=rowsC.find(c=>String(c.id)===String(S.bcFiche))||null;
+        const post=(path,body,after)=>{ const fr=window.__FR||{};
+          fetch((fr.base||'')+'/franchisee/'+path+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify(body)})
+            .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — action non enregistrée')); };
+        // table() renvoie une COPIE : il faut save() pour que le re-render voie
+        // le patch (b2b_clients est TYPED → l'overlay bo-store est sans effet).
+        const patchLocal=(id,patch)=>{ if(window.BOServer){ const rs=window.BOServer.table('b2b_clients'); const i2=rs.findIndex(x=>String(x.id)===String(id)); if(i2>=0){ rs[i2]={...rs[i2],...patch}; window.BOServer.save('b2b_clients',rs); } } this.setState(s=>({_rev:(s._rev||0)+1})); };
+        const togStyle=(on,onBg,onC)=>'border:1.5px solid '+(on?onC:'var(--color-border-secondary)')+';background:'+(on?onBg:'transparent')+';color:'+(on?onC:'var(--color-text-muted)')+';border-radius:8px;padding:7px 13px;font:600 11.5px var(--font-ui);cursor:pointer;flex:none';
+        const base={ isB2bClients:screen==='b2bClients',
+          bcQ:S.bcQ||'',bcSetQ:(e)=>this.setState({bcQ:e.target.value}),
+          bcSelStyle:'border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 10px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:180px',
+          bcDept:S.bcDept||'',bcSetDept:(e)=>this.setState({bcDept:e.target.value}),bcDeptOpts:opts(distinct('department'),'— Département —'),
+          bcOff:S.bcOff||'',bcSetOff:(e)=>this.setState({bcOff:e.target.value}),bcOffOpts:opts(distinct('office_name'),'— Office —'),
+          bcSite:S.bcSite||'',bcSetSite:(e)=>this.setState({bcSite:e.target.value}),bcSiteOpts:opts(distinct('site_name'),'— Site —'),
+          bcTour:S.bcTour||'',bcSetTour:(e)=>this.setState({bcTour:e.target.value}),bcTourOpts:opts(distinct('tour_name'),'— Tournée —'),
+          bcCounts,bcList,bcEmpty:filt.length===0,bcTotalTxt:filt.length+' client(s)',
+          bcFicheOpen:!!fc,bcFicheClose:()=>this.setState({bcFiche:null}) };
+        if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCompTitle:'',fcSetCompTitle:noop2,fcAddComplaint:noop2,fcCloseComplaint:noop2};
+        const rec=Number(fc.orders_90d)>=2?'Récurrent (2+ cmd / 90 j)':(Number(fc.orders_count)>=3?'Récurrent':'Ponctuel');
+        return {...base,
+          fcNm:cnm(fc),fcMail:fc.email||'—',fcTel:fc.phone_e164||fc.phone||'—',
+          fcAdr:(((fc.zip||'')+' '+(fc.city||fc.locality||'')).trim())||'—',
+          fcRatt:[fc.office_name,fc.site_name,fc.tour_name,fc.department].filter(v=>v&&v!=='—').join(' · ')||'— non rattaché à un bureau',
+          fcBadges:badgesOf(fc),
+          fcOrders:String(fc.orders_count||0),fcTotal:(Number(fc.orders_total||0)).toFixed(2).replace('.',',')+' €',
+          fcLast:fc.last_order?String(fc.last_order).slice(0,10):'—',fcRec:rec,
+          fcShopBuys:fc.shop_buys==null?'Achats magasin : tables POS absentes':(fc.shop_buys+' achat(s) en magasin'),
+          fcPwa:(Number(fc.pwa_user)||Number(fc.fidelity_active))?'App fidélité (PWA) liée':'Pas d\'app fidélité',
+          fcBlocked:!!Number(fc.blocked),
+          fcBlockLbl:Number(fc.blocked)?'Bloqué — débloquer':'Actif — bloquer',
+          fcBlockStyle:togStyle(!!Number(fc.blocked),'#fbe9eb','var(--color-primary)'),
+          fcToggleBlock:()=>{ const nb=Number(fc.blocked)?0:1;
+            post('client-block',{id:fc.id,blocked:nb},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{blocked:nb}); this.printJob(nb?'⛔ Client bloqué':'✓ Client débloqué'); } else this.printJob((j&&j.error)||'Erreur blocage'); }); },
+          fcCorp:!!S.bcCorp,fcCorpOff:!S.bcCorp,
+          fcCorpLbl:S.bcCorp?'Oui — personne morale':'Non — particulier',
+          fcCorpStyle:togStyle(!!S.bcCorp,'#f1ebfa','#6a3f9e'),
+          fcToggleCorp:()=>this.setState(s=>({bcCorp:!s.bcCorp})),
+          fcVat:S.bcVat||'',fcSetVat:(e)=>this.setState({bcVat:e.target.value}),
+          fcViesCheck:()=>{ const fr=window.__FR||{}; const vat=String(this.state.bcVat||'').trim(); if(!vat){ this.printJob('Encodez le n° TVA'); return; }
+            fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(vat)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+              .then(r=>r.json()).then(j=>this.printJob((j&&j.valid)?('✓ VIES : '+(j.name||'TVA valide')):(j&&j.valid===null?'VIES injoignable — réessayez':'✕ TVA non valide au VIES'))).catch(()=>this.printJob('VIES injoignable')); },
+          fcSaveBilling:()=>{ const corp=!!this.state.bcCorp; const vat=String(this.state.bcVat||'').trim();
+            if(corp&&!vat){ this.printJob('TVA (VIES) obligatoire pour une personne morale'); return; }
+            post('client-billing',{id:fc.id,corporate:corp,vat},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{invoice_vat:corp?j.vat:null,is_b2b:corp?1:fc.is_b2b}); this.printJob(corp?('✓ Facturation personne morale — '+j.vat):'✓ Facturation particulier enregistrée'); } else this.printJob((j&&j.error)||'Erreur facturation'); }); },
+          fcVoucherVal:S.bcVoucherVal||'',fcSetVoucherVal:(e)=>this.setState({bcVoucherVal:e.target.value}),
+          fcCreateVoucher:()=>{ const v=parseFloat(String(this.state.bcVoucherVal||'').replace(',','.'));
+            if(!(v>0)){ this.printJob('Montant du voucher requis (> 0)'); return; }
+            post('client-voucher',{client_id:fc.id,value:v,type:'fixed'},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{voucher_active:(Number(fc.voucher_active)||0)+1}); this.setState({bcVoucherMsg:'✓ Voucher '+j.code+' — '+v.toFixed(2).replace('.',',')+' € (usage unique)',bcVoucherVal:''}); } else this.printJob((j&&j.error)||'Erreur voucher'); }); },
+          fcVoucherMsg:S.bcVoucherMsg||'',fcVoucherHasMsg:!!S.bcVoucherMsg,
+          fcHasComplaint:Number(fc.complaint_open)>0,fcNoComplaint:!Number(fc.complaint_open),
+          fcCompTag:tag('#fff4e5','#b26a00'),
+          fcCompTitle:S.bcCompTitle||'',fcSetCompTitle:(e)=>this.setState({bcCompTitle:e.target.value}),
+          fcAddComplaint:()=>{ const t2=String(this.state.bcCompTitle||'').trim()||'Réclamation client';
+            post('client-complaint',{client_id:fc.id,title:t2},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:(Number(fc.complaint_open)||0)+1}); this.setState({bcCompTitle:''}); this.printJob('✓ Réclamation enregistrée — visible dans la section Réclamations'); } else this.printJob((j&&j.error)||'Erreur réclamation'); }); },
+          fcCloseComplaint:()=>{ post('client-complaint',{resolve_client_id:fc.id},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:0}); this.printJob('✓ Réclamation close'); } else this.printJob((j&&j.error)||'Erreur'); }); } };
+      })(),
       isBureauParams:screen==='bureauParams',bureauParams,
       isDispoCat:screen==='dispoCat',dispoCats,
       isDispoProd:screen==='dispoProd',dispoProds,

@@ -156,6 +156,13 @@
       {id:2,name:'Brabant flamand — périphérie',cp:'1600 · 1700 · 1800 · 1930 · 1932 · 3000 · 3001 · 3010 · 3020',exclusif:true,shop_id:3,shop_name:'L\'Atelier — Leuven',shop_city:'Leuven'},
       {id:3,name:'Brabant wallon nord',cp:'1300 · 1310 · 1320 · 1340 · 1348 · 1400 · 1410 · 1420',exclusif:false,shop_id:null,shop_name:null,shop_city:null},
     ],
+    // ---- Menu « Clients » : miroir de GET /franchisee/b2b-clients (table client
+    //      + agrégats commandes/vouchers/réclamations) — démo seulement. ----
+    "b2b_clients": [
+      {id:501,name:'Marie',surname:'Verheyden',company_name:'Asima SRL',email:'marie@asima.be',phone_e164:'+32475110022',zip:'1300',city:'Wavre',is_b2b:1,office_id:1,status:0,blocked:0,pwa_user:1,webshop_user:1,fidelity_active:1,invoice_vat:'BE0477112233',tax_number:'BE0477112233',created_at:'2025-11-03 09:12:00',orders_count:14,last_order:'2026-07-18 11:05:00',orders_90d:6,orders_total:812.40,voucher_active:1,voucher_used:0,complaint_open:0,shop_buys:3,office_name:'Asima',tour_name:'Tournée Centre-ville',site_name:'Regent Park',deferred:1,department:'Comptabilité'},
+      {id:502,name:'Jonas',surname:'Peeters',company_name:null,email:'jonas.peeters@gmail.com',phone_e164:'+32488220033',zip:'1050',city:'Ixelles',is_b2b:0,office_id:null,status:0,blocked:0,pwa_user:0,webshop_user:1,fidelity_active:0,invoice_vat:null,tax_number:null,created_at:'2026-02-14 14:40:00',orders_count:2,last_order:'2026-05-02 10:22:00',orders_90d:0,orders_total:64.90,voucher_active:0,voucher_used:1,complaint_open:1,shop_buys:0,office_name:null,tour_name:null,site_name:null,deferred:0,department:null},
+      {id:503,name:'Lena',surname:'Dossche',company_name:'Connard SA',email:'lena@connard.be',phone_e164:'+32499330044',zip:'1400',city:'Nivelles',is_b2b:1,office_id:2,status:1,blocked:1,pwa_user:0,webshop_user:1,fidelity_active:0,invoice_vat:null,tax_number:'BE0555667788',created_at:'2026-06-20 08:00:00',orders_count:5,last_order:'2026-07-01 09:00:00',orders_90d:3,orders_total:230.00,voucher_active:0,voucher_used:0,complaint_open:0,shop_buys:null,office_name:'Connard SRL',tour_name:'Tournée Uccle / Ixelles',site_name:'Quai des Ateliers',deferred:0,department:'RH'},
+    ],
     // ---- Tournées : table unique (constructeur + capacité + validation + horaires lisent ici) ----
     "ws_tours": [
       {id:'r1',name:'Tournée Bruxelles-Centre',short:'Centre',driver:'Marek Kowalski',start:360,max:10,ret:true,forfait:45,amplitude:240,decharge:16,trajet:8,used:4,zone:'Bruxelles Capitale'},
@@ -421,6 +428,7 @@
         ws_tour_postcodes:'ws-tour-postcodes', catchment_postcodes:'catchment-postcodes',
         ws_office_delivery_sites:'ws-office-delivery-sites', ws_offices:'ws-offices',
         ws_office_emails:'ws-office-emails', b2b_client_company_department:'b2b-departments',
+        b2b_clients:'b2b-clients',
         ws_tour_availability:'ws-tour-availability', ws_tour_closures:'ws-tour-closures',
         ws_calendar_rules:'ws-calendar-rules', ws_slots:'ws-slots',
         ws_vouchers_local:'ws-vouchers-local', ws_pricing_rules_local:'ws-pricing-rules-local',
@@ -439,10 +447,22 @@
       };
       var headers = fr.token ? { 'X-Admin-Token': fr.token } : {};
       var qs = fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : '';
+      // Tables à écriture TYPÉE (vraie table MySQL derrière /franchisee/save) :
+      // pour elles, la réponse API fait foi MÊME VIDE (une table vidée reste
+      // vide — le seed de démo ne doit pas « ressusciter » de lignes), et
+      // l'overlay bo-store (copie potentiellement périmée) ne s'applique pas.
+      // NB : fr_clients et ws_tour_availability restent HORS de ce set — leurs
+      // écrans s'éditent via bo-store (pas de bloc typé aller-retour), les y
+      // mettre ferait perdre les éditions au reload.
+      var TYPED = { ws_tours:1, ws_delivery_zones:1, ws_tour_postcodes:1,
+        ws_office_delivery_sites:1, ws_offices:1,
+        ws_tour_closures:1, ws_franchisor_catchment:1,
+        catchment_postcodes:1, b2b_client_company_department:1, params:1,
+        b2b_clients:1 };
       var jobs = Object.keys(MAP).map(function(key){
         return fetch(fr.base + '/franchisee/' + MAP[key] + qs, { headers: headers, credentials: 'omit' })
           .then(function(r){ return r.ok ? r.json() : null; })
-          .then(function(data){ if (Array.isArray(data) && data.length) DB[key] = data; })
+          .then(function(data){ if (Array.isArray(data) && (data.length || TYPED[key])) DB[key] = data; })
           .catch(function(){ /* garde le seed pour cette table */ });
       });
       return Promise.all(jobs).then(function(){
@@ -453,7 +473,10 @@
           .then(function(r){ return r.ok ? r.json() : null; })
           .then(function(store){
             if (store && typeof store === 'object' && !Array.isArray(store)) {
-              Object.keys(store).forEach(function(k){ if (Array.isArray(store[k])) DB[k] = store[k]; });
+              // Les tables TYPÉES viennent de la vraie table MySQL : l'overlay
+              // bo-store (copie d'anciens enregistrements UI) ne doit pas les
+              // écraser — c'est lui qui faisait « réapparaître » des sites.
+              Object.keys(store).forEach(function(k){ if (Array.isArray(store[k]) && !TYPED[k]) DB[k] = store[k]; });
             }
             return true;
           })
