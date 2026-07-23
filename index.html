@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072301"></script>
-<script src="bo_server.js?v=2026072301"></script>
+<script src="api-config.js?v=2026072302"></script>
+<script src="bo_server.js?v=2026072302"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072301'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072302'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072301">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072301"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072302">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072302"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -842,7 +842,7 @@
           </sc-for>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
-          <div style="display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;gap:10px;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Client</span><span class="t-admin-label">Rattachement (office · site · tournée · dépt)</span><span class="t-admin-label">Badges</span><span class="t-admin-label" style="text-align:right">Fiche</span></div>
+          <div style="display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;gap:10px;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Client</span><span class="t-admin-label">Rattachement — bureau · département (site &amp; tournée hérités du bureau)</span><span class="t-admin-label">Badges</span><span class="t-admin-label" style="text-align:right">Fiche</span></div>
           <sc-for list="{{ bcList }}" as="c" hint-placeholder-count="5">
             <div style="{{ c.rowStyle }}">
               <div style="min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.nm }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.email }}</div></div>
@@ -864,6 +864,7 @@
             </div>
           </sc-for>
           <sc-if value="{{ bcEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 18px;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun client ne correspond aux filtres.</div></sc-if>
+          <sc-if value="{{ bcHasMore }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 18px"><button onClick="{{ bcMore }}" class="btn-secondary" style="width:100%;font-size:12px">{{ bcMoreTxt }}</button></div></sc-if>
         </div>
       </div>
       </sc-if>
@@ -3670,7 +3671,10 @@ class Component extends DCLogic {
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
       offAssignChips,offAssignEmpty,offSiteTiles,
       // ===== Menu « Clients » — table client via GET /franchisee/b2b-clients =====
+      // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
+      // calcule QUE sur l'écran Clients — sinon il ralentit toute l'app.
       ...(()=>{ const noop2=()=>{};
+        if(screen!=='b2bClients') return {isB2bClients:false,bcQ:'',bcSetQ:noop2,bcSelStyle:'',bcDept:'',bcSetDept:noop2,bcDeptOpts:[],bcOff:'',bcSetOff:noop2,bcOffOpts:[],bcSite:'',bcSetSite:noop2,bcSiteOpts:[],bcTour:'',bcSetTour:noop2,bcTourOpts:[],bcCounts:[],bcList:[],bcEmpty:false,bcTotalTxt:'',bcHasMore:false,bcMore:noop2,bcMoreTxt:'',bcFicheOpen:false,bcFicheClose:noop2,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCompTitle:'',fcSetCompTitle:noop2,fcCompOrder:'',fcSetCompOrder:noop2,fcOrderOpts:[],fcAddComplaint:noop2,fcCloseComplaint:noop2};
         const rowsC=SRV('b2b_clients');
         const avByTour={}; SRV('ws_tour_availability').forEach(a=>{ if(a.tour) avByTour[a.tour]=a.jour; });
         // Affichage : « Nom Prénom — Société (si rattachée) » ; client.name =
@@ -3703,21 +3707,32 @@ class Component extends DCLogic {
           const dd=c.last_order||c.created_at; if(dd) B.push({t:(c.last_order?'Dern. cmd ':'Depuis ')+String(dd).slice(0,10),style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
           return B; };
         const filt=rowsC.filter(match);
+        // AFFICHAGE PROGRESSIF : pas de limite d'accès (tout est filtrable),
+        // mais on ne rend que bcShown lignes à la fois — le DOM reste léger.
+        const shown=S.bcShown||100;
+        const visible=filt.slice(0,shown);
         // Rattachement direct depuis la liste : droplist Offices + département
         // de cet office s'il en existe (client.office_id / department_id).
+        // Les options Office sont construites UNE fois et partagées par ligne.
         const offRows=SRV('ws_offices');
+        const offOptsShared=[{value:'',label:'— Rattacher à un bureau —'},...offRows.map(o=>({value:String(o.id!=null?o.id:o.name),label:o.name}))];
         const postAtt=(cid,bodyA,patch)=>{ post('client-attach',{id:cid,...bodyA},(j)=>{ if(j&&j.ok){ patchLocal(cid,patch); this.printJob('✓ Rattachement enregistré'); } else this.printJob((j&&j.error)||'Erreur rattachement'); }); };
-        const bcList=filt.map(c=>{
+        const bcList=visible.map(c=>{
           const curOff=offRows.find(o=>(c.office_id!=null&&o.id===c.office_id)||(c.office_name&&o.name===c.office_name));
           const deptOf=(oName)=>deptRowsAll.map((d,di)=>({d,di})).filter(x=>x.d.office===oName||x.d.company===oName);
           const dOpts=curOff?deptOf(curOff.name):[];
           return {id:c.id,nm:cnm(c),email:c.email||'—',
           ratt:[c.office_name,c.site_name,c.tour_name,c.department].filter(v=>v&&v!=='—').join(' · ')||'— non rattaché',
           offSel:curOff?String(curOff.id!=null?curOff.id:curOff.name):'',
-          offOpts:[{value:'',label:'— Rattacher à un office —'},...offRows.map(o=>({value:String(o.id!=null?o.id:o.name),label:o.name}))],
+          offOpts:offOptsShared,
           offSet:(e)=>{ const v=e.target.value; const o=offRows.find(x=>String(x.id!=null?x.id:x.name)===v)||null;
+            // SITE et TOURNÉE ne se choisissent pas ici : ils sont HÉRITÉS des
+            // données du bureau (pairing ws_office_delivery_sites + sa tournée).
+            const pr=o?siteRowsAll.find(r=>(r.office_client_id!=null&&o.id!=null&&r.office_client_id===o.id)||r.bureau===o.name||r.office===o.name):null;
+            const siteLbl=pr?((pr.name&&pr.name!=='—')?pr.name:(pr.adr&&pr.adr!=='—'?pr.adr:null)):null;
+            const tourLbl=o&&o.tour&&o.tour!=='—'?o.tour:(pr&&pr.tour&&pr.tour!=='—'?pr.tour:null);
             postAtt(c.id,{office_id:o&&o.id!=null?o.id:null,department_id:null},
-              {office_id:o?o.id:null,office_name:o?o.name:null,tour_name:o?(o.tour&&o.tour!=='—'?o.tour:null):null,department:null,department_id:null,
+              {office_id:o?o.id:null,office_name:o?o.name:null,site_name:siteLbl,tour_name:tourLbl,department:null,department_id:null,
                deferred:(o&&(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui'||o.deferred_billing_enabled===1))?1:0}); },
           hasDeptOpts:dOpts.length>0,
           deptSel:'',
@@ -3744,7 +3759,11 @@ class Component extends DCLogic {
           bcOff:S.bcOff||'',bcSetOff:(e)=>this.setState({bcOff:e.target.value}),bcOffOpts:opts(distinct('office_name'),'— Office —'),
           bcSite:S.bcSite||'',bcSetSite:(e)=>this.setState({bcSite:e.target.value}),bcSiteOpts:opts(distinct('site_name'),'— Site —'),
           bcTour:S.bcTour||'',bcSetTour:(e)=>this.setState({bcTour:e.target.value}),bcTourOpts:opts(distinct('tour_name'),'— Tournée —'),
-          bcCounts,bcList,bcEmpty:filt.length===0,bcTotalTxt:filt.length+' client(s)',
+          bcCounts,bcList,bcEmpty:filt.length===0,
+          bcTotalTxt:filt.length+' client(s)'+(filt.length>shown?(' · '+shown+' affichés'):''),
+          bcHasMore:filt.length>shown,
+          bcMore:()=>this.setState(s=>({bcShown:(s.bcShown||100)+200})),
+          bcMoreTxt:'+ Afficher 200 de plus ('+Math.max(0,filt.length-shown)+' restants)',
           bcFicheOpen:!!fc,bcFicheClose:()=>this.setState({bcFiche:null}) };
         if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCompTitle:'',fcSetCompTitle:noop2,fcCompOrder:'',fcSetCompOrder:noop2,fcOrderOpts:[],fcAddComplaint:noop2,fcCloseComplaint:noop2};
         const rec=Number(fc.orders_90d)>=2?'Récurrent (2+ cmd / 90 j)':(Number(fc.orders_count)>=3?'Récurrent':'Ponctuel');
