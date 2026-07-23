@@ -1696,7 +1696,7 @@
         <sc-if value="{{ fcVoucherHasMsg }}" hint-placeholder-val="{{ false }}"><div style="font:600 11.5px var(--font-ui);color:#2d7a3e;margin-top:7px">{{ fcVoucherMsg }}</div></sc-if>
       </div>
       <div style="padding:14px 24px 18px">
-        <div class="t-admin-label" style="margin-bottom:8px">Réclamation client (mécontent) — remonte dans « Réclamations », distincte d'un incident de livraison</div>
+        <div class="t-admin-label" style="margin-bottom:8px">Réclamation client (mécontent) — remonte dans « Réclamations », distincte d'un incident de livraison (déclaré lors d'un achat)</div>
         <sc-if value="{{ fcHasComplaint }}" hint-placeholder-val="{{ false }}">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
             <span style="{{ fcCompTag }}">⚠ Réclamation en cours</span>
@@ -1704,6 +1704,9 @@
           </div>
         </sc-if>
         <sc-if value="{{ fcNoComplaint }}" hint-placeholder-val="{{ false }}">
+          <select value="{{ fcCompOrder }}" onChange="{{ fcSetCompOrder }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 10px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);margin-bottom:8px;box-sizing:border-box">
+            <sc-for list="{{ fcOrderOpts }}" as="op" hint-placeholder-count="3"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+          </select>
           <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
             <input value="{{ fcCompTitle }}" onInput="{{ fcSetCompTitle }}" placeholder="Motif (ex. produit non conforme)" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:400 12.5px var(--font-ui);box-sizing:border-box"/>
             <button onClick="{{ fcAddComplaint }}" class="btn-secondary" style="font-size:11.5px;padding:0 14px">Signaler</button>
@@ -2508,6 +2511,13 @@ class Component extends DCLogic {
     if(label||refus.length) this.printJob((added?'✔ '+(label?label+' : ':'')+added+' CP ajoutés':'')+(refus.length?' · ⚠ refusés : '+refus.slice(0,3).join(' · ')+(refus.length>3?'…':''):'')+(deja?' · '+deja+' déjà présents':'')); }
   zfPick(cp){ return ()=>this.zfAppendCps([String(cp)],''); }
   zfPickGroup(cps,label){ return ()=>this.zfAppendCps(cps.map(String),label); }
+  // Fiche client : commandes du client (droplist réclamation, note ★1-5).
+  bcLoadOrders(id){ const fr=window.__FR||{};
+    if(!fr.base){ // mode démo : petit échantillon cohérent avec le seed
+      this.setState({bcOrders:[{id:9001,order_ref:'CMD-9001',created_at:'2026-07-18 11:05:00',total:64.20,status:'delivered',rating:4},{id:9002,order_ref:'CMD-9002',created_at:'2026-06-30 09:40:00',total:38.50,status:'delivered',rating:null}]}); return; }
+    fetch(fr.base+'/franchisee/client-orders?client_id='+encodeURIComponent(id)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+      .then(r=>r.ok?r.json():[]).then(a=>this.setState({bcOrders:Array.isArray(a)?a:[]}))
+      .catch(()=>this.setState({bcOrders:[]})); }
   drawZonesMap(){ const L=window.L,m=this._zonesFrMap,geo=window.__CPGEO; if(!L||!m||!geo) return;
     const S=this.state;
     const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
@@ -3681,7 +3691,7 @@ class Component extends DCLogic {
           ratt:[c.office_name,c.site_name,c.tour_name,c.department].filter(v=>v&&v!=='—').join(' · ')||'— non rattaché',
           badges:badgesOf(c),
           rowStyle:'display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;align-items:center;gap:10px;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
-          open:()=>this.setState({bcFiche:c.id,bcVat:c.invoice_vat||c.tax_number||'',bcCorp:!!(Number(c.is_b2b)||c.invoice_vat),bcVoucherVal:'',bcVoucherMsg:'',bcCompTitle:''})}));
+          open:()=>{ this.setState({bcFiche:c.id,bcVat:c.invoice_vat||c.tax_number||'',bcCorp:!!(Number(c.is_b2b)||c.invoice_vat),bcVoucherVal:'',bcVoucherMsg:'',bcCompTitle:'',bcCompOrder:'',bcOrders:null}); this.bcLoadOrders(c.id); }}));
         const cnt={}; rowsC.forEach(c=>{ const k1='Office · '+(c.office_name||'sans bureau'); cnt[k1]=(cnt[k1]||0)+1; if(c.department){ const k2='Dépt · '+c.department; cnt[k2]=(cnt[k2]||0)+1; } });
         const bcCounts=Object.keys(cnt).sort().map(k=>({label:k,n:String(cnt[k])}));
         const fc=rowsC.find(c=>String(c.id)===String(S.bcFiche))||null;
@@ -3701,7 +3711,7 @@ class Component extends DCLogic {
           bcTour:S.bcTour||'',bcSetTour:(e)=>this.setState({bcTour:e.target.value}),bcTourOpts:opts(distinct('tour_name'),'— Tournée —'),
           bcCounts,bcList,bcEmpty:filt.length===0,bcTotalTxt:filt.length+' client(s)',
           bcFicheOpen:!!fc,bcFicheClose:()=>this.setState({bcFiche:null}) };
-        if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCompTitle:'',fcSetCompTitle:noop2,fcAddComplaint:noop2,fcCloseComplaint:noop2};
+        if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCompTitle:'',fcSetCompTitle:noop2,fcCompOrder:'',fcSetCompOrder:noop2,fcOrderOpts:[],fcAddComplaint:noop2,fcCloseComplaint:noop2};
         const rec=Number(fc.orders_90d)>=2?'Récurrent (2+ cmd / 90 j)':(Number(fc.orders_count)>=3?'Récurrent':'Ponctuel');
         return {...base,
           fcNm:cnm(fc),fcMail:fc.email||'—',fcTel:fc.phone_e164||fc.phone||'—',
@@ -3736,8 +3746,15 @@ class Component extends DCLogic {
           fcHasComplaint:Number(fc.complaint_open)>0,fcNoComplaint:!Number(fc.complaint_open),
           fcCompTag:tag('#fff4e5','#b26a00'),
           fcCompTitle:S.bcCompTitle||'',fcSetCompTitle:(e)=>this.setState({bcCompTitle:e.target.value}),
+          // Droplist des commandes (achats) du client — note ★1-5 si laissée.
+          ...(()=>{ const ords=Array.isArray(S.bcOrders)?S.bcOrders:null;
+            return { fcCompOrder:S.bcCompOrder||'', fcSetCompOrder:(e)=>this.setState({bcCompOrder:e.target.value}),
+              fcOrderOpts:[{value:'',label:ords===null?'— Chargement des commandes… —':(ords.length?'— Rattacher à un achat (commande) —':'— Aucune commande webshop pour ce client —')},
+                ...(ords||[]).map(o=>({value:String(o.id),
+                  label:(o.order_ref||('CMD-'+o.id))+' · '+String(o.created_at||'').slice(0,10)+' · '+(Number(o.total||0)).toFixed(2).replace('.',',')+' €'+(o.rating!=null?(' · ★ '+o.rating+'/5'):' · sans note')}))] }; })(),
           fcAddComplaint:()=>{ const t2=String(this.state.bcCompTitle||'').trim()||'Réclamation client';
-            post('client-complaint',{client_id:fc.id,title:t2},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:(Number(fc.complaint_open)||0)+1}); this.setState({bcCompTitle:''}); this.printJob('✓ Réclamation enregistrée — visible dans la section Réclamations'); } else this.printJob((j&&j.error)||'Erreur réclamation'); }); },
+            const oid=parseInt(this.state.bcCompOrder,10)||0;
+            post('client-complaint',{client_id:fc.id,title:t2,...(oid?{order_id:oid}:{})},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:(Number(fc.complaint_open)||0)+1}); this.setState({bcCompTitle:'',bcCompOrder:''}); this.printJob('✓ Réclamation enregistrée'+(j.order_ref?(' — achat '+j.order_ref):'')+' — visible dans la section Réclamations'); } else this.printJob((j&&j.error)||'Erreur réclamation'); }); },
           fcCloseComplaint:()=>{ post('client-complaint',{resolve_client_id:fc.id},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:0}); this.printJob('✓ Réclamation close'); } else this.printJob((j&&j.error)||'Erreur'); }); } };
       })(),
       isBureauParams:screen==='bureauParams',bureauParams,
