@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072331"></script>
-<script src="bo_server.js?v=2026072331"></script>
+<script src="api-config.js?v=2026072332"></script>
+<script src="bo_server.js?v=2026072332"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072331'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072332'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072331">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072331"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072332">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072332"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -236,12 +236,13 @@
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="t-section-title" style="font-size:15px">Commandes — {{ ordTitleDate }}</div><div style="display:flex;gap:7px"><span style="{{ ordFilterAll }}">Toutes</span><span style="{{ ordFilterDeliv }}">Livraison</span><span style="{{ ordFilterPickup }}">Retrait</span></div></div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Cliquer sur le statut pour le faire avancer · écrit dans ws_orders</div>
-          <div style="display:grid;grid-template-columns:.8fr 1.5fr .8fr 1.1fr 1.1fr .8fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Mode</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Total</span></div>
+          <div style="display:grid;grid-template-columns:.8fr 1.4fr .7fr 1fr 1fr 1fr .7fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Source</span><span class="t-admin-label">Mode</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Total</span></div>
           <sc-for list="{{ ordersList }}" as="o" hint-placeholder-count="6">
-            <div style="display:grid;grid-template-columns:.8fr 1.5fr .8fr 1.1fr 1.1fr .8fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+            <div style="display:grid;grid-template-columns:.8fr 1.4fr .7fr 1fr 1fr 1fr .7fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
               <span style="font:600 12px var(--font-mono,monospace);color:var(--color-text-muted)">{{ o.ref }}</span>
-              <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ o.client }}</span>
-              <div style="min-width:0"><span style="{{ o.modePill }};max-width:100%">{{ o.mode }}</span></div>
+              <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ o.client }}">{{ o.client }}</span>
+              <div style="min-width:0"><span style="{{ o.srcPill }};max-width:100%">{{ o.srcTxt }}</span></div>
+              <div style="min-width:0"><span style="{{ o.modePill }};max-width:100%">{{ o.modeTxt }}</span></div>
               <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ o.slot }}</span>
               <div><button onClick="{{ o.advance }}" style="{{ o.statutStyle }}">{{ o.statut }}</button></div>
               <span style="font:600 12.5px var(--font-ui);color:var(--color-text);text-align:right">{{ o.total }}</span>
@@ -3980,7 +3981,15 @@ class Component extends DCLogic {
         .catch(()=>this.printJob('Réseau indisponible — statut non modifié')); };
     const ordersList=ordersRaw.filter(o=>ordFilter==='all'||(ordFilter==='deliv'&&o.mode==='Livraison')||(ordFilter==='pickup'&&o.mode==='Retrait')).map(o=>{
       const [bg,c]=ordStatColor(o.statut);
-      return {...o, slot:o.creneau||'—', total:o.montant, modePill:modePill(o.mode), statut:(ordStatFR[o.statut]||o.statut)+(ordNext[o.statut]?' →':''),
+      const isDeliv=o.mode==='Livraison';
+      return {...o, slot:o.creneau||'—', total:o.montant,
+        // Mode avec canal couleur : Retrait = Ruby (bordeaux) · Livraison = Apricot.
+        modeTxt:isDeliv?'Livraison · Apricot':'Retrait · Ruby',
+        modePill:pill2(isDeliv?'#f6ecdf':'#fbe9eb',isDeliv?'var(--color-secondary)':'var(--color-primary)'),
+        // Source : POS (comptoir / espèces) ou Webshop.
+        srcTxt:o.source||'Webshop',
+        srcPill:pill2(o.source==='POS'?'var(--color-background-secondary)':'#eef3fb',o.source==='POS'?'var(--color-text)':'#2a5a9e'),
+        statut:(ordStatFR[o.statut]||o.statut)+(ordNext[o.statut]?' →':''),
         statutStyle:'border:none;cursor:pointer;'+pill2(bg,c),
         advance:()=>ordAdvance(o) };
     });
