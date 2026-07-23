@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072319"></script>
-<script src="bo_server.js?v=2026072319"></script>
+<script src="api-config.js?v=2026072320"></script>
+<script src="bo_server.js?v=2026072320"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072319'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072320'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072319">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072319"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072320">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072320"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -481,7 +481,7 @@
       <!-- ===================== VALIDATIONS OFFICE CLIENT ===================== -->
       <sc-if value="{{ isValidations }}" hint-placeholder-val="{{ true }}">
       <div>
-        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;margin-bottom:18px"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button><button onClick="{{ setTabNouveau }}" style="{{ b2bTabNouveauStyle }}">Nouveaux bureaux</button></div>
+        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;margin-bottom:18px"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px"><div class="t-admin-label">En attente de validation</div><div style="font:700 30px/1 var(--font-ui);color:var(--color-primary);margin:8px 0 4px">{{ valCount }}</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">comptes Office Client B2B</div></div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px"><div class="t-admin-label">Rattachés à votre magasin</div><div style="font:700 30px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">{{ valMagasin }}</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Bruxelles-Centre</div></div>
@@ -1189,7 +1189,7 @@
       <!-- ===================== DEMANDES DE RATTACHEMENT BUREAU ===================== -->
       <sc-if value="{{ isDemandesBureau }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button><button onClick="{{ setTabNouveau }}" style="{{ b2bTabNouveauStyle }}">Nouveaux bureaux</button></div>
+        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button></div>
         <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Une personne du <strong>personnel déjà validé</strong> demande son rattachement à un bureau B2B existant · résolution → <strong>Lier</strong> (office existant) ou <strong>Rejeter</strong> — ws_office_join_requests</div>
         <sc-for list="{{ joinRequests }}" as="r" hint-placeholder-count="3">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:16px 18px">
@@ -1211,7 +1211,7 @@
       <!-- ===================== NOUVEAUX BUREAUX (DEMANDES DE CRÉATION) ===================== -->
       <sc-if value="{{ isNouveauxBureaux }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button><button onClick="{{ setTabNouveau }}" style="{{ b2bTabNouveauStyle }}">Nouveaux bureaux</button></div>
+        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button></div>
         <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Une <strong>entreprise</strong> demande l'ouverture d'un compte bureau B2B · résolution → <strong>Créer</strong> (lance l'onboarding complet) ou <strong>Rejeter</strong></div>
         <sc-if value="{{ newBureauEmpty }}" hint-placeholder-val="{{ false }}">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:44px;text-align:center;font:400 13px var(--font-ui);color:var(--color-text-muted)">✓ Aucune demande de nouveau bureau en attente.</div>
@@ -4127,7 +4127,7 @@ class Component extends DCLogic {
       nav,navStyles,setLang,langStyles,t,
       pageTitle:titles[screen],pageSub:subs[screen],
       isMulti:true,
-      isValidations:screen==='demandesB2B'&&(S.b2bTab||'acces')==='acces',
+      isValidations:screen==='demandesB2B'&&((S.b2bTab||'acces')==='acces'||(S.b2bTab||'')==='nouveau'),
       b2bTabAccesStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='acces'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       b2bTabRattachStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='rattach'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       b2bTabNouveauStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='nouveau'?'background:var(--color-primary);color:#fff':'background:transparent;color:var(--color-text-muted)'),
