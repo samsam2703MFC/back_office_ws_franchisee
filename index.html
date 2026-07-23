@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072345"></script>
-<script src="bo_server.js?v=2026072345"></script>
+<script src="api-config.js?v=2026072346"></script>
+<script src="bo_server.js?v=2026072346"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072345'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072346'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072345">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072345"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072346">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072346"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1650,7 +1650,7 @@
         <sc-if value="{{ stkFselShow }}" hint-placeholder-val="{{ true }}">
         <div style="border-top:.5px solid var(--color-border-tertiary);padding-top:14px">
           <div class="t-admin-label" style="margin-bottom:4px">Minimum par jour de la semaine</div>
-          <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:10px">« 10 » = le magasin en produit 10 ce jour-là, chaque semaine — appliqué automatiquement quand aucun stock du jour n'est saisi. Collect et Livraison séparés · un point (•) = jour déjà paramétré. ws_product_stock_defaults</div>
+          <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:10px">« 10 » = le magasin en produit 10 ce jour-là, chaque semaine — appliqué automatiquement quand aucun stock du jour n'est saisi. <strong>Cochez plusieurs jours</strong> : la saisie s'applique à tous d'un coup · un point (•) = jour déjà paramétré. ws_product_stock_defaults</div>
           <div style="display:flex;gap:6px;margin-bottom:10px">
             <sc-for list="{{ stkDayBtns }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.set }}" style="{{ d.style }}">{{ d.label }}</button></sc-for>
           </div>
@@ -4395,25 +4395,36 @@ class Component extends DCLogic {
       fetch(fr.base+'/franchisee/fr-stock-catalog'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
         .then(r=>r.ok?r.json():null)
         .then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_stock_catalog',a); this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{}); };
-    // Minimums hebdomadaires : jour ISO sélectionné + valeurs par jour×canal.
+    // Minimums hebdomadaires : jours ISO MULTI-SÉLECTIONNÉS (saisie groupée —
+    // la valeur tapée s'applique à TOUS les jours cochés) + valeurs jour×canal.
     const STK_DOW=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
     const stkTodayDow=((new Date().getDay()+6)%7)+1;
-    const stkDay=S.stkFday||stkTodayDow;
+    const stkDaysSel=S.stkFdays||{[stkTodayDow]:true};
+    const stkSelList=Object.keys(stkDaysSel).filter(k=>stkDaysSel[k]).map(Number).sort((a,b)=>a-b);
     const stkDefs=S.stkDefs||{};
     const stkDv=(d)=>stkDefs[d]||{};
     const stkHasVal=(d)=>{ const v=stkDv(d); return (v.collect!=null&&v.collect!=='')||(v.delivery!=null&&v.delivery!==''); };
-    const stkDefSet=(ch)=>(e)=>this.setState(s=>{ const cur=s.stkDefs||{}; const day=s.stkFday||stkTodayDow;
-      return {stkDefs:{...cur,[day]:{...(cur[day]||{}),[ch]:e.target.value}},stkDefsDirty:true}; });
+    // Valeur affichée : commune à tous les jours cochés, sinon champ vide.
+    const stkCommon=(ch)=>{ if(!stkSelList.length) return '';
+      const vs=stkSelList.map(d=>{ const v=stkDv(d)[ch]; return (v!=null&&v!=='')?String(v):''; });
+      return vs.every(v=>v===vs[0])?vs[0]:''; };
+    const stkDefSet=(ch)=>(e)=>this.setState(s=>{ const cur={...(s.stkDefs||{})};
+      const sel=s.stkFdays||{[stkTodayDow]:true};
+      Object.keys(sel).filter(k=>sel[k]).forEach(k=>{ const d=+k; cur[d]={...(cur[d]||{}),[ch]:e.target.value}; });
+      return {stkDefs:cur,stkDefsDirty:true}; });
     const stkFVals={
       stkFormOpen:!!S.stkForm,
-      stkFOpen:()=>this.setState({stkForm:true,stkFq:'',stkFsel:null,stkFon:'',stkFsh:'',stkFday:null,stkDefs:{},stkDefsDirty:false}),
+      stkFOpen:()=>this.setState({stkForm:true,stkFq:'',stkFsel:null,stkFon:'',stkFsh:'',stkFdays:null,stkDefs:{},stkDefsDirty:false}),
       stkFClose:()=>this.setState({stkForm:false,stkFsel:null,stkFq:''}),
-      stkDayBtns:STK_DOW.map((lbl,i)=>{ const d=i+1; const on=stkDay===d;
-        return {label:lbl+(stkHasVal(d)?' •':''),set:()=>this.setState({stkFday:d}),
+      // MULTI-SÉLECTION : chaque clic coche/décoche le jour — la saisie
+      // s'applique à tous les jours cochés (enregistrement groupé).
+      stkDayBtns:STK_DOW.map((lbl,i)=>{ const d=i+1; const on=!!stkDaysSel[d];
+        return {label:lbl+(stkHasVal(d)?' •':''),
+          set:()=>this.setState(s=>{ const sel={...(s.stkFdays||{[stkTodayDow]:true})}; sel[d]=!sel[d]; return {stkFdays:sel}; }),
           style:'flex:1;height:34px;border-radius:8px;cursor:pointer;font:600 11px var(--font-ui);border:1.5px solid '+(on?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(on?'var(--color-primary)':'var(--color-surface)')+';color:'+(on?'#fff':'var(--color-text)')}; }),
-      stkDayName:STK_DOW[stkDay-1],
-      stkDefC:(stkDv(stkDay).collect!=null?stkDv(stkDay).collect:''),
-      stkDefD:(stkDv(stkDay).delivery!=null?stkDv(stkDay).delivery:''),
+      stkDayName:stkSelList.length?stkSelList.map(d=>STK_DOW[d-1]).join(' · '):'aucun jour coché',
+      stkDefC:stkCommon('collect'),
+      stkDefD:stkCommon('delivery'),
       stkDefSetC:stkDefSet('collect'), stkDefSetD:stkDefSet('delivery'),
       stkFq, stkFSetQ:(e)=>this.setState({stkFq:e.target.value,stkFsel:null}),
       stkSug, stkSugShow:stkSug.length>0,
