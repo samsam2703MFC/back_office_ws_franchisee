@@ -5,25 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072328"></script>
-<script src="bo_server.js?v=2026072328"></script>
+<script src="api-config.js?v=2026072329"></script>
+<script src="bo_server.js?v=2026072329"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072328'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072329'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
   function normalizeShop(){
     var fr = window.__FR || {};
-    if (!fr.base || !fr.shop || /^[0-9]+$/.test(String(fr.shop))) return Promise.resolve();
+    if (!fr.base || !fr.shop) return Promise.resolve();
+    // TOUJOURS interroger /me : résout un slug en id ET mémorise l'identité de
+    // la boutique (nom, ville, CP) — window.__SHOPINFO sert à la géolocaliser
+    // sur les cartes (départ des tournées).
     return fetch(fr.base + '/franchisee/me?shop=' + encodeURIComponent(fr.shop),
                  { headers: fr.token ? { 'X-Admin-Token': fr.token } : {}, credentials: 'omit' })
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(v){ if (v && v.shop && v.shop.id != null) {
         fr.shop = String(v.shop.id);
+        window.__SHOPINFO = v.shop;
         try { localStorage.setItem('franchiseeShop', fr.shop); } catch (e) {}
       } })
       .catch(function(){});
@@ -41,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072328">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072328"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072329">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072329"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -2624,8 +2628,15 @@ class Component extends DCLogic {
       return {id:o.id||('pt'+i),libelle:o.name||'—',ville:o.city||(o.cp||'—'),client:o.name||'—',
         lat:e?e.lat:50.85,lng:e?e.lng:4.35,ca,couts,colis,kg:0,vol:0,seg:'horeca'}; }); }
 
-  depot(){ const nm=(window.BOServer?window.BOServer.getParam('shop.name',''):'')||'Ma boutique';
-    return {lat:50.85, lng:4.35, libelle:nm}; }
+  // La BOUTIQUE (départ des tournées) — position RÉELLE : CP du shop
+  // (/franchisee/me → __SHOPINFO) résolu via le référentiel CP→GPS.
+  depot(){ const si=(typeof window!=='undefined'&&window.__SHOPINFO)||null;
+    const nm=(si&&si.name)||(window.BOServer?window.BOServer.getParam('shop.name',''):'')||'Ma boutique';
+    const geo=(typeof window!=='undefined'&&window.__CPGEO&&window.__CPGEO.idx)||null;
+    let e=null;
+    if(geo&&si){ if(si.cp) e=geo[String(si.cp).trim()]||null;
+      if(!e&&si.city&&window.__CPGEO.list){ const cl=String(si.city).toLowerCase(); const hit=window.__CPGEO.list.find(x=>String(x[1]).toLowerCase()===cl); if(hit) e={lat:hit[2],lng:hit[3]}; } }
+    return {lat:e?e.lat:50.85, lng:e?e.lng:4.35, geoOk:!!e, libelle:nm+(si&&si.city?(' · '+si.city):'')}; }
 
   T = {
     navTdb:{FR:'Tableau de bord',NL:'Dashboard',EN:'Dashboard',PL:'Pulpit'},
@@ -2925,7 +2936,7 @@ class Component extends DCLogic {
       } else if(el && this._tourneesMap){
         // Redessine quand la donnée change (géo chargée, ordre modifié,
         // assignation, focus itinéraire) — signature légère anti-boucle.
-        const sig=JSON.stringify([(window.__CPGEO?1:0),this.state.mapFocusTour||'',
+        const sig=JSON.stringify([(window.__CPGEO?1:0),(window.__SHOPINFO?1:0),this.state.mapFocusTour||'',
           (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
         if(this._routeSig!==sig){ this._routeSig=sig; this.drawRoute(); }
       }
@@ -2948,7 +2959,9 @@ class Component extends DCLogic {
       +(t?('<br><span style="color:#666">'+esc(t)+' · arrêt n°'+k+'</span>'):'<br><span style="color:#666">Sans tournée</span>')
       +'<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><b style="font-size:11px">Bureaux &amp; adresses</b>'
       +p.offices.map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>';
-    L.circleMarker([d.lat,d.lng],{radius:9,color:'#222',weight:2,fillColor:'#fff',fillOpacity:1}).addTo(g).bindPopup("<b>"+esc(d.libelle)+"</b><br>Dépôt");
+    // La BOUTIQUE — pin distinctif (départ / retour des tournées).
+    const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
+    L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g).bindPopup("<b>"+esc(d.libelle)+"</b><br>Boutique — départ & retour des tournées"+(d.geoOk?"":"<br><span style='color:#b26a00'>CP de la boutique non géolocalisé — position approximative</span>"));
     let focusBounds=null;
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length];
       const isFocus=focus&&norm(focus)===norm(t.name);
@@ -2973,6 +2986,8 @@ class Component extends DCLogic {
       L.circleMarker([p.lat,p.lng],{radius:7,color:'#fff',weight:2,fillColor:'#9a9a9a',fillOpacity:focus?0.3:0.9}).addTo(g).bindPopup(sitePopup(p,null,0)));
     g.addTo(m); this._routeLayer=g;
     if(focusBounds) m.fitBounds(focusBounds,{padding:[36,36]});
+    else if(!this._fitDone){ const all=[[d.lat,d.lng],...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
+      if(all.length>1){ this._fitDone=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
   }
   componentDidMount(){ this.ensureMaps(); }
   componentDidUpdate(){ this.ensureMaps(); }
