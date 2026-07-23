@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072335"></script>
-<script src="bo_server.js?v=2026072335"></script>
+<script src="api-config.js?v=2026072336"></script>
+<script src="bo_server.js?v=2026072336"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072335'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072336'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072335">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072335"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072336">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072336"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -2758,7 +2758,29 @@ class Component extends DCLogic {
     if(s==='stockJour') st.stkAlert=null;
     // Rentabilité : charge (une fois) les points réels (geo-clients).
     if(s==='rentabilite') setTimeout(()=>this.rentaEnsure(),0);
+    // Écrans à données de commandes : refetch à l'ENTRÉE (une nouvelle
+    // commande webshop apparaît sans recharger toute la page).
+    if(this.ORD_SCREENS[s]) setTimeout(()=>this.ordersRefresh(),0);
     this.setState(st); }; }
+
+  // Écrans dont les données bougent avec les commandes entrantes.
+  ORD_SCREENS={tdb:1,commandes:1,prep:1,suivi:1,stockJour:1,capacite:1};
+  // Rafraîchit les données de COMMANDES (TDB, liste, préparation, capacité,
+  // stock) sans recharger la page : flush des écritures en vol, refetch des
+  // endpoints, injection mémoire, re-rendu. Appelé à l'entrée d'écran et
+  // toutes les 60 s tant que l'onglet est visible (voir componentDidMount).
+  ordersRefresh(){ const fr=window.__FR||{}; if(!fr.base) return Promise.resolve();
+    if(this._ordBusy) return Promise.resolve(); this._ordBusy=true;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'};
+    const KEYS={fr_orders:'fr-orders',fr_tdb_tree:'fr-tdb-tree',fr_prep_points:'fr-prep-points',
+      fr_net_stats:'fr-net-stats',fr_capacity:'fr-capacity',kpis:'kpis',
+      fr_tdb_tournees:'fr-tdb-tournees',fr_stock_catalog:'fr-stock-catalog'};
+    const fl=(window.BOServer&&window.BOServer.flush)?window.BOServer.flush():Promise.resolve();
+    return fl.then(()=>Promise.all(Object.keys(KEYS).map(k=>
+      fetch(fr.base+'/franchisee/'+KEYS[k]+qs,H).then(r=>r.ok?r.json():null)
+        .then(rows=>{ if(Array.isArray(rows)&&window.BOServer) window.BOServer.refresh(k,rows); }).catch(()=>{})
+    ))).then(()=>{ this._ordBusy=false; this.setState(s=>({_rev:(s._rev||0)+1})); },
+             ()=>{ this._ordBusy=false; }); }
 
   navStyle(s){
     const active = this.state.screen===s;
@@ -3083,7 +3105,14 @@ class Component extends DCLogic {
     else if(!this._fitDone){ const all=[[d.lat,d.lng],...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
       if(all.length>1){ this._fitDone=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
   }
-  componentDidMount(){ this.ensureMaps(); }
+  componentDidMount(){ this.ensureMaps();
+    // Auto-refresh des COMMANDES : toutes les 60 s tant que l'onglet est
+    // visible et qu'un écran « commandes » est affiché — une nouvelle commande
+    // webshop apparaît sans recharger la page. Au retour sur l'onglet
+    // (visibilitychange), refresh immédiat.
+    this._ordTimer=setInterval(()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); },60000);
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); });
+  }
   componentDidUpdate(){ this.ensureMaps(); }
 
   render(){ return null; }
@@ -4036,7 +4065,9 @@ class Component extends DCLogic {
       .map(o=>{
         const [bg,c]=ordStatColor(o.statut);
         const isDeliv=o.mode==='Livraison';
-        const jl=jourLbl(o.date);
+        // La DATE (jj/mm) apparaît TOUJOURS dans la colonne Créneau — jour de
+        // livraison de la commande ; les jours futurs gardent le jour de semaine.
+        const jl=o.date?(o.date===todayIso?(o.date.slice(8,10)+'/'+o.date.slice(5,7)):jourLbl(o.date)):'';
         return {...o, slot:(jl?(jl+' · '):'')+(o.creneau||'—'), total:o.montant,
           // Modes : Livraison = texte noir sur fond abricot · Collect = fond bordeaux clair.
           modeTxt:isDeliv?'Livraison':'Collect',
