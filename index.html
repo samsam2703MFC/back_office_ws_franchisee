@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072350"></script>
-<script src="bo_server.js?v=2026072350"></script>
+<script src="api-config.js?v=2026072351"></script>
+<script src="bo_server.js?v=2026072351"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072350'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072351'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072350">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072350"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072351">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072351"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1439,14 +1439,14 @@
 
         <sc-if value="{{ assortTabAssort }}" hint-placeholder-val="{{ true }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div class="t-section-title" style="font-size:15px;margin-bottom:3px">Assortiment par boutique</div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">ws_product_shops — activer/désactiver <strong>catégories</strong> et <strong>produits</strong> · les éléments <strong>marque obligatoire</strong> sont verrouillés · seuls les actifs sont repris dans le Stock du jour</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:12px"><div class="t-section-title" style="font-size:15px">Assortiment par boutique</div><button onClick="{{ asrToggleAll }}" style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-text);font:500 12px var(--font-ui);cursor:pointer;padding:8px 15px;flex:none">{{ asrToggleAllLabel }}</button></div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">ws_product_shops — activer/désactiver <strong>catégories</strong> et <strong>produits</strong> · les éléments <strong>marque obligatoire</strong> sont verrouillés · seuls les actifs sont repris dans le Stock du jour · <strong>clic sur une catégorie</strong> = déplier/replier ses produits</div>
           <div style="display:grid;grid-template-columns:2.4fr 1.2fr .7fr;padding:8px 6px 8px 22px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Catégorie / produit</span><span class="t-admin-label">État</span><span class="t-admin-label" style="text-align:center">Actif</span></div>
           <sc-for list="{{ assortRows }}" as="a" hint-placeholder-count="8">
             <sc-if value="{{ a.isCat }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;align-items:center;gap:11px;padding:11px 8px;background:var(--color-background-secondary);border-radius:8px;margin-top:8px">
                 <button onClick="{{ a.toggle }}" style="{{ a.swStyle }}"><span style="{{ a.swKnob }}"></span></button>
-                <span style="font:600 12px var(--font-ui);text-transform:uppercase;letter-spacing:.05em;color:var(--color-text);flex:1">{{ a.label }}</span>
+                <div onClick="{{ a.open }}" style="flex:1;display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0"><span style="width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-text-muted);flex:none">{{ a.caret }}</span><span style="font:600 12px var(--font-ui);text-transform:uppercase;letter-spacing:.05em;color:var(--color-text)">{{ a.label }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);flex:none">{{ a.nbProds }}</span></div>
                 <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if>
                 <sc-if value="{{ a.mand }}" hint-placeholder-val="{{ false }}"><span style="{{ a.mandBadge }}">Marque obligatoire</span></sc-if>
               </div>
@@ -4518,11 +4518,18 @@ class Component extends DCLogic {
       const cAct=c.prods.some(p=>p.defA!==false);
       const allLocked=c.prods.every(p=>p.locked);
       const cs=swT(cAct,allLocked);
+      // REPLI/DÉPLI par catégorie : replié PAR DÉFAUT (on ne voit que les
+      // bandeaux catégorie → gestion plus simple) ; clic sur le bandeau =
+      // déplier ; bouton global « Tout déplier / Tout replier ».
+      const catOpen=(S.asrOpen&&S.asrOpen[k]!==undefined)?S.asrOpen[k]:!!S.asrAllOpen;
       assortRows.push({isCat:true,isProd:false,label:c.cat,mand:allLocked,mandBadge:pill2('#fbe9eb','var(--color-primary)'),
+        caret:catOpen?'▾':'▸',nbProds:c.prods.length+' produit'+(c.prods.length>1?'s':''),
+        open:()=>this.setState(s=>({asrOpen:{...(s.asrOpen||{}),[k]:!catOpen}})),
         help:cAct?('Catégorie « '+c.cat+' » ACTIVE : ses produits sont vendables (ws_product_shops). La désactiver retire tous ses produits non verrouillés de la vente.'):('Catégorie « '+c.cat+' » DÉSACTIVÉE : ses produits sont retirés de la vente. La réactiver les rétablit.'),
         swStyle:cs.style,swKnob:cs.knob,
         toggle:allLocked?(()=>{}):(()=>{ const nv=!cAct;
           asrPost({cat:c.cat,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>(x.cat||'Autres')===k,nv); asrReloadStock(); this.printJob((nv?'✓ Catégorie « ':'Catégorie « ')+c.cat+' » '+(nv?'activée':'désactivée')+' — '+(j.n||0)+' produit(s) (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
+      if(!catOpen) return;
       c.prods.forEach(p=>{ const pAct=p.defA!==false; const ps2=swT(pAct,p.locked);
         assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
           canal:p.canal||'',hasCanal:!!p.canal,
@@ -4535,6 +4542,11 @@ class Component extends DCLogic {
             asrPost({product:p.nom,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>x.nom===p.nom,nv); asrReloadStock(); this.printJob('✓ « '+p.nom+' » '+(nv?'activé':'désactivé')+' (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
       });
     });
+
+    // Bouton global repli/dépli de l'assortiment.
+    const asrAllNowOpen=asrOrder.length>0&&asrOrder.every(k2=>(S.asrOpen&&S.asrOpen[k2]!==undefined)?S.asrOpen[k2]:!!S.asrAllOpen);
+    const asrToggleAll=()=>this.setState({asrAllOpen:!asrAllNowOpen,asrOpen:{}});
+    const asrToggleAllLabel=asrAllNowOpen?'⊖ Tout replier':'⊕ Tout déplier';
 
     // Demandes de rattachement bureau — Lier/Rejeter ÉCRIVENT en base
     // (POST /franchisee/join-decide → ws_office_join_requests.status).
@@ -5076,7 +5088,7 @@ class Component extends DCLogic {
       remiseTrack,remiseKnob,remiseToggle,remiseRate,remiseMin,remiseSetRate,remiseSetMin,remiseColor:remiseOn?'#2d7a3e':'var(--color-text-muted)',remiseStatus:remiseOn?'Active':'Désactivée',
       isVouchers:screen==='vouchers',vouchersList,addVoucher:this.openForm('voucher'),
       isRemiseWebshop:screen==='remiseWebshop',remiseTrack,remiseKnob,remiseToggle,remiseRate,remiseMin,remiseSetRate,remiseSetMin,remiseColor:remiseOn?'#2d7a3e':'var(--color-text-muted)',remiseStatus:remiseOn?'Active':'Désactivée',
-      isAssortiment:screen==='assortiment',assortRows,
+      isAssortiment:screen==='assortiment',assortRows,asrToggleAll,asrToggleAllLabel,
       assortTabAssort:(S.assortTab||'assort')==='assort',assortTabCat:(S.assortTab||'assort')==='cat',assortTabProd:(S.assortTab||'assort')==='prod',
       assortSegAssort:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.assortTab||'assort')==='assort'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       assortSegCat:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.assortTab||'assort')==='cat'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
