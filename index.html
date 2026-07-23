@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072305"></script>
-<script src="bo_server.js?v=2026072305"></script>
+<script src="api-config.js?v=2026072306"></script>
+<script src="bo_server.js?v=2026072306"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072305'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072306'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072305">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072305"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072306">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072306"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -867,8 +867,8 @@
                       <sc-for list="{{ c.deptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
                     </select>
                   </sc-if>
-                  <sc-if value="{{ c.offDelOn }}" hint-placeholder-val="{{ false }}">
-                    <span style="display:inline-flex;align-items:center;height:28px;background:#f6ead9;color:#8C4A2F;border-radius:20px;padding:0 11px;font:600 11px/1 var(--font-ui);white-space:nowrap">Livraison au bureau</span>
+                  <sc-if value="{{ c.offDelShow }}" hint-placeholder-val="{{ false }}">
+                    <button onClick="{{ c.offDelToggle }}" title="Validation manuelle du franchisé — activer rend l'office livrable (client.office_delivery)" style="{{ c.offDelStyle }}">{{ c.offDelLbl }}</button>
                   </sc-if>
                 </div>
               </div>
@@ -3772,9 +3772,17 @@ class Component extends DCLogic {
             postAtt(c.id,{office_id:o&&o.id!=null?o.id:null,department_id:null},
               {office_id:o?o.id:null,office_name:o?o.name:null,site_name:siteLbl,tour_name:tourLbl,department:null,department_id:null,
                deferred:(o&&(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui'||o.deferred_billing_enabled===1))?1:0}); },
-          // Badge ocre « Livraison au bureau » à côté du département quand le
-          // rattachement bureau a office_delivery actif.
-          offDelOn:!!(c.office_name&&Number(c.office_delivery)),
+          // Toggle DISCRET « Livraison au bureau » sur la ligne (si is_b2b) :
+          // c'est la VALIDATION MANUELLE du franchisé — l'activer valide le
+          // client et rend son office livrable (créé/validé côté serveur).
+          offDelShow:!!(Number(c.is_b2b)||c.invoice_vat),
+          offDelOn:!!Number(c.office_delivery),
+          offDelStyle:(Number(c.office_delivery)
+            ?'display:inline-flex;align-items:center;gap:5px;height:28px;background:#f6ead9;color:#8C4A2F;border:1px solid #e0c9a4;border-radius:20px;padding:0 11px;font:600 11px/1 var(--font-ui);white-space:nowrap;cursor:pointer'
+            :'display:inline-flex;align-items:center;gap:5px;height:28px;background:transparent;color:var(--color-text-muted);border:1px dashed var(--color-border-secondary);border-radius:20px;padding:0 11px;font:600 11px/1 var(--font-ui);white-space:nowrap;cursor:pointer'),
+          offDelLbl:Number(c.office_delivery)?'● Livraison au bureau':'○ Livraison au bureau',
+          offDelToggle:()=>{ const on=Number(c.office_delivery)?0:1;
+            post('client-office-delivery',{id:c.id,enabled:on},(j)=>{ if(j&&j.ok){ patchLocal(c.id,{office_delivery:on,status:on?0:c.status}); this.printJob(on?'✓ Validation manuelle : livraison au bureau ACTIVÉE — office créé/validé, livrable':'Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur livraison au bureau'); }); },
           // Département : sélectionné → BADGE avec « × » ; sinon droplist si
           // le bureau choisi possède des départements.
           hasDeptBadge:!!c.department,
@@ -3849,14 +3857,14 @@ class Component extends DCLogic {
             if(!(v>0)){ this.printJob('Montant du voucher requis (> 0)'); return; }
             post('client-voucher',{client_id:fc.id,value:v,type:'fixed'},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{voucher_active:(Number(fc.voucher_active)||0)+1}); this.setState({bcVoucherMsg:'✓ Voucher '+j.code+' — '+v.toFixed(2).replace('.',',')+' € (usage unique)',bcVoucherVal:''}); } else this.printJob((j&&j.error)||'Erreur voucher'); }); },
           fcVoucherMsg:S.bcVoucherMsg||'',fcVoucherHasMsg:!!S.bcVoucherMsg,
-          // Livraison au bureau (client.office_delivery) : réservé aux personnes
-          // morales VALIDÉES ; le trigger crée/désactive l'office en base.
-          fcOffDelShow:!!((Number(fc.is_b2b)||fc.invoice_vat)&&!Number(fc.status)),
+          // Livraison au bureau (client.office_delivery) = validation manuelle
+          // du franchisé : activer valide le client + rend l'office livrable.
+          fcOffDelShow:!!(Number(fc.is_b2b)||fc.invoice_vat),
           fcOffDelOn:!!Number(fc.office_delivery),
           fcOffDelLbl:Number(fc.office_delivery)?'Activée':'Désactivée',
           fcOffDelStyle:togStyle(!!Number(fc.office_delivery),'#f6ead9','#8C4A2F'),
           fcOffDelToggle:()=>{ const on=Number(fc.office_delivery)?0:1;
-            post('client-office-delivery',{id:fc.id,enabled:on},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{office_delivery:on}); this.printJob(on?'✓ Livraison au bureau ACTIVÉE — l\'office est créé/réactivé (trigger)':'Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur livraison au bureau'); }); },
+            post('client-office-delivery',{id:fc.id,enabled:on},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{office_delivery:on,status:on?0:fc.status}); this.printJob(on?'✓ Validation manuelle : livraison au bureau ACTIVÉE — office créé/validé, livrable':'Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur livraison au bureau'); }); },
           // Code postal : ajout / édition directe depuis la fiche (client.zip).
           fcZip:S.bcZip!==undefined?S.bcZip:(fc.zip||''),
           fcSetZip:(e)=>this.setState({bcZip:e.target.value}),
