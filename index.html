@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072342"></script>
-<script src="bo_server.js?v=2026072342"></script>
+<script src="api-config.js?v=2026072343"></script>
+<script src="bo_server.js?v=2026072343"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072342'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072343'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072342">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072342"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072343">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072343"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -272,9 +272,9 @@
           </div>
           <div class="t-admin-label" style="margin-bottom:8px">À produire</div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden;margin-bottom:16px">
-            <div style="display:grid;grid-template-columns:1.1fr 1.7fr .6fr 1.2fr 1.2fr;gap:14px;width:100%;padding:8px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Produit</span><span class="t-admin-label" style="text-align:center">Qty</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Tournée</span></div>
+            <div style="display:grid;grid-template-columns:1.2fr 2fr 70px 1.3fr 1.4fr;gap:16px;width:100%;padding:8px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Produit</span><span class="t-admin-label" style="text-align:center">Qty</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Tournée</span></div>
             <sc-for list="{{ prepProdLines }}" as="pl" hint-placeholder-count="4">
-              <div style="display:grid;grid-template-columns:1.1fr 1.7fr .6fr 1.2fr 1.2fr;gap:14px;width:100%;align-items:center;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary)">
+              <div style="display:grid;grid-template-columns:1.2fr 2fr 70px 1.3fr 1.4fr;gap:16px;width:100%;align-items:center;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary)">
                 <span style="font:500 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pl.cat }}</span>
                 <span style="font:500 12px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ pl.produit }}">{{ pl.produit }}</span>
                 <span style="font:700 13px var(--font-ui);color:var(--color-primary);text-align:center">{{ pl.qty }}</span>
@@ -298,22 +298,22 @@
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px"><div class="t-section-title" style="font-size:16px">À préparer — tournée › delivery site › office</div><button onClick="{{ tdbToggleAll }}" style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-text);font:500 12px var(--font-ui);cursor:pointer;padding:9px 16px;min-height:40px">{{ tdbToggleAllLabel }}</button></div>
-          <div style="display:grid;grid-template-columns:1fr 96px 200px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Niveau</span><span class="t-admin-label" style="text-align:right">Commandes</span><span class="t-admin-label" style="text-align:right">Étiquettes</span></div>
+          <div style="display:grid;grid-template-columns:1fr 96px 330px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Niveau</span><span class="t-admin-label" style="text-align:right">Commandes</span><span class="t-admin-label" style="text-align:right">Étiquettes</span></div>
           <sc-for list="{{ prepTree }}" as="t" hint-placeholder-count="3">
-            <div style="display:grid;grid-template-columns:1fr 96px 200px;align-items:center;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);min-height:56px">
+            <div style="display:grid;grid-template-columns:1fr 96px 330px;align-items:center;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);min-height:56px">
               <div onClick="{{ t.toggle }}" style="display:flex;align-items:center;gap:8px;cursor:pointer"><span style="width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--color-text-muted);flex:none">{{ t.caret }}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.7"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 9h4l3 3v5h-7z"/><circle cx="6" cy="19" r="1.8"/><circle cx="18" cy="19" r="1.8"/></svg><div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ t.nom }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ t.chauffeur }} · {{ t.nbSites }} sites</div></div></div>
               <span style="text-align:right;font:700 16px var(--font-ui);color:var(--color-primary)">{{ t.commandes }}</span>
-              <div style="justify-self:end;display:flex;align-items:center;gap:8px"><sc-if value="{{ t.printed }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font:600 10px var(--font-ui);background:#eaf5ec;color:#2d7a3e">✓ imprimé</span></sc-if><button onClick="{{ t.print }}" style="background:var(--color-primary);color:#fff;border:none;border-radius:8px;padding:0 12px;font:600 11px var(--font-ui);cursor:pointer;height:38px;width:120px;display:inline-flex;align-items:center;justify-content:center;flex:none">🖨 Étiquettes</button></div>
+              <div style="justify-self:end;display:flex;align-items:center;gap:8px"><sc-if value="{{ t.printed }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font:600 10px var(--font-ui);background:#eaf5ec;color:#2d7a3e">✓ imprimé</span></sc-if><button onClick="{{ t.print }}" style="background:var(--color-primary);color:#fff;border:none;border-radius:8px;padding:0 12px;font:600 11px var(--font-ui);cursor:pointer;height:38px;width:120px;display:inline-flex;align-items:center;justify-content:center;flex:none">🖨 Étiquettes</button><button onClick="{{ t.sendTab }}" title="Envoyer la tournée sur la tablette du chauffeur" style="background:var(--color-surface);color:var(--color-primary);border:1.5px solid var(--color-primary);border-radius:8px;padding:0 12px;font:600 11px var(--font-ui);cursor:pointer;height:38px;display:inline-flex;align-items:center;justify-content:center;flex:none">📲 Tablette</button></div>
             </div>
             <sc-if value="{{ t.open }}" hint-placeholder-val="{{ true }}">
             <sc-for list="{{ t.sites }}" as="s" hint-placeholder-count="2">
-              <div style="display:grid;grid-template-columns:1fr 96px 200px;align-items:center;padding:6px 6px;border-bottom:.5px solid var(--color-border-tertiary);min-height:50px">
+              <div style="display:grid;grid-template-columns:1fr 96px 330px;align-items:center;padding:6px 6px;border-bottom:.5px solid var(--color-border-tertiary);min-height:50px">
                 <div onClick="{{ s.toggle }}" style="padding-left:20px;display:flex;align-items:center;gap:8px;cursor:pointer"><span style="width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-text-muted);flex:none">{{ s.caret }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.8"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><div style="font:500 13px var(--font-ui);color:var(--color-text)">{{ s.libelle }}</div><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ s.ville }}</span></div>
                 <span style="text-align:right;font:600 13px var(--font-ui);color:var(--color-text)">{{ s.commandes }}</span>
                 <div style="justify-self:end;display:flex;align-items:center;gap:8px"><sc-if value="{{ s.printed }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font:600 10px var(--font-ui);background:#eaf5ec;color:#2d7a3e">✓ imprimé</span></sc-if><button onClick="{{ s.print }}" style="background:var(--color-surface);color:var(--color-primary);border:.5px solid var(--color-primary);border-radius:8px;padding:0 11px;font:600 11px var(--font-ui);cursor:pointer;height:38px;width:120px;display:inline-flex;align-items:center;justify-content:center;flex:none">🖨 Site</button></div>
               </div>
               <sc-if value="{{ s.open }}" hint-placeholder-val="{{ true }}">
-              <div style="display:grid;grid-template-columns:1fr 96px 200px;align-items:center;padding:5px 6px;border-bottom:.5px solid var(--color-border-tertiary);min-height:46px">
+              <div style="display:grid;grid-template-columns:1fr 96px 330px;align-items:center;padding:5px 6px;border-bottom:.5px solid var(--color-border-tertiary);min-height:46px">
                 <div style="padding-left:46px;display:flex;align-items:center;gap:8px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 8h4M8 12h4M8 16h4"/></svg><span style="font:500 12px var(--font-ui);color:var(--color-text)">Office · {{ s.office }}</span></div>
                 <span style="text-align:right;font:600 12.5px var(--font-ui);color:var(--color-text-muted)">{{ s.officeCmd }}</span>
                 <div style="justify-self:end;display:flex;align-items:center;gap:8px"><sc-if value="{{ s.officePrinted }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font:600 10px var(--font-ui);background:#eaf5ec;color:#2d7a3e">✓ imprimé</span></sc-if><button onClick="{{ s.officePrint }}" style="background:var(--color-surface);color:var(--color-primary);border:.5px solid var(--color-primary);border-radius:8px;padding:0 11px;font:600 11px var(--font-ui);cursor:pointer;height:38px;width:120px;display:inline-flex;align-items:center;justify-content:center;flex:none">🖨 Client</button></div>
@@ -1651,6 +1651,28 @@
       <div style="padding:14px 26px 20px;display:flex;gap:10px">
         <button onClick="{{ stkFClose }}" class="btn-secondary" style="flex:1;font-size:13px">Annuler</button>
         <sc-if value="{{ stkFCanSave }}" hint-placeholder-val="{{ true }}"><button onClick="{{ stkFSubmit }}" class="btn-primary" style="flex:1;font-size:13px">Enregistrer le stock</button></sc-if>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ MODALE ENVOI TABLETTE · VALIDATION CHAUFFEUR ============ -->
+  <sc-if value="{{ tabModalOn }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ tabClose }}" style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:2100;padding:24px">
+    <div onClick="{{ stop }}" style="background:var(--color-surface);border-radius:14px;width:480px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;display:flex;flex-direction:column">
+      <div style="padding:22px 26px 14px;border-bottom:.5px solid var(--color-border-tertiary)">
+        <div style="display:flex;align-items:center;gap:12px"><span style="width:40px;height:40px;border-radius:10px;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center;flex:none;font-size:19px">📲</span><div style="min-width:0"><div class="t-page-title" style="font-size:16px">Envoi vers la tablette — {{ tabTour }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ tabInfo }} · ws_tour_tracking</div></div></div>
+      </div>
+      <div style="padding:18px 26px">
+        <div class="t-admin-label" style="margin-bottom:6px">Chauffeur</div>
+        <input value="{{ tabDriver }}" onInput="{{ tabDriverSet }}" placeholder="Nom du chauffeur (obligatoire)" style="width:100%;height:42px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:0 13px;font:500 13px var(--font-ui);background:var(--color-surface);color:var(--color-text)"/>
+        <div class="t-admin-label" style="margin:16px 0 6px">Validation de la tournée par le chauffeur</div>
+        <span style="{{ tabStatusPill }}">{{ tabStatusTxt }}</span>
+        <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:10px">Chaque envoi remet la validation à zéro : le chauffeur reçoit la tournée sur sa tablette et la valide — le statut passe alors en « ✓ Validée ».</div>
+      </div>
+      <div style="padding:0 26px 20px;display:flex;gap:10px">
+        <button onClick="{{ tabClose }}" class="btn-secondary" style="flex:1;font-size:13px">Fermer</button>
+        <sc-if value="{{ tabCanSend }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tabSend }}" class="btn-primary" style="flex:1;font-size:13px">📲 Envoyer au chauffeur</button></sc-if>
       </div>
     </div>
   </div>
@@ -3257,7 +3279,33 @@ class Component extends DCLogic {
           officeOpen:!col[ok],officeCaret:col[ok]?'▸':'▾',officeToggle:()=>toggleKey(ok),
           officePrinted:!!pr[ok],officePrint:(e)=>{e&&e.stopPropagation&&e.stopPropagation();markPrint(ok,'🖨 Étiquette client — '+s.office);}}; });
       return {nom:t.nom,chauffeur:t.chauffeur,statutLabel:t.statutLabel,statutStyle:t.statutStyle,nbSites:sites.length,
-        commandes:sites.reduce((a,s)=>a+s.commandes,0),sites,...car(tk),printed:!!pr[tk],print:(e)=>{e&&e.stopPropagation&&e.stopPropagation();markPrint(tk,'🖨 Étiquettes tournée — '+t.nom);}}; });
+        commandes:sites.reduce((a,s)=>a+s.commandes,0),sites,...car(tk),printed:!!pr[tk],print:(e)=>{e&&e.stopPropagation&&e.stopPropagation();markPrint(tk,'🖨 Étiquettes tournée — '+t.nom);},
+        sendTab:(e)=>{e&&e.stopPropagation&&e.stopPropagation();this.setState({tabModal:{tour:t.nom},tabDriver:null});}}; });
+    // Envoi tablette + validation chauffeur (ws_tour_tracking réelle).
+    const tourDispatch=SRV('fr_tour_dispatch');
+    const tabM=S.tabModal; const tabModalOn=!!tabM;
+    const tabTour=tabM?tabM.tour:'';
+    const tabRow=tourDispatch.find(r=>r.tour===tabTour);
+    const tabDriver=(S.tabDriver!=null)?S.tabDriver:((tabRow&&tabRow.chauffeur&&tabRow.chauffeur!=='—')?tabRow.chauffeur:'');
+    const tabPrep=prepTree.find(x=>x.nom===tabTour)||{nbSites:0,commandes:0};
+    const tabInfo=tabPrep.nbSites+' site(s) · '+tabPrep.commandes+' commande(s) à livrer';
+    const tabStatusTxt=tabRow?(tabRow.valide?('✓ Validée par le chauffeur le '+tabRow.valide)
+      :(tabRow.envoye?('⏳ Envoyée le '+tabRow.envoye+' — en attente de validation du chauffeur'):'Jamais envoyée'))
+      :'Jamais envoyée sur la tablette';
+    const tabStatusPill='display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font:600 11.5px var(--font-ui);'
+      +(tabRow&&tabRow.valide?'background:#eaf5ec;color:#2d7a3e':(tabRow&&tabRow.envoye?'background:#fdf3e7;color:#b26a00':'background:var(--color-background-secondary);color:var(--color-text-muted)'));
+    const tabCanSend=!!(tabTour&&String(tabDriver).trim());
+    const tabDriverSet=(e)=>this.setState({tabDriver:e.target.value});
+    const tabClose=()=>this.setState({tabModal:null,tabDriver:null});
+    const tabSend=()=>{ const fr=window.__FR||{}; if(!fr.base){ this.printJob('⚠ API indisponible — envoi impossible'); return; }
+      const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})};
+      fetch(fr.base+'/franchisee/tour-dispatch'+qs2,{method:'POST',headers:H2,credentials:'omit',body:JSON.stringify({tour:tabTour,driver:String(tabDriver).trim()})})
+        .then(r=>r.json().catch(()=>null)).then(j=>{
+          if(j&&j.ok){ this.printJob('📲 Tournée « '+tabTour+' » envoyée sur la tablette — en attente de validation chauffeur');
+            fetch(fr.base+'/franchisee/tour-dispatch-status'+qs2,{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+              .then(r=>r.ok?r.json():null).then(rows=>{ if(Array.isArray(rows)&&window.BOServer) window.BOServer.refresh('fr_tour_dispatch',rows); this.setState(s=>({_rev:(s._rev||0)+1})); });
+          } else this.printJob('⚠ Envoi impossible : '+((j&&j.error)||'erreur serveur')); })
+        .catch(()=>this.printJob('⚠ Envoi impossible — réseau')); };
     const allCollapsed=allKeys.every(k=>col[k]);
     const tdbToggleAll=()=>this.setState(()=>{ const nc={}; if(!allCollapsed){ allKeys.forEach(k=>nc[k]=true); } return {tdbCollapsed:nc}; });
     const tdbToggleAllLabel=allCollapsed?'⊕ Tout déplier':'⊖ Tout replier';
@@ -4883,6 +4931,7 @@ class Component extends DCLogic {
       tdbSetTree:()=>this.setState({tdbView:'tree'}),tdbSetList:()=>this.setState({tdbView:'list'}),tdbSetCollect:()=>this.setState({tdbView:'collect'}),
       ordListTitle:tdbView==='collect'?'Commandes Collect':'Commandes',
       ordRangeChips,prepDayBadges,prepDayOrders,prepDayEmpty,prepProdLines,prepProdEmpty,
+      tabModalOn,tabTour,tabDriver,tabDriverSet,tabClose,tabSend,tabStatusTxt,tabStatusPill,tabCanSend,tabInfo,
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
       stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
       stkModalTrack,stkModalKnob,stkModalToggle,stkModeBadges,
