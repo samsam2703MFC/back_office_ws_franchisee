@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072352"></script>
-<script src="bo_server.js?v=2026072352"></script>
+<script src="api-config.js?v=2026072353"></script>
+<script src="bo_server.js?v=2026072353"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072352'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072353'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072352">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072352"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072353">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072353"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1449,6 +1449,13 @@
                 <div onClick="{{ a.open }}" style="flex:1;display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0"><span style="width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-text-muted);flex:none">{{ a.caret }}</span><span style="font:600 12px var(--font-ui);text-transform:uppercase;letter-spacing:.05em;color:var(--color-text)">{{ a.label }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);flex:none">{{ a.nbProds }}</span></div>
                 <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if>
                 <sc-if value="{{ a.mand }}" hint-placeholder-val="{{ false }}"><span style="{{ a.mandBadge }}">Marque obligatoire</span></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ a.isSub }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ a.subToggle }}" style="display:flex;align-items:center;gap:8px;padding:8px 8px 8px 28px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer;background:color-mix(in srgb,var(--color-background-secondary) 55%,var(--color-surface))">
+                <span style="width:18px;height:18px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:var(--color-text-muted);flex:none">{{ a.subCaret }}</span>
+                <span style="font:600 11px var(--font-ui);color:var(--color-text)">{{ a.subLabel }}</span>
+                <span style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ a.nbSub }}</span>
               </div>
             </sc-if>
             <sc-if value="{{ a.isProd }}" hint-placeholder-val="{{ false }}">
@@ -4532,7 +4539,20 @@ class Component extends DCLogic {
         toggle:allLocked?(()=>{}):(()=>{ const nv=!cAct;
           asrPost({cat:c.cat,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>(x.cat||'Autres')===k,nv); asrReloadStock(); this.printJob((nv?'✓ Catégorie « ':'Catégorie « ')+c.cat+' » '+(nv?'activée':'désactivée')+' — '+(j.n||0)+' produit(s) (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
       if(!catOpen) return;
-      c.prods.forEach(p=>{ const pAct=p.defA!==false; const ps2=swT(pAct,p.locked);
+      // Niveau SOUS-CATÉGORIE (même structure que le catalogue franchisor) :
+      // bandeau repliable par sous-catégorie ; produits sans sous-catégorie
+      // listés directement sous la catégorie.
+      const subsMap={}; const subOrder=[];
+      c.prods.forEach(p=>{ const sk2=p.sub||''; if(!(sk2 in subsMap)){ subsMap[sk2]=[]; subOrder.push(sk2); } subsMap[sk2].push(p); });
+      subOrder.forEach(sk2=>{ const sprods=subsMap[sk2]; let subOpen=true;
+        if(sk2){ const skey=k+'|'+sk2;
+          subOpen=(S.asrSubOpen&&S.asrSubOpen[skey]!==undefined)?S.asrSubOpen[skey]:true;
+          assortRows.push({isCat:false,isProd:false,isSub:true,subLabel:sk2,subCaret:subOpen?'▾':'▸',
+            nbSub:sprods.length+' produit'+(sprods.length>1?'s':''),
+            subToggle:()=>this.setState(s=>({asrSubOpen:{...(s.asrSubOpen||{}),[skey]:!subOpen}}))});
+        }
+        if(!subOpen) return;
+        sprods.forEach(p=>{ const pAct=p.defA!==false; const ps2=swT(pAct,p.locked);
         assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
           canal:p.canal||'',hasCanal:!!p.canal,
           hasPort:!!erpPortIdx[p.nom],portTitle:erpPortIdx[p.nom]||'',
@@ -4542,6 +4562,7 @@ class Component extends DCLogic {
           swStyle:ps2.style,swKnob:ps2.knob,
           toggle:p.locked?(()=>{}):(()=>{ const nv=!pAct;
             asrPost({product:p.nom,productId:(p.id!=null?p.id:undefined),active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>x.nom===p.nom,nv); asrReloadStock(); this.printJob('✓ « '+p.nom+' » '+(nv?'activé':'désactivé')+' (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
+        });
       });
     });
 
