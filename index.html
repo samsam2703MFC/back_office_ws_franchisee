@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072343"></script>
-<script src="bo_server.js?v=2026072343"></script>
+<script src="api-config.js?v=2026072344"></script>
+<script src="bo_server.js?v=2026072344"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072343'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072344'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072343">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072343"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072344">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072344"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1665,7 +1665,16 @@
       </div>
       <div style="padding:18px 26px">
         <div class="t-admin-label" style="margin-bottom:6px">Chauffeur</div>
-        <input value="{{ tabDriver }}" onInput="{{ tabDriverSet }}" placeholder="Nom du chauffeur (obligatoire)" style="width:100%;height:42px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:0 13px;font:500 13px var(--font-ui);background:var(--color-surface);color:var(--color-text)"/>
+        <sc-if value="{{ tabHasList }}" hint-placeholder-val="{{ true }}">
+        <select value="{{ tabDriverVal }}" onChange="{{ tabDriverPick }}" style="width:100%;height:42px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:0 10px;font:500 13px var(--font-ui);background:var(--color-surface);color:var(--color-text);cursor:pointer">
+          <option value="">— Choisir un chauffeur —</option>
+          <sc-for list="{{ tabDriverOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.v }}">{{ op.v }}</option></sc-for>
+          <option value="__new">＋ Nouveau chauffeur…</option>
+        </select>
+        </sc-if>
+        <sc-if value="{{ tabNewMode }}" hint-placeholder-val="{{ false }}">
+        <input value="{{ tabDriver }}" onInput="{{ tabDriverSet }}" placeholder="Nom du chauffeur (obligatoire)" style="width:100%;height:42px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:0 13px;font:500 13px var(--font-ui);background:var(--color-surface);color:var(--color-text);margin-top:8px"/>
+        </sc-if>
         <div class="t-admin-label" style="margin:16px 0 6px">Validation de la tournée par le chauffeur</div>
         <span style="{{ tabStatusPill }}">{{ tabStatusTxt }}</span>
         <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:10px">Chaque envoi remet la validation à zéro : le chauffeur reçoit la tournée sur sa tablette et la valide — le statut passe alors en « ✓ Validée ».</div>
@@ -3296,14 +3305,27 @@ class Component extends DCLogic {
       +(tabRow&&tabRow.valide?'background:#eaf5ec;color:#2d7a3e':(tabRow&&tabRow.envoye?'background:#fdf3e7;color:#b26a00':'background:var(--color-background-secondary);color:var(--color-text-muted)'));
     const tabCanSend=!!(tabTour&&String(tabDriver).trim());
     const tabDriverSet=(e)=>this.setState({tabDriver:e.target.value});
-    const tabClose=()=>this.setState({tabModal:null,tabDriver:null});
+    // DROPLIST chauffeur : noms connus (fr_drivers ← ws_tour_tracking/ws_tours) ;
+    // « + Nouveau chauffeur… » bascule en saisie libre (premier chauffeur inclus).
+    const drvKnown=[...new Set(SRV('fr_drivers').map(d=>(d&&d.nom)||'').filter(Boolean))];
+    const tabHasList=drvKnown.length>0;
+    const tabNewMode=!!S.tabDriverNew||!tabHasList;
+    const tabDriverOpts=drvKnown.map(n=>({v:n}));
+    const tabDriverVal=(!S.tabDriverNew&&drvKnown.includes(tabDriver))?tabDriver:(S.tabDriverNew?'__new':'');
+    const tabDriverPick=(e)=>{ const v=e.target.value;
+      if(v==='__new') this.setState({tabDriverNew:true,tabDriver:''});
+      else this.setState({tabDriver:v,tabDriverNew:false}); };
+    const tabClose=()=>this.setState({tabModal:null,tabDriver:null,tabDriverNew:null});
     const tabSend=()=>{ const fr=window.__FR||{}; if(!fr.base){ this.printJob('⚠ API indisponible — envoi impossible'); return; }
       const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})};
       fetch(fr.base+'/franchisee/tour-dispatch'+qs2,{method:'POST',headers:H2,credentials:'omit',body:JSON.stringify({tour:tabTour,driver:String(tabDriver).trim()})})
         .then(r=>r.json().catch(()=>null)).then(j=>{
           if(j&&j.ok){ this.printJob('📲 Tournée « '+tabTour+' » envoyée sur la tablette — en attente de validation chauffeur');
-            fetch(fr.base+'/franchisee/tour-dispatch-status'+qs2,{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
-              .then(r=>r.ok?r.json():null).then(rows=>{ if(Array.isArray(rows)&&window.BOServer) window.BOServer.refresh('fr_tour_dispatch',rows); this.setState(s=>({_rev:(s._rev||0)+1})); });
+            const HG={headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'};
+            Promise.all([
+              fetch(fr.base+'/franchisee/tour-dispatch-status'+qs2,HG).then(r=>r.ok?r.json():null).catch(()=>null),
+              fetch(fr.base+'/franchisee/drivers'+qs2,HG).then(r=>r.ok?r.json():null).catch(()=>null),
+            ]).then(([rows,drs])=>{ if(window.BOServer){ if(Array.isArray(rows)) window.BOServer.refresh('fr_tour_dispatch',rows); if(Array.isArray(drs)) window.BOServer.refresh('fr_drivers',drs); } this.setState(s=>({_rev:(s._rev||0)+1})); });
           } else this.printJob('⚠ Envoi impossible : '+((j&&j.error)||'erreur serveur')); })
         .catch(()=>this.printJob('⚠ Envoi impossible — réseau')); };
     const allCollapsed=allKeys.every(k=>col[k]);
@@ -4932,6 +4954,7 @@ class Component extends DCLogic {
       ordListTitle:tdbView==='collect'?'Commandes Collect':'Commandes',
       ordRangeChips,prepDayBadges,prepDayOrders,prepDayEmpty,prepProdLines,prepProdEmpty,
       tabModalOn,tabTour,tabDriver,tabDriverSet,tabClose,tabSend,tabStatusTxt,tabStatusPill,tabCanSend,tabInfo,
+      tabHasList,tabNewMode,tabDriverOpts,tabDriverVal,tabDriverPick,
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
       stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
       stkModalTrack,stkModalKnob,stkModalToggle,stkModeBadges,
