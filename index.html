@@ -827,10 +827,10 @@
       <div style="display:flex;flex-direction:column;gap:14px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
           <input value="{{ bcQ }}" onInput="{{ bcSetQ }}" placeholder="Rechercher un client (nom, société, email, ville…)" style="flex:1;min-width:180px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:400 12.5px var(--font-ui);background:var(--color-background-secondary);box-sizing:border-box"/>
-          <select value="{{ bcDept }}" onChange="{{ bcSetDept }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcDeptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
-          <select value="{{ bcOff }}" onChange="{{ bcSetOff }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcOffOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
-          <select value="{{ bcSite }}" onChange="{{ bcSetSite }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcSiteOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
           <select value="{{ bcTour }}" onChange="{{ bcSetTour }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcTourOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
+          <select value="{{ bcSite }}" onChange="{{ bcSetSite }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcSiteOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
+          <select value="{{ bcOff }}" onChange="{{ bcSetOff }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcOffOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
+          <select value="{{ bcDept }}" onChange="{{ bcSetDept }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcDeptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
           <span style="font:600 11px var(--font-ui);color:var(--color-text-muted);flex:none">{{ bcTotalTxt }}</span>
         </div>
         <div style="display:flex;gap:8px;overflow-x:auto">
@@ -846,7 +846,19 @@
           <sc-for list="{{ bcList }}" as="c" hint-placeholder-count="5">
             <div style="{{ c.rowStyle }}">
               <div style="min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.nm }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.email }}</div></div>
-              <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);min-width:0">{{ c.ratt }}</div>
+              <div style="min-width:0">
+                <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted)">{{ c.ratt }}</div>
+                <div style="display:flex;flex-direction:column;gap:4px;margin-top:5px">
+                  <select value="{{ c.offSel }}" onChange="{{ c.offSet }}" style="border:.5px solid var(--color-border-secondary);border-radius:7px;padding:5px 7px;font:500 10.5px var(--font-ui);background:var(--color-surface);color:var(--color-text-muted);max-width:100%;min-width:0">
+                    <sc-for list="{{ c.offOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+                  </select>
+                  <sc-if value="{{ c.hasDeptOpts }}" hint-placeholder-val="{{ false }}">
+                    <select value="{{ c.deptSel }}" onChange="{{ c.deptSet }}" style="border:.5px solid var(--color-border-secondary);border-radius:7px;padding:5px 7px;font:500 10.5px var(--font-ui);background:var(--color-surface);color:var(--color-text-muted);max-width:100%;min-width:0">
+                      <sc-for list="{{ c.deptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+                    </select>
+                  </sc-if>
+                </div>
+              </div>
               <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center"><sc-for list="{{ c.badges }}" as="bg" hint-placeholder-count="4"><span style="{{ bg.style }}">{{ bg.t }}</span></sc-for></div>
               <div style="display:flex;justify-content:flex-end"><button onClick="{{ c.open }}" class="btn-secondary" style="font-size:11.5px;padding:7px 13px">Fiche</button></div>
             </div>
@@ -3661,7 +3673,11 @@ class Component extends DCLogic {
       ...(()=>{ const noop2=()=>{};
         const rowsC=SRV('b2b_clients');
         const avByTour={}; SRV('ws_tour_availability').forEach(a=>{ if(a.tour) avByTour[a.tour]=a.jour; });
-        const cnm=(c)=>String(c.company_name||((c.name||'')+' '+(c.surname||'')).trim()||c.email||('Client #'+c.id));
+        // Affichage : « Nom Prénom — Société (si rattachée) » ; client.name =
+        // prénom, client.surname = nom de famille.
+        const cnm=(c)=>{ const pers=((c.surname||'')+' '+(c.name||'')).trim();
+          if(pers) return pers+(c.company_name?(' — '+c.company_name):'');
+          return String(c.company_name||c.email||('Client #'+c.id)); };
         const distinct=(f)=>[...new Set(rowsC.map(c=>c[f]).filter(v=>v&&v!=='—'))].sort();
         const opts=(list,ph)=>[{value:'',label:ph},...list.map(v=>({value:v,label:v}))];
         const q=String(S.bcQ||'').toLowerCase();
@@ -3687,11 +3703,30 @@ class Component extends DCLogic {
           const dd=c.last_order||c.created_at; if(dd) B.push({t:(c.last_order?'Dern. cmd ':'Depuis ')+String(dd).slice(0,10),style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
           return B; };
         const filt=rowsC.filter(match);
-        const bcList=filt.map(c=>({id:c.id,nm:cnm(c),email:c.email||'—',
+        // Rattachement direct depuis la liste : droplist Offices + département
+        // de cet office s'il en existe (client.office_id / department_id).
+        const offRows=SRV('ws_offices');
+        const postAtt=(cid,bodyA,patch)=>{ post('client-attach',{id:cid,...bodyA},(j)=>{ if(j&&j.ok){ patchLocal(cid,patch); this.printJob('✓ Rattachement enregistré'); } else this.printJob((j&&j.error)||'Erreur rattachement'); }); };
+        const bcList=filt.map(c=>{
+          const curOff=offRows.find(o=>(c.office_id!=null&&o.id===c.office_id)||(c.office_name&&o.name===c.office_name));
+          const deptOf=(oName)=>deptRowsAll.map((d,di)=>({d,di})).filter(x=>x.d.office===oName||x.d.company===oName);
+          const dOpts=curOff?deptOf(curOff.name):[];
+          return {id:c.id,nm:cnm(c),email:c.email||'—',
           ratt:[c.office_name,c.site_name,c.tour_name,c.department].filter(v=>v&&v!=='—').join(' · ')||'— non rattaché',
+          offSel:curOff?String(curOff.id!=null?curOff.id:curOff.name):'',
+          offOpts:[{value:'',label:'— Rattacher à un office —'},...offRows.map(o=>({value:String(o.id!=null?o.id:o.name),label:o.name}))],
+          offSet:(e)=>{ const v=e.target.value; const o=offRows.find(x=>String(x.id!=null?x.id:x.name)===v)||null;
+            postAtt(c.id,{office_id:o&&o.id!=null?o.id:null,department_id:null},
+              {office_id:o?o.id:null,office_name:o?o.name:null,tour_name:o?(o.tour&&o.tour!=='—'?o.tour:null):null,department:null,department_id:null,
+               deferred:(o&&(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui'||o.deferred_billing_enabled===1))?1:0}); },
+          hasDeptOpts:dOpts.length>0,
+          deptSel:'',
+          deptOpts:[{value:'',label:'— Département (facultatif) —'},...dOpts.map(x=>({value:String(x.d.id!=null?x.d.id:x.di),label:x.d.name||x.d.dept||'Département'}))],
+          deptSet:(e)=>{ const v=e.target.value; const x=dOpts.find(y=>String(y.d.id!=null?y.d.id:y.di)===v)||null;
+            postAtt(c.id,{department_id:x&&x.d.id!=null?x.d.id:null},{department_id:x&&x.d.id!=null?x.d.id:null,department:x?(x.d.name||x.d.dept):null}); },
           badges:badgesOf(c),
-          rowStyle:'display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;align-items:center;gap:10px;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
-          open:()=>{ this.setState({bcFiche:c.id,bcVat:c.invoice_vat||c.tax_number||'',bcCorp:!!(Number(c.is_b2b)||c.invoice_vat),bcVoucherVal:'',bcVoucherMsg:'',bcCompTitle:'',bcCompOrder:'',bcOrders:null}); this.bcLoadOrders(c.id); }}));
+          rowStyle:'display:grid;grid-template-columns:1.5fr 1.5fr 2.6fr .5fr;align-items:start;gap:10px;padding:12px 18px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
+          open:()=>{ this.setState({bcFiche:c.id,bcVat:c.invoice_vat||c.tax_number||'',bcCorp:!!(Number(c.is_b2b)||c.invoice_vat),bcVoucherVal:'',bcVoucherMsg:'',bcCompTitle:'',bcCompOrder:'',bcOrders:null}); this.bcLoadOrders(c.id); }};});
         const cnt={}; rowsC.forEach(c=>{ const k1='Office · '+(c.office_name||'sans bureau'); cnt[k1]=(cnt[k1]||0)+1; if(c.department){ const k2='Dépt · '+c.department; cnt[k2]=(cnt[k2]||0)+1; } });
         const bcCounts=Object.keys(cnt).sort().map(k=>({label:k,n:String(cnt[k])}));
         const fc=rowsC.find(c=>String(c.id)===String(S.bcFiche))||null;
