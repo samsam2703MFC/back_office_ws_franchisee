@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072344"></script>
-<script src="bo_server.js?v=2026072344"></script>
+<script src="api-config.js?v=2026072345"></script>
+<script src="bo_server.js?v=2026072345"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072344'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072345'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072344">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072344"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072345">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072345"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1647,6 +1647,26 @@
           </div>
         </div>
         <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Laisser un champ vide = ne pas toucher ce canal. Les ventes déjà enregistrées aujourd'hui restent déduites de la dispo.</div>
+        <sc-if value="{{ stkFselShow }}" hint-placeholder-val="{{ true }}">
+        <div style="border-top:.5px solid var(--color-border-tertiary);padding-top:14px">
+          <div class="t-admin-label" style="margin-bottom:4px">Minimum par jour de la semaine</div>
+          <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:10px">« 10 » = le magasin en produit 10 ce jour-là, chaque semaine — appliqué automatiquement quand aucun stock du jour n'est saisi. Collect et Livraison séparés · un point (•) = jour déjà paramétré. ws_product_stock_defaults</div>
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <sc-for list="{{ stkDayBtns }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.set }}" style="{{ d.style }}">{{ d.label }}</button></sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="background:var(--color-background-secondary);border-radius:10px;padding:12px 14px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-primary);flex:none"></span><span class="t-admin-label">Collect · {{ stkDayName }}</span></div>
+              <input type="number" min="0" value="{{ stkDefC }}" onInput="{{ stkDefSetC }}" placeholder="—" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:700 16px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/>
+            </div>
+            <div style="background:var(--color-background-secondary);border-radius:10px;padding:12px 14px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-secondary);flex:none"></span><span class="t-admin-label">Livraison · {{ stkDayName }}</span></div>
+              <input type="number" min="0" value="{{ stkDefD }}" onInput="{{ stkDefSetD }}" placeholder="—" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:700 16px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/>
+            </div>
+          </div>
+          <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:8px">Vider un champ = retirer le minimum de ce jour-là. « Enregistrer » sauve les 7 jours d'un coup.</div>
+        </div>
+        </sc-if>
       </div>
       <div style="padding:14px 26px 20px;display:flex;gap:10px">
         <button onClick="{{ stkFClose }}" class="btn-secondary" style="flex:1;font-size:13px">Annuler</button>
@@ -4361,16 +4381,40 @@ class Component extends DCLogic {
     const stkSug=(!stkFsel&&stkFq.trim().length>=1)
       ? stockAll.filter(r=>r.nom.toLowerCase().includes(stkFq.trim().toLowerCase())).slice(0,8)
         .map(r=>({nom:r.nom,cat:r.cat,dispoTxt:'online '+r.online+' · shop '+r.shop,
-          pick:()=>this.setState({stkFsel:r.nom,stkFq:r.nom,stkFon:String(r.online),stkFsh:String(r.shop)})}))
+          pick:()=>{ this.setState({stkFsel:r.nom,stkFq:r.nom,stkFon:String(r.online),stkFsh:String(r.shop),stkDefs:{},stkDefsDirty:false});
+            // Minimums hebdomadaires existants du produit → pré-remplissage.
+            const fr=window.__FR||{}; if(!fr.base) return;
+            fetch(fr.base+'/franchisee/stock-defaults?product='+encodeURIComponent(r.nom)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+              .then(rs=>rs.ok?rs.json():null)
+              .then(j=>{ if(j&&j.ok&&j.days&&this.state.stkFsel===r.nom){ const dd={};
+                Object.keys(j.days).forEach(k=>{ dd[parseInt(k,10)]={collect:(j.days[k].collect!=null?String(j.days[k].collect):''),delivery:(j.days[k].delivery!=null?String(j.days[k].delivery):'')}; });
+                this.setState({stkDefs:dd,stkDefsDirty:false}); } })
+              .catch(()=>{}); }}))
       : [];
     const stkFReload=()=>{ const fr=window.__FR||{}; if(!fr.base) return;
       fetch(fr.base+'/franchisee/fr-stock-catalog'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
         .then(r=>r.ok?r.json():null)
         .then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_stock_catalog',a); this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{}); };
+    // Minimums hebdomadaires : jour ISO sélectionné + valeurs par jour×canal.
+    const STK_DOW=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+    const stkTodayDow=((new Date().getDay()+6)%7)+1;
+    const stkDay=S.stkFday||stkTodayDow;
+    const stkDefs=S.stkDefs||{};
+    const stkDv=(d)=>stkDefs[d]||{};
+    const stkHasVal=(d)=>{ const v=stkDv(d); return (v.collect!=null&&v.collect!=='')||(v.delivery!=null&&v.delivery!==''); };
+    const stkDefSet=(ch)=>(e)=>this.setState(s=>{ const cur=s.stkDefs||{}; const day=s.stkFday||stkTodayDow;
+      return {stkDefs:{...cur,[day]:{...(cur[day]||{}),[ch]:e.target.value}},stkDefsDirty:true}; });
     const stkFVals={
       stkFormOpen:!!S.stkForm,
-      stkFOpen:()=>this.setState({stkForm:true,stkFq:'',stkFsel:null,stkFon:'',stkFsh:''}),
+      stkFOpen:()=>this.setState({stkForm:true,stkFq:'',stkFsel:null,stkFon:'',stkFsh:'',stkFday:null,stkDefs:{},stkDefsDirty:false}),
       stkFClose:()=>this.setState({stkForm:false,stkFsel:null,stkFq:''}),
+      stkDayBtns:STK_DOW.map((lbl,i)=>{ const d=i+1; const on=stkDay===d;
+        return {label:lbl+(stkHasVal(d)?' •':''),set:()=>this.setState({stkFday:d}),
+          style:'flex:1;height:34px;border-radius:8px;cursor:pointer;font:600 11px var(--font-ui);border:1.5px solid '+(on?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(on?'var(--color-primary)':'var(--color-surface)')+';color:'+(on?'#fff':'var(--color-text)')}; }),
+      stkDayName:STK_DOW[stkDay-1],
+      stkDefC:(stkDv(stkDay).collect!=null?stkDv(stkDay).collect:''),
+      stkDefD:(stkDv(stkDay).delivery!=null?stkDv(stkDay).delivery:''),
+      stkDefSetC:stkDefSet('collect'), stkDefSetD:stkDefSet('delivery'),
       stkFq, stkFSetQ:(e)=>this.setState({stkFq:e.target.value,stkFsel:null}),
       stkSug, stkSugShow:stkSug.length>0,
       stkFsel:stkFsel||'', stkFselShow:!!stkFsel,
@@ -4378,18 +4422,31 @@ class Component extends DCLogic {
       stkFDate:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),
       stkFon:S.stkFon!==undefined?S.stkFon:'', stkFSetOn:(e)=>this.setState({stkFon:e.target.value}),
       stkFsh:S.stkFsh!==undefined?S.stkFsh:'', stkFSetSh:(e)=>this.setState({stkFsh:e.target.value}),
-      stkFCanSave:!!stkFsel&&((S.stkFon!==''&&S.stkFon!=null)||(S.stkFsh!==''&&S.stkFsh!=null)),
+      stkFCanSave:!!stkFsel&&((S.stkFon!==''&&S.stkFon!=null)||(S.stkFsh!==''&&S.stkFsh!=null)||!!S.stkDefsDirty),
       stkFSubmit:()=>{ if(!stkFsel) return; const fr=window.__FR||{};
         if(!fr.base){ this.printJob('API indisponible — stock non enregistré'); return; }
-        const body2={product:stkFsel}; if(S.stkFon!==''&&S.stkFon!=null) body2.online=parseInt(S.stkFon,10)||0; if(S.stkFsh!==''&&S.stkFsh!=null) body2.shop=parseInt(S.stkFsh,10)||0;
-        fetch(fr.base+'/franchisee/stock-set'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify(body2)})
-          .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState({stkForm:false,stkFsel:null,stkFq:''});
-              // les saisies directes du tableau (flags) ne doivent pas masquer la nouvelle valeur
-              this.setState(s=>{ const fl={...s.flags}; Object.keys(fl).forEach(k=>{ if(k.indexOf('stkO_')===0||k.indexOf('stkS_')===0) delete fl[k]; }); return {flags:fl}; });
-              stkFReload();
-              this.printJob('✓ Stock du jour de « '+stkFsel+' » enregistré (ws_product_stock · '+j.date+')'); }
-            else this.printJob((j&&j.error)||'Erreur saisie stock'); })
-          .catch(()=>this.printJob('Réseau indisponible — stock non enregistré')); },
+        const qs3=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+        const HP3={'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})};
+        const jobs=[];
+        // 1) Stock RÉEL du jour (ws_product_stock) — seulement si saisi.
+        if((S.stkFon!==''&&S.stkFon!=null)||(S.stkFsh!==''&&S.stkFsh!=null)){
+          const body2={product:stkFsel}; if(S.stkFon!==''&&S.stkFon!=null) body2.online=parseInt(S.stkFon,10)||0; if(S.stkFsh!==''&&S.stkFsh!=null) body2.shop=parseInt(S.stkFsh,10)||0;
+          jobs.push(fetch(fr.base+'/franchisee/stock-set'+qs3,{method:'POST',headers:HP3,credentials:'omit',body:JSON.stringify(body2)}).then(r=>r.json()).then(j=>({k:'jour',j})));
+        }
+        // 2) MINIMUMS hebdomadaires (ws_product_stock_defaults) — si modifiés.
+        if(S.stkDefsDirty){
+          jobs.push(fetch(fr.base+'/franchisee/stock-defaults'+qs3,{method:'POST',headers:HP3,credentials:'omit',body:JSON.stringify({product:stkFsel,days:S.stkDefs||{}})}).then(r=>r.json()).then(j=>({k:'min',j})));
+        }
+        if(!jobs.length) return;
+        Promise.all(jobs).then(res=>{
+          const ko=res.find(x=>!(x.j&&x.j.ok));
+          if(ko){ this.printJob('⚠ '+((ko.j&&ko.j.error)||'Erreur saisie stock')); return; }
+          this.setState({stkForm:false,stkFsel:null,stkFq:'',stkDefsDirty:false});
+          this.setState(s=>{ const fl={...s.flags}; Object.keys(fl).forEach(k=>{ if(k.indexOf('stkO_')===0||k.indexOf('stkS_')===0) delete fl[k]; }); return {flags:fl}; });
+          stkFReload();
+          const parts=[]; if(res.some(x=>x.k==='jour')) parts.push('stock du jour'); if(res.some(x=>x.k==='min')) parts.push('minimums hebdomadaires');
+          this.printJob('✓ '+parts.join(' + ')+' de « '+stkFsel+' » enregistré(s)');
+        }).catch(()=>this.printJob('Réseau indisponible — stock non enregistré')); },
     };
     let _lastCat=null;
     const stockRows=stockFiltered.map(r=>{ const hasCat=r.catLabel!==_lastCat; _lastCat=r.catLabel; return {...r,hasCat}; });
