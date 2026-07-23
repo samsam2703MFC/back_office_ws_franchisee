@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072334"></script>
-<script src="bo_server.js?v=2026072334"></script>
+<script src="api-config.js?v=2026072335"></script>
+<script src="bo_server.js?v=2026072335"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072334'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072335'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072334">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072334"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072335">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072335"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -187,7 +187,7 @@
         <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;margin-bottom:16px"><button onClick="{{ tdbSetTree }}" style="{{ tdbSegTreeStyle }}">Par tournée</button><button onClick="{{ tdbSetCollect }}" style="{{ tdbSegCollectStyle }}">Collect</button><button onClick="{{ tdbSetList }}" style="{{ tdbSegListStyle }}">Liste commandes</button></div>
         <sc-if value="{{ tdbViewTree }}" hint-placeholder-val="{{ true }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px"><div class="t-section-title" style="font-size:16px">Commandes — tournée › zone › site › office › utilisateur</div><div style="display:flex;align-items:center;gap:10px"><button onClick="{{ tdbToggleAll }}" style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-text);font:500 12px var(--font-ui);cursor:pointer;padding:9px 16px;min-height:40px">{{ tdbToggleAllLabel }}</button><button onClick="{{ nav.tournees }}" style="background:transparent;border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-primary);font:500 12px var(--font-ui);cursor:pointer;padding:9px 16px;min-height:40px">Constructeur →</button></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:10px"><div class="t-section-title" style="font-size:16px">Commandes — tournée › zone › site › office › utilisateur</div><div style="display:flex;align-items:center;gap:10px"><button onClick="{{ tdbToggleAll }}" style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-text);font:500 12px var(--font-ui);cursor:pointer;padding:9px 16px;min-height:40px">{{ tdbToggleAllLabel }}</button></div></div>
           <div style="display:grid;grid-template-columns:1fr 120px 150px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Niveau</span><span class="t-admin-label" style="text-align:right">Commandes</span><span class="t-admin-label" style="text-align:right">Statut · fenêtre</span></div>
           <sc-for list="{{ tdbTree }}" as="t" hint-placeholder-count="3">
             <div onClick="{{ t.toggle }}" style="display:grid;grid-template-columns:1fr 120px 150px;align-items:center;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);cursor:pointer;min-height:56px">
@@ -234,7 +234,7 @@
         </sc-if>
         <sc-if value="{{ tdbViewList }}" hint-placeholder-val="{{ false }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:10px;flex-wrap:wrap"><div class="t-section-title" style="font-size:15px">{{ ordListTitle }} — {{ ordTitleDate }}</div><div style="display:flex;gap:7px"><span style="{{ ordFilterAll }}">Toutes</span><span style="{{ ordFilterDeliv }}">Livraison</span><span style="{{ ordFilterPickup }}">Collect</span></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:10px;flex-wrap:wrap"><div class="t-section-title" style="font-size:15px">{{ ordListTitle }} — {{ ordTitleDate }}</div><div style="display:flex;gap:7px"><button onClick="{{ ordSetAll }}" style="border:none;{{ ordFilterAll }}">Toutes</button><button onClick="{{ ordSetDeliv }}" style="border:none;{{ ordFilterDeliv }}">Livraison</button><button onClick="{{ ordSetPickup }}" style="border:none;{{ ordFilterPickup }}">Collect</button></div></div>
           <div style="display:flex;gap:7px;align-items:center;margin:6px 0 10px">
             <span style="font:600 10px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Période</span>
             <sc-for list="{{ ordRangeChips }}" as="rc" hint-placeholder-count="3"><button onClick="{{ rc.set }}" style="{{ rc.style }};border:none">{{ rc.label }}</button></sc-for>
@@ -1213,7 +1213,7 @@
               <button onClick="{{ stkModalToggle }}" style="{{ stkModalTrack }}"><span style="{{ stkModalKnob }}"></span></button>
             </div>
           </div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Produits <strong>actifs</strong> de l'assortiment uniquement · dispo online (webshop) + en shop (comptoir) · seuil <strong>stock minimum</strong> · <strong>clic sur un produit</strong> → commandes du jour <span style="color:var(--color-primary);font-weight:600">Ruby (Click &amp; Collect)</span> / <span style="color:var(--color-secondary);font-weight:600">Apricot (Delivery)</span> + ajustement ±. ws_product_stock · ws_order_lines</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Produits <strong>actifs</strong> de l'assortiment uniquement · dispo online (webshop) + en shop (comptoir) · seuil <strong>stock minimum</strong> · <strong>clic sur un produit</strong> → commandes du jour <span style="color:var(--color-primary);font-weight:600">Click &amp; Collect</span> / <span style="color:var(--color-secondary);font-weight:600">Livraison</span> + ajustement ±. ws_product_stock · ws_order_lines</div>
           <sc-if value="{{ stkAlertShow }}" hint-placeholder-val="{{ false }}">
           <button onClick="{{ stkAlertOpen }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1.5px solid var(--color-primary);background:#fbe9eb;border-radius:11px;padding:11px 14px;margin-bottom:12px;cursor:pointer">
             <span style="width:22px;height:22px;flex:none;border-radius:50%;background:var(--color-primary);color:#fff;font:700 13px var(--font-ui);display:inline-flex;align-items:center;justify-content:center">!</span>
@@ -1234,7 +1234,7 @@
           <sc-for list="{{ stockRows }}" as="s" hint-placeholder-count="6">
             <sc-if value="{{ s.hasCat }}" hint-placeholder-val="{{ false }}"><div style="font:600 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);background:var(--color-background-secondary);padding:6px 8px;margin-top:6px;border-radius:6px">{{ s.catLabel }}</div></sc-if>
             <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <button onClick="{{ s.toggleLines }}" title="Voir les lignes de commande du jour (Ruby / Apricot)" style="display:flex;align-items:center;gap:7px;border:none;background:none;padding:0;cursor:pointer;text-align:left;min-width:0"><span style="{{ s.caretStyle }}">▶</span><span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.nom }}</span></button>
+              <button onClick="{{ s.toggleLines }}" title="Voir les lignes de commande du jour (Click &amp; Collect / Livraison)" style="display:flex;align-items:center;gap:7px;border:none;background:none;padding:0;cursor:pointer;text-align:left;min-width:0"><span style="{{ s.caretStyle }}">▶</span><span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.nom }}</span></button>
               <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ s.cat }}</span>
               <div style="display:flex;justify-content:flex-end"><input type="number" value="{{ s.online }}" onChange="{{ s.setOnline }}" style="{{ s.inputStyle }}"/></div>
               <div style="display:flex;justify-content:flex-end"><input type="number" value="{{ s.shop }}" onChange="{{ s.setShop }}" style="{{ s.inputStyle }}"/></div>
@@ -1246,7 +1246,7 @@
             <div style="border:.5px solid var(--color-border-secondary);border-radius:12px;margin:8px 2px 14px;padding:16px 18px;background:var(--color-background-secondary)">
               <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-bottom:14px">
                 <div style="{{ s.tileReal }}"><div style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;opacity:.8">Stock réel</div><div style="font:700 22px var(--font-ui);margin-top:2px">{{ s.dispo }}</div><div style="font:400 10.5px var(--font-ui);opacity:.85;margin-top:1px">Online {{ s.online }} · En shop {{ s.shop }} · min. {{ s.min }}</div></div>
-                <div style="{{ s.tileOrd }}"><div style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;opacity:.8">Réservé · commandé (jour)</div><div style="font:700 22px var(--font-ui);margin-top:2px">{{ s.ordTot }}</div><div style="font:400 10.5px var(--font-ui);opacity:.85;margin-top:1px">Ruby {{ s.rubyTot }} · Apricot {{ s.apricotTot }}</div></div>
+                <div style="{{ s.tileOrd }}"><div style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;opacity:.8">Réservé · commandé (jour)</div><div style="font:700 22px var(--font-ui);margin-top:2px">{{ s.ordTot }}</div><div style="font:400 10.5px var(--font-ui);opacity:.85;margin-top:1px">Collect {{ s.rubyTot }} · Livraison {{ s.apricotTot }}</div></div>
                 <div style="display:flex;align-items:center"><span style="{{ s.verdictPill }}">{{ s.verdictTxt }}</span></div>
               </div>
               <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px">
@@ -1261,7 +1261,7 @@
               </div>
               <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
                 <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden">
-                  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:color-mix(in srgb,var(--color-primary) 8%,var(--color-surface))"><span style="width:9px;height:9px;flex:none;border-radius:50%;background:var(--color-primary)"></span><span style="font:600 11.5px var(--font-ui);color:var(--color-primary)">Ruby · Click &amp; Collect</span><span style="margin-left:auto;font:600 11px var(--font-ui);color:var(--color-primary)">{{ s.rubyTot }} pce(s)</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:color-mix(in srgb,var(--color-primary) 8%,var(--color-surface))"><span style="width:9px;height:9px;flex:none;border-radius:50%;background:var(--color-primary)"></span><span style="font:600 11.5px var(--font-ui);color:var(--color-primary)">Click &amp; Collect</span><span style="margin-left:auto;font:600 11px var(--font-ui);color:var(--color-primary)">{{ s.rubyTot }} pce(s)</span></div>
                   <sc-if value="{{ s.linesLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Chargement des commandes…</div></sc-if>
                   <sc-for list="{{ s.rubyLines }}" as="l" hint-placeholder-count="2">
                     <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--color-border-tertiary)"><span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.ref }} · {{ l.client }}</span><span style="font:700 12px var(--font-ui);color:var(--color-primary)">{{ l.qty }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.heure }}</span><span style="font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.statut }}</span></div>
@@ -1269,7 +1269,7 @@
                   <sc-if value="{{ s.rubyEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Aucune commande Click &amp; Collect aujourd'hui.</div></sc-if>
                 </div>
                 <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden">
-                  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:color-mix(in srgb,var(--color-secondary) 10%,var(--color-surface))"><span style="width:9px;height:9px;flex:none;border-radius:50%;background:var(--color-secondary)"></span><span style="font:600 11.5px var(--font-ui);color:var(--color-secondary)">Apricot · Delivery</span><span style="margin-left:auto;font:600 11px var(--font-ui);color:var(--color-secondary)">{{ s.apricotTot }} pce(s)</span></div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:color-mix(in srgb,var(--color-secondary) 10%,var(--color-surface))"><span style="width:9px;height:9px;flex:none;border-radius:50%;background:var(--color-secondary)"></span><span style="font:600 11.5px var(--font-ui);color:var(--color-secondary)">Livraison</span><span style="margin-left:auto;font:600 11px var(--font-ui);color:var(--color-secondary)">{{ s.apricotTot }} pce(s)</span></div>
                   <sc-if value="{{ s.linesLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Chargement des commandes…</div></sc-if>
                   <sc-for list="{{ s.apricotLines }}" as="l" hint-placeholder-count="2">
                     <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--color-border-tertiary)"><span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.ref }} · {{ l.client }}</span><span style="font:700 12px var(--font-ui);color:var(--color-secondary)">{{ l.qty }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.heure }}</span><span style="font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.statut }}</span></div>
@@ -4156,10 +4156,10 @@ class Component extends DCLogic {
     const stkModeChip=(k,bg,fg)=>{ const on=stockMode===k;
       return 'cursor:pointer;display:inline-flex;align-items:center;gap:6px;border:1.5px solid '+fg+';border-radius:20px;padding:5px 12px;font:600 11px var(--font-ui);'+(on?('background:'+fg+';color:#fff'):('background:'+bg+';color:'+fg)); };
     const stkModeBadges=[
-      {label:'Ruby · Click & Collect',count:String(stockAll.filter(r=>r.shop>0).length),
+      {label:'Click & Collect',count:String(stockAll.filter(r=>r.shop>0).length),
         style:stkModeChip('collect','#fbe9eb','var(--color-primary)'),
         set:()=>this.setState({stockMode:stockMode==='collect'?'all':'collect'})},
-      {label:'Apricot · Delivery',count:String(stockAll.filter(r=>r.online>0).length),
+      {label:'Livraison',count:String(stockAll.filter(r=>r.online>0).length),
         style:stkModeChip('delivery','#f6ecdf','var(--color-secondary)'),
         set:()=>this.setState({stockMode:stockMode==='delivery'?'all':'delivery'})},
     ];
@@ -4757,6 +4757,7 @@ class Component extends DCLogic {
       isJoursExcept:screen==='reglesBoutique'&&(S.dispoTab||'dispo')==='except',joursExcept,addExcept,
       isFrais:screen==='frais'||screen==='params',feeRules,
       isCommandes:screen==='commandes',ordersList,ordersEmpty,ordFilterAll:fPill('all'),ordFilterDeliv:fPill('deliv'),ordFilterPickup:fPill('pickup'),
+      ordSetAll:ordSetFilter('all'),ordSetDeliv:ordSetFilter('deliv'),ordSetPickup:ordSetFilter('pickup'),
       ordTitleDate:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'}),
       tdbViewTree:tdbView==='tree',tdbViewList:tdbView==='list'||tdbView==='collect',
       tdbSegTreeStyle:tdbSeg('tree'),tdbSegListStyle:tdbSeg('list'),tdbSegCollectStyle:tdbSeg('collect'),
