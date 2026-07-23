@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072339"></script>
-<script src="bo_server.js?v=2026072339"></script>
+<script src="api-config.js?v=2026072340"></script>
+<script src="bo_server.js?v=2026072340"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072339'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072340'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072339">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072339"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072340">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072340"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -398,16 +398,17 @@
       <sc-if value="{{ isSuivi }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:18px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
-          <div class="t-section-title" style="font-size:15px;margin-bottom:14px">Chauffeurs en tournée</div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
-            <sc-for list="{{ liveTable }}" as="d" hint-placeholder-count="3">
-              <div onClick="{{ d.select }}" style="{{ d.cardStyle }}">
-                <div style="width:10px;height:10px;border-radius:50%;background:{{ d.color }};flex:none;animation:blink 1.6s infinite"></div>
-                <div style="flex:1;min-width:0"><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ d.nom }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Tournée {{ d.tournee }} · {{ d.vehicule }}</div></div>
-                <div style="text-align:right;flex:none"><div style="font:700 16px var(--font-ui);color:var(--color-primary)">{{ d.eta }}</div><div style="font:400 9px var(--font-ui);color:var(--color-text-muted)">ETA · {{ d.avancement }}</div></div>
-              </div>
+          <div class="t-section-title" style="font-size:15px;margin-bottom:14px">Tournées du jour — zones de livraison</div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+            <sc-for list="{{ suiviTours }}" as="st" hint-placeholder-count="3">
+              <button onClick="{{ st.focus }}" style="{{ st.cardStyle }}">
+                <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><span style="width:11px;height:11px;border-radius:50%;background:{{ st.color }};flex:none"></span><span style="font:600 13px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ st.nom }}</span><span style="margin-left:auto;flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:50%;background:{{ st.color }};color:#fff;font:700 12px var(--font-ui);padding:0 6px" title="Nombre de bureaux servis">{{ st.nbOffices }}</span></div>
+                <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-bottom:6px">{{ st.nbSites }} site(s) · {{ st.nbOffices }} bureau(x) · {{ st.chauffeur }}</div>
+                <div style="display:flex;align-items:center;gap:6px"><span style="font:600 12.5px var(--font-ui);color:var(--color-text)">Départ {{ st.dep }}</span><span style="color:var(--color-text-muted)">→</span><span style="font:700 13px var(--font-ui);color:{{ st.color }}">ETA retour ~{{ st.fin }}</span></div>
+              </button>
             </sc-for>
           </div>
+          <sc-if value="{{ suiviToursEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée avec des sites assignés — écran Tournées pour en construire une.</div></sc-if>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px">
@@ -3021,21 +3022,18 @@ class Component extends DCLogic {
     }
     const L=window.L;
     if(this.state.screen==='suivi'){
+      // Le référentiel CP→GPS et la position boutique sont indispensables ici
+      // aussi — sans eux la carte restait vide (aucun site géolocalisable).
+      this.zfGeoEnsure();
       const el=document.getElementById('map-suivi');
       if(el && !el._leaflet_id){
         const m=L.map(el,{zoomControl:true,attributionControl:true}).setView([50.83,4.40],11);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
-        const d=this.depot();
-        L.marker([d.lat,d.lng]).addTo(m).bindPopup("<b>"+d.libelle+"</b><br>Dépôt magasin");
-        const stat={livre:'#2d7a3e',en_cours:'#8D1D2C',attendu:'#c9a24b'};
-        // Points RÉELS (geo-clients) — statut neutre (pas de télémétrie inventée).
-        this.points().forEach((p)=>{
-          L.circleMarker([p.lat,p.lng],{radius:8,color:'#fff',weight:2,fillColor:stat['attendu'],fillOpacity:.95}).addTo(m).bindPopup("<b>"+p.libelle+"</b><br>"+p.ville);
-        });
-        // Chauffeurs RÉELS (fr_live_drivers) — placés uniquement s'ils ont un GPS.
-        (window.BOServer?window.BOServer.table('fr_live_drivers'):[]).forEach(d=>{
-          if(d.lat&&d.lng) L.circleMarker([d.lat,d.lng],{radius:10,color:'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(m).bindPopup("<b>"+(d.name||d.nom||'Chauffeur')+"</b><br>"+(d.vehicule||''));
-        });
+        this._suiviMap=m; this._suiviFit=false; this.drawSuiviMap();
+      } else if(el && this._suiviMap){
+        const sig=JSON.stringify([(window.__CPGEO?1:0),(window.__SHOPINFO?1:0),this.state.mapFocusTour||'',
+          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
+        if(this._suiviSig!==sig){ this._suiviSig=sig; this.drawSuiviMap(); }
       }
     }
     if(this.state.screen==='tournees'){
@@ -3104,6 +3102,72 @@ class Component extends DCLogic {
     if(focusBounds) m.fitBounds(focusBounds,{padding:[36,36]});
     else if(!this._fitDone){ const all=[[d.lat,d.lng],...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
       if(all.length>1){ this._fitDone=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
+  }
+  // ETA PRÉVISIONNELLE par tournée : départ = ws_tour_availability.dep (repli
+  // 08:00), puis par arrêt : trajet estimé (distance CP→CP) + temps d'accès
+  // du site. Retourne {stops:{siteId:'HH:MM'}, dep, fin, nbSites, nbOffices}.
+  tourEtas(){
+    const d=this.depot(); const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+    const depOf={}; (window.BOServer?window.BOServer.table('ws_tour_availability'):[]).forEach(a=>{ if(a.tour&&a.dep) depOf[norm(a.tour)]=a.dep; });
+    const sites=this.sitesData(); const out={};
+    this.routesMeta().forEach(t=>{ if(!t.name) return; const k=norm(t.name);
+      const pts=sites.filter(s=>norm(s.zone)===k)
+        .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
+      if(!pts.length) return;
+      const dep=depOf[k]||'08:00'; let cur=this.toMin(dep); let prev=d; const stops={};
+      let nbOff=0;
+      pts.forEach(p=>{ cur+=this.travelMin(prev,p).min; stops[p.id]=this.hhmm(cur);
+        const no=p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').length; nbOff+=no;
+        cur+=(p.access||10)+Math.max(0,no-1)*3; prev=p; });
+      cur+=this.travelMin(prev,d).min;
+      out[k]={dep,fin:this.hhmm(cur),stops,nbSites:pts.length,nbOffices:nbOff};
+    });
+    return out;
+  }
+  // Carte « Livraison du jour » : une COULEUR par tournée (même palette que le
+  // constructeur), marqueur-CLUSTER par site (nombre de bureaux servis), ETA
+  // prévisionnelle par arrêt, chauffeurs GPS réels s'il y en a.
+  drawSuiviMap(){
+    const L=window.L, m=this._suiviMap; if(!L||!m) return;
+    if(this._suiviLayer) m.removeLayer(this._suiviLayer);
+    const g=L.layerGroup(); const d=this.depot();
+    const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+    const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const sites=this.sitesData(); const tours=this.routesMeta(); const etas=this.tourEtas();
+    const focus=this.state.mapFocusTour||null;
+    const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
+    const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
+    L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g).bindPopup("<b>"+esc(d.libelle)+"</b><br>Boutique — départ &amp; retour des tournées");
+    tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length]; const k=norm(t.name);
+      const isFocus=focus&&norm(focus)===k; const dim=focus&&!isFocus;
+      const pts=sites.filter(s=>norm(s.zone)===k)
+        .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
+      if(!pts.length) return;
+      const et=etas[k]||{stops:{},dep:'—',fin:'—'};
+      const coords=[[d.lat,d.lng],...pts.map(p=>[p.lat,p.lng]),[d.lat,d.lng]];
+      const line=L.polyline(coords,{color:col,weight:isFocus?5:3.5,opacity:dim?0.15:0.8}).addTo(g);
+      line.bindTooltip('<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin),{sticky:true});
+      pts.forEach((p,kk)=>{
+        const no=p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').length;
+        const eta=et.stops[p.id]||'—';
+        // CLUSTER : le rond porte le NOMBRE DE BUREAUX du site ; le badge blanc
+        // en haut à droite donne l'ordre de passage.
+        const icon=L.divIcon({className:'',html:`<div style="position:relative;width:32px;height:32px;border-radius:50%;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font:700 13px sans-serif;border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4);opacity:${dim?0.25:1}">${no||1}<span style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#fff;color:${col};font:700 9.5px sans-serif;display:flex;align-items:center;justify-content:center;border:1.5px solid ${col}">${kk+1}</span></div>`,iconSize:[32,32],iconAnchor:[16,16]});
+        const mk=L.marker([p.lat,p.lng],{icon}).addTo(g);
+        mk.bindTooltip(esc(p.name)+' · '+no+' bureau'+(no>1?'x':'')+' · ETA ~'+esc(eta),{direction:'top',offset:[0,-14]});
+        mk.bindPopup('<div style="font:12.5px/1.5 sans-serif;min-width:210px"><b>'+esc(p.name)+'</b>'
+          +'<br><span style="color:#666">'+esc(t.name)+' · arrêt n°'+(kk+1)+' · <b>ETA ~'+esc(eta)+'</b></span>'
+          +'<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><b style="font-size:11px">'+no+' bureau'+(no>1?'x':'')+'</b>'
+          +p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>');
+      });
+    });
+    // Chauffeurs RÉELS (fr_live_drivers) — placés uniquement s'ils ont un GPS.
+    (window.BOServer?window.BOServer.table('fr_live_drivers'):[]).forEach(dr=>{
+      if(dr.lat&&dr.lng) L.circleMarker([dr.lat,dr.lng],{radius:10,color:'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(g).bindPopup("<b>"+esc(dr.name||dr.nom||'Chauffeur')+"</b><br>"+esc(dr.vehicule||''));
+    });
+    g.addTo(m); this._suiviLayer=g;
+    if(!this._suiviFit){ const all=[[d.lat,d.lng],...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
+      if(all.length>1){ this._suiviFit=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
   }
   componentDidMount(){ this.ensureMaps();
     // Auto-refresh des COMMANDES : toutes les 60 s tant que l'onglet est
@@ -3398,6 +3462,21 @@ class Component extends DCLogic {
         select:()=>this.setState({selDriver:i})};
     });
     const selDrv=liveTable[Math.min(selDriverIdx,Math.max(0,liveTable.length-1))]||{stops:[]};
+    // TUILES « Tournées du jour » : une par tournée avec sites — couleur (même
+    // palette que la carte), cluster (nb sites / nb bureaux), départ + ETA
+    // retour prévisionnelle (tourEtas), chauffeur réel si télémétrie. Clic =
+    // focus de la tournée sur la carte (re-clic = tout afficher).
+    const suiviColors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
+    const suiviEtas=this.tourEtas(); const normT=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+    const suiviTours=this.routesMeta().map((t,i)=>({t,i,et:suiviEtas[normT(t.name)]})).filter(x=>x.t.name&&x.et)
+      .map(({t,i,et})=>{ const drv=SRV('fr_live_table').find(d=>normT(t.name).includes(normT(d.tournee||'')));
+        const focused=normT(S.mapFocusTour||'')===normT(t.name);
+        return {nom:t.name,color:suiviColors[i%suiviColors.length],
+          nbSites:String(et.nbSites),nbOffices:String(et.nbOffices),
+          dep:et.dep,fin:et.fin,chauffeur:(drv&&drv.nom)?drv.nom:'chauffeur non assigné',
+          cardStyle:'text-align:left;border:1.5px solid '+(focused?suiviColors[i%suiviColors.length]:'var(--color-border-tertiary)')+';border-radius:10px;padding:14px 16px;cursor:pointer;background:'+(focused?'var(--color-background-secondary)':'var(--color-surface)')+';min-width:0',
+          focus:()=>this.setState(s=>({mapFocusTour:normT(s.mapFocusTour||'')===normT(t.name)?null:t.name}))}; });
+    const suiviToursEmpty=suiviTours.length===0;
 
     // CLIENTS
     const clientsData=SRV('fr_clients');
@@ -5008,7 +5087,7 @@ class Component extends DCLogic {
       zfCpq:S.zf.cpq||'',
       zoneParentOpts,zfCanSubmit,zfSubmitExtra:zfCanSubmit?'':'opacity:.45;pointer-events:none',zfSubmit,
       publier:this.go('suivi'),publierLabel:'Publier vers la tablette',
-      liveDrivers,liveEta,liveTable,
+      liveDrivers,liveEta,liveTable,suiviTours,suiviToursEmpty,
       selNom:selDrv.nom,selTournee:selDrv.tournee,selVehicule:selDrv.vehicule,selAvancement:selDrv.avancement,selEta:selDrv.eta,selDrift:selDrv.drift,selDriftColor:selDrv.driftColor,selStatut:selDrv.statut,selStatutStyle:selDrv.statutStyle,selColor:selDrv.color,selStops:selDrv.stops,selHasStops:(selDrv.stops||[]).length>0,
       clients,sel,
       incidents,selInc,
