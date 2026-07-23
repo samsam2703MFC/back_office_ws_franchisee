@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072348"></script>
-<script src="bo_server.js?v=2026072348"></script>
+<script src="api-config.js?v=2026072349"></script>
+<script src="bo_server.js?v=2026072349"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072348'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072349'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072348">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072348"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072349">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072349"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1388,11 +1388,11 @@
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="t-section-title" style="font-size:15px">Portions — règles réseau (ERP)</div><span style="display:inline-flex;align-items:center;padding:4px 11px;border-radius:999px;font:600 10.5px var(--font-ui);background:var(--color-background-secondary);color:var(--color-text-muted)">👁 Lecture seule</span></div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">product_portion (ERP) — tailles proposées au webshop par produit · facturation <strong>quart ×0.27 · demi ×0.52 · entière ×1</strong> du prix magasin</div>
-          <div style="display:grid;grid-template-columns:1.5fr .9fr 1fr 1.6fr;gap:12px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Produit</span><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Portions proposées</span><span class="t-admin-label">Prix des portions</span></div>
+          <div style="display:grid;grid-template-columns:1.8fr 1.2fr 1.8fr;gap:12px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Produit</span><span class="t-admin-label">Portions disponibles</span><span class="t-admin-label">Prix des portions</span></div>
           <sc-for list="{{ erpPortions }}" as="ep" hint-placeholder-count="4">
-            <div style="display:grid;grid-template-columns:1.5fr .9fr 1fr 1.6fr;gap:12px;align-items:center;padding:10px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ ep.produit }}">{{ ep.produit }}</span>
-              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ ep.cat }}</span>
+            <sc-if value="{{ ep.hasCat }}" hint-placeholder-val="{{ false }}"><div style="font:600 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);background:var(--color-background-secondary);padding:6px 8px;margin-top:6px;border-radius:6px">{{ ep.cat }}</div></sc-if>
+            <div style="display:grid;grid-template-columns:1.8fr 1.2fr 1.8fr;gap:12px;align-items:center;padding:10px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+              <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ ep.produit }}">◔ {{ ep.produit }}</span>
               <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ ep.badges }}" as="b" hint-placeholder-count="3"><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font:600 10.5px var(--font-ui);background:#eef3fb;color:#2a5a9e">{{ b.label }}</span></sc-for></div>
               <span style="font:500 11.5px var(--font-ui);color:var(--color-text)" title="{{ ep.facteurs }}">{{ ep.prix }}</span>
             </div>
@@ -4475,10 +4475,14 @@ class Component extends DCLogic {
           this.printJob('✓ '+parts.join(' + ')+' de « '+stkFsel+' » enregistré(s)');
         }).catch(()=>this.printJob('Réseau indisponible — stock non enregistré')); },
     };
-    // Portions — règles RÉSEAU issues de l'ERP (product_portion, lecture seule).
-    const PORTION_LBL={quart:'1/4',demi:'1/2',entier:'Entière'};
-    const erpPortions=SRV('fr_erp_portions').map(r=>({produit:r.produit,cat:r.cat||'—',
-      badges:(r.portions||[]).map(t=>({label:PORTION_LBL[t]||t})),facteurs:r.facteurs||'—',prix:r.prix||'—'}));
+    // Portions — règles RÉSEAU issues de l'ERP (product_portion, lecture seule),
+    // GROUPÉES PAR CATÉGORIE (bandeau à chaque changement de catégorie).
+    const PORTION_LBL={quart:'1/4',demi:'1/2',entier:'Entière',huitieme:'1/8'};
+    let _epCat=null;
+    const erpPortions=SRV('fr_erp_portions').map(r=>{ const cat=r.cat||'Autres';
+      const hasCat=cat!==_epCat; _epCat=cat;
+      return {produit:r.produit,cat,hasCat,
+        badges:(r.portions||[]).map(t=>({label:PORTION_LBL[t]||t})),facteurs:r.facteurs||'—',prix:r.prix||'—'}; });
     const erpPortionsEmpty=erpPortions.length===0;
     // Index par produit pour marquer d'une icône ◔ les produits portionnables
     // dans les catalogues (Assortiment, Stock du jour) — info-bulle : catégorie
