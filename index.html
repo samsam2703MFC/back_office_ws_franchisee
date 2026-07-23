@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072307"></script>
-<script src="bo_server.js?v=2026072307"></script>
+<script src="api-config.js?v=2026072308"></script>
+<script src="bo_server.js?v=2026072308"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072307'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072308'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072307">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072307"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072308">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072308"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1675,6 +1675,32 @@
   </div>
   </sc-if>
 
+  <!-- ============ MODALE : ACTIVER LA LIVRAISON AU BUREAU (choix du site) ============ -->
+  <sc-if value="{{ odOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.55);display:flex;align-items:center;justify-content:center;z-index:2400;padding:24px">
+    <div style="background:var(--color-surface);border-radius:14px;width:480px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden">
+      <div style="padding:20px 24px 14px;border-bottom:.5px solid var(--color-border-tertiary)">
+        <div class="t-page-title" style="font-size:16px">Activer la livraison au bureau</div>
+        <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">{{ odName }} — choisissez le <strong>site</strong> (bâtiment) du bureau : la <strong>tournée</strong> en découle automatiquement.</div>
+      </div>
+      <div style="padding:16px 24px">
+        <select value="{{ odSite }}" onChange="{{ odSetSite }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:10px 11px;font:500 12.5px var(--font-ui);background:var(--color-surface);color:var(--color-text);box-sizing:border-box">
+          <sc-for list="{{ odSiteOpts }}" as="op" hint-placeholder-count="3"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+        </select>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Tournée du site : <strong style="color:var(--color-text)">{{ odTourTxt }}</strong></span>
+          <button onClick="{{ odNewSite }}" style="border:1.5px dashed var(--color-border-secondary);background:transparent;color:var(--color-text-muted);border-radius:8px;padding:7px 12px;font:600 11.5px var(--font-ui);cursor:pointer">+ Créer un site</button>
+        </div>
+        <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:8px">Si le site n'existe pas encore : « + Créer un site » ouvre le formulaire Sites (ws_office_delivery_sites) ; après validation, il revient présélectionné ici et ses données sont injectées dans la fiche client.</div>
+      </div>
+      <div style="padding:12px 24px 20px;border-top:.5px solid var(--color-border-tertiary);display:flex;gap:10px">
+        <button onClick="{{ odCancel }}" class="btn-secondary" style="flex:1;font-size:12.5px">Annuler</button>
+        <button onClick="{{ odConfirm }}" class="btn-primary" style="flex:1;font-size:12.5px">Activer — office livrable</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
   <!-- ===================== FICHE CLIENT COMPLÈTE ===================== -->
   <sc-if value="{{ bcFicheOpen }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;inset:0;background:rgba(34,34,34,.5);display:flex;align-items:center;justify-content:center;z-index:2300;padding:24px">
@@ -2329,7 +2355,20 @@ class Component extends DCLogic {
         window.BOServer.save('ws_offices',orows); } this.printJob('✓ Adresse encodée enregistrée comme lieu de livraison (office, en attente)'); },900);
       this.setState({pendingOffice:null});
     }
+    // Modale « livraison au bureau » : si la création de SITE vient du bouton
+    // « + Créer un site » de la modale, on la rouvre avec le nouveau site
+    // présélectionné — ses données sont injectées dans la fiche client.
+    if(S.formKey==='site'&&S.odKeep){ this.setState({odClient:S.odKeep,odKeep:null,odSite:String(v.adr||'')}); }
     this.setState({formKey:null,_rev:(S._rev||0)+1}); this.printJob((S.formEdit?'✔ Ligne mise à jour dans ':'✔ Enregistré dans ')+cfg.table); }
+  // Reflète en mémoire les tables serveur touchées par le toggle « livraison
+  // au bureau » (office créé/validé + pairing site) → l'office apparaît
+  // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
+  bcRefreshOffices(){ const fr=window.__FR||{}; if(!fr.base){ this.setState(s=>({_rev:(s._rev||0)+1})); return; }
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'};
+    Promise.all([
+      fetch(fr.base+'/franchisee/ws-offices'+qs,H).then(r=>r.ok?r.json():null).catch(()=>null),
+      fetch(fr.base+'/franchisee/ws-office-delivery-sites'+qs,H).then(r=>r.ok?r.json():null).catch(()=>null),
+    ]).then(([offs,sites])=>{ if(window.BOServer){ if(Array.isArray(offs)) window.BOServer.refresh('ws_offices',offs); if(Array.isArray(sites)) window.BOServer.refresh('ws_office_delivery_sites',sites); } this.setState(s=>({_rev:(s._rev||0)+1})); }); }
   deleteRow(tbl,idx,label){ return ()=>{ this.setState({confirmDel:{tbl,idx,label:label||'cet élément'}}); }; }
   confirmDelDo(){ const c=this.state.confirmDel; if(c&&c.tbl&&window.BOServer){ const rows=window.BOServer.table(c.tbl); rows.splice(c.idx,1); window.BOServer.save(c.tbl,rows); } this.setState({confirmDel:null,_rev:(this.state._rev||0)+1}); this.printJob('✖ Supprimé'); }
   NEW_PERPOINT = 30; NEW_AMPL = 240;
@@ -3704,7 +3743,8 @@ class Component extends DCLogic {
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
       // calcule QUE sur l'écran Clients — sinon il ralentit toute l'app.
       ...(()=>{ const noop2=()=>{};
-        if(screen!=='b2bClients') return {isB2bClients:false,bcQ:'',bcSetQ:noop2,bcSelStyle:'',bcDept:'',bcSetDept:noop2,bcDeptOpts:[],bcOff:'',bcSetOff:noop2,bcOffOpts:[],bcSite:'',bcSetSite:noop2,bcSiteOpts:[],bcTour:'',bcSetTour:noop2,bcTourOpts:[],bcCounts:[],bcList:[],bcEmpty:false,bcTotalTxt:'',bcHasMore:false,bcMore:noop2,bcMoreTxt:'',bcFicheOpen:false,bcFicheClose:noop2,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcOffDelShow:false,fcOffDelOn:false,fcOffDelLbl:'',fcOffDelStyle:'',fcOffDelToggle:noop2,fcCloseComplaint:noop2};
+        if(screen!=='b2bClients') return {isB2bClients:false,bcQ:'',bcSetQ:noop2,bcSelStyle:'',bcDept:'',bcSetDept:noop2,bcDeptOpts:[],bcOff:'',bcSetOff:noop2,bcOffOpts:[],bcSite:'',bcSetSite:noop2,bcSiteOpts:[],bcTour:'',bcSetTour:noop2,bcTourOpts:[],bcCounts:[],bcList:[],bcEmpty:false,bcTotalTxt:'',bcHasMore:false,bcMore:noop2,bcMoreTxt:'',bcFicheOpen:false,bcFicheClose:noop2,
+        odOpen:false,odName:'',odSiteOpts:[],odSite:'',odSetSite:noop2,odTourTxt:'',odCancel:noop2,odNewSite:noop2,odConfirm:noop2,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcOffDelShow:false,fcOffDelOn:false,fcOffDelLbl:'',fcOffDelStyle:'',fcOffDelToggle:noop2,fcCloseComplaint:noop2};
         const rowsC=SRV('b2b_clients');
         // Nom affiché : « Nom Prénom » (client.surname + name) ; la société
         // d'une personne morale s'affiche en CHIP à côté du nom (pas collée
@@ -3781,8 +3821,11 @@ class Component extends DCLogic {
             ?'display:inline-flex;align-items:center;gap:5px;height:26px;background:#f6ead9;color:#8C4A2F;border:1px solid #e0c9a4;border-radius:20px;padding:0 11px;font:600 11px/1 var(--font-ui);white-space:nowrap;cursor:pointer'
             :'display:inline-flex;align-items:center;gap:5px;height:26px;background:transparent;color:var(--color-text-muted);border:1px dashed var(--color-border-secondary);border-radius:20px;padding:0 11px;font:600 11px/1 var(--font-ui);white-space:nowrap;cursor:pointer'),
           offDelLbl:Number(c.office_delivery)?'● Livraison au bureau':'○ Livraison au bureau',
-          offDelToggle:()=>{ const on=Number(c.office_delivery)?0:1;
-            post('client-office-delivery',{id:c.id,enabled:on},(j)=>{ if(j&&j.ok){ patchLocal(c.id,{office_delivery:on,status:on?0:c.status}); this.printJob(on?'✓ Validation manuelle : livraison au bureau ACTIVÉE — office créé/validé, livrable':'Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur livraison au bureau'); }); },
+          // ACTIVER → modale de choix du SITE (la tournée en découle) ;
+          // désactiver → direct.
+          offDelToggle:()=>{ if(Number(c.office_delivery)){
+              post('client-office-delivery',{id:c.id,enabled:0},(j)=>{ if(j&&j.ok){ patchLocal(c.id,{office_delivery:0}); this.bcRefreshOffices(); this.printJob('Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur'); }); }
+            else this.setState({odClient:c.id,odSite:''}); },
           // Département : sélectionné → BADGE avec « × » ; sinon droplist si
           // le bureau choisi possède des départements.
           hasDeptBadge:!!c.department,
@@ -3824,7 +3867,28 @@ class Component extends DCLogic {
           bcHasMore:filt.length>shown,
           bcMore:()=>this.setState(s=>({bcShown:(s.bcShown||100)+200})),
           bcMoreTxt:'+ Afficher 200 de plus ('+Math.max(0,filt.length-shown)+' restants)',
-          bcFicheOpen:!!fc,bcFicheClose:()=>this.setState({bcFiche:null}) };
+          bcFicheOpen:!!fc,bcFicheClose:()=>this.setState({bcFiche:null}),
+          // ---- Modale « activer la livraison au bureau » : choix du SITE ----
+          ...(()=>{ const odC=S.odClient!=null?rowsC.find(x=>String(x.id)===String(S.odClient)):null;
+            const odSites=[]; const odSeen=new Set();
+            siteRowsAll.forEach(r=>{ if(!r.adr||r.adr==='—'||odSeen.has(r.adr)) return; odSeen.add(r.adr);
+              odSites.push({adr:r.adr,name:(r.name&&r.name!=='—')?r.name:null,tour:(r.tour&&r.tour!=='—')?r.tour:null,
+                label:((r.name&&r.name!=='—')?r.name:r.adr)+((r.tour&&r.tour!=='—')?(' — '+r.tour):' — ⏸ sans tournée')}); });
+            const odSel=odSites.find(y=>y.adr===(S.odSite||''))||null;
+            return { odOpen:!!odC, odName:odC?cnm(odC):'',
+              odSiteOpts:[{value:'',label:odSites.length?'— Choisir le site (bâtiment) —':'— Aucun site : créez-en un —'},...odSites.map(x=>({value:x.adr,label:x.label}))],
+              odSite:S.odSite||'', odSetSite:(e)=>this.setState({odSite:e.target.value}),
+              odTourTxt:odSel?(odSel.tour||'⏸ site sans tournée — rattachez-le dans Sites'):'—',
+              odCancel:()=>this.setState({odClient:null,odSite:''}),
+              odNewSite:()=>{ this.setState({odKeep:S.odClient,odClient:null}); this.openForm('site')(); },
+              odConfirm:()=>{ const adr=this.state.odSite; if(!adr){ this.printJob('Choisissez un site (ou créez-en un)'); return; }
+                const x=odSites.find(y=>y.adr===adr)||null;
+                post('client-office-delivery',{id:odC.id,enabled:1,site_adr:adr},(j)=>{ if(j&&j.ok){
+                    patchLocal(odC.id,{office_delivery:1,status:0,office_name:j.office||odC.company_name||odC.office_name,site_name:x?(x.name||adr):adr,tour_name:j.tour||(x?x.tour:null)});
+                    this.setState({odClient:null,odSite:''}); this.bcRefreshOffices();
+                    this.printJob('✓ Bureau activé — office livrable sur le site'+(j.tour?(' · tournée « '+j.tour+' »'):'')); }
+                  else this.printJob((j&&j.error)||'Erreur activation'); }); } };
+          })() };
         if(!fc) return {...base,fcNm:'',fcMail:'',fcTel:'',fcAdr:'',fcRatt:'',fcBadges:[],fcOrders:'',fcTotal:'',fcLast:'',fcRec:'',fcShopBuys:'',fcPwa:'',fcBlocked:false,fcBlockLbl:'',fcBlockStyle:'',fcToggleBlock:noop2,fcCorp:false,fcCorpOff:false,fcCorpLbl:'',fcCorpStyle:'',fcToggleCorp:noop2,fcVat:'',fcSetVat:noop2,fcViesCheck:noop2,fcSaveBilling:noop2,fcZip:'',fcSetZip:noop2,fcSaveZip:noop2,fcOffDelShow:false,fcOffDelOn:false,fcOffDelLbl:'',fcOffDelStyle:'',fcOffDelToggle:noop2,fcVoucherVal:'',fcSetVoucherVal:noop2,fcCreateVoucher:noop2,fcVoucherMsg:'',fcVoucherHasMsg:false,fcHasComplaint:false,fcNoComplaint:false,fcCompTag:'',fcCloseComplaint:noop2};
         const rec=Number(fc.orders_90d)>=2?'Récurrent (2+ cmd / 90 j)':(Number(fc.orders_count)>=3?'Récurrent':'Ponctuel');
         return {...base,
@@ -3863,8 +3927,9 @@ class Component extends DCLogic {
           fcOffDelOn:!!Number(fc.office_delivery),
           fcOffDelLbl:Number(fc.office_delivery)?'Activée':'Désactivée',
           fcOffDelStyle:togStyle(!!Number(fc.office_delivery),'#f6ead9','#8C4A2F'),
-          fcOffDelToggle:()=>{ const on=Number(fc.office_delivery)?0:1;
-            post('client-office-delivery',{id:fc.id,enabled:on},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{office_delivery:on,status:on?0:fc.status}); this.printJob(on?'✓ Validation manuelle : livraison au bureau ACTIVÉE — office créé/validé, livrable':'Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur livraison au bureau'); }); },
+          fcOffDelToggle:()=>{ if(Number(fc.office_delivery)){
+              post('client-office-delivery',{id:fc.id,enabled:0},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{office_delivery:0}); this.bcRefreshOffices(); this.printJob('Livraison au bureau désactivée — office désactivé'); } else this.printJob((j&&j.error)||'Erreur'); }); }
+            else this.setState({odClient:fc.id,odSite:''}); },
           // Code postal : ajout / édition directe depuis la fiche (client.zip).
           fcZip:S.bcZip!==undefined?S.bcZip:(fc.zip||''),
           fcSetZip:(e)=>this.setState({bcZip:e.target.value}),

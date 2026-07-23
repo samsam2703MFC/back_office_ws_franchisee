@@ -410,6 +410,10 @@
     getParam: function(key, dflt){ var db = ensure(); var rows = db.params || []; for (var i=0;i<rows.length;i++){ if (rows[i].cle===key){ var r=rows[i]; return (r.val!==undefined ? r.val : (r.def!==undefined ? r.def : dflt)); } } return dflt; },
     setParam: function(key, val){ ensure(); var rows = DB.params || (DB.params = []); var found=false; for (var i=0;i<rows.length;i++){ if (rows[i].cle===key){ rows[i].val=val; found=true; } } if (!found) rows.push({cle:key, type:'bool', val:val}); syncSave('params', rows); return persist(); },
     save: function(n, rows){ ensure(); DB[n] = JSON.parse(JSON.stringify(rows)); syncSave(n, DB[n]); return persist(); },
+    // Mise à jour LOCALE seulement (pas de syncSave) : utilisée pour refléter
+    // en mémoire une donnée déjà écrite côté serveur (ex. office créé par le
+    // toggle « livraison au bureau » — GET refetché puis injecté ici).
+    refresh: function(n, rows){ ensure(); if (Array.isArray(rows)) DB[n] = JSON.parse(JSON.stringify(rows)); return persist(); },
     reset: function(){ DB = JSON.parse(JSON.stringify(SEED)); return persist(); },
     // Charge la vraie donnée depuis l'API PHP (/franchisee/*) EN MÉMOIRE, avec
     // repli seed par table : toute table absente/erreur/401/vide garde le seed,
