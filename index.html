@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072309"></script>
-<script src="bo_server.js?v=2026072309"></script>
+<script src="api-config.js?v=2026072310"></script>
+<script src="bo_server.js?v=2026072310"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072309'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072310'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072309">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072309"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072310">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072310"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -2123,7 +2123,7 @@ class Component extends DCLogic {
     if(o.sendMail&&o.contactEmail) parts.push('e-mail récapitulatif → '+o.contactEmail);
     if(o.sendAdhesion&&S.obStaff.length) parts.push(S.obStaff.length+' demande(s) d\'adhésion');
     parts.push('voucher '+vcode);
-    this.setState({obOpen:false,screen:'clients',selClient:newIdx,_rev:(S._rev||0)+1});
+    this.setState({obOpen:false,screen:'b2bClients',selClient:newIdx,_rev:(S._rev||0)+1});
     this.printJob('✔ Bureau '+(o.raison||'')+' créé · '+parts.join(' · '));
     // Écriture serveur typée : création réelle du bureau (office + site +
     // départements + voucher de bienvenue) via l'API. Best-effort — le local
@@ -2135,6 +2135,13 @@ class Component extends DCLogic {
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur}})
+      }).then(r=>r.ok?r.json():null).then(()=>{
+        // Le serveur a créé office + LIGNE CLIENT (double lien) : refetch pour
+        // que le nouveau client apparaisse tout de suite dans le menu Clients.
+        const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={headers:{'X-Admin-Token':fr.token},credentials:'omit'};
+        fetch(fr.base+'/franchisee/b2b-clients'+qs2,H2).then(r=>r.ok?r.json():null)
+          .then(a2=>{ if(Array.isArray(a2)&&window.BOServer) window.BOServer.refresh('b2b_clients',a2); this.bcRefreshOffices(); })
+          .catch(()=>{});
       }).catch(()=>{});
     } catch(e){}
   }
@@ -2251,6 +2258,7 @@ class Component extends DCLogic {
         fields:[
           {k:'name',label:'Nom de l\'office (lieu de livraison)',type:'text',ph:'ex. KBC — Cafétéria HQ',info:'Un office est un LIEU DE LIVRAISON d\'un client. Un site (building) peut regrouper plusieurs offices ; un office contient plusieurs départements, auxquels se rattachent les clients (personnes) qui commandent.',section:'Identité'},
           {k:'status',label:'Statut',type:'toggle',options:[{value:'pending',label:'En attente'},{value:'validated',label:'Validé'}],def:'validated',info:'À la création : Validé. Toute MODIFICATION repasse l\'office « En attente » jusqu\'à re-validation.',section:'Identité'},
+          {k:'vat',label:'N° TVA',type:'text',ph:'BE0123456789',info:'TVA du bureau — sert au contrôle de conflit (un même CP déjà desservi sous une autre TVA).',section:'Identité'},
           {k:'site',label:'Site (building) du bureau',type:'select',options:[{value:'',label:'— Aucun building (site à créer) —'},...buildings.map(b=>({value:b,label:b}))],info:'Sens du paramétrage : c\'est le BUREAU qui choisit son building (site). Un site peut regrouper plusieurs bureaux — c\'est l\'arrêt physique de la tournée.',section:'Identité'},
           {k:'address',label:'Adresse',type:'text',ph:'Rue, n°',section:'Coordonnées'},
           {k:'postal_code',label:'Code postal',type:'text',ph:'1000',half:true,section:'Coordonnées'},
@@ -2375,6 +2383,10 @@ class Component extends DCLogic {
         window.BOServer.save('ws_offices',orows); } this.printJob('✓ Adresse encodée enregistrée comme lieu de livraison (office, en attente)'); },900);
       this.setState({pendingOffice:null});
     }
+    // Après un save OFFICE ou SITE : refetch des tables serveur → la ligne
+    // locale récupère son id DB (évite un doublon si on ré-édite/renomme
+    // avant reload) et la liste reflète l'état réellement écrit.
+    if(S.formKey==='office'||S.formKey==='site'){ setTimeout(()=>this.bcRefreshOffices(),700); }
     // Modale « livraison au bureau » : si la création de SITE vient du bouton
     // « + Créer un site » de la modale, on la rouvre avec le nouveau site
     // présélectionné — ses données sont injectées dans la fiche client.

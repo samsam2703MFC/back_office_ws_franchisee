@@ -455,12 +455,12 @@
       // pour elles, la réponse API fait foi MÊME VIDE (une table vidée reste
       // vide — le seed de démo ne doit pas « ressusciter » de lignes), et
       // l'overlay bo-store (copie potentiellement périmée) ne s'applique pas.
-      // NB : fr_clients et ws_tour_availability restent HORS de ce set — leurs
-      // écrans s'éditent via bo-store (pas de bloc typé aller-retour), les y
-      // mettre ferait perdre les éditions au reload.
+      // NB : fr_clients reste HORS de ce set — son écran s'édite via bo-store
+      // (pas de bloc typé aller-retour). ws_tour_availability y est ENTRÉE le
+      // jour où son bloc typé PHP a été ajouté (upsert par tournée × jour).
       var TYPED = { ws_tours:1, ws_delivery_zones:1, ws_tour_postcodes:1,
         ws_office_delivery_sites:1, ws_offices:1,
-        ws_tour_closures:1, ws_franchisor_catchment:1,
+        ws_tour_closures:1, ws_tour_availability:1, ws_franchisor_catchment:1,
         catchment_postcodes:1, b2b_client_company_department:1, params:1,
         b2b_clients:1 };
       var jobs = Object.keys(MAP).map(function(key){
