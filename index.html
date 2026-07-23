@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072336"></script>
-<script src="bo_server.js?v=2026072336"></script>
+<script src="api-config.js?v=2026072337"></script>
+<script src="bo_server.js?v=2026072337"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072336'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072337'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072336">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072336"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072337">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072337"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -3174,8 +3174,11 @@ class Component extends DCLogic {
     const tdbTree=tdbRaw.map((t,i)=>{ const tk='t'+i; allKeys.push(tk); let tSites=0;
       const zones=t.zones.map((z,j)=>{ const zk=tk+'z'+j; allKeys.push(zk);
         const sites=z.sites.map((s,k)=>{ const sk=zk+'s'+k, ok=sk+'o'; allKeys.push(sk,ok); tSites++;
-          const scmd=s.users.reduce((a,u)=>a+u.cmd,0);
-          return {libelle:s.libelle,ville:s.ville,cutoff:s.cutoff,office:s.office,commandes:scmd,officeCmd:scmd,users:s.users,
+          // La colonne « Commandes » COMPTE les commandes (1 par ligne client) ;
+          // les pièces restent visibles sur la ligne client (« 3 pcs »).
+          const scmd=s.users.length;
+          const uRows=s.users.map(u=>({...u,cmd:(u.cmd||0)+' pcs'}));
+          return {libelle:s.libelle,ville:s.ville,cutoff:s.cutoff,office:s.office,commandes:scmd,officeCmd:scmd,users:uRows,
             ...car(sk),officeOpen:!col[ok],officeCaret:col[ok]?'▸':'▾',officeToggle:()=>toggleKey(ok)}; });
         return {nom:z.nom,commandes:sites.reduce((a,s)=>a+s.commandes,0),nbSites:sites.length,sites,...car(zk)}; });
       return {nom:t.nom,chauffeur:t.chauffeur,statutLabel:t.statutLabel,statutStyle:t.statutStyle,
@@ -3184,7 +3187,7 @@ class Component extends DCLogic {
     const markPrint=(k,msg)=>{ this.setState(s=>({printed:{...s.printed,[k]:true}})); this.printJob(msg); };
     const prepTree=tdbRaw.map((t,i)=>{ const tk='p'+i; allKeys.push(tk);
       const flat=[]; t.zones.forEach(z=>z.sites.forEach(s=>flat.push(s)));
-      const sites=flat.map((s,k)=>{ const sk=tk+'s'+k, ok=sk+'o'; allKeys.push(sk,ok); const scmd=s.users.reduce((a,u)=>a+u.cmd,0);
+      const sites=flat.map((s,k)=>{ const sk=tk+'s'+k, ok=sk+'o'; allKeys.push(sk,ok); const scmd=s.users.length;
         return {libelle:s.libelle,ville:s.ville,cutoff:s.cutoff,office:s.office,commandes:scmd,officeCmd:scmd,
           ...car(sk),printed:!!pr[sk],print:(e)=>{e&&e.stopPropagation&&e.stopPropagation();markPrint(sk,'🖨 Étiquettes delivery site — '+s.libelle);},
           officeOpen:!col[ok],officeCaret:col[ok]?'▸':'▾',officeToggle:()=>toggleKey(ok),
