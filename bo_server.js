@@ -462,7 +462,7 @@
         ws_office_delivery_sites:1, ws_offices:1,
         ws_tour_closures:1, ws_tour_availability:1, ws_franchisor_catchment:1,
         catchment_postcodes:1, b2b_client_company_department:1, params:1,
-        b2b_clients:1 };
+        b2b_clients:1, fr_assortiment:1 };
       var jobs = Object.keys(MAP).map(function(key){
         return fetch(fr.base + '/franchisee/' + MAP[key] + qs, { headers: headers, credentials: 'omit' })
           .then(function(r){ return r.ok ? r.json() : null; })

@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072315"></script>
-<script src="bo_server.js?v=2026072315"></script>
+<script src="api-config.js?v=2026072316"></script>
+<script src="bo_server.js?v=2026072316"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072315'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072316'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072315">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072315"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072316">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072316"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -3516,19 +3516,34 @@ class Component extends DCLogic {
 
     // Assortiment — arbre catégories → produits, toggles actif + verrou marque
     const swT=(on,lock)=>({style:'position:relative;width:38px;height:21px;border-radius:20px;border:none;cursor:pointer;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)')+(lock?';opacity:.45;pointer-events:none':''),knob:'position:absolute;top:2px;left:'+(on?'19px':'2px')+';width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2)'});
+    // « Assortiment par boutique » — RÉEL : ws_products × ws_product_shops
+    // (fr_assortiment). Chaque bascule est ÉCRITE via POST assortiment-toggle ;
+    // produits « marque obligatoire » verrouillés côté serveur ET côté écran.
+    const asrRaw=SRV('fr_assortiment');
+    const asrCats={}; const asrOrder=[];
+    asrRaw.forEach(a=>{ const k=a.cat||'Autres'; if(!asrCats[k]){ asrCats[k]={cat:k,prods:[]}; asrOrder.push(k); } asrCats[k].prods.push(a); });
+    const asrPost=(bodyA,after)=>{ const fr=window.__FR||{};
+      fetch((fr.base||'')+'/franchisee/assortiment-toggle'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify(bodyA)})
+        .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — bascule non enregistrée')); };
+    const asrSetLocal=(pred,act)=>{ if(window.BOServer){ const rows=window.BOServer.table('fr_assortiment'); rows.forEach(x=>{ if(pred(x)&&!(x.locked&&!act)) x.defA=act; }); window.BOServer.refresh('fr_assortiment',rows); } this.setState(st=>({_rev:(st._rev||0)+1})); };
     const assortRows=[];
-    CATALOG.forEach((c,ci)=>{ const cAct=catActive(ci,c); const cs=swT(cAct,c.catMand);
-      assortRows.push({isCat:true,isProd:false,label:c.cat,mand:c.catMand,mandBadge:pill2('#fbe9eb','var(--color-primary)'),
-        help:c.catMand?('Catégorie « '+c.cat+' » VERROUILLÉE (marque obligatoire) : imposée par le réseau, toujours active dans l\'assortiment, non désactivable.'):(cAct?('Catégorie « '+c.cat+' » ACTIVE : ses produits sont vendables et repris dans le Stock du jour. La désactiver masque toute la catégorie (produits inclus) du webshop et du comptoir.'):('Catégorie « '+c.cat+' » DÉSACTIVÉE : elle et tous ses produits sont retirés de la vente et du Stock du jour. La réactiver rétablit les produits selon leur propre état.')),
+    asrOrder.forEach(k=>{ const c=asrCats[k];
+      const cAct=c.prods.some(p=>p.defA!==false);
+      const allLocked=c.prods.every(p=>p.locked);
+      const cs=swT(cAct,allLocked);
+      assortRows.push({isCat:true,isProd:false,label:c.cat,mand:allLocked,mandBadge:pill2('#fbe9eb','var(--color-primary)'),
+        help:cAct?('Catégorie « '+c.cat+' » ACTIVE : ses produits sont vendables (ws_product_shops). La désactiver retire tous ses produits non verrouillés de la vente.'):('Catégorie « '+c.cat+' » DÉSACTIVÉE : ses produits sont retirés de la vente. La réactiver les rétablit.'),
         swStyle:cs.style,swKnob:cs.knob,
-        toggle:c.catMand?(()=>{}):(()=>this.setState(st=>({flags:{...st.flags,['catA_'+ci]:!(st.flags['catA_'+ci]!==undefined?st.flags['catA_'+ci]:true)}})))});
-      c.prods.forEach((p,pi)=>{ const pAct=prodActive(ci,pi,p); const eff=cAct&&pAct; const ps=swT(pAct,p.mand);
-        assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:p.mand,
-          help:p.mand?('Produit « '+p.nom+' » VERROUILLÉ (marque obligatoire) : toujours proposé si sa catégorie est active.'):(eff?('Produit « '+p.nom+' » ACTIF : vendable et repris dans le Stock du jour. Le désactiver le retire de la vente sans toucher aux autres produits.'):(cAct?('Produit « '+p.nom+' » INACTIF : retiré de la vente. L\'activer le rend commandable.'):('Indisponible : la catégorie parente est désactivée. Réactivez d\'abord la catégorie.'))),
-          rowStyle:'display:grid;grid-template-columns:2.4fr 1.2fr .7fr;align-items:center;padding:10px 6px 10px 22px;border-bottom:.5px solid var(--color-border-tertiary)'+(eff?'':';opacity:.5'),
-          stateTxt:eff?'Actif · repris au stock':(cAct?'Inactif':'Catégorie désactivée'),stateColor:eff?'#2d7a3e':'var(--color-text-muted)',
-          swStyle:ps.style,swKnob:ps.knob,
-          toggle:p.mand?(()=>{}):(()=>this.setState(st=>({flags:{...st.flags,['prodA_'+ci+'_'+pi]:!(st.flags['prodA_'+ci+'_'+pi]!==undefined?st.flags['prodA_'+ci+'_'+pi]:(p.defOff?false:true))}})))});
+        toggle:allLocked?(()=>{}):(()=>{ const nv=!cAct;
+          asrPost({cat:c.cat,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>(x.cat||'Autres')===k,nv); this.printJob((nv?'✓ Catégorie « ':'Catégorie « ')+c.cat+' » '+(nv?'activée':'désactivée')+' — '+(j.n||0)+' produit(s) (ws_product_shops)'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
+      c.prods.forEach(p=>{ const pAct=p.defA!==false; const ps2=swT(pAct,p.locked);
+        assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
+          help:p.locked?('Produit « '+p.nom+' » VERROUILLÉ (marque obligatoire) : toujours proposé.'):(pAct?('Produit « '+p.nom+' » ACTIF (ws_product_shops). Le désactiver le retire de la vente pour cette boutique.'):('Produit « '+p.nom+' » INACTIF pour cette boutique. L\'activer le rend commandable.')),
+          rowStyle:'display:grid;grid-template-columns:2.4fr 1.2fr .7fr;align-items:center;padding:10px 6px 10px 22px;border-bottom:.5px solid var(--color-border-tertiary)'+(pAct?'':';opacity:.5'),
+          stateTxt:pAct?'Actif · vendable':'Inactif (boutique)',stateColor:pAct?'#2d7a3e':'var(--color-text-muted)',
+          swStyle:ps2.style,swKnob:ps2.knob,
+          toggle:p.locked?(()=>{}):(()=>{ const nv=!pAct;
+            asrPost({product:p.nom,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>x.nom===p.nom,nv); this.printJob('✓ « '+p.nom+' » '+(nv?'activé':'désactivé')+' (ws_product_shops)'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
       });
     });
 
