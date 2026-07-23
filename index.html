@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072326"></script>
-<script src="bo_server.js?v=2026072326"></script>
+<script src="api-config.js?v=2026072327"></script>
+<script src="bo_server.js?v=2026072327"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072326'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072327'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072326">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072326"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072327">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072327"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -319,6 +319,7 @@
                 <span style="{{ r.colDot }}"></span>
                 <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px">{{ r.driver }} · départ {{ r.start }}</div></div>
                 <div style="flex:none;display:flex;gap:5px">
+                  <button onClick="{{ r.itin }}" title="Voir l'itinéraire sur la carte (ordre des arrêts)" style="{{ r.itinStyle }}">🗺 Itinéraire</button>
                   <button onClick="{{ r.editTile }}" title="Modifier la tournée" style="width:27px;height:27px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-text-muted);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
                   <button onClick="{{ r.delTile }}" title="Supprimer la tournée" style="width:27px;height:27px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
                 </div>
@@ -332,8 +333,13 @@
                 <sc-for list="{{ r.sites }}" as="st" hint-placeholder-count="2">
                   <div style="border:.5px solid var(--color-border-tertiary);border-radius:9px;padding:9px 11px;background:var(--color-background-secondary)">
                     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0">
-                      <span style="font:600 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ st.nom }}</span>
-                      <span style="flex:none;display:inline-flex;align-items:center;gap:6px"><span style="font:600 10px var(--font-ui);color:var(--color-text-muted)">{{ st.offCount }}</span><button onClick="{{ st.remove }}" title="Retirer ce site de la tournée" style="border:none;background:transparent;color:var(--color-text-muted);cursor:pointer;font-size:13px;padding:0;line-height:1">×</button></span>
+                      <span style="display:inline-flex;align-items:center;gap:7px;min-width:0"><span style="{{ st.numStyle }}">{{ st.num }}</span><span style="font:600 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ st.nom }}</span></span>
+                      <span style="flex:none;display:inline-flex;align-items:center;gap:4px">
+                        <button onClick="{{ st.up }}" title="Monter dans l'ordre de la tournée" style="width:20px;height:20px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;opacity:{{ st.upOp }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--color-text)" stroke-width="2.6"><path d="M6 15l6-6 6 6"/></svg></button>
+                        <button onClick="{{ st.down }}" title="Descendre dans l'ordre de la tournée" style="width:20px;height:20px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;opacity:{{ st.downOp }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--color-text)" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>
+                        <span style="font:600 10px var(--font-ui);color:var(--color-text-muted);margin-left:2px">{{ st.offCount }}</span>
+                        <button onClick="{{ st.remove }}" title="Retirer ce site de la tournée" style="border:none;background:transparent;color:var(--color-text-muted);cursor:pointer;font-size:13px;padding:0 0 0 2px;line-height:1">×</button>
+                      </span>
                     </div>
                     <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ st.offNames }}">{{ st.offNames }}</div>
                   </div>
@@ -2545,19 +2551,31 @@ class Component extends DCLogic {
     const geo=(typeof window!=='undefined'&&window.__CPGEO)||null;
     const seen={}; const out=[];
     rows.forEach(r=>{ const adr=(r.adr&&r.adr!=='—')?r.adr:null; if(!adr) return;
-      if(seen[adr]===undefined){ const cp=(String(adr).match(/\b(\d{4})\b/)||[])[1]||'';
+      if(seen[adr]===undefined){
+        // Géoloc : CP de l'adresse du site, SINON CP du BUREAU rattaché
+        // (ws_offices.postal_code) — les adresses de référence sont celles
+        // des bureaux concernés.
+        const cp=(String(adr).match(/\b(\d{4})\b/)||[])[1]||String(r.office_cp||'').trim();
         const e=(geo&&geo.idx)?geo.idx[cp]:null;
         seen[adr]=out.length;
         out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,
-          ville:e?e.city:(cp||'—'),lat:e?e.lat:50.85,lng:e?e.lng:4.35,
+          ville:e?e.city:(r.office_city||cp||'—'),lat:e?e.lat:null,lng:e?e.lng:null,cp,
+          stop:(r.stop!=null?+r.stop:null),
           zone:(r.tour&&r.tour!=='—')?r.tour:'—',access:parseFloat(r.acc)||10,offices:[],
           notes:(r.etage&&r.etage!=='—')?('Étage/local : '+r.etage):''});
       }
       const st=out[seen[adr]];
+      // Ordre du bâtiment = plus petit stop de ses lignes ; géoloc de secours
+      // par le CP d'un autre bureau du même bâtiment.
+      if(r.stop!=null&&(st.stop==null||+r.stop<st.stop)) st.stop=+r.stop;
+      if(st.lat==null&&geo&&geo.idx){ const cp2=String(r.office_cp||'').trim(); const e2=geo.idx[cp2]; if(e2){ st.lat=e2.lat; st.lng=e2.lng; st.ville=e2.city; st.cp=cp2; } }
       const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
-      if(b&&!st.offices.some(o=>o.name===b)) st.offices.push({name:b,drop:5});
+      if(b&&!st.offices.some(o=>o.name===b)){
+        const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
+        st.offices.push({name:b,addr:oAdr||'adresse non renseignée',drop:5});
+      }
     });
-    out.forEach(st=>{ if(!st.offices.length) st.offices=[{name:'— aucun bureau lié —',drop:5}]; });
+    out.forEach(st=>{ if(st.lat==null){ st.lat=50.85; st.lng=4.35; st.geoKo=true; } if(!st.offices.length) st.offices=[{name:'— aucun bureau lié —',addr:'',drop:5}]; });
     return out;
   }
   computeRoute(rid){
@@ -2854,7 +2872,9 @@ class Component extends DCLogic {
     if(fit.length) m.fitBounds(fit,{padding:[28,28],maxZoom:12});
   }
   ensureMaps(){
-    if(this.state.screen==='zones') this.zfGeoEnsure();
+    // Le référentiel CP→GPS se charge AVANT la garde Leaflet — la carte des
+    // tournées en dépend (sinon tous les sites retombent sur le point défaut).
+    if(this.state.screen==='zones'||this.state.screen==='tournees') this.zfGeoEnsure();
     if(this.state.screen==='geoAnalyse') this.geoAEnsure();
     if(!window.L){ this._mapTimer=setTimeout(()=>this.ensureMaps(),140); return; }
     if(this.state.screen==='zones'){
@@ -2883,39 +2903,67 @@ class Component extends DCLogic {
       }
     }
     if(this.state.screen==='tournees'){
+      // Le référentiel CP→GPS (__CPGEO) est INDISPENSABLE au tracé : on le
+      // charge ici aussi (il ne l'était que sur zones/analyse géo — la
+      // tournée « ne s'affichait pas » : tous les sites retombaient sur le
+      // point par défaut).
+      this.zfGeoEnsure();
       const el=document.getElementById('map-tournees');
       if(el && !el._leaflet_id){
         const m=L.map(el,{zoomControl:true}).setView([50.84,4.37],12);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
         this._tourneesMap=m; this.drawRoute();
+      } else if(el && this._tourneesMap){
+        // Redessine quand la donnée change (géo chargée, ordre modifié,
+        // assignation, focus itinéraire) — signature légère anti-boucle.
+        const sig=JSON.stringify([(window.__CPGEO?1:0),this.state.mapFocusTour||'',
+          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
+        if(this._routeSig!==sig){ this._routeSig=sig; this.drawRoute(); }
       }
     }
   }
-  // Carte des tournées — RÉELLE : une couleur par tournée, sites depuis
-  // ws_office_delivery_sites (sitesData), tracé dépôt → sites → dépôt.
-  // Les sites sans tournée apparaissent en gris.
+  // Carte des tournées — RÉELLE : une couleur par tournée, sites ORDONNÉS par
+  // tournee_stop_id (1, 2, 3…), tracé dépôt → 1 → 2 → … → dépôt. Survol d'un
+  // tracé = itinéraire mis en avant + info-bulle de l'ordre ; clic sur un site
+  // = adresses de TOUS ses bureaux. Sites sans tournée en gris.
   drawRoute(){
     const L=window.L, m=this._tourneesMap; if(!L||!m) return;
     if(this._routeLayer) m.removeLayer(this._routeLayer);
     const g=L.layerGroup(); const d=this.depot();
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+    const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     const sites=this.sitesData(); const tours=this.routesMeta();
+    const focus=this.state.mapFocusTour||null;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
-    L.circleMarker([d.lat,d.lng],{radius:9,color:'#222',weight:2,fillColor:'#fff',fillOpacity:1}).addTo(g).bindPopup("<b>"+d.libelle+"</b><br>Dépôt");
+    const sitePopup=(p,t,k)=>'<div style="font:12.5px/1.5 sans-serif;min-width:210px"><b>'+esc(p.name)+'</b>'
+      +(t?('<br><span style="color:#666">'+esc(t)+' · arrêt n°'+k+'</span>'):'<br><span style="color:#666">Sans tournée</span>')
+      +'<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><b style="font-size:11px">Bureaux &amp; adresses</b>'
+      +p.offices.map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>';
+    L.circleMarker([d.lat,d.lng],{radius:9,color:'#222',weight:2,fillColor:'#fff',fillOpacity:1}).addTo(g).bindPopup("<b>"+esc(d.libelle)+"</b><br>Dépôt");
+    let focusBounds=null;
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length];
-      const pts=sites.filter(s=>norm(s.zone)===norm(t.name));
+      const isFocus=focus&&norm(focus)===norm(t.name);
+      const dim=focus&&!isFocus;
+      const pts=sites.filter(s=>norm(s.zone)===norm(t.name))
+        .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       if(!pts.length) return;
       const coords=[[d.lat,d.lng],...pts.map(p=>[p.lat,p.lng])];
       if(t.ret!==false) coords.push([d.lat,d.lng]);
-      L.polyline(coords,{color:col,weight:3,opacity:.7,dashArray:'6 5'}).addTo(g);
+      const itin=pts.map((p,k)=>(k+1)+'. '+p.name).join(' → ');
+      const line=L.polyline(coords,{color:col,weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}).addTo(g);
+      line.bindTooltip('<b>'+esc(t.name)+'</b><br>'+esc(itin),{sticky:true});
+      line.on('mouseover',function(){ this.setStyle({weight:6,opacity:1,dashArray:null}); });
+      line.on('mouseout',function(){ this.setStyle({weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}); });
+      if(isFocus) focusBounds=L.latLngBounds(coords);
       pts.forEach((p,k)=>{
-        const icon=L.divIcon({className:'',html:`<div style="width:26px;height:26px;border-radius:50%;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${k+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
-        L.marker([p.lat,p.lng],{icon}).addTo(g).bindPopup("<b>"+p.name+"</b><br>"+t.name);
+        const icon=L.divIcon({className:'',html:`<div style="width:26px;height:26px;border-radius:50%;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);opacity:${dim?0.25:1}">${k+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
+        L.marker([p.lat,p.lng],{icon}).addTo(g).bindPopup(sitePopup(p,t.name,k+1));
       });
     });
     sites.filter(s=>!s.zone||s.zone==='—').forEach(p=>
-      L.circleMarker([p.lat,p.lng],{radius:7,color:'#fff',weight:2,fillColor:'#9a9a9a',fillOpacity:.9}).addTo(g).bindPopup("<b>"+p.name+"</b><br>Sans tournée"));
+      L.circleMarker([p.lat,p.lng],{radius:7,color:'#fff',weight:2,fillColor:'#9a9a9a',fillOpacity:focus?0.3:0.9}).addTo(g).bindPopup(sitePopup(p,null,0)));
     g.addTo(m); this._routeLayer=g;
+    if(focusBounds) m.fitBounds(focusBounds,{padding:[36,36]});
   }
   componentDidMount(){ this.ensureMaps(); }
   componentDidUpdate(){ this.ensureMaps(); }
@@ -3043,22 +3091,44 @@ class Component extends DCLogic {
     const tvRows=SRV('ws_office_delivery_sites');
     const tvBlds={}; const tvOrder=[];
     tvRows.forEach(r=>{ const key=(r.adr&&r.adr!=='—')?('a:'+tNorm(r.adr)):((r.name&&r.name!=='—')?('n:'+tNorm(r.name)):null); if(!key) return;
-      if(!tvBlds[key]){ tvBlds[key]={key,name:(r.name&&r.name!=='—')?r.name:r.adr,adr:(r.adr&&r.adr!=='—')?r.adr:'',tour:(r.tour&&r.tour!=='—')?r.tour:null,acc:parseFloat(r.acc)||10,offices:[]}; tvOrder.push(key); }
+      if(!tvBlds[key]){ tvBlds[key]={key,name:(r.name&&r.name!=='—')?r.name:r.adr,adr:(r.adr&&r.adr!=='—')?r.adr:'',tour:(r.tour&&r.tour!=='—')?r.tour:null,acc:parseFloat(r.acc)||10,stop:(r.stop!=null?+r.stop:null),offices:[]}; tvOrder.push(key); }
       const b=tvBlds[key]; if(!b.tour&&r.tour&&r.tour!=='—') b.tour=r.tour;
+      if(r.stop!=null&&(b.stop==null||+r.stop<b.stop)) b.stop=+r.stop;
       const off=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
       if(off&&!b.offices.some(x=>tNorm(x)===tNorm(off))) b.offices.push(off); });
     const tvList=tvOrder.map(k=>tvBlds[k]);
     const armKey=(S.armSite&&tvBlds[S.armSite])?S.armSite:null;
     // Écrit la tournée d'un BÂTIMENT (toutes ses lignes) — save typé + refetch.
+    // À l'assignation, le site prend l'ordre SUIVANT (max+1) dans la tournée ;
+    // au retrait, son ordre est effacé.
     const tourSetBld=(bld,tourName)=>{ if(!window.BOServer) return;
       const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false;
+      let nextStop=null;
+      if(tourName){ const used=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(tourName)&&b.key!==bld.key).map(b=>b.stop||0); nextStop=(used.length?Math.max(...used):0)+1; }
       rows.forEach((x,xi)=>{ const kx=(x.adr&&x.adr!=='—')?('a:'+tNorm(x.adr)):((x.name&&x.name!=='—')?('n:'+tNorm(x.name)):null);
-        if(kx===bld.key){ rows[xi]={...x,tour:tourName||'—'}; ch=true; } });
+        if(kx===bld.key){ rows[xi]={...x,tour:tourName||'—',stop:tourName?nextStop:null}; ch=true; } });
       if(ch) window.BOServer.save('ws_office_delivery_sites',rows);
       this.setState(s=>({armSite:null,_rev:(s._rev||0)+1}));
       setTimeout(()=>this.bcRefreshOffices(),150);
       setTimeout(()=>this.drawRoute(),400);
-      this.printJob(tourName?('✓ Site « '+bld.name+' » → tournée « '+tourName+' » (ws_office_delivery_sites)'):('Site « '+bld.name+' » retiré de sa tournée — non desservi')); };
+      this.printJob(tourName?('✓ Site « '+bld.name+' » → tournée « '+tourName+' » · arrêt n°'+nextStop+' (ws_office_delivery_sites)'):('Site « '+bld.name+' » retiré de sa tournée — non desservi')); };
+    // Réordonner un site dans sa tournée (↑/↓) : renumérote 1..n et PERSISTE
+    // tournee_stop_id sur toutes les lignes de chaque bâtiment.
+    const tourReorder=(tourName,key,dir)=>{ if(!window.BOServer) return;
+      const ordered=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(tourName))
+        .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
+      const i=ordered.findIndex(b=>b.key===key); const j=i+dir;
+      if(i<0||j<0||j>=ordered.length) return;
+      const tmp=ordered[i]; ordered[i]=ordered[j]; ordered[j]=tmp;
+      const stopOf={}; ordered.forEach((b,ix)=>stopOf[b.key]=ix+1);
+      const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false;
+      rows.forEach((x,xi)=>{ const kx=(x.adr&&x.adr!=='—')?('a:'+tNorm(x.adr)):((x.name&&x.name!=='—')?('n:'+tNorm(x.name)):null);
+        if(kx&&stopOf[kx]!==undefined&&x.tour&&tNorm(x.tour)===tNorm(tourName)){ rows[xi]={...x,stop:stopOf[kx]}; ch=true; } });
+      if(ch) window.BOServer.save('ws_office_delivery_sites',rows);
+      this.setState(s=>({_rev:(s._rev||0)+1}));
+      setTimeout(()=>this.bcRefreshOffices(),150);
+      setTimeout(()=>this.drawRoute(),400);
+      this.printJob('✓ Ordre de la tournée « '+tourName+' » mis à jour : '+ordered.map((b,ix)=>(ix+1)+'·'+b.name).join(' → ')); };
     const unassignedSites=tvList.filter(b=>!b.tour).map(b=>{ const armed=armKey===b.key;
       return {name:b.name,zone:b.adr||'—',nbOffices:b.offices.length,siteTime:(b.acc||10)+' min',
         cardStyle:'border:1.5px '+(armed?'solid var(--color-primary);box-shadow:0 0 0 3px rgba(141,29,44,.08)':'dashed var(--color-border-secondary)')+';border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:12px;min-width:236px;background:'+(armed?'var(--color-background-secondary)':'transparent'),
@@ -3069,7 +3139,8 @@ class Component extends DCLogic {
     const tvArmOn=!!armKey;
     // TUILES tournées (4 par ligne) : composition exacte sites + bureaux.
     const tourTiles=rMeta.filter(t=>t.name).map((t,ti)=>{
-      const sites=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(t.name));
+      const sites=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(t.name))
+        .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       const nbOff=sites.reduce((a,b)=>a+b.offices.length,0);
       const max=parseInt(t.max,10)||10; const over=nbOff>max;
       const tColors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
@@ -3085,9 +3156,18 @@ class Component extends DCLogic {
         tileStyle:'display:flex;flex-direction:column;gap:12px;background:var(--color-surface);border:'+(tvArmOn?'1.5px dashed var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:14px;padding:18px 20px;min-height:190px;cursor:'+(tvArmOn?'copy':'default'),
         dropHere:()=>{ if(!tvArmOn) return; const b=tvBlds[armKey]; if(b) tourSetBld(b,t.name); },
         canDrop:tvArmOn,
-        sites:sites.map(b=>({nom:b.name,offCount:b.offices.length+' bureau'+(b.offices.length>1?'x':''),
+        sites:sites.map((b,si)=>({nom:b.name,num:String(si+1),
+          numStyle:'width:20px;height:20px;flex:none;border-radius:50%;background:'+col+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font:700 10.5px var(--font-ui)',
+          offCount:b.offices.length+' bureau'+(b.offices.length>1?'x':''),
           offNames:b.offices.length?b.offices.join(' · '):'aucun bureau rattaché',
+          upOp:si===0?'.25':'1',downOp:si===sites.length-1?'.25':'1',
+          up:()=>tourReorder(t.name,b.key,-1),down:()=>tourReorder(t.name,b.key,1),
           remove:()=>tourSetBld(b,null)})),
+        itin:()=>{ const nv=(S.mapFocusTour===t.name)?null:t.name;
+          this.setState({mapFocusTour:nv});
+          setTimeout(()=>{ this.drawRoute(); const el=document.getElementById('map-tournees'); if(nv&&el&&el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'center'}); },60); },
+        itinOn:S.mapFocusTour===t.name,
+        itinStyle:'flex:none;border:.5px solid '+(S.mapFocusTour===t.name?col:'var(--color-border-secondary)')+';background:'+(S.mapFocusTour===t.name?col:'var(--color-surface)')+';color:'+(S.mapFocusTour===t.name?'#fff':'var(--color-text-muted)')+';border-radius:7px;padding:0 9px;height:27px;font:600 10.5px var(--font-ui);cursor:pointer;display:inline-flex;align-items:center;gap:5px',
         sitesEmpty:sites.length===0,
         addOpts:[{value:'',label:'+ Assigner un site…'},...addable.map(b=>({value:b.key,label:b.name+(b.tour?(' ← '+b.tour):'')}))],
         addSet:(e)=>{ const v=e.target.value; const b=tvBlds[v]; if(b) tourSetBld(b,t.name); },
