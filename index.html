@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072333"></script>
-<script src="bo_server.js?v=2026072333"></script>
+<script src="api-config.js?v=2026072334"></script>
+<script src="bo_server.js?v=2026072334"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072333'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072334'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072333">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072333"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072334">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072334"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -3711,24 +3711,31 @@ class Component extends DCLogic {
     const offKey=(o)=>String(o.id!=null?o.id:o.name);
     const offPairedKeys=new Set();
     siteRowsAll.forEach(r=>{ const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null); if(b) offPairedKeys.add(normA(b)); });
+    // CLÉ DE BÂTIMENT : adresse normalisée, SINON nom normalisé — un site créé
+    // sans adresse (ex. « Zoning Sud Wavre ») reste assignable partout ; avant,
+    // tout était indexé par adresse et ces sites étaient invisibles de l'étape 3.
+    const bKey=(x)=>{ const a=(x&&x.adr&&x.adr!=='—')?normA(x.adr):''; if(a) return 'a:'+a;
+      const n=(x&&x.name&&x.name!=='—')?normA(x.name):''; return n?('n:'+n):null; };
     // Rattacher un office à un site (partagé : drop après saisie + sélecteur).
     const offAttach=(r,key)=>{ const off=SRV('ws_offices').find(o=>offKey(o)===String(key)); if(!off) return;
       if(window.BOServer){
         const rows=window.BOServer.table('ws_office_delivery_sites');
-        const tpl=rows.find(x=>sameA(x.adr,r.adr))||r;
+        const rk=bKey(r);
+        const tpl=rows.find(x=>rk&&bKey(x)===rk)||r;
         const ex=rows.findIndex(x=>(x.office_client_id!=null&&off.id!=null&&x.office_client_id===off.id)||x.bureau===off.name||x.office===off.name);
         if(ex>=0){
-          const oldAdr=rows[ex].adr;
-          if(oldAdr&&oldAdr!=='—'&&!sameA(oldAdr,tpl.adr)&&!rows.some((x,xi)=>xi!==ex&&sameA(x.adr,oldAdr)))
+          const oldKey=bKey(rows[ex]);
+          if(oldKey&&oldKey!==bKey(tpl)&&!rows.some((x,xi)=>xi!==ex&&bKey(x)===oldKey))
             rows.push({...rows[ex],id:undefined,bureau:'—',office:'—',office_client_id:null});
           rows[ex]={...rows[ex],name:tpl.name,adr:tpl.adr,etage:tpl.etage,acc:tpl.acc,tour:tpl.tour,bureau:off.name,office:off.name,office_client_id:(off.id!=null?off.id:rows[ex].office_client_id)};
         }
-        else{ const free=rows.findIndex(x=>sameA(x.adr,r.adr)&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
+        else{ const free=rows.findIndex(x=>rk&&bKey(x)===rk&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
           if(free>=0) rows[free]={...rows[free],bureau:off.name,office:off.name,office_client_id:off.id};
           else rows.push({name:tpl.name,adr:tpl.adr,etage:tpl.etage||'—',acc:tpl.acc||'5',tour:tpl.tour||'—',bureau:off.name,office:off.name,office_client_id:off.id}); }
         window.BOServer.save('ws_office_delivery_sites',rows);
         const offs=window.BOServer.table('ws_offices'); const oi=offs.findIndex(x=>offKey(x)===String(key));
-        if(oi>=0){ const p2={site:tpl.adr,site_touch:1}; if(tpl.tour&&tpl.tour!=='—') p2.tour=tpl.tour;
+        if(oi>=0){ const realAdr=(tpl.adr&&tpl.adr!=='—')?tpl.adr:'';
+          const p2={site:realAdr}; if(realAdr) p2.site_touch=1; if(tpl.tour&&tpl.tour!=='—') p2.tour=tpl.tour;
           offs[oi]={...offs[oi],...p2}; window.BOServer.save('ws_offices',offs); }
       }
       this.setState(st=>({dndOff:null,_rev:(st._rev||0)+1}));
@@ -3739,9 +3746,10 @@ class Component extends DCLogic {
     // Retirer un bureau d'un site (× sur la chip).
     const offDetach=(r,bName)=>{ if(!window.BOServer) return;
       const rows=window.BOServer.table('ws_office_delivery_sites');
-      const idx=rows.findIndex(x=>sameA(x.adr,r.adr)&&(x.bureau===bName||x.office===bName));
+      const rk=bKey(r);
+      const idx=rows.findIndex(x=>rk&&bKey(x)===rk&&(x.bureau===bName||x.office===bName));
       if(idx<0) return;
-      const others=rows.some((x,xi)=>xi!==idx&&sameA(x.adr,r.adr));
+      const others=rows.some((x,xi)=>xi!==idx&&rk&&bKey(x)===rk);
       if(others) rows.splice(idx,1);
       else rows[idx]={...rows[idx],bureau:'—',office:'—',office_client_id:null};
       window.BOServer.save('ws_office_delivery_sites',rows);
@@ -3750,10 +3758,11 @@ class Component extends DCLogic {
       this.setState(st=>({_rev:(st._rev||0)+1}));
       setTimeout(()=>this.bcRefreshOffices(),150);
       this.printJob('Bureau « '+bName+' » retiré du site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' »'); };
-    // Bâtiments distincts (adresse normalisée) — sert au sélecteur « → site »
-    // des bureaux sans site ET aux cartes de l'étape 3.
+    // Bâtiments distincts (clé adresse OU nom) — sert au sélecteur « → site »
+    // des bureaux sans site ET aux cartes de l'étape 3. Les sites sans adresse
+    // (ex. « Zoning Sud Wavre ») sont INCLUS.
     const bldSeen=new Set(); const bldList=[];
-    siteRowsAll.forEach(r=>{ if(!r.adr||r.adr==='—'||bldSeen.has(normA(r.adr))) return; bldSeen.add(normA(r.adr)); bldList.push(r); });
+    siteRowsAll.forEach(r=>{ const k=bKey(r); if(!k||bldSeen.has(k)) return; bldSeen.add(k); bldList.push({...r,_k:k}); });
     // VUE VISUELLE : bureaux validés SANS site — mini-cartes dans un panneau
     // d'alerte ambre, avec assignation directe (sélecteur de site) OU saisie ⠿.
     const offAssignChips=offValid.filter(o=>!offPairedKeys.has(normA(o.name))).map(o=>{ const g=S.dndOff!=null&&String(S.dndOff)===offKey(o);
@@ -3762,23 +3771,25 @@ class Component extends DCLogic {
         grabLabel:g?'⠿ Saisi — cliquez une carte site':'⠿ Saisir',
         grabStyle:'border:1px dashed '+(g?'var(--color-primary)':'var(--color-border-secondary)')+';background:transparent;color:'+(g?'var(--color-primary)':'var(--color-text-muted)')+';border-radius:7px;padding:5px 9px;font:600 10.5px var(--font-ui);cursor:grab;flex:none',
         grab:()=>this.setState(st=>({dndOff:(st.dndOff!=null&&String(st.dndOff)===offKey(o))?null:offKey(o)})),
-        siteOpts:[{value:'',label:'→ Assigner à un site…'},...bldList.map(b=>({value:b.adr,label:((b.name&&b.name!=='—')?b.name:b.adr)+((b.tour&&b.tour!=='—')?(' · '+b.tour):'')}))],
-        siteSet:(e)=>{ const a=e.target.value; if(!a) return; const b=bldList.find(x=>sameA(x.adr,a)); if(b) offAttach(b,offKey(o)); }};
+        siteOpts:[{value:'',label:'→ Assigner à un site…'},...bldList.map(b=>({value:b._k,label:((b.name&&b.name!=='—')?b.name:b.adr)+((b.tour&&b.tour!=='—')?(' · '+b.tour):'')+((!b.adr||b.adr==='—')?' · adresse à compléter':'')}))],
+        siteSet:(e)=>{ const k=e.target.value; if(!k) return; const b=bldList.find(x=>x._k===k); if(b) offAttach(b,offKey(o)); }};
     });
     const offAssignEmpty=offValid.length===0;
     const offNoFree=offValid.length>0&&offAssignChips.length===0;
     const offHasFree=offAssignChips.length>0;
     const offFreeTitle=offAssignChips.length+' bureau(x) validé(s) sans site de livraison — non desservis tant qu’ils ne sont pas assignés';
     // Cartes SITES : chips bureaux (× = retirer) + sélecteur d'ajout direct.
+    // Un bâtiment = clé adresse OU nom — les sites sans adresse ont leur carte.
     const offSeenAdr=new Set(); const offSiteCards=[];
-    siteRowsAll.forEach(r=>{ if(!r.adr||r.adr==='—'||offSeenAdr.has(normA(r.adr))) return; offSeenAdr.add(normA(r.adr));
+    siteRowsAll.forEach(r=>{ const rk=bKey(r); if(!rk||offSeenAdr.has(rk)) return; offSeenAdr.add(rk);
       // Bureaux du bâtiment, dédupliqués par nom NORMALISÉ (deux graphies du
       // même bureau = un seul tag).
       const bxSeen=new Set(); const bx=[];
-      siteRowsAll.filter(x=>sameA(x.adr,r.adr)).forEach(x=>{ const b=(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null); if(b&&!bxSeen.has(normA(b))){ bxSeen.add(normA(b)); bx.push(b); } });
+      siteRowsAll.filter(x=>bKey(x)===rk).forEach(x=>{ const b=(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null); if(b&&!bxSeen.has(normA(b))){ bxSeen.add(normA(b)); bx.push(b); } });
       const canDrop=S.dndOff!=null;
       const addable=offValid.filter(o=>!bxSeen.has(normA(o.name)));
-      offSiteCards.push({nom:(r.name&&r.name!=='—')?r.name:r.adr,adr:r.adr,
+      offSiteCards.push({nom:(r.name&&r.name!=='—')?r.name:r.adr,
+        adr:(r.adr&&r.adr!=='—')?r.adr:'⚠ adresse à compléter (écran Sites → ✎)',
         tourLbl:(r.tour&&r.tour!=='—')?r.tour:'⏸ sans tournée',
         tourOn:!!(r.tour&&r.tour!=='—'),
         canDrop,
