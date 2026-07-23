@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072329"></script>
-<script src="bo_server.js?v=2026072329"></script>
+<script src="api-config.js?v=2026072330"></script>
+<script src="bo_server.js?v=2026072330"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072329'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072330'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072329">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072329"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072330">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072330"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -2351,7 +2351,12 @@ class Component extends DCLogic {
         fields:[
           {k:'name',label:'Nom du site / bâtiment',type:'text',ph:'ex. Tour Bastion, Zoning Fleming',info:'Un site est un BUILDING (ou groupement de bureaux) : l\'arrêt physique de la tournée. Les bureaux (offices) s\'y rattachent depuis leur propre formulaire.',section:'Rattachement'},
           {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Rattachement'},
-          {k:'adr',label:'Adresse',type:'text',ph:'Rue, n°, code postal, ville',section:'Site'},
+          // Adresse STRUCTURÉE (rue+n° / CP / ville) : recomposée en `adr` à
+          // l'enregistrement — garantit un CP exploitable par la carte
+          // (géolocalisation via le référentiel CP→GPS, pas d'API externe).
+          {k:'adr_rue',label:'Rue et numéro',type:'text',ph:'ex. Rue du Zoning 5',section:'Adresse du site'},
+          {k:'adr_cp',label:'Code postal',type:'text',ph:'1348',half:true,info:'4 chiffres (BE). C\'est LUI qui positionne le site sur la carte des tournées — la ville se remplit automatiquement s\'il est reconnu.',section:'Adresse du site'},
+          {k:'adr_ville',label:'Ville / commune',type:'text',ph:'auto via le CP',half:true},
           {k:'etage',label:'Étage / local',type:'text',ph:'ex. Sous-sol / quai',section:'Site'},
           {k:'acc',label:'Temps d\'accès au site (min)',type:'number',def:6,section:'Site'},
           {k:'contact_name',label:'Personne de contact',type:'text',ph:'ex. Facility, Économe',section:'Contact'},
@@ -2473,11 +2478,16 @@ class Component extends DCLogic {
   }
   // Office : la tournée choisie impose cut-off + jours autorisés (ws_tour_availability).
   officeAutofill(v){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v.tour); if(av){ v.delivery_cutoff=av.cut||''; v.allowed_days=av.jour||''; } return v; }
-  openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
-  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
+  openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure(); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
+  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure(); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   editForm(key,vals,idx){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(vals&&vals[f.k]!==undefined&&vals[f.k]!=='')?vals[f.k]:(f.def!==undefined?f.def:''); });
     // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
     if(key==='office'){ v.status='pending'; this.officeAutofill(v); }
+    // Site : l'adresse stockée est redécoupée dans les champs structurés.
+    if(key==='site'){ this.zfGeoEnsure(); const adr=String((vals&&(vals.adr!=='—'?vals.adr:''))||'');
+      const mm=adr.match(/^(.*?),?\s*(\d{4})\s*(.*)$/);
+      if(mm){ v.adr_rue=mm[1].trim(); v.adr_cp=mm[2]; v.adr_ville=(mm[3]||'').trim(); }
+      else { v.adr_rue=adr; v.adr_cp=''; v.adr_ville=''; } }
     this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   closeForm(){ this.setState({formKey:null}); }
   submitForm(){ const S=this.state, cfg=this.formDefs()[S.formKey]; if(!cfg){ return; } const v={...S.formVals};
@@ -2486,6 +2496,13 @@ class Component extends DCLogic {
     // de l'utilisateur — le marqueur site_touch protège des round-trips périmés
     // qui ressuscitaient des sites supprimés.
     if(S.formKey==='office') v.site_touch=1;
+    // Site : adresse STRUCTURÉE recomposée en `adr` — « Rue n°, CP Ville ».
+    // Rue + CP (4 chiffres) obligatoires : le CP positionne le site sur la carte.
+    if(S.formKey==='site'){
+      const rue=String(v.adr_rue||'').trim(), cp=String(v.adr_cp||'').trim(), ville=String(v.adr_ville||'').trim();
+      if(!rue||!/^\d{4}$/.test(cp)){ this.printJob('⚠ Adresse incomplète — rue et code postal (4 chiffres) sont requis pour placer le site sur la carte'); return; }
+      v.adr=rue+', '+cp+(ville?(' '+ville):''); v.address=v.adr;
+    }
     // Contrôle TVA (client B2B) : un office/lieu déjà desservi au même CP porte
     // une AUTRE TVA → deux choix (renvoi vers le franchisé du CP / département).
     if(S.formKey==='clientEdit'){
@@ -3838,6 +3855,12 @@ class Component extends DCLogic {
       const onInput=(e)=>{ const v=e.target.value; this.setState(s=>{ const fv={...s.formVals,[f.k]:v};
         // Office : la tournée pilote le cut-off + les jours autorisés (champs hérités, lecture seule).
         if(s.formKey==='office'&&f.k==='tour'){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v); if(av){ fv.delivery_cutoff=av.cut||''; fv.allowed_days=av.jour||''; } }
+        // Site : le CP remplit la ville automatiquement (référentiel CP→GPS).
+        if(s.formKey==='site'&&f.k==='adr_cp'){ const cp=String(v).trim();
+          if(/^\d{4}$/.test(cp)){ const geo=(window.__CPGEO&&window.__CPGEO.idx)?window.__CPGEO.idx[cp]:null;
+            const ref=geo?null:(window.BOServer?window.BOServer.table('catchment_postcodes').find(x=>String(x.cp)===cp):null);
+            const ville=geo?geo.city:(ref?(ref.loc||ref.locality||''):'');
+            if(ville) fv.adr_ville=ville; } }
         return {formVals:fv}; }); };
       const prevSec=i>0?fCfg.fields[i-1].section:null;
       const isToggle=f.type==='toggle';
