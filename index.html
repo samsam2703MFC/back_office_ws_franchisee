@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072316"></script>
-<script src="bo_server.js?v=2026072316"></script>
+<script src="api-config.js?v=2026072317"></script>
+<script src="bo_server.js?v=2026072317"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072316'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072317'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072316">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072316"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072317">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072317"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -783,21 +783,34 @@
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
           <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Étape 3 · Assigner les bureaux (offices) aux sites — fin du paramétrage des tournées</div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:9px">Seuls les offices <strong>validés</strong> (Client B2B → Office) apparaissent ici. Saisissez un office (⠿) puis déposez-le sur un site : le bureau rejoint le site et hérite de sa tournée.</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:9px">
-            <sc-for list="{{ offAssignChips }}" as="oc" hint-placeholder-count="4">
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:10px">Ajoutez un bureau via le sélecteur <strong>+ Ajouter un bureau…</strong> de chaque carte site, retirez-le d'un simple <strong>×</strong> sur sa chip, ou saisissez (⠿) un bureau sans site et cliquez la carte de destination. Le bureau hérite de la tournée du site.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px;align-items:center">
+            <span style="font:600 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);flex:none">Bureaux validés sans site :</span>
+            <sc-for list="{{ offAssignChips }}" as="oc" hint-placeholder-count="3">
               <button type="button" onClick="{{ oc.grab }}" style="{{ oc.style }}">⠿ {{ oc.name }}</button>
             </sc-for>
-            <sc-if value="{{ offAssignEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucun office validé à assigner — validez d'abord vos offices.</span></sc-if>
+            <sc-if value="{{ offNoFree }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:#2d7a3e">✓ tous les bureaux validés ont un site</span></sc-if>
+            <sc-if value="{{ offAssignEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucun office validé — validez d'abord vos offices.</span></sc-if>
           </div>
-          <div style="display:flex;gap:8px;overflow-x:auto">
-            <sc-for list="{{ offSiteTiles }}" as="ot" hint-placeholder-count="4">
-              <button type="button" onClick="{{ ot.drop }}" style="{{ ot.style }}">
-                <span style="display:block;font:600 12px var(--font-ui);white-space:nowrap">{{ ot.nom }}</span>
-                <span style="display:block;font:400 10px var(--font-ui);opacity:.75;margin-top:2px;white-space:nowrap">{{ ot.tourLbl }}</span>
-                <span style="display:block;font:400 10.5px var(--font-ui);margin-top:3px;max-width:230px;white-space:normal">{{ ot.bureauxLbl }}</span>
-                <sc-if value="{{ ot.canDrop }}" hint-placeholder-val="{{ false }}"><span style="display:block;font:600 10px var(--font-ui);margin-top:3px;color:var(--color-primary)">⤓ Déposer l'office ici</span></sc-if>
-              </button>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px">
+            <sc-for list="{{ offSiteCards }}" as="ot" hint-placeholder-count="4">
+              <div onClick="{{ ot.drop }}" style="{{ ot.cardStyle }}">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0">
+                  <span title="{{ ot.adr }}" style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ot.nom }}</span>
+                  <sc-if value="{{ ot.tourOn }}" hint-placeholder-val="{{ true }}"><span style="flex:none;display:inline-flex;align-items:center;height:20px;border-radius:20px;padding:0 9px;font:600 10px/1 var(--font-ui);background:#fbe9eb;color:var(--color-primary);white-space:nowrap">{{ ot.tourLbl }}</span></sc-if>
+                  <sc-if value="{{ ot.tourOn }}" hint-placeholder-val="{{ false }}"><span style="flex:none;display:inline-flex;align-items:center;height:20px;border-radius:20px;padding:0 9px;font:600 10px/1 var(--font-ui);background:#fff4e5;color:#b26a00;white-space:nowrap">{{ ot.tourLbl }}</span></sc-if>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:5px;min-height:24px">
+                  <sc-for list="{{ ot.bx }}" as="bx" hint-placeholder-count="2">
+                    <span style="display:inline-flex;align-items:center;gap:6px;height:24px;background:#eef3fb;color:#2a5a9e;border-radius:20px;padding:0 10px;font:600 10.5px/1 var(--font-ui);white-space:nowrap">{{ bx.name }}<button onClick="{{ bx.remove }}" title="Retirer ce bureau du site" style="border:none;background:transparent;color:#2a5a9e;cursor:pointer;font-size:13px;padding:0;line-height:1">×</button></span>
+                  </sc-for>
+                  <sc-if value="{{ ot.bxEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);align-self:center">Aucun bureau sur ce site</span></sc-if>
+                </div>
+                <select value="{{ ot.addSel }}" onChange="{{ ot.addSet }}" style="height:28px;border:.5px dashed var(--color-border-secondary);border-radius:8px;padding:0 8px;font:500 11.5px var(--font-ui);background:transparent;color:var(--color-text-muted);max-width:100%;cursor:pointer">
+                  <sc-for list="{{ ot.addOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
+                </select>
+                <sc-if value="{{ ot.canDrop }}" hint-placeholder-val="{{ false }}"><span style="font:600 10px var(--font-ui);color:var(--color-primary)">⤓ Déposer le bureau saisi ici</span></sc-if>
+              </div>
             </sc-for>
           </div>
         </div>
@@ -3228,57 +3241,74 @@ class Component extends DCLogic {
         edit:this.editForm('office',o,i), del:this.deleteRow('ws_offices',i,'l\'office « '+o.name+' »') };
     });
     // Étape 3 du sens de paramétrage : les offices VALIDÉS s'assignent aux
-    // sites en « prendre → déposer » ; le bureau hérite de la tournée du site.
+    // sites — cartes visuelles : chips bureaux avec « × » pour retirer,
+    // sélecteur « + Ajouter un bureau » par site, dépôt au clic après saisie.
     const offValid=SRV('ws_offices').filter(o=>o.status==='validated');
     const offKey=(o)=>String(o.id!=null?o.id:o.name);
-    const offAssignChips=offValid.map(o=>{ const g=S.dndOff!=null&&String(S.dndOff)===offKey(o);
-      const cur=siteRowsAll.find(r=>(r.office_client_id!=null&&o.id!=null&&r.office_client_id===o.id)||r.bureau===o.name||r.office===o.name);
-      const curLbl=cur?((cur.name&&cur.name!=='—')?cur.name:cur.adr):'sans site';
-      return {name:o.name+' — '+curLbl,
+    const offPairedKeys=new Set();
+    siteRowsAll.forEach(r=>{ const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null); if(b) offPairedKeys.add(b); });
+    // Rattacher un office à un site (partagé : drop après saisie + sélecteur).
+    const offAttach=(r,key)=>{ const off=SRV('ws_offices').find(o=>offKey(o)===String(key)); if(!off) return;
+      if(window.BOServer){
+        const rows=window.BOServer.table('ws_office_delivery_sites');
+        const tpl=rows.find(x=>x.adr===r.adr)||r;
+        const ex=rows.findIndex(x=>(x.office_client_id!=null&&off.id!=null&&x.office_client_id===off.id)||x.bureau===off.name||x.office===off.name);
+        if(ex>=0){
+          const oldAdr=rows[ex].adr;
+          if(oldAdr&&oldAdr!=='—'&&oldAdr!==tpl.adr&&!rows.some((x,xi)=>xi!==ex&&x.adr===oldAdr))
+            rows.push({...rows[ex],id:undefined,bureau:'—',office:'—',office_client_id:null});
+          rows[ex]={...rows[ex],name:tpl.name,adr:tpl.adr,etage:tpl.etage,acc:tpl.acc,tour:tpl.tour,bureau:off.name,office:off.name,office_client_id:(off.id!=null?off.id:rows[ex].office_client_id)};
+        }
+        else{ const free=rows.findIndex(x=>x.adr===r.adr&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
+          if(free>=0) rows[free]={...rows[free],bureau:off.name,office:off.name,office_client_id:off.id};
+          else rows.push({name:tpl.name,adr:tpl.adr,etage:tpl.etage||'—',acc:tpl.acc||'5',tour:tpl.tour||'—',bureau:off.name,office:off.name,office_client_id:off.id}); }
+        window.BOServer.save('ws_office_delivery_sites',rows);
+        const offs=window.BOServer.table('ws_offices'); const oi=offs.findIndex(x=>offKey(x)===String(key));
+        if(oi>=0){ const p2={site:tpl.adr}; if(tpl.tour&&tpl.tour!=='—') p2.tour=tpl.tour;
+          offs[oi]={...offs[oi],...p2}; window.BOServer.save('ws_offices',offs); }
+      }
+      this.setState(st=>({dndOff:null,_rev:(st._rev||0)+1}));
+      this.printJob('✓ Bureau « '+off.name+' » → site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' »'+((r.tour&&r.tour!=='—')?' · tournée « '+r.tour+' » héritée':'')); };
+    // Retirer un bureau d'un site (× sur la chip).
+    const offDetach=(r,bName)=>{ if(!window.BOServer) return;
+      const rows=window.BOServer.table('ws_office_delivery_sites');
+      const idx=rows.findIndex(x=>x.adr===r.adr&&(x.bureau===bName||x.office===bName));
+      if(idx<0) return;
+      const others=rows.some((x,xi)=>xi!==idx&&x.adr===r.adr);
+      if(others) rows.splice(idx,1);
+      else rows[idx]={...rows[idx],bureau:'—',office:'—',office_client_id:null};
+      window.BOServer.save('ws_office_delivery_sites',rows);
+      const off=SRV('ws_offices').find(o=>o.name===bName);
+      if(off){ const offs=window.BOServer.table('ws_offices'); const oi=offs.findIndex(x=>offKey(x)===offKey(off)); if(oi>=0){ offs[oi]={...offs[oi],site:''}; window.BOServer.save('ws_offices',offs); } }
+      this.setState(st=>({_rev:(st._rev||0)+1}));
+      this.printJob('Bureau « '+bName+' » retiré du site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' »'); };
+    // File du haut : bureaux validés SANS site (saisir ⠿ puis cliquer une carte).
+    const offAssignChips=offValid.filter(o=>!offPairedKeys.has(o.name)).map(o=>{ const g=S.dndOff!=null&&String(S.dndOff)===offKey(o);
+      return {name:o.name,
         style:'border:1.5px '+(g?'solid var(--color-primary)':'dashed var(--color-border-secondary)')+';background:'+(g?'var(--color-background-secondary)':'transparent')+';color:'+(g?'var(--color-primary)':'var(--color-text)')+';border-radius:9px;padding:7px 11px;font:600 11.5px var(--font-ui);cursor:grab',
-        grab:()=>this.setState(s=>({dndOff:(s.dndOff!=null&&String(s.dndOff)===offKey(o))?null:offKey(o)}))};
+        grab:()=>this.setState(st=>({dndOff:(st.dndOff!=null&&String(st.dndOff)===offKey(o))?null:offKey(o)}))};
     });
     const offAssignEmpty=offValid.length===0;
-    const offSeenAdr=new Set(); const offSiteTiles=[];
+    const offNoFree=offValid.length>0&&offAssignChips.length===0;
+    // Cartes SITES : chips bureaux (× = retirer) + sélecteur d'ajout direct.
+    const offSeenAdr=new Set(); const offSiteCards=[];
     siteRowsAll.forEach(r=>{ if(!r.adr||r.adr==='—'||offSeenAdr.has(r.adr)) return; offSeenAdr.add(r.adr);
-      const bx=[...new Set(siteRowsAll.filter(x=>x.adr===r.adr).map(x=>x.bureau||x.office).filter(v=>v&&v!=='—'))];
+      const bx=[...new Set(siteRowsAll.filter(x=>x.adr===r.adr).map(x=>(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null)).filter(Boolean))];
       const canDrop=S.dndOff!=null;
-      offSiteTiles.push({nom:(r.name&&r.name!=='—')?r.name:r.adr,
+      const addable=offValid.filter(o=>!bx.includes(o.name));
+      offSiteCards.push({nom:(r.name&&r.name!=='—')?r.name:r.adr,adr:r.adr,
         tourLbl:(r.tour&&r.tour!=='—')?r.tour:'⏸ sans tournée',
-        bureauxLbl:bx.length?('Bureaux actifs : '+bx.join(', ')):'Aucun bureau actif',
+        tourOn:!!(r.tour&&r.tour!=='—'),
         canDrop,
-        style:'flex:none;max-width:260px;text-align:left;border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';background:var(--color-surface);color:var(--color-text);border-radius:10px;padding:8px 14px;cursor:'+(canDrop?'copy':'default'),
-        drop:()=>{ const key=this.state.dndOff; if(key==null) return;
-          const off=SRV('ws_offices').find(o=>offKey(o)===String(key)); if(!off) return;
-          if(window.BOServer){
-            const rows=window.BOServer.table('ws_office_delivery_sites');
-            const tpl=rows.find(x=>x.adr===r.adr)||r;
-            // Pairing existant de CET office → déplacé vers ce site ; sinon on
-            // remplit une ligne libre du site, sinon nouvelle ligne de liaison.
-            const ex=rows.findIndex(x=>(x.office_client_id!=null&&off.id!=null&&x.office_client_id===off.id)||x.bureau===off.name||x.office===off.name);
-            if(ex>=0){
-              // Si la ligne déplacée était la SEULE du site d'origine, on laisse
-              // une ligne sans bureau derrière elle — le site ne disparaît pas.
-              const oldAdr=rows[ex].adr;
-              if(oldAdr&&oldAdr!=='—'&&oldAdr!==tpl.adr&&!rows.some((x,xi)=>xi!==ex&&x.adr===oldAdr))
-                rows.push({...rows[ex],id:undefined,bureau:'—',office:'—',office_client_id:null});
-              rows[ex]={...rows[ex],name:tpl.name,adr:tpl.adr,etage:tpl.etage,acc:tpl.acc,tour:tpl.tour,bureau:off.name,office:off.name,office_client_id:(off.id!=null?off.id:rows[ex].office_client_id)};
-            }
-            else{ const free=rows.findIndex(x=>x.adr===r.adr&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
-              if(free>=0) rows[free]={...rows[free],bureau:off.name,office:off.name,office_client_id:off.id};
-              else rows.push({name:tpl.name,adr:tpl.adr,etage:tpl.etage||'—',acc:tpl.acc||'5',tour:tpl.tour||'—',bureau:off.name,office:off.name,office_client_id:off.id}); }
-            window.BOServer.save('ws_office_delivery_sites',rows);
-            // Fin du paramétrage : la tournée du bureau suit celle du site.
-            // IMPORTANT : on rafraîchit aussi le champ `site` de l'office —
-            // sinon le save renverrait l'ANCIENNE adresse et le pairing PHP
-            // annulerait le déplacement qu'on vient de faire.
-            const offs=window.BOServer.table('ws_offices'); const oi=offs.findIndex(x=>offKey(x)===String(key));
-            if(oi>=0){ const p2={site:tpl.adr}; if(tpl.tour&&tpl.tour!=='—') p2.tour=tpl.tour;
-              offs[oi]={...offs[oi],...p2}; window.BOServer.save('ws_offices',offs); }
-          }
-          this.setState(s=>({dndOff:null,_rev:(s._rev||0)+1}));
-          this.printJob('✓ Office « '+off.name+' » assigné au site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' »'+((r.tour&&r.tour!=='—')?' — tournée « '+r.tour+' » héritée':'')); }});
+        cardStyle:'display:flex;flex-direction:column;gap:9px;background:var(--color-surface);border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';border-radius:12px;padding:13px 15px;cursor:'+(canDrop?'copy':'default'),
+        drop:()=>{ const key=this.state.dndOff; if(key!=null) offAttach(r,key); },
+        bx:bx.map(b=>({name:b,remove:()=>offDetach(r,b)})),
+        bxEmpty:bx.length===0,
+        addSel:'',
+        addOpts:[{value:'',label:'+ Ajouter un bureau…'},...addable.map(o=>({value:offKey(o),label:o.name}))],
+        addSet:(e)=>{ const v=e.target.value; if(v) offAttach(r,v); }});
     });
+
     // Ordre de mise en place : 1· tournées, 2· assignation des SITES aux tournées
     // (déplaçables pour optimiser la charge — les bureaux, eux, se rattachent au
     // site à l'onboarding du bureau). Tuiles tournée = capacité + charge actuelle.
@@ -3812,7 +3842,7 @@ class Component extends DCLogic {
       isFermetures:screen==='horaires'||screen==='tournees',fermetures,addFermeture,
       isSites:screen==='sites',sitesList,tourAssignTiles,
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
-      offAssignChips,offAssignEmpty,offSiteTiles,
+      offAssignChips,offAssignEmpty,offNoFree,offSiteCards,
       // ===== Menu « Clients » — table client via GET /franchisee/b2b-clients =====
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
       // calcule QUE sur l'écran Clients — sinon il ralentit toute l'app.
