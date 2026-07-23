@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072321"></script>
-<script src="bo_server.js?v=2026072321"></script>
+<script src="api-config.js?v=2026072322"></script>
+<script src="bo_server.js?v=2026072322"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072321'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072322'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072321">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072321"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072322">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072322"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1162,7 +1162,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px">
             <div class="t-section-title" style="font-size:15px">Stock du jour</div>
           </div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Produits <strong>actifs</strong> de l'assortiment uniquement · dispo online (webshop) + en shop (comptoir) · seuil <strong>stock minimum</strong>. ws_product_stock</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Produits <strong>actifs</strong> de l'assortiment uniquement · dispo online (webshop) + en shop (comptoir) · seuil <strong>stock minimum</strong> · <strong>clic sur un produit</strong> → commandes du jour <span style="color:var(--color-primary);font-weight:600">Ruby (Click &amp; Collect)</span> / <span style="color:var(--color-secondary);font-weight:600">Apricot (Delivery)</span> + ajustement ±. ws_product_stock · ws_order_lines</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">
             <sc-for list="{{ stockBadges }}" as="b" hint-placeholder-count="4">
               <button onClick="{{ b.set }}" style="{{ b.style }}">{{ b.label }}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:9px;background:rgba(255,255,255,.35);padding:0 4px;font-size:10px">{{ b.count }}</span></button>
@@ -1172,7 +1172,7 @@
           <sc-for list="{{ stockRows }}" as="s" hint-placeholder-count="6">
             <sc-if value="{{ s.hasCat }}" hint-placeholder-val="{{ false }}"><div style="font:600 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);background:var(--color-background-secondary);padding:6px 8px;margin-top:6px;border-radius:6px">{{ s.catLabel }}</div></sc-if>
             <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ s.nom }}</span>
+              <button onClick="{{ s.toggleLines }}" title="Voir les lignes de commande du jour (Ruby / Apricot)" style="display:flex;align-items:center;gap:7px;border:none;background:none;padding:0;cursor:pointer;text-align:left;min-width:0"><span style="{{ s.caretStyle }}">▶</span><span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.nom }}</span></button>
               <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ s.cat }}</span>
               <div style="display:flex;justify-content:flex-end"><input type="number" value="{{ s.online }}" onChange="{{ s.setOnline }}" style="{{ s.inputStyle }}"/></div>
               <div style="display:flex;justify-content:flex-end"><input type="number" value="{{ s.shop }}" onChange="{{ s.setShop }}" style="{{ s.inputStyle }}"/></div>
@@ -1180,6 +1180,43 @@
               <span style="font:500 12px var(--font-ui);color:var(--color-text);text-align:right">{{ s.min }}</span>
               <div style="display:flex;justify-content:center"><span style="{{ s.alertPill }}">{{ s.alertTxt }}</span></div>
             </div>
+            <sc-if value="{{ s.expanded }}" hint-placeholder-val="{{ false }}">
+            <div style="border:.5px solid var(--color-border-secondary);border-radius:12px;margin:8px 2px 14px;padding:16px 18px;background:var(--color-background-secondary)">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-bottom:14px">
+                <div style="{{ s.tileReal }}"><div style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;opacity:.8">Stock réel</div><div style="font:700 22px var(--font-ui);margin-top:2px">{{ s.dispo }}</div><div style="font:400 10.5px var(--font-ui);opacity:.85;margin-top:1px">Online {{ s.online }} · En shop {{ s.shop }} · min. {{ s.min }}</div></div>
+                <div style="{{ s.tileOrd }}"><div style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;opacity:.8">Réservé · commandé (jour)</div><div style="font:700 22px var(--font-ui);margin-top:2px">{{ s.ordTot }}</div><div style="font:400 10.5px var(--font-ui);opacity:.85;margin-top:1px">Ruby {{ s.rubyTot }} · Apricot {{ s.apricotTot }}</div></div>
+                <div style="display:flex;align-items:center"><span style="{{ s.verdictPill }}">{{ s.verdictTxt }}</span></div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px">
+                <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+                  <div style="min-width:0"><div style="font:600 12px var(--font-ui);color:var(--color-text)">Online · webshop</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">mode delivery — ws_product_stock</div></div>
+                  <div style="display:flex;align-items:center;gap:10px"><button onClick="{{ s.adjOnMinus }}" style="{{ s.adjBtn }}">−</button><span style="font:700 15px var(--font-ui);color:var(--color-text);min-width:28px;text-align:center">{{ s.online }}</span><button onClick="{{ s.adjOnPlus }}" style="{{ s.adjBtn }}">+</button></div>
+                </div>
+                <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+                  <div style="min-width:0"><div style="font:600 12px var(--font-ui);color:var(--color-text)">En shop · comptoir</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">mode collect — ws_product_stock</div></div>
+                  <div style="display:flex;align-items:center;gap:10px"><button onClick="{{ s.adjShMinus }}" style="{{ s.adjBtn }}">−</button><span style="font:700 15px var(--font-ui);color:var(--color-text);min-width:28px;text-align:center">{{ s.shop }}</span><button onClick="{{ s.adjShPlus }}" style="{{ s.adjBtn }}">+</button></div>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+                <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden">
+                  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:color-mix(in srgb,var(--color-primary) 8%,var(--color-surface))"><span style="width:9px;height:9px;flex:none;border-radius:50%;background:var(--color-primary)"></span><span style="font:600 11.5px var(--font-ui);color:var(--color-primary)">Ruby · Click &amp; Collect</span><span style="margin-left:auto;font:600 11px var(--font-ui);color:var(--color-primary)">{{ s.rubyTot }} pce(s)</span></div>
+                  <sc-if value="{{ s.linesLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Chargement des commandes…</div></sc-if>
+                  <sc-for list="{{ s.rubyLines }}" as="l" hint-placeholder-count="2">
+                    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--color-border-tertiary)"><span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.ref }} · {{ l.client }}</span><span style="font:700 12px var(--font-ui);color:var(--color-primary)">{{ l.qty }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.heure }}</span><span style="font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.statut }}</span></div>
+                  </sc-for>
+                  <sc-if value="{{ s.rubyEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Aucune commande Click &amp; Collect aujourd'hui.</div></sc-if>
+                </div>
+                <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden">
+                  <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:color-mix(in srgb,var(--color-secondary) 10%,var(--color-surface))"><span style="width:9px;height:9px;flex:none;border-radius:50%;background:var(--color-secondary)"></span><span style="font:600 11.5px var(--font-ui);color:var(--color-secondary)">Apricot · Delivery</span><span style="margin-left:auto;font:600 11px var(--font-ui);color:var(--color-secondary)">{{ s.apricotTot }} pce(s)</span></div>
+                  <sc-if value="{{ s.linesLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Chargement des commandes…</div></sc-if>
+                  <sc-for list="{{ s.apricotLines }}" as="l" hint-placeholder-count="2">
+                    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--color-border-tertiary)"><span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.ref }} · {{ l.client }}</span><span style="font:700 12px var(--font-ui);color:var(--color-secondary)">{{ l.qty }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.heure }}</span><span style="font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.statut }}</span></div>
+                  </sc-for>
+                  <sc-if value="{{ s.apricotEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Aucune commande en livraison aujourd'hui.</div></sc-if>
+                </div>
+              </div>
+            </div>
+            </sc-if>
           </sc-for>
           <sc-if value="{{ stockEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:24px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun produit actif dans l'assortiment.</div></sc-if>
         </div>
@@ -2678,6 +2715,20 @@ class Component extends DCLogic {
     fetch(fr.base+'/franchisee/client-orders?client_id='+encodeURIComponent(id)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
       .then(r=>r.ok?r.json():[]).then(a=>this.setState({bcOrders:Array.isArray(a)?a:[]}))
       .catch(()=>this.setState({bcOrders:[]})); }
+  // Stock du jour — lignes de commande du produit ouvert (Ruby = Click&Collect,
+  // Apricot = Delivery) : GET /franchisee/stock-product-orders (ws_order_lines).
+  stkLoadLines(nom){ const fr=window.__FR||{};
+    if(!fr.base){ this.setState({stkLines:[]}); return; } // sans API : aucune ligne (pas de mock)
+    fetch(fr.base+'/franchisee/stock-product-orders?product='+encodeURIComponent(nom)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+      .then(r=>r.ok?r.json():[]).then(a=>{ if(this.state.stkOpen===nom) this.setState({stkLines:Array.isArray(a)?a:[]}); })
+      .catch(()=>{ if(this.state.stkOpen===nom) this.setState({stkLines:[]}); }); }
+  // Stock du jour — ajustement +/− ÉCRIT dans ws_product_stock (jour courant,
+  // mode delivery=online / collect=en shop) via POST /franchisee/stock-adjust.
+  stkAdjust(nom,mode,delta,fk,cur){ const fr=window.__FR||{};
+    if(!fr.base){ this.setState(s=>({flags:{...s.flags,[fk]:Math.max(0,cur+delta)}})); return; }
+    fetch(fr.base+'/franchisee/stock-adjust'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({product:nom,mode:mode,delta:delta})})
+      .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({flags:{...s.flags,[fk]:j.dispo}})); this.printJob('✓ Stock '+(mode==='delivery'?'online':'en shop')+' de « '+nom+' » : '+j.dispo+' (ws_product_stock)'); } else this.printJob((j&&j.error)||'Erreur ajustement stock'); })
+      .catch(()=>this.printJob('Réseau indisponible — ajustement non enregistré')); }
   drawZonesMap(){ const L=window.L,m=this._zonesFrMap,geo=window.__CPGEO; if(!L||!m||!geo) return;
     const S=this.state;
     const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
@@ -3538,6 +3589,8 @@ class Component extends DCLogic {
     const stkIn='width:52px;text-align:right;border:.5px solid var(--color-border-secondary);border-radius:7px;padding:6px 7px;font:500 12px var(--font-ui);color:var(--color-text);background:var(--color-surface)';
     const stockFilter=S.stockFilter||'all';
     let stockAll=[];
+    // Libellés FR des statuts de commande (ws_orders.status) dans le panneau.
+    const stkStatFR=st=>({pending:'En attente',confirmed:'Confirmée',paid:'Payée',preparing:'En préparation',ready:'Prête',completed:'Terminée',delivered:'Livrée',collected:'Retirée',cancelled:'Annulée'})[String(st||'').toLowerCase()]||st||'—';
     CATALOG.forEach((c,ci)=>{ if(!catActive(ci,c)) return;
       c.prods.forEach((p,pi)=>{ if(!prodActive(ci,pi,p)) return;
         const ok='stkO_'+ci+'_'+pi, sk='stkS_'+ci+'_'+pi;
@@ -3545,12 +3598,41 @@ class Component extends DCLogic {
         const shop=S.flags[sk]!==undefined?+S.flags[sk]:p.shop;
         const dispo=online+shop, below=dispo<p.min, near=!below&&dispo<p.min*1.25;
         const status=below?'below':(near?'near':'ok');
-        stockAll.push({nom:p.nom,cat:c.cat,min:p.min,online,shop,dispo,inputStyle:stkIn,catLabel:c.cat,status,
+        const expanded=S.stkOpen===p.nom;
+        const row={nom:p.nom,cat:c.cat,min:p.min,online,shop,dispo,inputStyle:stkIn,catLabel:c.cat,status,expanded,
           dispoColor:below?'var(--color-primary)':(near?'#b26a00':'#2d7a3e'),
           alertPill:below?pill2('#fbe9eb','var(--color-primary)'):(near?pill2('#fff4e5','#b26a00'):pill2('#eaf5ec','#2d7a3e')),
           alertTxt:below?'Sous seuil':(near?'Tension':'OK'),
+          caretStyle:'display:inline-block;flex:none;font-size:10px;color:var(--color-text-muted);transition:transform .15s'+(expanded?';transform:rotate(90deg)':''),
+          toggleLines:()=>{ if(this.state.stkOpen===p.nom){ this.setState({stkOpen:null,stkLines:null}); } else { this.setState({stkOpen:p.nom,stkLines:null}); this.stkLoadLines(p.nom); } },
           setOnline:(e)=>{const v=e.target.value;this.setState(st=>({flags:{...st.flags,[ok]:v}}));},
-          setShop:(e)=>{const v=e.target.value;this.setState(st=>({flags:{...st.flags,[sk]:v}}));} });
+          setShop:(e)=>{const v=e.target.value;this.setState(st=>({flags:{...st.flags,[sk]:v}}));} };
+        if(expanded){
+          // Panneau déroulant : lignes de commande du jour (S.stkLines — null = chargement),
+          // Ruby = collect (Click & Collect), Apricot = delivery (Livraison).
+          const raw=Array.isArray(S.stkLines)?S.stkLines:[];
+          const mkL=l=>({ref:l.ref||'—',client:l.client||'Client webshop',qty:'×'+(+l.qty||0),heure:l.heure||'',statut:stkStatFR(l.statut)});
+          const ruby=raw.filter(l=>l.mode!=='delivery'), apricot=raw.filter(l=>l.mode==='delivery');
+          const rubyTot=ruby.reduce((a,l)=>a+(+l.qty||0),0), apricotTot=apricot.reduce((a,l)=>a+(+l.qty||0),0);
+          const ordTot=rubyTot+apricotTot;
+          const over=ordTot>dispo, tight=!over&&(dispo-ordTot)<p.min;
+          const tile=(bg,tc)=>'flex:1;min-width:180px;border-radius:10px;padding:12px 16px;background:'+bg+';color:'+tc;
+          Object.assign(row,{
+            linesLoading:S.stkLines===null||S.stkLines===undefined,
+            rubyLines:ruby.map(mkL),apricotLines:apricot.map(mkL),
+            rubyEmpty:Array.isArray(S.stkLines)&&!ruby.length,apricotEmpty:Array.isArray(S.stkLines)&&!apricot.length,
+            rubyTot:String(rubyTot),apricotTot:String(apricotTot),ordTot:String(ordTot),
+            tileReal:tile(below?'#fbe9eb':(near?'#fff4e5':'#eaf5ec'),below?'var(--color-primary)':(near?'#b26a00':'#2d7a3e')),
+            tileOrd:tile(over?'var(--color-primary)':(ordTot?'#f6ecdf':'var(--color-surface)'),over?'#fff':(ordTot?'#8a5a2e':'var(--color-text-muted)'))+(over?'':';border:.5px solid var(--color-border-tertiary)'),
+            verdictPill:(over?pill2('#fbe9eb','var(--color-primary)'):(tight?pill2('#fff4e5','#b26a00'):pill2('#eaf5ec','#2d7a3e')))+';padding:8px 14px;font-size:11px;line-height:1.4',
+            verdictTxt:over?('⚠ Commandé ('+ordTot+') > stock réel ('+dispo+') — réassort nécessaire'):(tight?('Tension : reste '+(dispo-ordTot)+' après commandes (min. '+p.min+')'):('Couvert : reste '+(dispo-ordTot)+' après les commandes du jour')),
+            adjBtn:'width:30px;height:30px;flex:none;border-radius:8px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);font:700 15px var(--font-ui);color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:center',
+            adjOnMinus:()=>this.stkAdjust(p.nom,'delivery',-1,ok,online),
+            adjOnPlus:()=>this.stkAdjust(p.nom,'delivery',1,ok,online),
+            adjShMinus:()=>this.stkAdjust(p.nom,'collect',-1,sk,shop),
+            adjShPlus:()=>this.stkAdjust(p.nom,'collect',1,sk,shop)});
+        }
+        stockAll.push(row);
       });
     });
     const stkCount={all:stockAll.length,below:stockAll.filter(r=>r.status==='below').length,near:stockAll.filter(r=>r.status==='near').length,ok:stockAll.filter(r=>r.status==='ok').length};
