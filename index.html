@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072313"></script>
-<script src="bo_server.js?v=2026072313"></script>
+<script src="api-config.js?v=2026072314"></script>
+<script src="bo_server.js?v=2026072314"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072313'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072314'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072313">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072313"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072314">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072314"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -3136,7 +3136,9 @@ class Component extends DCLogic {
       // « Bureaux & sites » (écran clients) et « Contacts email » (emailsBureau)
       // sortent du menu : doublons — la création B2B vit dans Clients, les
       // contacts email dans le formulaire d'édition de l'Office (engrenage).
-      {id:'g_b2b',label:'Clients B2B',items:[['offices','Offices'],['b2bClients','Clients'],['sites','Sites de livraison'],['zones','Zone de chalandise']]},
+      // « Zone de chalandise » retirée du menu : double emploi avec l'Analyse
+      // géographique (l'écran reste dans le code, réversible).
+      {id:'g_b2b',label:'Clients B2B',items:[['offices','Offices'],['b2bClients','Clients'],['sites','Sites de livraison']]},
       {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
     ];
     const navSub=(s)=>{ const active=S.screen===s; return 'display:flex;align-items:center;width:100%;padding:9px 12px 9px 32px;border:none;border-radius:8px;cursor:pointer;font:'+(active?'600':'400')+' 12.5px/1 var(--font-ui);text-align:left;'+(active?'background:var(--color-background-secondary);color:var(--color-primary)':'background:transparent;color:var(--color-text-muted)'); };
