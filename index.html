@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072317"></script>
-<script src="bo_server.js?v=2026072317"></script>
+<script src="api-config.js?v=2026072318"></script>
+<script src="bo_server.js?v=2026072318"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072317'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072318'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -41,8 +41,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072317">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072317"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072318">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072318"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -792,7 +792,7 @@
             <sc-if value="{{ offNoFree }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:#2d7a3e">✓ tous les bureaux validés ont un site</span></sc-if>
             <sc-if value="{{ offAssignEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucun office validé — validez d'abord vos offices.</span></sc-if>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px">
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
             <sc-for list="{{ offSiteCards }}" as="ot" hint-placeholder-count="4">
               <div onClick="{{ ot.drop }}" style="{{ ot.cardStyle }}">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0">
@@ -2415,7 +2415,15 @@ class Component extends DCLogic {
       fetch(fr.base+'/franchisee/b2b-clients'+qs,H).then(r=>r.ok?r.json():null).catch(()=>null),
     ]).then(([offs,sites,cls])=>{ if(window.BOServer){ if(Array.isArray(offs)) window.BOServer.refresh('ws_offices',offs); if(Array.isArray(sites)) window.BOServer.refresh('ws_office_delivery_sites',sites); if(Array.isArray(cls)) window.BOServer.refresh('b2b_clients',cls); } this.setState(s=>({_rev:(s._rev||0)+1})); }); }
   deleteRow(tbl,idx,label){ return ()=>{ this.setState({confirmDel:{tbl,idx,label:label||'cet élément'}}); }; }
-  confirmDelDo(){ const c=this.state.confirmDel; if(c&&c.tbl&&window.BOServer){ const rows=window.BOServer.table(c.tbl); rows.splice(c.idx,1); window.BOServer.save(c.tbl,rows); }
+  confirmDelDo(){ const c=this.state.confirmDel; let delAdr=null;
+    if(c&&c.tbl&&window.BOServer){ const rows=window.BOServer.table(c.tbl);
+      if(c.tbl==='ws_office_delivery_sites'&&rows[c.idx]) delAdr=rows[c.idx].adr;
+      rows.splice(c.idx,1); window.BOServer.save(c.tbl,rows);
+      // Anti-résurrection : les offices qui portaient ce site en mémoire ne
+      // doivent plus le renvoyer au prochain enregistrement (pairing PHP).
+      if(delAdr&&delAdr!=='—'){ const offs=window.BOServer.table('ws_offices'); let ch=false;
+        offs.forEach(o=>{ if(o.site===delAdr){ o.site=''; ch=true; } });
+        if(ch) window.BOServer.refresh('ws_offices',offs); } }
     this.setState({confirmDel:null,_rev:(this.state._rev||0)+1});
     if(c&&(c.tbl==='ws_offices'||c.tbl==='ws_office_delivery_sites')){
       // Retirer un office coupe sa livraison au bureau côté serveur mais le
@@ -3300,7 +3308,7 @@ class Component extends DCLogic {
         tourLbl:(r.tour&&r.tour!=='—')?r.tour:'⏸ sans tournée',
         tourOn:!!(r.tour&&r.tour!=='—'),
         canDrop,
-        cardStyle:'display:flex;flex-direction:column;gap:9px;background:var(--color-surface);border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';border-radius:12px;padding:13px 15px;cursor:'+(canDrop?'copy':'default'),
+        cardStyle:'display:flex;flex-direction:column;gap:11px;background:var(--color-surface);border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';border-radius:12px;padding:17px 19px;min-height:120px;cursor:'+(canDrop?'copy':'default'),
         drop:()=>{ const key=this.state.dndOff; if(key!=null) offAttach(r,key); },
         bx:bx.map(b=>({name:b,remove:()=>offDetach(r,b)})),
         bxEmpty:bx.length===0,
