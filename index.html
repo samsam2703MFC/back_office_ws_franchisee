@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072440"></script>
-<script src="bo_server.js?v=2026072440"></script>
+<script src="api-config.js?v=2026072450"></script>
+<script src="bo_server.js?v=2026072450"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072440'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072450'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072440">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072440"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072450">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072450"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1449,7 +1449,25 @@
                   <sc-if value="{{ vchTgtPicked }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;margin-top:2px;font:400 12px var(--font-ui);color:#6b4420;background:var(--color-secondary,#F2C9A0);border-radius:6px;padding:8px 11px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>{{ vchTgtConfirm }}</span></div></sc-if>
                 </div>
                 </sc-if>
-                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Limiter à un produit</label><select value="{{ vchScopePid }}" onChange="{{ vchSetScopePid }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;cursor:pointer"><option value="">Panier entier</option><sc-for list="{{ vchScopeOpts }}" as="sp" hint-placeholder-count="2"><option value="{{ sp.id }}">{{ sp.nom }}</option></sc-for></select></div>
+                <div style="display:flex;flex-direction:column;gap:7px;grid-column:span 2;min-width:0;position:relative;z-index:4">
+                  <label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Limiter à un produit</label>
+                  <div style="position:relative">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--color-text-muted);display:inline-flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span>
+                    <input value="{{ vchScopeQ }}" onChange="{{ vchSetScopeQ }}" placeholder="{{ vchScopePh }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none;padding-left:36px;padding-right:40px"/>
+                    <sc-if value="{{ vchScopePicked }}" hint-placeholder-val="{{ false }}"><button onClick="{{ vchScopeClear }}" title="Effacer" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;border:none;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:pointer;font-size:14px;line-height:1">×</button></sc-if>
+                  </div>
+                  <sc-if value="{{ vchScopeMenuOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:var(--color-surface);border:1px solid var(--color-border-secondary);border-radius:8px;box-shadow:0 8px 24px rgba(34,34,34,.14);max-height:280px;overflow-y:auto">
+                    <sc-for list="{{ vchScopeMenu }}" as="sp" hint-placeholder-count="3">
+                    <button onClick="{{ sp.pick }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:transparent;border:none;border-bottom:.5px solid var(--color-border-tertiary);padding:11px 14px;cursor:pointer;font-family:var(--font-ui)">
+                      <span><span style="font:500 14px var(--font-ui);color:var(--color-text)">{{ sp.nom }}</span><sc-if value="{{ sp.hasSub }}" hint-placeholder-val="{{ true }}"><br/><span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ sp.sub }}</span></sc-if></span>
+                      <sc-if value="{{ sp.hasPrice }}" hint-placeholder-val="{{ false }}"><span style="font:500 12px var(--font-ui);color:var(--color-primary);white-space:nowrap">{{ sp.price }}</span></sc-if>
+                    </button>
+                    </sc-for>
+                    <sc-if value="{{ vchScopeMenuEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 14px;font:400 13px var(--font-ui);color:var(--color-text-muted)">Aucun produit ne correspond.</div></sc-if>
+                  </div>
+                  </sc-if>
+                </div>
                 <sc-if value="{{ vchScopeQtyShown }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Pièces max remisées</label><input value="{{ vchScopeQty }}" onChange="{{ vchSetScopeQty }}" placeholder="1 = un produit offert" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div></sc-if>
                 <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Motif</label><select value="{{ vchReason }}" onChange="{{ vchSetReason }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;cursor:pointer"><option value="MARKETING">Marketing</option><option value="GESTE_CO">Geste commercial</option><option value="FIDELITE">Fidélité</option><option value="RECLAMATION">Réclamation</option><option value="PARTENARIAT">Partenariat</option><option value="TEST">Test / interne</option></select></div>
               </div>
@@ -4701,13 +4719,18 @@ class Component extends DCLogic {
       togLabel:v.act?'Actif':'Inactif',
       togStyle:'border:1.5px solid '+(v.act?'#2d7a3e':'var(--color-border-secondary)')+';background:'+(v.act?'#eaf5ec':'transparent')+';color:'+(v.act?'#2d7a3e':'var(--color-text-muted)')+';border-radius:8px;padding:6px 11px;font:600 11px var(--font-ui);cursor:'+(v.editable?'pointer':'default')+';flex:none;opacity:'+(v.editable?'1':'.55'),
       tog:()=>{ if(!v.editable) return; vchPost('voucher-toggle',{code:v.code,active:!v.act},(j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+v.code+(!v.act?' activé':' désactivé')); vchReload(); } else this.printJob((j&&j.error)||'Erreur'); }); },
-      edit:()=>{ vchLoadTargets(); const isGift=(v.type==='percent'&&Number(v.value)===100&&v.scope_product_id!==''&&v.scope_product_id!=null); this.setState({vchOpen:true,vchEdit:v.code,vchCode:v.code,vchType:isGift?'gift':(v.type||'percent'),vchValue:String(v.value!=null?v.value:''),vchMin:String(v.min_order||''),vchMax:String(v.max_uses||''),vchExp:v.expires_at||'',vchTgtKind:v.target_kind||'NETWORK',vchTgtId:v.target_id!=null?String(v.target_id):'',vchTgtQ:(v.target_kind&&v.target_kind!=='NETWORK')?String(v.cible||'').replace(/^(Client|Bureau)\s+/,''):'',vchScopePid:v.scope_product_id!==''&&v.scope_product_id!=null?String(v.scope_product_id):'',vchScopeQty:v.scope_max_qty!==''&&v.scope_max_qty!=null?String(v.scope_max_qty):'',vchPerCust:v.per_customer!==''&&v.per_customer!=null?String(v.per_customer):'',vchReason:v.reason_kind||'MARKETING',vchNote:v.reason_note||'',vchMsg:''}); },
+      edit:()=>{ vchLoadTargets(); const isGift=(v.type==='percent'&&Number(v.value)===100&&v.scope_product_id!==''&&v.scope_product_id!=null); this.setState({vchOpen:true,vchEdit:v.code,vchCode:v.code,vchType:isGift?'gift':(v.type||'percent'),vchValue:String(v.value!=null?v.value:''),vchMin:String(v.min_order||''),vchMax:String(v.max_uses||''),vchExp:v.expires_at||'',vchTgtKind:v.target_kind||'NETWORK',vchTgtId:v.target_id!=null?String(v.target_id):'',vchTgtQ:(v.target_kind&&v.target_kind!=='NETWORK')?String(v.cible||'').replace(/^(Client|Bureau)\s+/,''):'',vchScopePid:v.scope_product_id!==''&&v.scope_product_id!=null?String(v.scope_product_id):'',vchScopeQ:v.scope_product_name||'',vchTgtHc:null,vchScopeQty:v.scope_max_qty!==''&&v.scope_max_qty!=null?String(v.scope_max_qty):'',vchPerCust:v.per_customer!==''&&v.per_customer!=null?String(v.per_customer):'',vchReason:v.reason_kind||'MARKETING',vchNote:v.reason_note||'',vchMsg:''}); },
     }));
     const vchTgtKindCur=S.vchTgtKind||'NETWORK';
     let vchTgtRaw=vchTgtKindCur==='CUSTOMER'?((this._vchTgt&&this._vchTgt.clients)||[]):vchTgtKindCur==='OFFICE'?((this._vchTgt&&this._vchTgt.offices)||[]):[];
     // Combobox riche : nom + sous-titre (société / ville) + effectif ; recherche
     // plein texte sur nom ET sous-titre (« IBA » -> tous ses employés).
-    vchTgtRaw=vchTgtRaw.map(t=>({id:t.id,nom:t.nom||('#'+t.id),sub:t.soc||t.sub||'',hc:t.hc?String(t.hc)+' pers.':''}));
+    vchTgtRaw=vchTgtRaw.map(t=>({id:t.id,nom:t.nom||('#'+t.id),sub:t.soc||t.sub||'',hc:t.hc?String(t.hc)+' pers.':'',hcNum:t.hc||null}));
+    // Produit (périmètre) : combobox de recherche riche (nom + catégorie + prix).
+    let vchScopeRaw=((this._vchTgt&&this._vchTgt.products)||[]).map(t=>({id:String(t.id),nom:t.nom||('#'+t.id),sub:t.sub||'',price:(t.price!=null&&t.price!=='')?(Number(t.price).toFixed(2).replace('.',',')+' €'):''}));
+    const vchScopeSearch=(S.vchScopeQ||'').trim().toLowerCase();
+    let vchScopeFiltered=(vchScopeSearch&&!S.vchScopePid)?vchScopeRaw.filter(t=>(t.nom+' '+t.sub).toLowerCase().includes(vchScopeSearch)):vchScopeRaw;
+    vchScopeFiltered=vchScopeFiltered.slice(0,8);
     const vchTgtQ=(S.vchTgtQ||'').trim().toLowerCase();
     if(vchTgtQ&&!S.vchTgtId) vchTgtRaw=vchTgtRaw.filter(t=>(t.nom+' '+t.sub).toLowerCase().includes(vchTgtQ));
     vchTgtRaw=vchTgtRaw.slice(0,8);
@@ -4717,7 +4740,7 @@ class Component extends DCLogic {
       vchOpen:!!S.vchOpen,
       vchTitle:S.vchEdit?('Modifier le bon '+S.vchEdit):'Nouveau bon boutique',
       vchSaveLabel:S.vchEdit?'Enregistrer':'Créer le bon',
-      vchNew:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:null,vchCode:'',vchType:'percent',vchValue:'',vchMin:'',vchMax:'',vchExp:'',vchTgtKind:'NETWORK',vchTgtId:'',vchTgtQ:'',vchScopePid:'',vchScopeQty:'',vchPerCust:'',vchReason:'MARKETING',vchNote:'',vchMsg:''}); },
+      vchNew:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:null,vchCode:'',vchType:'percent',vchValue:'',vchMin:'',vchMax:'',vchExp:'',vchTgtKind:'NETWORK',vchTgtId:'',vchTgtQ:'',vchTgtHc:null,vchScopePid:'',vchScopeQ:'',vchScopeQty:'',vchPerCust:'',vchReason:'MARKETING',vchNote:'',vchMsg:''}); },
       vchCancel:()=>this.setState({vchOpen:false}),
       vchCode:S.vchCode||'',vchSetCode:vchSet('vchCode'),
       vchType:S.vchType||'percent',vchSetType:vchSet('vchType'),
@@ -4734,16 +4757,23 @@ class Component extends DCLogic {
       vchTgtQ:S.vchTgtQ||'',vchSetTgtQ:(e)=>this.setState({vchTgtQ:e.target.value,vchTgtId:'',vchMsg:''}),
       vchTgtMenuOpen:vchTgtKindCur!=='NETWORK'&&!S.vchTgtId,
       vchTgtMenu:vchTgtRaw.map(t=>({nom:t.nom,sub:t.sub,hc:t.hc,hasSub:!!t.sub,hasHc:!!t.hc,
-        pick:()=>this.setState({vchTgtId:String(t.id),vchTgtQ:t.nom,vchMsg:''})})),
+        pick:()=>this.setState({vchTgtId:String(t.id),vchTgtQ:t.nom,vchTgtHc:t.hcNum||null,vchMsg:''})})),
       vchTgtMenuEmpty:vchTgtRaw.length===0,
       vchTgtPicked:!!(S.vchTgtId&&vchTgtKindCur!=='NETWORK'),
-      vchTgtConfirm:vchTgtKindCur==='OFFICE'?('Le bon vaudra pour tous les travailleurs de '+(S.vchTgtQ||'')+'.'):('Le bon est réservé à '+(S.vchTgtQ||'')+'.'),
+      vchTgtConfirm:vchTgtKindCur==='OFFICE'?('Le bon vaudra pour '+(S.vchTgtHc?('les '+S.vchTgtHc+' travailleurs'):'tous les travailleurs')+' de '+(S.vchTgtQ||'')+'.'):('Le bon est réservé à '+(S.vchTgtQ||'')+'.'),
       vchTgtClear:()=>this.setState({vchTgtId:'',vchTgtQ:''}),
       vchTgtOpts:vchTgtRaw.map(t=>({id:String(t.id),nom:t.nom||('#'+t.id)})),
       vchTgtId:S.vchTgtId||'',vchSetTgtId:vchSet('vchTgtId'),
-      vchScopePid:S.vchScopePid||'',vchSetScopePid:(e)=>this.setState({vchScopePid:e.target.value,vchMsg:''}),
+      vchScopePid:S.vchScopePid||'',
       vchScopeQtyShown:!!(S.vchScopePid||''),
-      vchScopeOpts:((this._vchTgt&&this._vchTgt.products)||[]).map(t=>({id:String(t.id),nom:t.nom||('#'+t.id)})),
+      vchScopeQ:S.vchScopeQ||'',vchSetScopeQ:(e)=>this.setState({vchScopeQ:e.target.value,vchScopePid:'',vchMsg:''}),
+      vchScopePh:'Panier entier — ou rechercher un produit…',
+      vchScopeMenuOpen:!S.vchScopePid&&(S.vchScopeQ||'').trim().length>0,
+      vchScopeMenu:vchScopeFiltered.map(t=>({nom:t.nom,sub:t.sub,price:t.price,hasSub:!!t.sub,hasPrice:!!t.price,
+        pick:()=>this.setState({vchScopePid:String(t.id),vchScopeQ:t.nom,vchMsg:''})})),
+      vchScopeMenuEmpty:vchScopeFiltered.length===0,
+      vchScopePicked:!!S.vchScopePid,
+      vchScopeClear:()=>this.setState({vchScopePid:'',vchScopeQ:''}),
       vchScopeQty:S.vchScopeQty||'',vchSetScopeQty:vchSet('vchScopeQty'),
       vchReason:S.vchReason||'MARKETING',vchSetReason:vchSet('vchReason'),
       vchNote:S.vchNote||'',vchSetNote:vchSet('vchNote'),
