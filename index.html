@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072410"></script>
-<script src="bo_server.js?v=2026072410"></script>
+<script src="api-config.js?v=2026072420"></script>
+<script src="bo_server.js?v=2026072420"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072410'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072420'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072410">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072410"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072420">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072420"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1416,6 +1416,8 @@
               <div><div class="t-admin-label" style="margin-bottom:4px">Expire le</div><input type="date" value="{{ vchExp }}" onChange="{{ vchSetExp }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
               <div><div class="t-admin-label" style="margin-bottom:4px">Cible</div><select value="{{ vchTgtKind }}" onChange="{{ vchSetTgtKind }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="NETWORK">Tous mes clients</option><option value="CUSTOMER">Un client</option><option value="OFFICE">Un bureau</option></select></div>
               <sc-if value="{{ vchTgtList }}" hint-placeholder-val="{{ false }}"><div><div class="t-admin-label" style="margin-bottom:4px">{{ vchTgtLabel }}</div><select value="{{ vchTgtId }}" onChange="{{ vchSetTgtId }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="">— choisir —</option><sc-for list="{{ vchTgtOpts }}" as="t" hint-placeholder-count="2"><option value="{{ t.id }}">{{ t.nom }}</option></sc-for></select></div></sc-if>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Limiter à un produit</div><select value="{{ vchScopePid }}" onChange="{{ vchSetScopePid }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="">Panier entier</option><sc-for list="{{ vchScopeOpts }}" as="sp" hint-placeholder-count="2"><option value="{{ sp.id }}">{{ sp.nom }}</option></sc-for></select></div>
+              <sc-if value="{{ vchScopeQtyShown }}" hint-placeholder-val="{{ false }}"><div><div class="t-admin-label" style="margin-bottom:4px">Pièces max remisées</div><input value="{{ vchScopeQty }}" onChange="{{ vchSetScopeQty }}" placeholder="1 = un produit offert" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div></sc-if>
               <div><div class="t-admin-label" style="margin-bottom:4px">Motif</div><select value="{{ vchReason }}" onChange="{{ vchSetReason }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="MARKETING">Marketing</option><option value="GESTE_CO">Geste commercial</option><option value="RECLAMATION">Réclamation</option><option value="FIDELITE">Fidélité</option></select></div>
               <div style="grid-column:1/-1"><div class="t-admin-label" style="margin-bottom:4px">Note (optionnel)</div><input value="{{ vchNote }}" onChange="{{ vchSetNote }}" placeholder="ex. suite réclamation commande WS-1784…" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
             </div>
@@ -4652,16 +4654,16 @@ class Component extends DCLogic {
       fetch(vchFR.base+'/franchisee/'+path+vchQS,{method:'POST',headers:{'Content-Type':'application/json',...(vchFR.token?{'X-Admin-Token':vchFR.token}:{})},credentials:'omit',body:JSON.stringify(body)})
         .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — action non enregistrée')); };
     const vchLoadTargets=()=>{ if(this._vchTgt||!vchFR.base) return;
-      this._vchTgt={clients:[],offices:[]};
+      this._vchTgt={clients:[],offices:[],products:[]};
       fetch(vchFR.base+'/franchisee/fr-voucher-targets'+vchQS,vchHdrs)
         .then(r=>r.ok?r.json():null)
-        .then(j=>{ if(j){ this._vchTgt={clients:j.clients||[],offices:j.offices||[]}; this.setState(s2=>({_rev:(s2._rev||0)+1})); } }).catch(()=>{}); };
+        .then(j=>{ if(j){ this._vchTgt={clients:j.clients||[],offices:j.offices||[],products:j.products||[]}; this.setState(s2=>({_rev:(s2._rev||0)+1})); } }).catch(()=>{}); };
     const vchRows=SRV('fr_vouchers').map(v=>({...v,
       origPill:v.origine==='Marque'?pill2('#eef3fb','#2a5a9e'):pill2('#eaf5ec','#2d7a3e'),
       togLabel:v.act?'Actif':'Inactif',
       togStyle:'border:1.5px solid '+(v.act?'#2d7a3e':'var(--color-border-secondary)')+';background:'+(v.act?'#eaf5ec':'transparent')+';color:'+(v.act?'#2d7a3e':'var(--color-text-muted)')+';border-radius:8px;padding:6px 11px;font:600 11px var(--font-ui);cursor:'+(v.editable?'pointer':'default')+';flex:none;opacity:'+(v.editable?'1':'.55'),
       tog:()=>{ if(!v.editable) return; vchPost('voucher-toggle',{code:v.code,active:!v.act},(j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+v.code+(!v.act?' activé':' désactivé')); vchReload(); } else this.printJob((j&&j.error)||'Erreur'); }); },
-      edit:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:v.code,vchCode:v.code,vchType:v.type||'percent',vchValue:String(v.value!=null?v.value:''),vchMin:String(v.min_order||''),vchMax:String(v.max_uses||''),vchExp:v.expires_at||'',vchTgtKind:v.target_kind||'NETWORK',vchTgtId:v.target_id!=null?String(v.target_id):'',vchReason:v.reason_kind||'MARKETING',vchNote:v.reason_note||'',vchMsg:''}); },
+      edit:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:v.code,vchCode:v.code,vchType:v.type||'percent',vchValue:String(v.value!=null?v.value:''),vchMin:String(v.min_order||''),vchMax:String(v.max_uses||''),vchExp:v.expires_at||'',vchTgtKind:v.target_kind||'NETWORK',vchTgtId:v.target_id!=null?String(v.target_id):'',vchScopePid:v.scope_product_id!==''&&v.scope_product_id!=null?String(v.scope_product_id):'',vchScopeQty:v.scope_max_qty!==''&&v.scope_max_qty!=null?String(v.scope_max_qty):'',vchReason:v.reason_kind||'MARKETING',vchNote:v.reason_note||'',vchMsg:''}); },
     }));
     const vchTgtKindCur=S.vchTgtKind||'NETWORK';
     const vchTgtRaw=vchTgtKindCur==='CUSTOMER'?((this._vchTgt&&this._vchTgt.clients)||[]):vchTgtKindCur==='OFFICE'?((this._vchTgt&&this._vchTgt.offices)||[]):[];
@@ -4671,7 +4673,7 @@ class Component extends DCLogic {
       vchOpen:!!S.vchOpen,
       vchTitle:S.vchEdit?('Modifier le bon '+S.vchEdit):'Nouveau bon boutique',
       vchSaveLabel:S.vchEdit?'Enregistrer':'Créer le bon',
-      vchNew:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:null,vchCode:'',vchType:'percent',vchValue:'',vchMin:'',vchMax:'',vchExp:'',vchTgtKind:'NETWORK',vchTgtId:'',vchReason:'MARKETING',vchNote:'',vchMsg:''}); },
+      vchNew:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:null,vchCode:'',vchType:'percent',vchValue:'',vchMin:'',vchMax:'',vchExp:'',vchTgtKind:'NETWORK',vchTgtId:'',vchScopePid:'',vchScopeQty:'',vchReason:'MARKETING',vchNote:'',vchMsg:''}); },
       vchCancel:()=>this.setState({vchOpen:false}),
       vchCode:S.vchCode||'',vchSetCode:vchSet('vchCode'),
       vchType:S.vchType||'percent',vchSetType:vchSet('vchType'),
@@ -4685,6 +4687,10 @@ class Component extends DCLogic {
       vchTgtLabel:vchTgtKindCur==='CUSTOMER'?'Client ciblé':'Bureau ciblé',
       vchTgtOpts:vchTgtRaw.map(t=>({id:String(t.id),nom:t.nom||('#'+t.id)})),
       vchTgtId:S.vchTgtId||'',vchSetTgtId:vchSet('vchTgtId'),
+      vchScopePid:S.vchScopePid||'',vchSetScopePid:(e)=>this.setState({vchScopePid:e.target.value,vchMsg:''}),
+      vchScopeQtyShown:!!(S.vchScopePid||''),
+      vchScopeOpts:((this._vchTgt&&this._vchTgt.products)||[]).map(t=>({id:String(t.id),nom:t.nom||('#'+t.id)})),
+      vchScopeQty:S.vchScopeQty||'',vchSetScopeQty:vchSet('vchScopeQty'),
       vchReason:S.vchReason||'MARKETING',vchSetReason:vchSet('vchReason'),
       vchNote:S.vchNote||'',vchSetNote:vchSet('vchNote'),
       vchMsg:S.vchMsg||'',
@@ -4698,6 +4704,7 @@ class Component extends DCLogic {
           max_uses:(S.vchMax||'')===''?'':parseInt(S.vchMax,10),
           expires_at:S.vchExp||null,active:1,
           target_kind:S.vchTgtKind||'NETWORK',target_id:S.vchTgtId||null,
+          scope_product_id:S.vchScopePid||null,scope_max_qty:(S.vchScopePid&&S.vchScopeQty)?parseInt(S.vchScopeQty,10):null,
           reason_kind:S.vchReason||'MARKETING',reason_note:S.vchNote||''},
           (j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+code+' enregistré'); this.setState({vchOpen:false}); vchReload(); } else this.setState({vchMsg:(j&&j.error)||'Erreur serveur'}); }); },
     };
