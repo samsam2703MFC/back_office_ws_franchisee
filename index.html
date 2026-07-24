@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072460"></script>
-<script src="bo_server.js?v=2026072460"></script>
+<script src="api-config.js?v=2026072470"></script>
+<script src="bo_server.js?v=2026072470"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072460'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072470'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072460">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072460"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072470">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072470"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1482,18 +1482,18 @@
           </sc-if>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;overflow-x:auto">
             <div style="min-width:920px">
-              <div style="display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(110px,1fr) minmax(120px,1.3fr) minmax(120px,1.5fr) 92px 76px minmax(100px,1fr) 84px 92px;gap:10px;align-items:center;padding:10px 16px;background:var(--color-background-secondary)"><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Code</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Effet</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Cible</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Motif</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Origine</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Usages</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Validité</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">État</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em"></span></div>
+              <div style="display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(110px,1fr) minmax(120px,1.3fr) minmax(120px,1.5fr) 92px 76px minmax(100px,1fr) 84px 92px;gap:10px;align-items:center;padding:7px 14px;background:var(--color-background-secondary)"><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Code</span><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Effet</span><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Cible</span><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Motif</span><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Origine</span><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Usages</span><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Validité</span><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">État</span><span style="font:600 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em"></span></div>
               <sc-for list="{{ vchRows }}" as="v" hint-placeholder-count="4">
-              <div style="display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(110px,1fr) minmax(120px,1.3fr) minmax(120px,1.5fr) 92px 76px minmax(100px,1fr) 84px 92px;gap:10px;align-items:center;padding:10px 16px;border-top:.5px solid var(--color-border-tertiary)">
-                <span style="font:700 12.5px var(--font-mono,monospace);color:var(--color-primary);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis" title="{{ v.code }}">{{ v.code }}</span>
-                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.effet }}</span>
-                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ v.cible }}">{{ v.cible }}</span>
-                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ v.motif }}">{{ v.motif }}</span>
+              <div style="display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(110px,1fr) minmax(120px,1.3fr) minmax(120px,1.5fr) 92px 76px minmax(100px,1fr) 84px 92px;gap:10px;align-items:center;padding:7px 14px;border-top:.5px solid var(--color-border-tertiary)">
+                <span style="font:700 11px var(--font-mono,monospace);color:var(--color-primary);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis" title="{{ v.code }}">{{ v.code }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.effet }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ v.cible }}">{{ v.cible }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ v.motif }}">{{ v.motif }}</span>
                 <span><span style="{{ v.origPill }}">{{ v.origine }}</span></span>
-                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.usages }}</span>
-                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.validite }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.usages }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.validite }}</span>
                 <span><button onClick="{{ v.tog }}" style="{{ v.togStyle }}">{{ v.togLabel }}</button></span>
-                <span><sc-if value="{{ v.editable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ v.edit }}" style="border:.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text);border-radius:8px;padding:6px 11px;font:600 11px var(--font-ui);cursor:pointer">Modifier</button></sc-if></span>
+                <span><sc-if value="{{ v.editable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ v.edit }}" style="border:.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text);border-radius:7px;padding:4px 9px;font:600 10px var(--font-ui);cursor:pointer">Modifier</button></sc-if></span>
               </div>
               </sc-for>
               <sc-if value="{{ vchEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:18px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun bon — créez le premier avec « + Bon boutique », ou attendez un bon Marque.</div></sc-if>
@@ -4717,7 +4717,7 @@ class Component extends DCLogic {
     const vchRows=SRV('fr_vouchers').map(v=>({...v,
       origPill:v.origine==='Marque'?pill2('#eef3fb','#2a5a9e'):pill2('#eaf5ec','#2d7a3e'),
       togLabel:v.act?'Actif':'Inactif',
-      togStyle:'border:1.5px solid '+(v.act?'#2d7a3e':'var(--color-border-secondary)')+';background:'+(v.act?'#eaf5ec':'transparent')+';color:'+(v.act?'#2d7a3e':'var(--color-text-muted)')+';border-radius:8px;padding:6px 11px;font:600 11px var(--font-ui);cursor:'+(v.editable?'pointer':'default')+';flex:none;opacity:'+(v.editable?'1':'.55'),
+      togStyle:'border:1.5px solid '+(v.act?'#2d7a3e':'var(--color-border-secondary)')+';background:'+(v.act?'#eaf5ec':'transparent')+';color:'+(v.act?'#2d7a3e':'var(--color-text-muted)')+';border-radius:7px;padding:4px 9px;font:600 10px var(--font-ui);cursor:'+(v.editable?'pointer':'default')+';flex:none;opacity:'+(v.editable?'1':'.55'),
       tog:()=>{ if(!v.editable) return; vchPost('voucher-toggle',{code:v.code,active:!v.act},(j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+v.code+(!v.act?' activé':' désactivé')); vchReload(); } else this.printJob((j&&j.error)||'Erreur'); }); },
       edit:()=>{ vchLoadTargets(); const isGift=(v.type==='percent'&&Number(v.value)===100&&v.scope_product_id!==''&&v.scope_product_id!=null); this.setState({vchOpen:true,vchEdit:v.code,vchCode:v.code,vchType:isGift?'gift':(v.type||'percent'),vchValue:String(v.value!=null?v.value:''),vchMin:String(v.min_order||''),vchMax:String(v.max_uses||''),vchExp:v.expires_at||'',vchTgtKind:v.target_kind||'NETWORK',vchTgtId:v.target_id!=null?String(v.target_id):'',vchTgtQ:(v.target_kind&&v.target_kind!=='NETWORK')?String(v.cible||'').replace(/^(Client|Bureau)\s+/,''):'',vchScopePid:v.scope_product_id!==''&&v.scope_product_id!=null?String(v.scope_product_id):'',vchScopeQ:v.scope_product_name||'',vchTgtHc:null,vchScopeQty:v.scope_max_qty!==''&&v.scope_max_qty!=null?String(v.scope_max_qty):'',vchPerCust:v.per_customer!==''&&v.per_customer!=null?String(v.per_customer):'',vchReason:v.reason_kind||'MARKETING',vchNote:v.reason_note||'',vchMsg:''}); },
     }));
