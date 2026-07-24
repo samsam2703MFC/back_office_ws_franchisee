@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072450"></script>
-<script src="bo_server.js?v=2026072450"></script>
+<script src="api-config.js?v=2026072460"></script>
+<script src="bo_server.js?v=2026072460"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072450'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072460'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072450">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072450"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072460">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072460"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1416,7 +1416,7 @@
             <div style="padding:24px 28px 8px">
               <div style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-primary);margin-bottom:14px">Le bon</div>
               <div style="display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-bottom:28px">
-                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Code</label><input value="{{ vchCode }}" onChange="{{ vchSetCode }}" placeholder="ex. H2-NOEL10" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Code</label><input value="{{ vchCode }}" onChange="{{ vchSetCode }}" placeholder="Laisser vide = généré automatiquement" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div>
                 <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Effet</label><select value="{{ vchType }}" onChange="{{ vchSetType }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;cursor:pointer"><option value="percent">Remise %</option><option value="fixed">Remise € (montant)</option><option value="free_delivery">Livraison offerte</option><option value="gift">Produit offert</option></select></div>
                 <sc-if value="{{ vchValueShown }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Valeur</label><input value="{{ vchValue }}" onChange="{{ vchSetValue }}" placeholder="ex. 10" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div></sc-if>
                 <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Panier min (€)</label><input value="{{ vchMin }}" onChange="{{ vchSetMin }}" placeholder="0 = aucun" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div>
@@ -4779,7 +4779,7 @@ class Component extends DCLogic {
       vchNote:S.vchNote||'',vchSetNote:vchSet('vchNote'),
       vchMsg:S.vchMsg||'',
       vchSave:()=>{ const code=(S.vchCode||'').trim().toUpperCase();
-        if(!code){ this.setState({vchMsg:'Code requis'}); return; }
+        // Code facultatif : vide -> généré côté serveur (renvoyé dans j.code).
         let type=S.vchType||'percent', value=parseFloat(String(S.vchValue||'0').replace(',','.'))||0, scopePid=S.vchScopePid||null, scopeQty=(S.vchScopePid&&S.vchScopeQty)?parseInt(S.vchScopeQty,10):null;
         if(type==='gift'){ // Produit offert = remise 100 % limitée au produit, 1 pièce par défaut
           if(!scopePid){ this.setState({vchMsg:'Choisissez le produit offert'}); return; }
@@ -4795,7 +4795,7 @@ class Component extends DCLogic {
           target_kind:S.vchTgtKind||'NETWORK',target_id:S.vchTgtId||null,
           scope_product_id:scopePid,scope_max_qty:scopeQty,
           reason_kind:S.vchReason||'MARKETING',reason_note:S.vchNote||''},
-          (j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+code+' enregistré'); this.setState({vchOpen:false}); vchReload(); } else this.setState({vchMsg:(j&&j.error)||'Erreur serveur'}); }); },
+          (j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+((j&&j.code)||code||'')+' enregistré'); this.setState({vchOpen:false}); vchReload(); } else this.setState({vchMsg:(j&&j.error)||'Erreur serveur'}); }); },
     };
 
     // Remise webshop
