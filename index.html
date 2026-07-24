@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072430"></script>
-<script src="bo_server.js?v=2026072430"></script>
+<script src="api-config.js?v=2026072440"></script>
+<script src="bo_server.js?v=2026072440"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072430'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072440'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072430">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072430"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072440">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072440"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1405,24 +1405,61 @@
         <div style="display:flex;flex-direction:column;gap:14px">
           <div style="display:flex;justify-content:space-between;align-items:center"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Modèle unifié marque + boutiques (voucher_campaign / voucher_code) — vos bons sont éditables, les bons Marque en lecture seule · un bon « Client » n'est utilisable que par ce client</div><button onClick="{{ vchNew }}" class="btn-primary" style="font-size:12px;flex:none">+ Bon boutique</button></div>
           <sc-if value="{{ vchOpen }}" hint-placeholder-val="{{ false }}">
-          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px">
-            <div class="t-section-title" style="font-size:14px;margin-bottom:12px">{{ vchTitle }}</div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
-              <div><div class="t-admin-label" style="margin-bottom:4px">Code</div><input value="{{ vchCode }}" onChange="{{ vchSetCode }}" placeholder="ex. H2-NOEL10" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
-              <div><div class="t-admin-label" style="margin-bottom:4px">Effet</div><select value="{{ vchType }}" onChange="{{ vchSetType }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="percent">Remise %</option><option value="fixed">Remise €</option><option value="free_delivery">Port offert</option></select></div>
-              <sc-if value="{{ vchValueShown }}" hint-placeholder-val="{{ true }}"><div><div class="t-admin-label" style="margin-bottom:4px">Valeur</div><input value="{{ vchValue }}" onChange="{{ vchSetValue }}" placeholder="ex. 10" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div></sc-if>
-              <div><div class="t-admin-label" style="margin-bottom:4px">Panier min (€)</div><input value="{{ vchMin }}" onChange="{{ vchSetMin }}" placeholder="0 = aucun" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
-              <div><div class="t-admin-label" style="margin-bottom:4px">Max usages</div><input value="{{ vchMax }}" onChange="{{ vchSetMax }}" placeholder="vide = illimité" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
-              <div><div class="t-admin-label" style="margin-bottom:4px">Limite par client</div><input value="{{ vchPerCust }}" onChange="{{ vchSetPerCust }}" placeholder="1 = une fois chacun" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
-              <div><div class="t-admin-label" style="margin-bottom:4px">Expire le</div><input type="date" value="{{ vchExp }}" onChange="{{ vchSetExp }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
-              <div><div class="t-admin-label" style="margin-bottom:4px">Cible</div><select value="{{ vchTgtKind }}" onChange="{{ vchSetTgtKind }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="NETWORK">Tous mes clients</option><option value="CUSTOMER">Un client</option><option value="OFFICE">Une entreprise (tous ses travailleurs)</option></select></div>
-              <sc-if value="{{ vchTgtList }}" hint-placeholder-val="{{ false }}"><div><div class="t-admin-label" style="margin-bottom:4px">{{ vchTgtLabel }}</div><input value="{{ vchTgtQ }}" onChange="{{ vchSetTgtQ }}" placeholder="Filtrer : nom, prénom, société…" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none;margin-bottom:6px"/><select value="{{ vchTgtId }}" onChange="{{ vchSetTgtId }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="">— choisir —</option><sc-for list="{{ vchTgtOpts }}" as="t" hint-placeholder-count="2"><option value="{{ t.id }}">{{ t.nom }}</option></sc-for></select></div></sc-if>
-              <div><div class="t-admin-label" style="margin-bottom:4px">Limiter à un produit</div><select value="{{ vchScopePid }}" onChange="{{ vchSetScopePid }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="">Panier entier</option><sc-for list="{{ vchScopeOpts }}" as="sp" hint-placeholder-count="2"><option value="{{ sp.id }}">{{ sp.nom }}</option></sc-for></select></div>
-              <sc-if value="{{ vchScopeQtyShown }}" hint-placeholder-val="{{ false }}"><div><div class="t-admin-label" style="margin-bottom:4px">Pièces max remisées</div><input value="{{ vchScopeQty }}" onChange="{{ vchSetScopeQty }}" placeholder="1 = un produit offert" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div></sc-if>
-              <div><div class="t-admin-label" style="margin-bottom:4px">Motif</div><select value="{{ vchReason }}" onChange="{{ vchSetReason }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="MARKETING">Marketing</option><option value="GESTE_CO">Geste commercial</option><option value="RECLAMATION">Réclamation</option><option value="FIDELITE">Fidélité</option></select></div>
-              <div style="grid-column:1/-1"><div class="t-admin-label" style="margin-bottom:4px">Note (optionnel)</div><input value="{{ vchNote }}" onChange="{{ vchSetNote }}" placeholder="ex. suite réclamation commande WS-1784…" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;box-shadow:0 1px 3px rgba(34,34,34,.05)">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:22px 28px 18px;border-bottom:.5px solid var(--color-border-tertiary)">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <h2 style="margin:0;font:600 20px var(--font-ui);color:var(--color-text)">{{ vchTitle }}</h2>
+                <p style="margin:0;font:400 13px var(--font-ui);color:var(--color-text-muted)">Crée un code de réduction et choisis à qui il s'applique.</p>
+              </div>
+              <span style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-primary);border:.5px solid var(--color-border-secondary);border-radius:999px;padding:5px 12px">Brouillon</span>
             </div>
-            <div style="display:flex;gap:10px;margin-top:14px;align-items:center"><button onClick="{{ vchSave }}" class="btn-primary" style="font-size:12px">{{ vchSaveLabel }}</button><button onClick="{{ vchCancel }}" style="border:.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-muted);border-radius:8px;padding:8px 14px;font:600 12px var(--font-ui);cursor:pointer">Annuler</button><span style="font:600 11.5px var(--font-ui);color:var(--color-primary)">{{ vchMsg }}</span></div>
+            <div style="padding:24px 28px 8px">
+              <div style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-primary);margin-bottom:14px">Le bon</div>
+              <div style="display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-bottom:28px">
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Code</label><input value="{{ vchCode }}" onChange="{{ vchSetCode }}" placeholder="ex. H2-NOEL10" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Effet</label><select value="{{ vchType }}" onChange="{{ vchSetType }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;cursor:pointer"><option value="percent">Remise %</option><option value="fixed">Remise € (montant)</option><option value="free_delivery">Livraison offerte</option><option value="gift">Produit offert</option></select></div>
+                <sc-if value="{{ vchValueShown }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Valeur</label><input value="{{ vchValue }}" onChange="{{ vchSetValue }}" placeholder="ex. 10" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div></sc-if>
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Panier min (€)</label><input value="{{ vchMin }}" onChange="{{ vchSetMin }}" placeholder="0 = aucun" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Max usages</label><input value="{{ vchMax }}" onChange="{{ vchSetMax }}" placeholder="vide = illimité" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Limite par client</label><input value="{{ vchPerCust }}" onChange="{{ vchSetPerCust }}" placeholder="1 = une fois chacun" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div>
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Expire le</label><input type="date" value="{{ vchExp }}" onChange="{{ vchSetExp }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none;padding:9px 12px"/></div>
+              </div>
+              <div style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-primary);margin-bottom:14px">Cible &amp; portée</div>
+              <div style="display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));margin-bottom:28px;align-items:start">
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Cible</label><select value="{{ vchTgtKind }}" onChange="{{ vchSetTgtKind }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;cursor:pointer"><option value="OFFICE">Une entreprise (tous ses travailleurs)</option><option value="CUSTOMER">Un client précis</option><option value="GROUP" disabled>Un segment de clients (bientôt)</option><option value="NETWORK">Tous les clients</option></select></div>
+                <sc-if value="{{ vchTgtList }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:7px;grid-column:span 2;min-width:0;position:relative;z-index:5">
+                  <label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">{{ vchTgtLabel }}</label>
+                  <div style="position:relative">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--color-text-muted);display:inline-flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span>
+                    <input value="{{ vchTgtQ }}" onChange="{{ vchSetTgtQ }}" placeholder="{{ vchTgtPh }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none;padding-left:36px;padding-right:40px"/>
+                    <sc-if value="{{ vchTgtPicked }}" hint-placeholder-val="{{ false }}"><button onClick="{{ vchTgtClear }}" title="Effacer" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;border:none;background:var(--color-background-secondary);color:var(--color-text-muted);cursor:pointer;font-size:14px;line-height:1">×</button></sc-if>
+                  </div>
+                  <sc-if value="{{ vchTgtMenuOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="background:var(--color-surface);border:1px solid var(--color-border-secondary);border-radius:8px;box-shadow:0 8px 24px rgba(34,34,34,.14);max-height:280px;overflow-y:auto">
+                    <sc-for list="{{ vchTgtMenu }}" as="t" hint-placeholder-count="3">
+                    <button onClick="{{ t.pick }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;background:transparent;border:none;border-bottom:.5px solid var(--color-border-tertiary);padding:11px 14px;cursor:pointer;font-family:var(--font-ui)">
+                      <span><span style="font:500 14px var(--font-ui);color:var(--color-text)">{{ t.nom }}</span><sc-if value="{{ t.hasSub }}" hint-placeholder-val="{{ true }}"><br/><span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ t.sub }}</span></sc-if></span>
+                      <sc-if value="{{ t.hasHc }}" hint-placeholder-val="{{ false }}"><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);background:var(--color-background-secondary);border-radius:999px;padding:3px 9px;white-space:nowrap">{{ t.hc }}</span></sc-if>
+                    </button>
+                    </sc-for>
+                    <sc-if value="{{ vchTgtMenuEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 14px;font:400 13px var(--font-ui);color:var(--color-text-muted)">Aucun résultat pour cette recherche.</div></sc-if>
+                  </div>
+                  </sc-if>
+                  <sc-if value="{{ vchTgtPicked }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:8px;margin-top:2px;font:400 12px var(--font-ui);color:#6b4420;background:var(--color-secondary,#F2C9A0);border-radius:6px;padding:8px 11px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>{{ vchTgtConfirm }}</span></div></sc-if>
+                </div>
+                </sc-if>
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Limiter à un produit</label><select value="{{ vchScopePid }}" onChange="{{ vchSetScopePid }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;cursor:pointer"><option value="">Panier entier</option><sc-for list="{{ vchScopeOpts }}" as="sp" hint-placeholder-count="2"><option value="{{ sp.id }}">{{ sp.nom }}</option></sc-for></select></div>
+                <sc-if value="{{ vchScopeQtyShown }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Pièces max remisées</label><input value="{{ vchScopeQty }}" onChange="{{ vchSetScopeQty }}" placeholder="1 = un produit offert" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none"/></div></sc-if>
+                <div style="display:flex;flex-direction:column;gap:7px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Motif</label><select value="{{ vchReason }}" onChange="{{ vchSetReason }}" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;cursor:pointer"><option value="MARKETING">Marketing</option><option value="GESTE_CO">Geste commercial</option><option value="FIDELITE">Fidélité</option><option value="RECLAMATION">Réclamation</option><option value="PARTENARIAT">Partenariat</option><option value="TEST">Test / interne</option></select></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:8px"><label style="font:500 11px var(--font-ui);text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted)">Note (optionnel)</label><textarea rows="2" value="{{ vchNote }}" onChange="{{ vchSetNote }}" placeholder="ex. suite réclamation commande WS-1784…" style="width:100%;box-sizing:border-box;font:400 14px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:10px 12px;outline:none;resize:vertical;line-height:1.5"></textarea></div>
+            </div>
+            <div style="display:flex;gap:12px;padding:18px 28px 24px;border-top:.5px solid var(--color-border-tertiary);margin-top:14px;align-items:center">
+              <button onClick="{{ vchSave }}" class="btn-primary" style="font-size:14px;padding:11px 16px">{{ vchSaveLabel }}</button>
+              <button onClick="{{ vchCancel }}" style="background:transparent;border:.5px solid var(--color-border-secondary);color:var(--color-text);border-radius:8px;padding:11px 16px;font:500 14px var(--font-ui);cursor:pointer">Annuler</button>
+              <span style="font:600 12px var(--font-ui);color:var(--color-primary)">{{ vchMsg }}</span>
+            </div>
           </div>
           </sc-if>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;overflow-x:auto">
@@ -4664,15 +4701,16 @@ class Component extends DCLogic {
       togLabel:v.act?'Actif':'Inactif',
       togStyle:'border:1.5px solid '+(v.act?'#2d7a3e':'var(--color-border-secondary)')+';background:'+(v.act?'#eaf5ec':'transparent')+';color:'+(v.act?'#2d7a3e':'var(--color-text-muted)')+';border-radius:8px;padding:6px 11px;font:600 11px var(--font-ui);cursor:'+(v.editable?'pointer':'default')+';flex:none;opacity:'+(v.editable?'1':'.55'),
       tog:()=>{ if(!v.editable) return; vchPost('voucher-toggle',{code:v.code,active:!v.act},(j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+v.code+(!v.act?' activé':' désactivé')); vchReload(); } else this.printJob((j&&j.error)||'Erreur'); }); },
-      edit:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:v.code,vchCode:v.code,vchType:v.type||'percent',vchValue:String(v.value!=null?v.value:''),vchMin:String(v.min_order||''),vchMax:String(v.max_uses||''),vchExp:v.expires_at||'',vchTgtKind:v.target_kind||'NETWORK',vchTgtId:v.target_id!=null?String(v.target_id):'',vchScopePid:v.scope_product_id!==''&&v.scope_product_id!=null?String(v.scope_product_id):'',vchScopeQty:v.scope_max_qty!==''&&v.scope_max_qty!=null?String(v.scope_max_qty):'',vchPerCust:v.per_customer!==''&&v.per_customer!=null?String(v.per_customer):'',vchTgtQ:'',vchReason:v.reason_kind||'MARKETING',vchNote:v.reason_note||'',vchMsg:''}); },
+      edit:()=>{ vchLoadTargets(); const isGift=(v.type==='percent'&&Number(v.value)===100&&v.scope_product_id!==''&&v.scope_product_id!=null); this.setState({vchOpen:true,vchEdit:v.code,vchCode:v.code,vchType:isGift?'gift':(v.type||'percent'),vchValue:String(v.value!=null?v.value:''),vchMin:String(v.min_order||''),vchMax:String(v.max_uses||''),vchExp:v.expires_at||'',vchTgtKind:v.target_kind||'NETWORK',vchTgtId:v.target_id!=null?String(v.target_id):'',vchTgtQ:(v.target_kind&&v.target_kind!=='NETWORK')?String(v.cible||'').replace(/^(Client|Bureau)\s+/,''):'',vchScopePid:v.scope_product_id!==''&&v.scope_product_id!=null?String(v.scope_product_id):'',vchScopeQty:v.scope_max_qty!==''&&v.scope_max_qty!=null?String(v.scope_max_qty):'',vchPerCust:v.per_customer!==''&&v.per_customer!=null?String(v.per_customer):'',vchReason:v.reason_kind||'MARKETING',vchNote:v.reason_note||'',vchMsg:''}); },
     }));
     const vchTgtKindCur=S.vchTgtKind||'NETWORK';
     let vchTgtRaw=vchTgtKindCur==='CUSTOMER'?((this._vchTgt&&this._vchTgt.clients)||[]):vchTgtKindCur==='OFFICE'?((this._vchTgt&&this._vchTgt.offices)||[]):[];
-    // Libellé riche (nom — société) + RECHERCHE plein texte (nom, prénom, société).
-    vchTgtRaw=vchTgtRaw.map(t=>({id:t.id,nom:(t.nom||('#'+t.id))+(t.soc?(' — '+t.soc):'')}));
+    // Combobox riche : nom + sous-titre (société / ville) + effectif ; recherche
+    // plein texte sur nom ET sous-titre (« IBA » -> tous ses employés).
+    vchTgtRaw=vchTgtRaw.map(t=>({id:t.id,nom:t.nom||('#'+t.id),sub:t.soc||t.sub||'',hc:t.hc?String(t.hc)+' pers.':''}));
     const vchTgtQ=(S.vchTgtQ||'').trim().toLowerCase();
-    if(vchTgtQ) vchTgtRaw=vchTgtRaw.filter(t=>t.nom.toLowerCase().includes(vchTgtQ));
-    vchTgtRaw=vchTgtRaw.slice(0,50);
+    if(vchTgtQ&&!S.vchTgtId) vchTgtRaw=vchTgtRaw.filter(t=>(t.nom+' '+t.sub).toLowerCase().includes(vchTgtQ));
+    vchTgtRaw=vchTgtRaw.slice(0,8);
     const vchSet=(k)=>(e)=>{ const st={vchMsg:''}; st[k]=e.target.value; this.setState(st); };
     const vchProps={
       vchRows,vchEmpty:vchRows.length===0,
@@ -4683,7 +4721,7 @@ class Component extends DCLogic {
       vchCancel:()=>this.setState({vchOpen:false}),
       vchCode:S.vchCode||'',vchSetCode:vchSet('vchCode'),
       vchType:S.vchType||'percent',vchSetType:vchSet('vchType'),
-      vchValueShown:(S.vchType||'percent')!=='free_delivery',
+      vchValueShown:(S.vchType||'percent')==='percent'||(S.vchType||'percent')==='fixed',
       vchValue:S.vchValue||'',vchSetValue:vchSet('vchValue'),
       vchMin:S.vchMin||'',vchSetMin:vchSet('vchMin'),
       vchMax:S.vchMax||'',vchSetMax:vchSet('vchMax'),
@@ -4691,8 +4729,16 @@ class Component extends DCLogic {
       vchExp:S.vchExp||'',vchSetExp:vchSet('vchExp'),
       vchTgtKind:vchTgtKindCur,vchSetTgtKind:(e)=>this.setState({vchTgtKind:e.target.value,vchTgtId:'',vchMsg:''}),
       vchTgtList:vchTgtKindCur!=='NETWORK',
-      vchTgtLabel:vchTgtKindCur==='CUSTOMER'?'Client ciblé (tapez pour chercher : nom, prénom, société)':'Entreprise ciblée — le bon vaudra pour tous ses travailleurs',
-      vchTgtQ:S.vchTgtQ||'',vchSetTgtQ:(e)=>this.setState({vchTgtQ:e.target.value}),
+      vchTgtLabel:vchTgtKindCur==='CUSTOMER'?'Client ciblé':'Entreprise ciblée',
+      vchTgtPh:vchTgtKindCur==='CUSTOMER'?'Rechercher un client par nom, prénom ou société…':'Rechercher une entreprise par nom ou ville…',
+      vchTgtQ:S.vchTgtQ||'',vchSetTgtQ:(e)=>this.setState({vchTgtQ:e.target.value,vchTgtId:'',vchMsg:''}),
+      vchTgtMenuOpen:vchTgtKindCur!=='NETWORK'&&!S.vchTgtId,
+      vchTgtMenu:vchTgtRaw.map(t=>({nom:t.nom,sub:t.sub,hc:t.hc,hasSub:!!t.sub,hasHc:!!t.hc,
+        pick:()=>this.setState({vchTgtId:String(t.id),vchTgtQ:t.nom,vchMsg:''})})),
+      vchTgtMenuEmpty:vchTgtRaw.length===0,
+      vchTgtPicked:!!(S.vchTgtId&&vchTgtKindCur!=='NETWORK'),
+      vchTgtConfirm:vchTgtKindCur==='OFFICE'?('Le bon vaudra pour tous les travailleurs de '+(S.vchTgtQ||'')+'.'):('Le bon est réservé à '+(S.vchTgtQ||'')+'.'),
+      vchTgtClear:()=>this.setState({vchTgtId:'',vchTgtQ:''}),
       vchTgtOpts:vchTgtRaw.map(t=>({id:String(t.id),nom:t.nom||('#'+t.id)})),
       vchTgtId:S.vchTgtId||'',vchSetTgtId:vchSet('vchTgtId'),
       vchScopePid:S.vchScopePid||'',vchSetScopePid:(e)=>this.setState({vchScopePid:e.target.value,vchMsg:''}),
@@ -4704,16 +4750,20 @@ class Component extends DCLogic {
       vchMsg:S.vchMsg||'',
       vchSave:()=>{ const code=(S.vchCode||'').trim().toUpperCase();
         if(!code){ this.setState({vchMsg:'Code requis'}); return; }
-        const type=S.vchType||'percent';
-        if(type!=='free_delivery'&&!(parseFloat(String(S.vchValue||'').replace(',','.'))>0)){ this.setState({vchMsg:'Valeur requise'}); return; }
+        let type=S.vchType||'percent', value=parseFloat(String(S.vchValue||'0').replace(',','.'))||0, scopePid=S.vchScopePid||null, scopeQty=(S.vchScopePid&&S.vchScopeQty)?parseInt(S.vchScopeQty,10):null;
+        if(type==='gift'){ // Produit offert = remise 100 % limitée au produit, 1 pièce par défaut
+          if(!scopePid){ this.setState({vchMsg:'Choisissez le produit offert'}); return; }
+          type='percent'; value=100; if(!scopeQty) scopeQty=1;
+        }
+        if(type!=='free_delivery'&&!(value>0)){ this.setState({vchMsg:'Valeur requise'}); return; }
         if((S.vchTgtKind||'NETWORK')!=='NETWORK'&&!S.vchTgtId){ this.setState({vchMsg:'Choisissez la cible'}); return; }
-        vchPost('voucher',{code,type,value:parseFloat(String(S.vchValue||'0').replace(',','.'))||0,
+        vchPost('voucher',{code,type,value,
           min_order:parseFloat(String(S.vchMin||'0').replace(',','.'))||0,
           max_uses:(S.vchMax||'')===''?'':parseInt(S.vchMax,10),
           per_customer:(S.vchPerCust||'')===''?'':parseInt(S.vchPerCust,10),
           expires_at:S.vchExp||null,active:1,
           target_kind:S.vchTgtKind||'NETWORK',target_id:S.vchTgtId||null,
-          scope_product_id:S.vchScopePid||null,scope_max_qty:(S.vchScopePid&&S.vchScopeQty)?parseInt(S.vchScopeQty,10):null,
+          scope_product_id:scopePid,scope_max_qty:scopeQty,
           reason_kind:S.vchReason||'MARKETING',reason_note:S.vchNote||''},
           (j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+code+' enregistré'); this.setState({vchOpen:false}); vchReload(); } else this.setState({vchMsg:(j&&j.error)||'Erreur serveur'}); }); },
     };
