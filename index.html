@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072353"></script>
-<script src="bo_server.js?v=2026072353"></script>
+<script src="api-config.js?v=2026072410"></script>
+<script src="bo_server.js?v=2026072410"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072353'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072410'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072353">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072353"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072410">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072410"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1402,16 +1402,44 @@
         </sc-if>
 
         <sc-if value="{{ promoTabBons }}" hint-placeholder-val="{{ false }}">
-        <div style="display:flex;flex-direction:column;gap:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">ws_vouchers — bons locaux éditables, bons marque en lecture · type <em>add_office</em> = parrainage/onboarding B2B</div><button onClick="{{ addVoucher }}" class="btn-primary" style="font-size:12px;flex:none">+ Bon local</button></div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
-            <sc-for list="{{ vouchersList }}" as="v" hint-placeholder-count="4">
-              <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:16px 18px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font:700 14px var(--font-mono,monospace);color:var(--color-primary);letter-spacing:.05em">{{ v.code }}</span><span style="{{ v.scopePill }}">{{ v.scope }}</span></div>
-                <div style="font:500 13px var(--font-ui);color:var(--color-text)">{{ v.valeur }}</div>
-                <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ v.type }} · valable {{ v.validite }}</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Modèle unifié marque + boutiques (voucher_campaign / voucher_code) — vos bons sont éditables, les bons Marque en lecture seule · un bon « Client » n'est utilisable que par ce client</div><button onClick="{{ vchNew }}" class="btn-primary" style="font-size:12px;flex:none">+ Bon boutique</button></div>
+          <sc-if value="{{ vchOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px">
+            <div class="t-section-title" style="font-size:14px;margin-bottom:12px">{{ vchTitle }}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+              <div><div class="t-admin-label" style="margin-bottom:4px">Code</div><input value="{{ vchCode }}" onChange="{{ vchSetCode }}" placeholder="ex. H2-NOEL10" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Effet</div><select value="{{ vchType }}" onChange="{{ vchSetType }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="percent">Remise %</option><option value="fixed">Remise €</option><option value="free_delivery">Port offert</option></select></div>
+              <sc-if value="{{ vchValueShown }}" hint-placeholder-val="{{ true }}"><div><div class="t-admin-label" style="margin-bottom:4px">Valeur</div><input value="{{ vchValue }}" onChange="{{ vchSetValue }}" placeholder="ex. 10" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div></sc-if>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Panier min (€)</div><input value="{{ vchMin }}" onChange="{{ vchSetMin }}" placeholder="0 = aucun" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Max usages</div><input value="{{ vchMax }}" onChange="{{ vchSetMax }}" placeholder="vide = illimité" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Expire le</div><input type="date" value="{{ vchExp }}" onChange="{{ vchSetExp }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Cible</div><select value="{{ vchTgtKind }}" onChange="{{ vchSetTgtKind }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="NETWORK">Tous mes clients</option><option value="CUSTOMER">Un client</option><option value="OFFICE">Un bureau</option></select></div>
+              <sc-if value="{{ vchTgtList }}" hint-placeholder-val="{{ false }}"><div><div class="t-admin-label" style="margin-bottom:4px">{{ vchTgtLabel }}</div><select value="{{ vchTgtId }}" onChange="{{ vchSetTgtId }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="">— choisir —</option><sc-for list="{{ vchTgtOpts }}" as="t" hint-placeholder-count="2"><option value="{{ t.id }}">{{ t.nom }}</option></sc-for></select></div></sc-if>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Motif</div><select value="{{ vchReason }}" onChange="{{ vchSetReason }}" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);cursor:pointer"><option value="MARKETING">Marketing</option><option value="GESTE_CO">Geste commercial</option><option value="RECLAMATION">Réclamation</option><option value="FIDELITE">Fidélité</option></select></div>
+              <div style="grid-column:1/-1"><div class="t-admin-label" style="margin-bottom:4px">Note (optionnel)</div><input value="{{ vchNote }}" onChange="{{ vchSetNote }}" placeholder="ex. suite réclamation commande WS-1784…" style="width:100%;box-sizing:border-box;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:500 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none"/></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:14px;align-items:center"><button onClick="{{ vchSave }}" class="btn-primary" style="font-size:12px">{{ vchSaveLabel }}</button><button onClick="{{ vchCancel }}" style="border:.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-muted);border-radius:8px;padding:8px 14px;font:600 12px var(--font-ui);cursor:pointer">Annuler</button><span style="font:600 11.5px var(--font-ui);color:var(--color-primary)">{{ vchMsg }}</span></div>
+          </div>
+          </sc-if>
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;overflow-x:auto">
+            <div style="min-width:920px">
+              <div style="display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(110px,1fr) minmax(120px,1.3fr) minmax(120px,1.5fr) 92px 76px minmax(100px,1fr) 84px 92px;gap:10px;align-items:center;padding:10px 16px;background:var(--color-background-secondary)"><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Code</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Effet</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Cible</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Motif</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Origine</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Usages</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">Validité</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em">État</span><span style="font:600 10.5px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em"></span></div>
+              <sc-for list="{{ vchRows }}" as="v" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:minmax(110px,1.1fr) minmax(110px,1fr) minmax(120px,1.3fr) minmax(120px,1.5fr) 92px 76px minmax(100px,1fr) 84px 92px;gap:10px;align-items:center;padding:10px 16px;border-top:.5px solid var(--color-border-tertiary)">
+                <span style="font:700 12.5px var(--font-mono,monospace);color:var(--color-primary);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis" title="{{ v.code }}">{{ v.code }}</span>
+                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.effet }}</span>
+                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ v.cible }}">{{ v.cible }}</span>
+                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ v.motif }}">{{ v.motif }}</span>
+                <span><span style="{{ v.origPill }}">{{ v.origine }}</span></span>
+                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.usages }}</span>
+                <span style="font:400 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.validite }}</span>
+                <span><button onClick="{{ v.tog }}" style="{{ v.togStyle }}">{{ v.togLabel }}</button></span>
+                <span><sc-if value="{{ v.editable }}" hint-placeholder-val="{{ true }}"><button onClick="{{ v.edit }}" style="border:.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text);border-radius:8px;padding:6px 11px;font:600 11px var(--font-ui);cursor:pointer">Modifier</button></sc-if></span>
               </div>
-            </sc-for>
+              </sc-for>
+              <sc-if value="{{ vchEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:18px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun bon — créez le premier avec « + Bon boutique », ou attendez un bon Marque.</div></sc-if>
+            </div>
           </div>
         </div>
         </sc-if>
@@ -4611,8 +4639,68 @@ class Component extends DCLogic {
     const scopePill=(loc)=>loc?pill2('#eaf5ec','#2d7a3e'):pill2('#eef3fb','#2a5a9e');
     const priceRules=SRV('ws_pricing_rules_local').map((p,i)=>({...p,scope:p.loc?'Locale ✍️':'Réseau 👁️',scopePill:scopePill(p.loc),edit:this.editForm('pricing',p,i),del:this.deleteRow('ws_pricing_rules_local',i,'la règle « '+(p.nom||p.regle||'')+' »')}));
 
-    // Bons / codes
-    const vouchersList=SRV('ws_vouchers_local').map((v,i)=>({...v,scope:v.loc?'Locale':'Marque',scopePill:scopePill(v.loc),edit:this.editForm('voucher',v,i),del:this.deleteRow('ws_vouchers_local',i,'le bon « '+(v.nom||v.code||'')+' »')}));
+    // Bons / codes — MODÈLE ERP UNIFIÉ (fr-vouchers) : mes bons éditables,
+    // bons Marque en lecture seule. Création/édition → POST /franchisee/voucher.
+    const vchFR=window.__FR||{};
+    const vchHdrs={headers:(vchFR.token?{'X-Admin-Token':vchFR.token}:{}),credentials:'omit'};
+    const vchQS=vchFR.shop?('?shop='+encodeURIComponent(vchFR.shop)):'';
+    const vchReload=()=>{ if(!vchFR.base) return;
+      fetch(vchFR.base+'/franchisee/fr-vouchers'+vchQS,vchHdrs)
+        .then(r=>r.ok?r.json():null)
+        .then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_vouchers',a); this.setState(s2=>({_rev:(s2._rev||0)+1})); } }).catch(()=>{}); };
+    const vchPost=(path,body,after)=>{ if(!vchFR.base){ this.printJob('API indisponible'); return; }
+      fetch(vchFR.base+'/franchisee/'+path+vchQS,{method:'POST',headers:{'Content-Type':'application/json',...(vchFR.token?{'X-Admin-Token':vchFR.token}:{})},credentials:'omit',body:JSON.stringify(body)})
+        .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — action non enregistrée')); };
+    const vchLoadTargets=()=>{ if(this._vchTgt||!vchFR.base) return;
+      this._vchTgt={clients:[],offices:[]};
+      fetch(vchFR.base+'/franchisee/fr-voucher-targets'+vchQS,vchHdrs)
+        .then(r=>r.ok?r.json():null)
+        .then(j=>{ if(j){ this._vchTgt={clients:j.clients||[],offices:j.offices||[]}; this.setState(s2=>({_rev:(s2._rev||0)+1})); } }).catch(()=>{}); };
+    const vchRows=SRV('fr_vouchers').map(v=>({...v,
+      origPill:v.origine==='Marque'?pill2('#eef3fb','#2a5a9e'):pill2('#eaf5ec','#2d7a3e'),
+      togLabel:v.act?'Actif':'Inactif',
+      togStyle:'border:1.5px solid '+(v.act?'#2d7a3e':'var(--color-border-secondary)')+';background:'+(v.act?'#eaf5ec':'transparent')+';color:'+(v.act?'#2d7a3e':'var(--color-text-muted)')+';border-radius:8px;padding:6px 11px;font:600 11px var(--font-ui);cursor:'+(v.editable?'pointer':'default')+';flex:none;opacity:'+(v.editable?'1':'.55'),
+      tog:()=>{ if(!v.editable) return; vchPost('voucher-toggle',{code:v.code,active:!v.act},(j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+v.code+(!v.act?' activé':' désactivé')); vchReload(); } else this.printJob((j&&j.error)||'Erreur'); }); },
+      edit:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:v.code,vchCode:v.code,vchType:v.type||'percent',vchValue:String(v.value!=null?v.value:''),vchMin:String(v.min_order||''),vchMax:String(v.max_uses||''),vchExp:v.expires_at||'',vchTgtKind:v.target_kind||'NETWORK',vchTgtId:v.target_id!=null?String(v.target_id):'',vchReason:v.reason_kind||'MARKETING',vchNote:v.reason_note||'',vchMsg:''}); },
+    }));
+    const vchTgtKindCur=S.vchTgtKind||'NETWORK';
+    const vchTgtRaw=vchTgtKindCur==='CUSTOMER'?((this._vchTgt&&this._vchTgt.clients)||[]):vchTgtKindCur==='OFFICE'?((this._vchTgt&&this._vchTgt.offices)||[]):[];
+    const vchSet=(k)=>(e)=>{ const st={vchMsg:''}; st[k]=e.target.value; this.setState(st); };
+    const vchProps={
+      vchRows,vchEmpty:vchRows.length===0,
+      vchOpen:!!S.vchOpen,
+      vchTitle:S.vchEdit?('Modifier le bon '+S.vchEdit):'Nouveau bon boutique',
+      vchSaveLabel:S.vchEdit?'Enregistrer':'Créer le bon',
+      vchNew:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:null,vchCode:'',vchType:'percent',vchValue:'',vchMin:'',vchMax:'',vchExp:'',vchTgtKind:'NETWORK',vchTgtId:'',vchReason:'MARKETING',vchNote:'',vchMsg:''}); },
+      vchCancel:()=>this.setState({vchOpen:false}),
+      vchCode:S.vchCode||'',vchSetCode:vchSet('vchCode'),
+      vchType:S.vchType||'percent',vchSetType:vchSet('vchType'),
+      vchValueShown:(S.vchType||'percent')!=='free_delivery',
+      vchValue:S.vchValue||'',vchSetValue:vchSet('vchValue'),
+      vchMin:S.vchMin||'',vchSetMin:vchSet('vchMin'),
+      vchMax:S.vchMax||'',vchSetMax:vchSet('vchMax'),
+      vchExp:S.vchExp||'',vchSetExp:vchSet('vchExp'),
+      vchTgtKind:vchTgtKindCur,vchSetTgtKind:(e)=>this.setState({vchTgtKind:e.target.value,vchTgtId:'',vchMsg:''}),
+      vchTgtList:vchTgtKindCur!=='NETWORK',
+      vchTgtLabel:vchTgtKindCur==='CUSTOMER'?'Client ciblé':'Bureau ciblé',
+      vchTgtOpts:vchTgtRaw.map(t=>({id:String(t.id),nom:t.nom||('#'+t.id)})),
+      vchTgtId:S.vchTgtId||'',vchSetTgtId:vchSet('vchTgtId'),
+      vchReason:S.vchReason||'MARKETING',vchSetReason:vchSet('vchReason'),
+      vchNote:S.vchNote||'',vchSetNote:vchSet('vchNote'),
+      vchMsg:S.vchMsg||'',
+      vchSave:()=>{ const code=(S.vchCode||'').trim().toUpperCase();
+        if(!code){ this.setState({vchMsg:'Code requis'}); return; }
+        const type=S.vchType||'percent';
+        if(type!=='free_delivery'&&!(parseFloat(String(S.vchValue||'').replace(',','.'))>0)){ this.setState({vchMsg:'Valeur requise'}); return; }
+        if((S.vchTgtKind||'NETWORK')!=='NETWORK'&&!S.vchTgtId){ this.setState({vchMsg:'Choisissez la cible'}); return; }
+        vchPost('voucher',{code,type,value:parseFloat(String(S.vchValue||'0').replace(',','.'))||0,
+          min_order:parseFloat(String(S.vchMin||'0').replace(',','.'))||0,
+          max_uses:(S.vchMax||'')===''?'':parseInt(S.vchMax,10),
+          expires_at:S.vchExp||null,active:1,
+          target_kind:S.vchTgtKind||'NETWORK',target_id:S.vchTgtId||null,
+          reason_kind:S.vchReason||'MARKETING',reason_note:S.vchNote||''},
+          (j)=>{ if(j&&j.ok){ this.printJob('✓ Bon '+code+' enregistré'); this.setState({vchOpen:false}); vchReload(); } else this.setState({vchMsg:(j&&j.error)||'Erreur serveur'}); }); },
+    };
 
     // Remise webshop
     // Remise webshop — PERSISTÉE en ws_param (setParam → save typé params).
@@ -5107,9 +5195,9 @@ class Component extends DCLogic {
       promoSegBons:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.promoTab||'prix')==='bons'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       promoSegRemise:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.promoTab||'prix')==='remise'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       setPromoPrix:()=>this.setState({promoTab:'prix'}),setPromoBons:()=>this.setState({promoTab:'bons'}),setPromoRemise:()=>this.setState({promoTab:'remise'}),
-      vouchersList,addVoucher:this.openForm('voucher'),
+      ...vchProps,
       remiseTrack,remiseKnob,remiseToggle,remiseRate,remiseMin,remiseSetRate,remiseSetMin,remiseColor:remiseOn?'#2d7a3e':'var(--color-text-muted)',remiseStatus:remiseOn?'Active':'Désactivée',
-      isVouchers:screen==='vouchers',vouchersList,addVoucher:this.openForm('voucher'),
+      isVouchers:screen==='vouchers',
       isRemiseWebshop:screen==='remiseWebshop',remiseTrack,remiseKnob,remiseToggle,remiseRate,remiseMin,remiseSetRate,remiseSetMin,remiseColor:remiseOn?'#2d7a3e':'var(--color-text-muted)',remiseStatus:remiseOn?'Active':'Désactivée',
       isAssortiment:screen==='assortiment',assortRows,asrToggleAll,asrToggleAllLabel,
       assortTabAssort:(S.assortTab||'assort')==='assort',assortTabCat:(S.assortTab||'assort')==='cat',assortTabProd:(S.assortTab||'assort')==='prod',

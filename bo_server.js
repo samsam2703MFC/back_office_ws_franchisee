@@ -54,6 +54,7 @@
     "ws_calendar_rules": [],
     "ws_pricing_rules_local": [],
     "ws_vouchers_local": [],
+    "fr_vouchers": [],
     "ws_shop_exceptions": [],
     "ws_payment_methods": [],
     "fr_tdb_tournees": [],
@@ -142,7 +143,7 @@
         b2b_clients:'b2b-clients',
         ws_tour_availability:'ws-tour-availability', ws_tour_closures:'ws-tour-closures',
         ws_calendar_rules:'ws-calendar-rules', ws_slots:'ws-slots',
-        ws_vouchers_local:'ws-vouchers-local', ws_pricing_rules_local:'ws-pricing-rules-local',
+        ws_vouchers_local:'ws-vouchers-local', fr_vouchers:'fr-vouchers', ws_pricing_rules_local:'ws-pricing-rules-local',
         ws_shop_exceptions:'ws-shop-exceptions', ws_payment_methods:'ws-payment-methods',
         ws_product_availability:'ws-product-availability',
         ws_office_delivery_settings:'ws-office-delivery-settings',
@@ -174,7 +175,7 @@
         ws_tour_closures:1, ws_tour_availability:1, ws_franchisor_catchment:1,
         catchment_postcodes:1, b2b_client_company_department:1, params:1,
         b2b_clients:1, fr_assortiment:1,
-        fr_orders:1, fr_net_stats:1, fr_capacity:1 };
+        fr_orders:1, fr_net_stats:1, fr_capacity:1, fr_vouchers:1 };
       var jobs = Object.keys(MAP).map(function(key){
         return fetch(fr.base + '/franchisee/' + MAP[key] + qs, { headers: headers, credentials: 'omit' })
           .then(function(r){ return r.ok ? r.json() : null; })
