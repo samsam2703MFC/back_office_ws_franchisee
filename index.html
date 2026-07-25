@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072470"></script>
-<script src="bo_server.js?v=2026072470"></script>
+<script src="api-config.js?v=2026072480"></script>
+<script src="bo_server.js?v=2026072480"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
    avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072470'; document.head.appendChild(s); }
+  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072480'; document.head.appendChild(s); }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +45,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072470">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072470"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072480">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072480"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -1125,22 +1125,42 @@
       <div style="display:flex;flex-direction:column;gap:16px;max-width:760px">
         <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start;flex-wrap:wrap"><button onClick="{{ setDispoTabDispo }}" style="{{ dispoSegDispo }}">Disponibilité boutique</button><button onClick="{{ setDispoTabCal }}" style="{{ dispoSegCal }}">Règles calendrier</button><button onClick="{{ setDispoTabExcept }}" style="{{ dispoSegExcept }}">Jours exceptionnels</button><button onClick="{{ setDispoTabCreneaux }}" style="{{ dispoSegCreneaux }}">Créneaux</button></div>
         <sc-if value="{{ dispoTabDispo }}" hint-placeholder-val="{{ true }}">
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div class="t-section-title" style="font-size:15px;margin-bottom:14px">Jours & heures de livraison — boutique</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Durée créneau</div><div style="font:700 18px var(--font-ui);color:var(--color-text)">120 min</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Cut-off global</div><div style="font:700 18px var(--font-ui);color:var(--color-primary)">17:00 J-1</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Lead time</div><div style="font:700 18px var(--font-ui);color:var(--color-text)">24 h</div></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Jour</span><span class="t-admin-label" style="color:var(--color-primary);text-align:center">Webshop <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">Ouvre/ferme la prise de commande sur le webshop pour ce jour. Fermé = le client ne peut pas commander en ligne ce jour-là.</span></span></sc-if></span><span class="t-admin-label" style="color:#E8A15C;text-align:center">Livraison matin <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">Autorise les créneaux de livraison du matin pour ce jour. Fermé = aucun créneau matin proposé au client.</span></span></sc-if></span><span class="t-admin-label" style="color:#8C4A2F;text-align:center">Livraison après-midi <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">Autorise les créneaux de livraison de l'après-midi pour ce jour. Fermé = aucun créneau après-midi proposé au client.</span></span></sc-if></span></div>
-          <sc-for list="{{ shopHours }}" as="d" hint-placeholder-count="7">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
-              <span style="font:500 12.5px var(--font-ui);color:{{ d.color }}">{{ d.jour }}</span>
-              <button onClick="{{ d.web.toggle }}" style="{{ d.web.style }}"><span style="{{ d.web.dot }}"></span>{{ d.web.label }}</button>
-              <button onClick="{{ d.am.toggle }}" style="{{ d.am.style }}"><span style="{{ d.am.dot }}"></span>{{ d.am.label }}</button>
-              <button onClick="{{ d.pm.toggle }}" style="{{ d.pm.style }}"><span style="{{ d.pm.dot }}"></span>{{ d.pm.label }}</button>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:flex-start;gap:10px;background:#eef3fb;border:.5px solid #cfe0f5;border-radius:10px;padding:12px 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a5a9e" stroke-width="1.8" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg><div style="font:400 11.5px/1.6 var(--font-ui);color:#2a5a9e">Ces réglages sont la <strong>source unique</strong> lue par le webshop : jours ouverts, heures, durée de créneau, cut-off et délai. Toute modification enregistrée ici <strong>régénère aussitôt les créneaux</strong> proposés aux clients.</div></div>
+
+          <!-- COLLECTE -->
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
+            <div class="t-section-title" style="font-size:15px;margin-bottom:14px;color:var(--color-primary)">Collecte (retrait en magasin)</div>
+            <div class="t-admin-label" style="margin-bottom:8px">Jours ouverts à la collecte</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px"><sc-for list="{{ avaColDays }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.toggle }}" style="{{ d.style }}">{{ d.lbl }}</button></sc-for></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px">
+              <div><div class="t-admin-label" style="margin-bottom:4px">Heure début</div><input type="time" value="{{ avaColStart.val }}" onChange="{{ avaColStart.set }}" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Heure fin</div><input type="time" value="{{ avaColEnd.val }}" onChange="{{ avaColEnd.set }}" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Durée créneau (min)</div><input value="{{ avaColDur.val }}" onChange="{{ avaColDur.set }}" placeholder="ex. 60" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Cut-off — heure</div><input value="{{ avaColCutH.val }}" onChange="{{ avaColCutH.set }}" placeholder="0-23" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Cut-off — min</div><input value="{{ avaColCutM.val }}" onChange="{{ avaColCutM.set }}" placeholder="0-59" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Délai (h)</div><input value="{{ avaColLead.val }}" onChange="{{ avaColLead.set }}" placeholder="ex. 2" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Capacité / créneau</div><input value="{{ avaColCap.val }}" onChange="{{ avaColCap.set }}" placeholder="ex. 15" style="{{ avaInputStyle }}"/></div>
             </div>
-          </sc-for>
+          </div>
+
+          <!-- LIVRAISON -->
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
+            <div class="t-section-title" style="font-size:15px;margin-bottom:14px;color:#C87A3F">Livraison bureau</div>
+            <div class="t-admin-label" style="margin-bottom:8px">Jours ouverts à la livraison</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px"><sc-for list="{{ avaDelDays }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.toggle }}" style="{{ d.style }}">{{ d.lbl }}</button></sc-for></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px">
+              <div><div class="t-admin-label" style="margin-bottom:4px">Heure début</div><input type="time" value="{{ avaDelStart.val }}" onChange="{{ avaDelStart.set }}" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Heure fin</div><input type="time" value="{{ avaDelEnd.val }}" onChange="{{ avaDelEnd.set }}" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Durée créneau (min)</div><input value="{{ avaDelDur.val }}" onChange="{{ avaDelDur.set }}" placeholder="ex. 120" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Cut-off — heure</div><input value="{{ avaDelCutH.val }}" onChange="{{ avaDelCutH.set }}" placeholder="0-23" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Cut-off — min</div><input value="{{ avaDelCutM.val }}" onChange="{{ avaDelCutM.set }}" placeholder="0-59" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Délai (h)</div><input value="{{ avaDelLead.val }}" onChange="{{ avaDelLead.set }}" placeholder="ex. 20" style="{{ avaInputStyle }}"/></div>
+              <div><div class="t-admin-label" style="margin-bottom:4px">Capacité / créneau</div><input value="{{ avaDelCap.val }}" onChange="{{ avaDelCap.set }}" placeholder="ex. 30" style="{{ avaInputStyle }}"/></div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:14px"><button onClick="{{ avaSave }}" style="{{ avaSaveStyle }}">Enregistrer la disponibilité</button><sc-if value="{{ avaDirty }}" hint-placeholder-val="{{ false }}"><span style="font:500 12px var(--font-ui);color:var(--color-primary)">Modifications non enregistrées</span></sc-if></div>
         </div>
         </sc-if>
         <sc-if value="{{ dispoTabCal }}" hint-placeholder-val="{{ false }}">
@@ -2520,7 +2540,7 @@ class Component extends DCLogic {
     dispoProd:{table:'ws_product_availability',origin:'Form dispoProd — exceptions produit qui écrasent la catégorie',calc:'Champs produit/cat/rule ⇒ upsert BOServer.save(ws_product_availability)',dev:'1 j'},
     creneaux:{table:'ws_slots',origin:'Form creneau — libellés de créneaux par mode',calc:'Champs mode/libelle/plage/cap ⇒ upsert BOServer.save(ws_slots)',dev:'0,5 j'},
     capacite:{table:'ws_slots × dates',origin:'Grille remplissage réservé/max par date × créneau',calc:'Cellule rouge si réservé≥max, orange si tension (>80%)',dev:'1,5 j'},
-    reglesBoutique:{table:'ws_shop_hours',origin:'Disponibilité boutique — jours/heures · durée créneau · cut-off · lead',calc:'Lecture directe ws_shop_hours ; édition inline',dev:'1 j'},
+    reglesBoutique:{table:'ws_shop_availability',origin:'Disponibilité boutique — SOURCE UNIQUE du webshop (jours/heures · durée créneau · cut-off · lead)',calc:'Lecture + écriture directes ws_shop_availability (GET/POST shop-availability)',dev:'—'},
     joursExcept:{table:'ws_shop_exceptions',origin:'Form except — fermetures & horaires spéciaux par date',calc:'Champs date/label/type/detail ⇒ upsert ; fermé=rouge, spécial=orange',dev:'0,5 j'},
     frais:{table:'ws_delivery_fee_rules',origin:'Form fee — cascade Site→Bureau→Tournée→Boutique · franco',calc:'Première règle applicable dans l\'ordre de priorité ; upsert BOServer.save',dev:'1 j'},
     calendarRules:{table:'ws_calendar_rules',origin:'Form calRule — open days · cut-off · lead time par mode',calc:'Champs mode/days/cut/lead ⇒ upsert BOServer.save(ws_calendar_rules)',dev:'1 j'},
@@ -4198,32 +4218,41 @@ class Component extends DCLogic {
     const capaEmpty=capaRows.length===0;
 
     const APRICOT='#E8A15C', COPPER='#8C4A2F';
-    const shopDefs=[
-      {jour:'Lundi',   web:true, am:true,  pm:true },
-      {jour:'Mardi',   web:true, am:true,  pm:true },
-      {jour:'Mercredi',web:true, am:true,  pm:true },
-      {jour:'Jeudi',   web:true, am:true,  pm:true },
-      {jour:'Vendredi',web:true, am:true,  pm:true },
-      {jour:'Samedi',  web:true, am:true,  pm:false},
-      {jour:'Dimanche',web:false,am:false, pm:false},
-    ];
-    const shopCell=(jour,slot,def,fade)=>{
-      // Ouverture par jour × créneau — PERSISTÉE en ws_param (setParam).
-      const k='shop_'+jour+'_'+slot;
-      const stored=window.BOServer?window.BOServer.getParam('shopopen.'+jour+'.'+slot,undefined):undefined;
-      const base=(stored!==undefined&&stored!==null&&stored!=='')?(stored===true||stored==='1'||stored===1):def;
-      const on=S.flags[k]!==undefined?S.flags[k]:base;
-      return { on, label:on?'Ouvert':'Fermé',
-        toggle:()=>{ const nv=!on; if(window.BOServer) window.BOServer.setParam('shopopen.'+jour+'.'+slot,nv?'1':'0'); this.setState(st=>({flags:{...st.flags,[k]:nv}})); },
-        style:'justify-self:center;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border-radius:20px;padding:5px 11px;font:600 11px var(--font-ui);background:'+fade+';border:.5px solid '+(on?'rgba(45,122,62,.4)':'var(--color-border-tertiary)')+';color:'+(on?'#2d7a3e':'var(--color-text-muted)'),
-        dot:'width:7px;height:7px;border-radius:50%;background:'+(on?'#2d7a3e':'var(--color-border-secondary)') };
-    };
-    const shopHours=shopDefs.map(d=>({
-      jour:d.jour, color:'var(--color-text)',
-      web:shopCell(d.jour,'web',d.web,'rgba(141,29,44,.08)'),
-      am:shopCell(d.jour,'am',d.am,'rgba(232,161,92,.20)'),
-      pm:shopCell(d.jour,'pm',d.pm,'rgba(140,74,47,.14)'),
-    }));
+    // ===== Disponibilité boutique — SOURCE UNIQUE ws_shop_availability =====
+    // Le BO lit ET écrit directement la table lue par le webshop (jours, heures,
+    // durée créneau, cut-off, lead). Fini le ws_param parallèle déconnecté.
+    const DOW_LBL=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']; // index 0..6 -> ISO 1..7
+    const avaLoaded=(SRV('fr_shop_availability')[0])||{};
+    const avaDraft=S.avaDraft||{};
+    const ava={...avaLoaded,...avaDraft};
+    const avaDirty=!!S.avaDirty;
+    const avaSet=(k,v)=>this.setState(st=>({avaDraft:{...(st.avaDraft||{}),[k]:v},avaDirty:true}));
+    const avaDayOn=(mode,iso)=>Array.isArray(ava[mode+'_open_days'])&&ava[mode+'_open_days'].includes(iso);
+    const avaDayToggle=(mode,iso)=>{ const key=mode+'_open_days'; const cur=Array.isArray(ava[key])?ava[key].slice():[]; const i=cur.indexOf(iso); if(i>=0)cur.splice(i,1); else cur.push(iso); cur.sort((a,b)=>a-b); avaSet(key,cur); };
+    const avaDayBtn=(mode,iso,accent)=>{ const on=avaDayOn(mode,iso); return { lbl:DOW_LBL[iso-1], toggle:()=>avaDayToggle(mode,iso),
+      style:'cursor:pointer;border-radius:8px;padding:6px 0;min-width:40px;text-align:center;font:600 11px var(--font-ui);border:1px solid '+(on?accent:'var(--color-border-secondary)')+';background:'+(on?accent:'transparent')+';color:'+(on?'#fff':'var(--color-text-muted)') }; };
+    const avaField=(k,ph,w)=>({ val:(ava[k]!=null?String(ava[k]):''), set:(e)=>avaSet(k,e.target.value), ph:ph||'', w:w||'88px' });
+    const avaCollectDays=[1,2,3,4,5,6,7].map(iso=>avaDayBtn('collect',iso,'#8D1D2C'));
+    const avaDeliveryDays=[1,2,3,4,5,6,7].map(iso=>avaDayBtn('delivery',iso,APRICOT));
+    const avaSave=()=>{ const fr=window.__FR||{}; if(!fr.base){ this.printJob('API indisponible'); return; }
+      const payload={ shop_id:ava.shop_id,
+        collect_enabled:1, delivery_enabled:1,
+        collect_open_days:Array.isArray(ava.collect_open_days)?ava.collect_open_days:[],
+        delivery_open_days:Array.isArray(ava.delivery_open_days)?ava.delivery_open_days:[],
+        collect_hours_start:ava.collect_hours_start, collect_hours_end:ava.collect_hours_end,
+        delivery_hours_start:ava.delivery_hours_start, delivery_hours_end:ava.delivery_hours_end,
+        collect_slot_duration_min:parseInt(ava.collect_slot_duration_min,10)||60,
+        delivery_slot_duration_min:parseInt(ava.delivery_slot_duration_min,10)||120,
+        collect_cutoff_hour:parseInt(ava.collect_cutoff_hour,10)||0, collect_cutoff_minute:parseInt(ava.collect_cutoff_minute,10)||0, collect_lead_hours:parseInt(ava.collect_lead_hours,10)||0,
+        delivery_cutoff_hour:parseInt(ava.delivery_cutoff_hour,10)||0, delivery_cutoff_minute:parseInt(ava.delivery_cutoff_minute,10)||0, delivery_lead_hours:parseInt(ava.delivery_lead_hours,10)||0,
+        collect_capacity_per_slot:parseInt(ava.collect_capacity_per_slot,10)||1, delivery_capacity_per_slot:parseInt(ava.delivery_capacity_per_slot,10)||1 };
+      fetch(fr.base+'/franchisee/shop-availability'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify(payload)})
+        .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.printJob('✓ Disponibilité enregistrée — le webshop régénère ses créneaux');
+            // recharge la table -> l'écran reflète la base
+            fetch(fr.base+'/franchisee/fr-shop-availability'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+              .then(r=>r.ok?r.json():null).then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_shop_availability',a); this.setState({avaDraft:null,avaDirty:false,_rev:(S._rev||0)+1}); } });
+          } else this.printJob((j&&j.error)||'Erreur enregistrement'); })
+        .catch(()=>this.printJob('Réseau indisponible — non enregistré')); };
 
     // ===== Coordonnées & horaires boutique — édition inline dans la modale Profil =====
     // Coordonnées boutique — RÉELLES : paramètres persistés (ws_param via
@@ -5253,7 +5282,15 @@ class Component extends DCLogic {
       isDispoProd:screen==='dispoProd',dispoProds,
       isCreneaux:screen==='reglesBoutique'&&(S.dispoTab||'dispo')==='creneaux',creneaux,slotGridOpen,toggleSlotGrid,sgList,sgActive,slotStart,slotEnd,slotSetStart,slotSetEnd,slotFieldStyle,slotStepLabel,slotStepOpts,
       isCapacite:screen==='capacite',capaDays,capaRows,
-      isReglesBoutique:screen==='reglesBoutique',shopHours,
+      isReglesBoutique:screen==='reglesBoutique',
+      avaColDays:avaCollectDays, avaDelDays:avaDeliveryDays,
+      avaColStart:avaField('collect_hours_start'), avaColEnd:avaField('collect_hours_end'),
+      avaColDur:avaField('collect_slot_duration_min'), avaColCutH:avaField('collect_cutoff_hour'), avaColCutM:avaField('collect_cutoff_minute'), avaColLead:avaField('collect_lead_hours'), avaColCap:avaField('collect_capacity_per_slot'),
+      avaDelStart:avaField('delivery_hours_start'), avaDelEnd:avaField('delivery_hours_end'),
+      avaDelDur:avaField('delivery_slot_duration_min'), avaDelCutH:avaField('delivery_cutoff_hour'), avaDelCutM:avaField('delivery_cutoff_minute'), avaDelLead:avaField('delivery_lead_hours'), avaDelCap:avaField('delivery_capacity_per_slot'),
+      avaSave, avaDirty,
+      avaInputStyle:'width:100%;box-sizing:border-box;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);border:1px solid var(--color-border-secondary);border-radius:8px;padding:9px 11px;outline:none',
+      avaSaveStyle:'border:none;border-radius:8px;padding:10px 18px;font:600 13px var(--font-ui);cursor:pointer;background:'+(avaDirty?'var(--color-primary)':'var(--color-border-secondary)')+';color:'+(avaDirty?'#fff':'var(--color-text-muted)'),
       dispoTabDispo:(S.dispoTab||'dispo')==='dispo',dispoTabCal:(S.dispoTab||'dispo')==='cal',
       dispoSegDispo:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.dispoTab||'dispo')==='dispo'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       dispoSegCal:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.dispoTab||'dispo')==='cal'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
