@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026073012"></script>
-<script src="bo_server.js?v=2026073012"></script>
+<script src="api-config.js?v=2026073014"></script>
+<script src="bo_server.js?v=2026073014"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime.
    RÈGLE GO-LIVE : aucune donnée de secours — si l'API ne répond pas ou que le
@@ -41,7 +41,7 @@
     } catch(e){}
   };
   function boot(){
-    var s=document.createElement('script'); s.src='./support.js?v=2026073012'; document.head.appendChild(s);
+    var s=document.createElement('script'); s.src='./support.js?v=2026073014'; document.head.appendChild(s);
     // Re-render du bandeau après boot (le runtime peut avoir remplacé le body).
     try { var E = window.BOServer && window.BOServer.loadErrors; if (E && E.length) setTimeout(function(){ window.__BO_RENDER_ERRORS(E); }, 800); } catch(e){}
   }
@@ -77,8 +77,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026073012">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026073012"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026073014">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026073014"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -111,6 +111,31 @@
   ::-webkit-scrollbar-thumb{background:rgba(34,34,34,.22);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
 </style>
 </helmet>
+<!-- ÉCRAN DE CONNEXION TABLETTE (PIN 4 chiffres).
+     Affiché uniquement sans jeton admin ET sans session PIN : l'administrateur
+     (jeton ERP) conserve son accès direct. Le clavier est tactile, sans champ
+     texte, pour un usage au doigt en boutique. -->
+<sc-if value="{{ pinNeeded }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:900;background:var(--color-bg);display:flex;align-items:center;justify-content:center">
+    <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:18px;padding:34px 38px;box-shadow:0 18px 50px rgba(0,0,0,.18);text-align:center;width:360px">
+      <img src="img/logo.png" alt="L'Atelier" style="height:32px;width:auto;margin:0 auto 14px;display:block"/>
+      <div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ pinShopTxt }}</div>
+      <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:4px;margin-bottom:18px">Entrez votre code à 4 chiffres</div>
+      <div style="font:700 26px var(--font-ui);letter-spacing:.3em;color:var(--color-primary);margin-bottom:16px">{{ pinDots }}</div>
+      <sc-if value="{{ pinHasErr }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fbe9eb;color:var(--color-primary);border-radius:9px;padding:8px 12px;font:600 11.5px var(--font-ui);margin-bottom:14px">{{ pinErrTxt }}</div>
+      </sc-if>
+      <div style="display:grid;grid-template-columns:repeat(3,70px);gap:10px;justify-content:center">
+        <sc-for list="{{ pinKeys }}" as="k" hint-placeholder-count="9">
+          <button onClick="{{ k.press }}" style="{{ k.style }}">{{ k.d }}</button>
+        </sc-for>
+        <button onClick="{{ pinClearBtn }}" style="width:70px;height:70px;border-radius:16px;border:.5px solid var(--color-border-secondary);background:var(--color-background-secondary);font:600 13px var(--font-ui);color:var(--color-text-muted);cursor:pointer">Effacer</button>
+        <button onClick="{{ pinKey0.press }}" style="{{ pinKey0.style }}">{{ pinKey0.d }}</button>
+      </div>
+      <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:18px">Les comptes et les accès sont gérés dans la console marque.</div>
+    </div>
+  </div>
+</sc-if>
 <div style="display:grid;grid-template-columns:246px 1fr;height:100vh;background:var(--color-bg);overflow:hidden">
 
   <!-- SIDEBAR -->
@@ -118,6 +143,15 @@
     <div style="padding:20px 20px 16px;border-bottom:.5px solid var(--color-border-tertiary)">
       <img src="img/logo.png" alt="L'Atelier" style="height:34px;width:auto;display:block"/>
       <div style="font:400 10px/1.4 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);margin-top:7px">Back-office WebShop</div>
+      <sc-if value="{{ pinActive }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:10px;background:var(--color-background-secondary);border-radius:9px;padding:8px 10px;display:flex;align-items:center;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font:600 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pinNom }}</div>
+            <div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ pinNbSec }} section(s) autorisée(s)</div>
+          </div>
+          <button onClick="{{ pinLogoutBtn }}" title="Se déconnecter" style="background:transparent;border:none;cursor:pointer;color:var(--color-primary);font:600 11px var(--font-ui)">Quitter</button>
+        </div>
+      </sc-if>
     </div>
     <nav class="lz" style="flex:1;overflow-y:auto;padding:10px 12px 20px;display:flex;flex-direction:column;gap:3px">
       <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:4px;border-radius:8px;text-decoration:none;background:var(--color-background-secondary);color:var(--color-text-muted);font:500 12px/1 var(--font-ui)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 19l-7-7 7-7"/><path d="M3 12h18"/></svg><span>Retour à l'ERP</span></a>
@@ -2969,7 +3003,60 @@ class Component extends DCLogic {
   };
   tr(k){ const lang=this.state.lang; return (this.T[k]&&this.T[k][lang])||(this.T[k]&&this.T[k].FR)||k; }
 
+  // ── SESSION TABLETTE (PIN) ────────────────────────────────────────────────
+  // Chargée depuis localStorage au boot ; revalidée auprès du serveur (une
+  // session révoquée ou expirée côté base doit fermer l'accès, pas seulement
+  // masquer le menu).
+  pinRestore(){
+    let ses=null;
+    try { ses=JSON.parse(localStorage.getItem('boPinSession')||'null'); } catch(e){}
+    if(!ses||!ses.token) return;
+    this.setState({pinSession:ses});
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base) return;
+    fetch(fr.base+'/bo/pin-me',{headers:{'X-Pin-Token':ses.token},credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(j=>{ if(j&&j.ok){ const up={token:ses.token,nom:j.nom,shopId:j.shopId,sections:j.sections||[]};
+          try{ localStorage.setItem('boPinSession',JSON.stringify(up)); }catch(e){}
+          this.setState({pinSession:up}); }
+        else this.pinForget(); })
+      .catch(()=>{ /* hors ligne : on garde la session locale jusqu'au retour réseau */ });
+  }
+  pinForget(){ try{ localStorage.removeItem('boPinSession'); }catch(e){} this.setState({pinSession:null}); }
+  pinLogout(){ const ses=this.state.pinSession; const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(ses&&ses.token&&fr.base){ fetch(fr.base+'/bo/pin-logout',{method:'POST',headers:{'X-Pin-Token':ses.token},credentials:'omit'}).catch(()=>{}); }
+    this.pinForget(); this.setState({pinPad:'',pinErr:null});
+  }
+  pinDigit(d){ return ()=>{ const cur=String(this.state.pinPad||''); if(cur.length>=4) return;
+    const nv=cur+String(d); this.setState({pinPad:nv,pinErr:null});
+    if(nv.length===4) setTimeout(()=>this.pinSubmit(nv),120); }; }
+  pinClear(){ this.setState({pinPad:'',pinErr:null}); }
+  pinSubmit(code){
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    const shop=parseInt(fr.shop||0,10);
+    if(!fr.base){ this.setState({pinErr:'API indisponible — connexion impossible (please debug)',pinPad:''}); return; }
+    if(!shop){ this.setState({pinErr:'Boutique inconnue : ouvrez le back-office avec ?shop=<id>',pinPad:''}); return; }
+    this.setState({pinBusy:true});
+    fetch(fr.base+'/bo/pin-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',
+      body:JSON.stringify({shopId:shop,pin:String(code)})})
+      .then(r=>r.json().then(j=>({ok:r.ok,j})))
+      .then(({ok,j})=>{ this.setState({pinBusy:false,pinPad:''});
+        if(!ok||!j.ok){ this.setState({pinErr:(j&&j.error)||'PIN incorrect'}); return; }
+        const ses={token:j.token,nom:j.nom,shopId:j.shopId,sections:j.sections||[]};
+        try{ localStorage.setItem('boPinSession',JSON.stringify(ses)); }catch(e){}
+        // On atterrit sur la première section autorisée.
+        this.setState({pinSession:ses,pinErr:null,screen:(j.sections&&j.sections[0])||'tdb'});
+      })
+      .catch(()=>this.setState({pinBusy:false,pinPad:'',pinErr:'Réseau indisponible'}));
+  }
   go(s){ return ()=>{ const st={screen:s};
+    // Garde-fou : une session tablette ne peut pas atteindre une section non
+    // autorisée, même en forçant (le masquage du menu ne suffit pas).
+    const ses=this.state.pinSession;
+    if(ses&&Array.isArray(ses.sections)&&ses.sections.indexOf(s)<0){
+      this.printJob('⛔ Section « '+s+' » non autorisée pour ce compte');
+      return;
+    }
     // Stock du jour : à l'ARRIVÉE sur l'écran, si des produits sont sous le
     // seuil bas, la modale d'alerte se rouvre (état null = automatique).
     if(s==='stockJour') st.stkAlert=null;
@@ -3387,7 +3474,7 @@ class Component extends DCLogic {
     if(!this._suiviFit){ const all=[[d.lat,d.lng],...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
       if(all.length>1){ this._suiviFit=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
   }
-  componentDidMount(){ this.ensureMaps();
+  componentDidMount(){ this.pinRestore(); this.ensureMaps();
     // Auto-refresh des COMMANDES : toutes les 60 s tant que l'onglet est
     // visible et qu'un écran « commandes » est affiché — une nouvelle commande
     // webshop apparaît sans recharger la page. Au retour sur l'onglet
@@ -3404,8 +3491,18 @@ class Component extends DCLogic {
     const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
     const pts=this.points();
     // nav
+    // ===== SESSION TABLETTE (PIN) : filtrage des sections autorisées =====
+    // Admin (jeton ERP) => aucune restriction. Session PIN => seules les
+    // sections cochées dans la console marque sont accessibles ; les autres
+    // sont masquées du menu ET refusées si on tente d'y aller.
+    const pinSes=S.pinSession||null;
+    const allowed=pinSes&&Array.isArray(pinSes.sections)?pinSes.sections:null;
+    const canSee=(k)=>!allowed||allowed.indexOf(k)>=0;
     const nav={}, navStyles={};
-    ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{ nav[k]=this.go(k); navStyles[k]=this.navStyle(k); });
+    ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{
+      nav[k]=this.go(k);
+      navStyles[k]=this.navStyle(k)+(canSee(k)?'':';display:none');
+    });
     const paramScreens=['tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
     const paramsActive=paramScreens.includes(S.screen);
     // Fil d'ariane du paramétrage livraison : 1 · Tournées → 2 · Bureaux
@@ -3976,9 +4073,10 @@ class Component extends DCLogic {
         toggle: single ? this.go(soloScreen) : (()=>{ const cur=S.openGroups[g.id]!==undefined?S.openGroups[g.id]:hasActive; this.setState(st=>({openGroups:{...st.openGroups,[g.id]:!cur}})); }),
         headStyle:'display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:none;border-radius:8px;cursor:pointer;font:600 12px/1 var(--font-ui);text-align:left;background:'+(single&&hasActive?'var(--color-background-secondary)':'transparent')+';margin-top:2px;color:'+(hasActive?'var(--color-primary)':'var(--color-text)'),
         chevStyle:'flex:none;transition:transform .15s'+(single?';opacity:0;width:0':'')+(open?';transform:rotate(90deg)':''),
-        items:g.items.map(([s,label])=>({label,go:this.go(s),style:navSub(s)})),
+        items:g.items.filter(([s2])=>canSee(s2)).map(([s,label])=>({label,go:this.go(s),style:navSub(s)})),
+        groupHidden:!g.items.some(([s2])=>canSee(s2)),
       };
-    });
+    }).filter(g=>!g.groupHidden);
 
     // ===== données écrans paramétrage =====
     const pill2=(bg,c)=>'display:inline-flex;align-items:center;font:600 10px var(--font-ui);border-radius:20px;padding:3px 10px;background:'+bg+';color:'+c;
@@ -5018,6 +5116,22 @@ class Component extends DCLogic {
 
     return {
       navGroups,
+      // ── Écran de connexion PIN (tablette) ──
+      // Affiché uniquement s'il n'y a NI jeton admin NI session PIN : l'admin
+      // (jeton ERP) garde donc son accès direct, comme aujourd'hui.
+      pinNeeded: !((window.__FR||{}).token) && !S.pinSession,
+      pinDots: (function(n){ let o=''; for(let i=0;i<4;i++) o+= (i<n?'●':'○')+(i<3?' ':''); return o; })(String(S.pinPad||'').length),
+      pinErrTxt: S.pinErr||'', pinHasErr: !!S.pinErr, pinBusy: !!S.pinBusy,
+      pinShopTxt: ((window.__SHOPINFO||{}).name)||('Boutique '+((window.__FR||{}).shop||'?')),
+      pinKeys: [1,2,3,4,5,6,7,8,9].map(d=>({d:String(d),press:this.pinDigit(d),
+        style:'width:70px;height:70px;border-radius:16px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);font:600 24px var(--font-ui);color:var(--color-text);cursor:pointer'})),
+      pinKey0: {d:'0',press:this.pinDigit(0),
+        style:'width:70px;height:70px;border-radius:16px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);font:600 24px var(--font-ui);color:var(--color-text);cursor:pointer'},
+      pinClearBtn: ()=>this.pinClear(),
+      // Bandeau de session active (nom + déconnexion) pour la tablette.
+      pinActive: !!S.pinSession, pinNom: (S.pinSession&&S.pinSession.nom)||'',
+      pinNbSec: (S.pinSession&&(S.pinSession.sections||[]).length)||0,
+      pinLogoutBtn: ()=>this.pinLogout(),
       kTdbTours:this.routesMeta().length,
       kTdbColis:tournees.reduce((a,t)=>a+(t.colis||0),0),
       kTdbOrders:tdbRaw.reduce((a,t)=>a+t.zones.reduce((b,z)=>b+z.sites.reduce((c,s)=>c+s.users.reduce((d,u)=>d+(u.cmd||0),0),0),0),0),
