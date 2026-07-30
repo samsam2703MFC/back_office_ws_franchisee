@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026073010"></script>
-<script src="bo_server.js?v=2026073010"></script>
+<script src="api-config.js?v=2026073012"></script>
+<script src="bo_server.js?v=2026073012"></script>
 <script>
 /* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime.
    RÈGLE GO-LIVE : aucune donnée de secours — si l'API ne répond pas ou que le
@@ -41,7 +41,7 @@
     } catch(e){}
   };
   function boot(){
-    var s=document.createElement('script'); s.src='./support.js?v=2026073010'; document.head.appendChild(s);
+    var s=document.createElement('script'); s.src='./support.js?v=2026073012'; document.head.appendChild(s);
     // Re-render du bandeau après boot (le runtime peut avoir remplacé le body).
     try { var E = window.BOServer && window.BOServer.loadErrors; if (E && E.length) setTimeout(function(){ window.__BO_RENDER_ERRORS(E); }, 800); } catch(e){}
   }
@@ -77,8 +77,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026073010">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026073010"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026073012">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026073012"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -4707,9 +4707,14 @@ class Component extends DCLogic {
         assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
           canal:p.canal||'',hasCanal:!!p.canal,
           hasPort:!!erpPortIdx[p.nom],portTitle:erpPortIdx[p.nom]||'',
-          help:p.locked?('Produit « '+p.nom+' » VERROUILLÉ (marque obligatoire) : toujours proposé.'):(pAct?('Produit « '+p.nom+' » ACTIF (ws_product_shops). Le désactiver le retire de la vente pour cette boutique.'):('Produit « '+p.nom+' » INACTIF pour cette boutique. L\'activer le rend commandable.')),
-          rowStyle:'display:grid;grid-template-columns:2.4fr 1.2fr .7fr;align-items:center;padding:10px 6px 10px 22px;border-bottom:.5px solid var(--color-border-tertiary)'+(pAct?'':';opacity:.5'),
-          stateTxt:pAct?'Actif · vendable':'Inactif (boutique)',stateColor:pAct?'#2d7a3e':'var(--color-text-muted)',
+          help:p.nonTarife?('Produit « '+p.nom+' » SANS PRIX pour cette boutique (ERP shop_product) : hors vente — invisible au webshop et refusé à la commande. Il redeviendra vendable AUTOMATIQUEMENT dès qu\'un prix sera posé dans l\'ERP.'):(p.locked?('Produit « '+p.nom+' » VERROUILLÉ (marque obligatoire) : toujours proposé.'):(pAct?('Produit « '+p.nom+' » ACTIF (ws_product_shops). Le désactiver le retire de la vente pour cette boutique.'):('Produit « '+p.nom+' » INACTIF pour cette boutique. L\'activer le rend commandable.'))),
+          rowStyle:'display:grid;grid-template-columns:2.4fr 1.2fr .7fr;align-items:center;padding:10px 6px 10px 22px;border-bottom:.5px solid var(--color-border-tertiary)'+((pAct&&!p.nonTarife)?'':';opacity:.5'),
+          // NON TARIFÉ (aucun prix ERP > 0 pour cette boutique) : le produit est
+          // hors vente quoi qu'en dise la bascule — il disparaissait AVANT du
+          // webshop sans explication ici. Il redevient vendable automatiquement
+          // dès que l'ERP pose un prix : aucune bascule à refaire.
+          stateTxt:p.nonTarife?'Non tarifé · hors vente':(pAct?'Actif · vendable':'Inactif (boutique)'),
+          stateColor:p.nonTarife?'#b26a00':(pAct?'#2d7a3e':'var(--color-text-muted)'),
           swStyle:ps2.style,swKnob:ps2.knob,
           toggle:p.locked?(()=>{}):(()=>{ const nv=!pAct;
             asrPost({product:p.nom,productId:(p.id!=null?p.id:undefined),active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>x.nom===p.nom,nv); asrReloadStock(); this.printJob('✓ « '+p.nom+' » '+(nv?'activé':'désactivé')+' (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
