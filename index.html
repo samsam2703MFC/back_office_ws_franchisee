@@ -4829,14 +4829,17 @@ class Component extends DCLogic {
     // (POST /franchisee/join-decide → ws_office_join_requests.status).
     const jrHandled=S.jrHandled||{};
     const joinRaw=SRV('fr_join_requests').filter(r=>!jrHandled[r.id]);
-    const jrDecide=(id,action,msg)=>()=>{ const fr=window.__FR||{};
+    // « Lier » transmet le bureau détecté (officeId) : c'est le serveur qui
+    // écrit client.office_id — sans client identifié ou sans bureau validé, il
+    // REFUSE et le message d'erreur s'affiche tel quel (aucun faux succès).
+    const jrDecide=(id,action,msg,officeId)=>()=>{ const fr=window.__FR||{};
       if(!fr.base){ this.printJob('API indisponible — décision non enregistrée'); return; }
-      fetch(fr.base+'/franchisee/join-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({id,action})})
-        .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({jrHandled:{...s.jrHandled,[id]:true}})); this.printJob(msg); } else this.printJob((j&&j.error)||'Erreur décision'); })
+      fetch(fr.base+'/franchisee/join-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({id,action,...(officeId?{officeId}:{})})})
+        .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({jrHandled:{...s.jrHandled,[id]:true}})); this.printJob(msg+(j.clientId?(' · client #'+j.clientId+' → bureau #'+j.officeId):'')); } else this.printJob('⚠ '+((j&&j.error)||'Erreur décision')); })
         .catch(()=>this.printJob('Réseau indisponible — décision non enregistrée')); };
     const joinRequests=joinRaw.map(r=>({...r,
-      dupPill:r.dup?pill2('#fff4e5','#b26a00'):pill2('#eaf5ec','#2d7a3e'), dupTxt:r.dup?'Doublon possible':'Nouveau',
-      lier:jrDecide(r.id,'link','✔ Personnel lié au bureau (ws_office_join_requests → linked)'),
+      dupPill:r.dup?pill2('#eaf5ec','#2d7a3e'):pill2('#fff4e5','#b26a00'), dupTxt:r.dup?'Bureau trouvé':'Bureau à créer',
+      lier:jrDecide(r.id,'link','✔ Client rattaché (client.office_id écrit · demande → linked)',r.officeId),
       rejeter:jrDecide(r.id,'reject','Demande rejetée (ws_office_join_requests → rejected)') }));
     const joinCount=joinRaw.length;
     const joinBadgeStyle=joinCount?'margin-left:auto;background:var(--color-primary);color:#fff;font:600 10px var(--font-ui);border-radius:9px;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px':'display:none';
