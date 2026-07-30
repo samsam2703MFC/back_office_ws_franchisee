@@ -1,0 +1,111 @@
+{
+  "key": "console_franchise",
+  "slug": "console-franchise",
+  "group": "Terrain",
+  "icon": "store",
+  "isNew": true,
+  "sortOrder": 3,
+  "name": {
+    "fr": "Console franchisé",
+    "en": "Franchisee console",
+    "ar": "لوحة صاحب الامتياز"
+  },
+  "description": {
+    "fr": "Le back office du point de vente : préparation, livraison du jour, stock, clients B2B.",
+    "en": "The store's back office: preparation, today's deliveries, stock, B2B customers.",
+    "ar": "لوحة نقطة البيع: التحضير، توصيل اليوم، المخزون، عملاء الشركات."
+  },
+  "overview": {
+    "fr": "Le pendant magasin de la console marque. Le franchisé y voit sa journée — ce qu'il faut préparer, ce qui part en tournée, ce qui manque en stock — et gère ce qui lui appartient : ses clients professionnels, ses créneaux, ses frais de livraison, ses promotions locales. Le catalogue et les règles du siège arrivent d'en haut ; ce qui est local reste local.",
+    "en": "The store-side counterpart of the brand console. The franchisee sees the day — what to prepare, what leaves on a tour, what is short in stock — and manages what is theirs: business customers, slots, delivery fees, local offers. Catalogue and head-office rules come from above; what is local stays local."
+  },
+  "metric": {
+    "value": "1",
+    "label": { "fr": "écran pour toute la journée", "en": "screen for the whole day" }
+  },
+  "screenshots": [
+    { "file": "docs/landing/franchisee-dashboard.png", "alt": { "fr": "Tableau de bord du point de vente", "en": "Store dashboard" } }
+  ],
+  "features": [
+    {
+      "key": "dashboard",
+      "icon": "layout-dashboard",
+      "name": { "fr": "Tableau de bord du jour", "en": "Today's dashboard" },
+      "description": {
+        "fr": "Commandes à préparer, tournées engagées, incidents ouverts : la journée du magasin sur un écran, avec les compteurs qui disent où ça coince.",
+        "en": "Orders to prepare, tours under way, open incidents: the store's day on one screen, with the counters that say where it hurts."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-dashboard.png", "alt": { "fr": "Tableau de bord : commandes, tournées, incidents", "en": "Dashboard: orders, tours, incidents" } }]
+    },
+    {
+      "key": "preparation",
+      "icon": "list-checks",
+      "name": { "fr": "Préparation des commandes", "en": "Order preparation" },
+      "description": {
+        "fr": "Les commandes du jour regroupées par tournée ou à plat, avec le détail article par article. C'est la liste que suit l'équipe en cuisine, et celle que le chauffeur va contre-scanner au chargement.",
+        "en": "The day's orders grouped by tour or flat, item by item. It is the list the kitchen team works from, and the one the driver counter-scans at loading."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-preparation.png", "alt": { "fr": "Commandes à préparer, par tournée", "en": "Orders to prepare, by tour" } }]
+    },
+    {
+      "key": "livraison",
+      "icon": "truck",
+      "name": { "fr": "Livraison du jour", "en": "Today's deliveries" },
+      "description": {
+        "fr": "L'état des tournées en cours vu du magasin : ce qui est parti, ce qui est livré, ce qui traîne. Le magasin répond au client sans appeler le chauffeur.",
+        "en": "The state of running tours seen from the store: what left, what landed, what is late. The store answers the customer without calling the driver."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-livraison.png", "alt": { "fr": "Suivi des livraisons du jour", "en": "Today's delivery tracking" } }]
+    },
+    {
+      "key": "stock",
+      "icon": "layers",
+      "name": { "fr": "Stock du jour", "en": "Today's stock" },
+      "description": {
+        "fr": "La disponibilité par produit et par jour, celle-là même que le webshop consulte avant d'accepter une commande. Fermer un produit ici le retire de la vente en ligne tout de suite.",
+        "en": "Availability per product and per day — the very thing the webshop checks before accepting an order. Closing a product here pulls it from online sale immediately."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-stock.png", "alt": { "fr": "Disponibilité produit par jour", "en": "Per-day product availability" } }]
+    },
+    {
+      "key": "b2b",
+      "icon": "building-2",
+      "name": { "fr": "Clients et demandes B2B", "en": "B2B customers and requests" },
+      "description": {
+        "fr": "Les entreprises livrées : sociétés, services, sites de livraison, e-mails de facturation. Les demandes entrantes se traitent ici, et alimentent les tournées et les frais de livraison qui vont avec.",
+        "en": "The businesses you deliver to: companies, departments, delivery sites, billing emails. Incoming requests are handled here and feed the tours and delivery fees that go with them."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-b2b.png", "alt": { "fr": "Demandes et comptes B2B", "en": "B2B requests and accounts" } }]
+    },
+    {
+      "key": "incidents",
+      "icon": "triangle-alert",
+      "name": { "fr": "Incidents et litiges", "en": "Incidents and disputes" },
+      "description": {
+        "fr": "Les incidents remontés du terrain — colis manquant, client absent, litige de facturation — avec leur preuve et leur suite. Le même motif codifié que dans l'app chauffeur, donc les chiffres se comparent.",
+        "en": "Incidents raised from the field — missing parcel, customer away, billing dispute — with their proof and their follow-up. The same codified reasons as in the driver app, so the numbers compare."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-incidents.png", "alt": { "fr": "Incidents et litiges ouverts", "en": "Open incidents and disputes" } }]
+    },
+    {
+      "key": "capacite",
+      "icon": "arrow-up-down",
+      "name": { "fr": "Capacité et remplissage", "en": "Capacity and fill rate" },
+      "description": {
+        "fr": "Les créneaux, leur remplissage et les fermetures exceptionnelles. C'est ce qui empêche d'accepter en ligne une commande que la cuisine ne peut pas produire.",
+        "en": "Slots, how full they are, and exceptional closures. It is what stops the shop accepting an online order the kitchen cannot produce."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-capacite.png", "alt": { "fr": "Capacité et remplissage des créneaux", "en": "Slot capacity and fill rate" } }]
+    },
+    {
+      "key": "rentabilite",
+      "icon": "wallet",
+      "name": { "fr": "Rentabilité", "en": "Profitability" },
+      "description": {
+        "fr": "Ce que rapporte réellement une tournée ou un client une fois les frais de livraison posés en face. La discussion sur les frais se fait sur des chiffres, pas au ressenti.",
+        "en": "What a tour or a customer actually returns once delivery costs are set against it. The conversation about fees happens on figures, not on hunches."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-rentabilite.png", "alt": { "fr": "Rentabilité par tournée et par client", "en": "Profitability per tour and per customer" } }]
+    }
+  ]
+}
