@@ -102,23 +102,33 @@
     ERRORS.push({ kind: kind, detail: detail, at: new Date().toISOString() });
     try { if (typeof window !== 'undefined' && window.__BO_RENDER_ERRORS) window.__BO_RENDER_ERRORS(ERRORS); } catch(e){}
   }
+  // En-têtes d'authentification : jeton admin ERP, sinon jeton de session
+  // tablette (PIN). Sans ce second cas, une tablette ne pouvait charger AUCUNE
+  // donnée — /franchisee/* n'acceptait que le jeton admin.
+  function frAuth(fr){
+    if (fr && fr.token)    return { 'X-Admin-Token': fr.token };
+    if (fr && fr.pinToken) return { 'X-Pin-Token': fr.pinToken };
+    return {};
+  }
+  function frHasAuth(fr){ return !!(fr && (fr.token || fr.pinToken)); }
+
   function syncSave(n, rows){
     try {
       var fr = (typeof window !== 'undefined' && window.__FR) || {};
-      if (!fr.base || !fr.token) {
+      if (!fr.base || !frHasAuth(fr)) {
         // AVANT : écriture silencieusement ignorée (l'utilisateur croyait
         // enregistrer). Maintenant : erreur visible, rien de fantôme.
         noteError('ecriture', 'Écriture « ' + n + ' » NON envoyée — ' +
-          (!fr.base ? 'API non configurée' : 'jeton admin manquant (ouvrez ?shop=…&token=<jeton>)'));
+          (!fr.base ? 'API non configurée' : 'aucune session (jeton admin ou PIN tablette)'));
         return Promise.resolve();
       }
       var p = fetch(fr.base + '/franchisee/save' + (fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : ''), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Token': fr.token },
+        headers: Object.assign({ 'Content-Type': 'application/json' }, frAuth(fr)),
         credentials: 'omit',
         body: JSON.stringify({ table: n, rows: rows })
       }).then(function(r){
-        if (!r.ok) noteError('ecriture', 'Écriture « ' + n + ' » refusée (HTTP ' + r.status + (r.status === 401 ? ' — jeton admin invalide' : '') + ')');
+        if (!r.ok) noteError('ecriture', 'Écriture « ' + n + ' » refusée (HTTP ' + r.status + (r.status === 401 ? ' — session invalide' : r.status === 403 ? ' — section non autorisée pour ce compte' : '') + ')');
         return r;
       }).catch(function(e){ noteError('ecriture', 'Écriture « ' + n + ' » KO (réseau) : ' + (e && e.message || e)); });
       PENDING.push(p);
@@ -155,8 +165,8 @@
         noteError('fatal', 'API non configurée (window.__FR.base absent) — aucun chargement possible.');
         return Promise.resolve(false);
       }
-      if (!fr.token) {
-        noteError('fatal', 'Jeton admin manquant — aucune donnée ne peut charger. Ouvrez le BO avec ?shop=…&token=<jeton admin> (il sera mémorisé).');
+      if (!frHasAuth(fr)) {
+        noteError('fatal', 'Aucune session — aucune donnée ne peut charger. Ouvrez le BO avec ?shop=…&token=<jeton admin>, ou connectez-vous avec votre PIN tablette.');
         return Promise.resolve(false);
       }
       ensure();
@@ -189,7 +199,7 @@
         fr_assortiment:'fr-assortiment',
         fr_orders:'fr-orders', fr_net_stats:'fr-net-stats', fr_capacity:'fr-capacity'
       };
-      var headers = { 'X-Admin-Token': fr.token };
+      var headers = frAuth(fr);
       var qs = fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : '';
       // Tables dont l'écriture est TYPÉE (vraie table MySQL) : l'overlay
       // bo-store (copie potentiellement périmée) ne s'applique pas à elles.

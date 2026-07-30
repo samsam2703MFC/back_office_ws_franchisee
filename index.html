@@ -55,7 +55,7 @@
     // la boutique (nom, ville, CP) — window.__SHOPINFO sert à la géolocaliser
     // sur les cartes (départ des tournées).
     return fetch(fr.base + '/franchisee/me?shop=' + encodeURIComponent(fr.shop),
-                 { headers: fr.token ? { 'X-Admin-Token': fr.token } : {}, credentials: 'omit' })
+                 { headers: FRH(), credentials: 'omit' })
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(v){ if (v && v.shop && v.shop.id != null) {
         fr.shop = String(v.shop.id);
@@ -2573,7 +2573,7 @@ class Component extends DCLogic {
     // reste la source d'affichage immédiate, le serveur fait foi au rechargement.
     try { const fr=window.__FR||{};
       if(fr.base&&fr.token) fetch(fr.base+'/franchisee/onboard-office'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{
-        method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':fr.token},credentials:'omit',
+        method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
         body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,cp:obCp,localite:obLocalite,
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
@@ -2581,7 +2581,7 @@ class Component extends DCLogic {
       }).then(r=>r.ok?r.json():null).then(()=>{
         // Le serveur a créé office + LIGNE CLIENT (double lien) : refetch pour
         // que le nouveau client apparaisse tout de suite dans le menu Clients.
-        const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={headers:{'X-Admin-Token':fr.token},credentials:'omit'};
+        const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={headers:FRH(),credentials:'omit'};
         fetch(fr.base+'/franchisee/b2b-clients'+qs2,H2).then(r=>r.ok?r.json():null)
           .then(a2=>{ if(Array.isArray(a2)&&window.BOServer) window.BOServer.refresh('b2b_clients',a2); this.bcRefreshOffices(); })
           .catch(()=>{});
@@ -2861,7 +2861,7 @@ class Component extends DCLogic {
   // au bureau » (office créé/validé + pairing site) → l'office apparaît
   // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
   bcRefreshOffices(){ const fr=window.__FR||{}; if(!fr.base){ this.setState(s=>({_rev:(s._rev||0)+1})); return; }
-    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'};
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:FRH(),credentials:'omit'};
     // ATTENDRE d'abord que les écritures en vol soient commitées (flush) —
     // sinon le GET gagne la course contre le POST /save et écrase l'état
     // local avec la donnée d'AVANT (toggle Validé perdu, site supprimé qui
@@ -2960,7 +2960,7 @@ class Component extends DCLogic {
   rentaEnsure(){ if(this._rentaPts!==undefined||this._rentaLoading) return; const fr=window.__FR||{};
     if(!fr.base){ this._rentaPts=[]; return; }
     this._rentaLoading=true;
-    fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+    fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
       .then(r=>r.ok?r.json():null)
       .then(j=>{ this._rentaPts=(j&&Array.isArray(j.clients))?j.clients.filter(c=>c.type==='office'):[]; this._rentaLoading=false; this.setState(s=>({_rev:(s._rev||0)+1})); })
       .catch(()=>{ this._rentaPts=[]; this._rentaLoading=false; }); }
@@ -3022,7 +3022,13 @@ class Component extends DCLogic {
         else this.pinForget(); })
       .catch(()=>{ /* hors ligne : on garde la session locale jusqu'au retour réseau */ });
   }
-  pinForget(){ try{ localStorage.removeItem('boPinSession'); }catch(e){} this.setState({pinSession:null}); }
+  // Quitter la session : on efface AUSSI le jeton de la couche données et on
+  // recharge — sinon les données de la session précédente restaient à l'écran
+  // derrière le pavé PIN.
+  pinForget(){ try{ localStorage.removeItem('boPinSession'); }catch(e){}
+    try{ if(window.__FR) window.__FR.pinToken=''; }catch(e){}
+    this.setState({pinSession:null});
+    setTimeout(function(){ try{ location.reload(); }catch(e){} }, 60); }
   pinLogout(){ const ses=this.state.pinSession; const fr=(typeof window!=='undefined'&&window.__FR)||{};
     if(ses&&ses.token&&fr.base){ fetch(fr.base+'/bo/pin-logout',{method:'POST',headers:{'X-Pin-Token':ses.token},credentials:'omit'}).catch(()=>{}); }
     this.pinForget(); this.setState({pinPad:'',pinErr:null});
@@ -3044,8 +3050,13 @@ class Component extends DCLogic {
         if(!ok||!j.ok){ this.setState({pinErr:(j&&j.error)||'PIN incorrect'}); return; }
         const ses={token:j.token,nom:j.nom,shopId:j.shopId,sections:j.sections||[]};
         try{ localStorage.setItem('boPinSession',JSON.stringify(ses)); }catch(e){}
-        // On atterrit sur la première section autorisée.
+        // L'hydratation a déjà eu lieu SANS authentification (écrans vides) :
+        // on recharge pour que la couche données reparte avec le jeton PIN.
+        // Sans ce rechargement, la tablette restait vide après un PIN correct.
+        try{ window.__FR=window.__FR||{}; window.__FR.pinToken=j.token;
+             if(j.shopId) window.__FR.shop=String(j.shopId); }catch(e){}
         this.setState({pinSession:ses,pinErr:null,screen:(j.sections&&j.sections[0])||'tdb'});
+        setTimeout(function(){ try{ location.reload(); }catch(e){} }, 60);
       })
       .catch(()=>this.setState({pinBusy:false,pinPad:'',pinErr:'Réseau indisponible'}));
   }
@@ -3075,7 +3086,7 @@ class Component extends DCLogic {
   // toutes les 60 s tant que l'onglet est visible (voir componentDidMount).
   ordersRefresh(){ const fr=window.__FR||{}; if(!fr.base) return Promise.resolve();
     if(this._ordBusy) return Promise.resolve(); this._ordBusy=true;
-    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'};
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:FRH(),credentials:'omit'};
     const KEYS={fr_orders:'fr-orders',fr_tdb_tree:'fr-tdb-tree',fr_prep_points:'fr-prep-points',
       fr_prep_lines:'fr-prep-lines',fr_net_stats:'fr-net-stats',fr_capacity:'fr-capacity',kpis:'kpis',
       fr_tdb_tournees:'fr-tdb-tournees',fr_stock_catalog:'fr-stock-catalog'};
@@ -3174,7 +3185,7 @@ class Component extends DCLogic {
     this.zfGeoEnsure();
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
     if(!this._geoAData && !this._geoADataLoading && fr.base){ this._geoADataLoading=true;
-      fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
+      fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
         .then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.clients)){ this._geoAData=d; this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{}); }
     if(!window.L){ clearTimeout(this._gaT); this._gaT=setTimeout(()=>this.geoAEnsure(),160); return; }
     const el=document.getElementById('map-geo-fr'); if(!el) return;
@@ -3254,14 +3265,14 @@ class Component extends DCLogic {
   // Fiche client : commandes du client (droplist réclamation, note ★1-5).
   bcLoadOrders(id){ const fr=window.__FR||{};
     if(!fr.base){ this.setState({bcOrders:[]}); return; } // sans API : aucune donnée (pas de démo)
-    fetch(fr.base+'/franchisee/client-orders?client_id='+encodeURIComponent(id)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+    fetch(fr.base+'/franchisee/client-orders?client_id='+encodeURIComponent(id)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
       .then(r=>r.ok?r.json():[]).then(a=>this.setState({bcOrders:Array.isArray(a)?a:[]}))
       .catch(()=>this.setState({bcOrders:[]})); }
   // Stock du jour — lignes de commande du produit ouvert (Ruby = Click&Collect,
   // Apricot = Delivery) : GET /franchisee/stock-product-orders (ws_order_lines).
   stkLoadLines(nom){ const fr=window.__FR||{};
     if(!fr.base){ this.setState({stkLines:[]}); return; } // sans API : aucune ligne (pas de mock)
-    fetch(fr.base+'/franchisee/stock-product-orders?product='+encodeURIComponent(nom)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+    fetch(fr.base+'/franchisee/stock-product-orders?product='+encodeURIComponent(nom)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
       .then(r=>r.ok?r.json():[]).then(a=>{ if(this.state.stkOpen===nom) this.setState({stkLines:Array.isArray(a)?a:[]}); })
       .catch(()=>{ if(this.state.stkOpen===nom) this.setState({stkLines:[]}); }); }
   // Stock du jour — ajustement +/− ÉCRIT dans ws_product_stock (jour courant,
@@ -3270,7 +3281,7 @@ class Component extends DCLogic {
     if(!fr.base){ this.setState(s=>({flags:{...s.flags,[fk]:Math.max(0,cur+delta)}})); return; }
     // productId transporté quand connu — la résolution par nom seul renvoyait
     // parfois « produit inconnu » (espaces, doublons, produit désactivé).
-    fetch(fr.base+'/franchisee/stock-adjust'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({product:nom,productId:(pid!=null?pid:undefined),mode:mode,delta:delta})})
+    fetch(fr.base+'/franchisee/stock-adjust'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({product:nom,productId:(pid!=null?pid:undefined),mode:mode,delta:delta})})
       .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({flags:{...s.flags,[fk]:j.dispo}})); this.printJob('✓ Stock '+(mode==='delivery'?'online':'en shop')+' de « '+nom+' » : '+j.dispo+' (ws_product_stock)'); } else this.printJob((j&&j.error)||'Erreur ajustement stock'); })
       .catch(()=>this.printJob('Réseau indisponible — ajustement non enregistré')); }
   drawZonesMap(){ const L=window.L,m=this._zonesFrMap,geo=window.__CPGEO; if(!L||!m||!geo) return;
@@ -3601,11 +3612,11 @@ class Component extends DCLogic {
       else this.setState({tabDriver:v,tabDriverNew:false}); };
     const tabClose=()=>this.setState({tabModal:null,tabDriver:null,tabDriverNew:null});
     const tabSend=()=>{ const fr=window.__FR||{}; if(!fr.base){ this.printJob('⚠ API indisponible — envoi impossible'); return; }
-      const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})};
+      const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2=FRH({'Content-Type':'application/json'});
       fetch(fr.base+'/franchisee/tour-dispatch'+qs2,{method:'POST',headers:H2,credentials:'omit',body:JSON.stringify({tour:tabTour,driver:String(tabDriver).trim()})})
         .then(r=>r.json().catch(()=>null)).then(j=>{
           if(j&&j.ok){ this.printJob('📲 Tournée « '+tabTour+' » envoyée sur la tablette — en attente de validation chauffeur');
-            const HG={headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'};
+            const HG={headers:FRH(),credentials:'omit'};
             Promise.all([
               fetch(fr.base+'/franchisee/tour-dispatch-status'+qs2,HG).then(r=>r.ok?r.json():null).catch(()=>null),
               fetch(fr.base+'/franchisee/drivers'+qs2,HG).then(r=>r.ok?r.json():null).catch(()=>null),
@@ -3783,7 +3794,7 @@ class Component extends DCLogic {
       // Cohérence zoning : chaque CP encodé ne doit être ni dans une zone primaire (chalandise) ni dans une autre zone.
       try { const fr=window.__FR||{};
         if(fr.base&&fr.token&&nz.cp&&nz.cp!=='—'){
-          const r=await fetch(fr.base+'/franchisee/zone-check?cp='+encodeURIComponent(nz.cp)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:{'X-Admin-Token':fr.token},credentials:'omit'});
+          const r=await fetch(fr.base+'/franchisee/zone-check?cp='+encodeURIComponent(nz.cp)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'});
           if(r.ok){ const v=await r.json(); if(v&&v.conflicts&&v.conflicts.length){ this.printJob('⚠ CP déjà attribué : '+v.conflicts.map(c=>c.cp+' → '+c.zone).join(' · ')); return; } }
         }
       } catch(e){}
@@ -4015,7 +4026,7 @@ class Component extends DCLogic {
       // Refus RÉEL : POST validation-decide → ws_offices.active=0.
       refuser:()=>{ const fr=window.__FR||{};
         if(!fr.base){ this.printJob('API indisponible — refus non enregistré'); return; }
-        fetch(fr.base+'/franchisee/validation-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({id:p.id,action:'reject'})})
+        fetch(fr.base+'/franchisee/validation-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({id:p.id,action:'reject'})})
           .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({valHandled:{...s.valHandled,[p.id]:'refuse'}})); this.printJob('Demande refusée — bureau désactivé (ws_offices)'); } else this.printJob((j&&j.error)||'Erreur refus'); })
           .catch(()=>this.printJob('Réseau indisponible — refus non enregistré')); },
     }; });
@@ -4380,10 +4391,10 @@ class Component extends DCLogic {
         collect_cutoff_hour:parseInt(ava.collect_cutoff_hour,10)||0, collect_cutoff_minute:parseInt(ava.collect_cutoff_minute,10)||0, collect_lead_hours:parseInt(ava.collect_lead_hours,10)||0,
         delivery_cutoff_hour:parseInt(ava.delivery_cutoff_hour,10)||0, delivery_cutoff_minute:parseInt(ava.delivery_cutoff_minute,10)||0, delivery_lead_hours:parseInt(ava.delivery_lead_hours,10)||0,
         collect_capacity_per_slot:parseInt(ava.collect_capacity_per_slot,10)||1, delivery_capacity_per_slot:parseInt(ava.delivery_capacity_per_slot,10)||1 };
-      fetch(fr.base+'/franchisee/shop-availability'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify(payload)})
+      fetch(fr.base+'/franchisee/shop-availability'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(payload)})
         .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.printJob('✓ Disponibilité enregistrée — le webshop régénère ses créneaux');
             // recharge la table -> l'écran reflète la base
-            fetch(fr.base+'/franchisee/fr-shop-availability'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+            fetch(fr.base+'/franchisee/fr-shop-availability'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
               .then(r=>r.ok?r.json():null).then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_shop_availability',a); this.setState({avaDraft:null,avaDirty:false,_rev:(S._rev||0)+1}); } });
           } else this.printJob((j&&j.error)||'Erreur enregistrement'); })
         .catch(()=>this.printJob('Réseau indisponible — non enregistré')); };
@@ -4434,7 +4445,7 @@ class Component extends DCLogic {
       // VIES : vérifie le n° TVA + pré-remplit nom/adresse depuis le registre européen.
       const viesCheck=()=>{ const raw=String(this.state.formVals[f.k]||'').replace(/[^A-Za-z0-9]/g,''); if(!raw){ this.setState({viesOk:false,viesMsg:'Encodez d\'abord le n° TVA'}); return; }
         this.setState({viesOk:null,viesMsg:'Vérification VIES…'}); const fr=window.__FR||{};
-        fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(raw)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
+        fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(raw)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
           .then(r=>r.json()).then(j=>{ if(j&&j.valid){ this.setState(s=>{
               // Clés selon le formulaire porteur : client B2B (raison/cp/adresse/ville)
               // ou office (name/postal_code/address/city).
@@ -4488,7 +4499,7 @@ class Component extends DCLogic {
     const ordAdvance=(o)=>{ const nx=ordNext[o.statut]; if(!nx) return; const fr=window.__FR||{};
       if(!fr.base){ this.printJob('API indisponible — statut non modifié'); return; }
       const nxMode=nx==='ready'&&o.mode==='Livraison'?'ready':nx;
-      fetch(fr.base+'/franchisee/order-status'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({ref:o.ref,status:nxMode})})
+      fetch(fr.base+'/franchisee/order-status'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({ref:o.ref,status:nxMode})})
         .then(r=>r.json()).then(j=>{ if(j&&j.ok){ const st2=j.status||nxMode; const rows=SRV('fr_orders'); const i2=rows.findIndex(x=>x.ref===o.ref); if(i2>=0){ rows[i2]={...rows[i2],statut:st2}; if(window.BOServer) window.BOServer.refresh('fr_orders',rows); } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob('✓ Commande '+o.ref+' → « '+(ordStatFR[st2]||st2)+' » (ws_orders)'); } else this.printJob((j&&j.error)||'Erreur statut'); })
         .catch(()=>this.printJob('Réseau indisponible — statut non modifié')); };
     // Filtres de DATE : Aujourd'hui / Cette semaine / Ce mois-ci — l'API
@@ -4658,7 +4669,7 @@ class Component extends DCLogic {
           pick:()=>{ this.setState({stkFsel:r.nom,stkFselId:(r.id!=null?r.id:null),stkFq:r.nom,stkFon:String(r.online),stkFsh:String(r.shop),stkDefs:{},stkDefsDirty:false});
             // Minimums hebdomadaires existants du produit → pré-remplissage.
             const fr=window.__FR||{}; if(!fr.base) return;
-            fetch(fr.base+'/franchisee/stock-defaults?product='+encodeURIComponent(r.nom)+(r.id!=null?('&productId='+r.id):'')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+            fetch(fr.base+'/franchisee/stock-defaults?product='+encodeURIComponent(r.nom)+(r.id!=null?('&productId='+r.id):'')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
               .then(rs=>rs.ok?rs.json():null)
               .then(j=>{ if(j&&j.ok&&j.days&&this.state.stkFsel===r.nom){ const dd={};
                 Object.keys(j.days).forEach(k=>{ dd[parseInt(k,10)]={collect:(j.days[k].collect!=null?String(j.days[k].collect):''),delivery:(j.days[k].delivery!=null?String(j.days[k].delivery):'')}; });
@@ -4666,7 +4677,7 @@ class Component extends DCLogic {
               .catch(()=>{}); }}))
       : [];
     const stkFReload=()=>{ const fr=window.__FR||{}; if(!fr.base) return;
-      fetch(fr.base+'/franchisee/fr-stock-catalog'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+      fetch(fr.base+'/franchisee/fr-stock-catalog'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
         .then(r=>r.ok?r.json():null)
         .then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_stock_catalog',a); this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{}); };
     // Minimums hebdomadaires : jours ISO MULTI-SÉLECTIONNÉS (saisie groupée —
@@ -4711,7 +4722,7 @@ class Component extends DCLogic {
       stkFSubmit:()=>{ if(!stkFsel) return; const fr=window.__FR||{};
         if(!fr.base){ this.printJob('API indisponible — stock non enregistré'); return; }
         const qs3=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
-        const HP3={'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})};
+        const HP3=FRH({'Content-Type':'application/json'});
         const jobs=[];
         // 1) Stock RÉEL du jour (ws_product_stock) — seulement si saisi.
         if((S.stkFon!==''&&S.stkFon!=null)||(S.stkFsh!==''&&S.stkFsh!=null)){
@@ -4760,13 +4771,13 @@ class Component extends DCLogic {
     const asrCats={}; const asrOrder=[];
     asrRaw.forEach(a=>{ const k=a.cat||'Autres'; if(!asrCats[k]){ asrCats[k]={cat:k,prods:[]}; asrOrder.push(k); } asrCats[k].prods.push(a); });
     const asrPost=(bodyA,after)=>{ const fr=window.__FR||{};
-      fetch((fr.base||'')+'/franchisee/assortiment-toggle'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify(bodyA)})
+      fetch((fr.base||'')+'/franchisee/assortiment-toggle'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(bodyA)})
         .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — bascule non enregistrée')); };
     // Après CHAQUE bascule d'assortiment : refetch du catalogue Stock du jour —
     // un produit retiré de l'assortiment disparaît IMMÉDIATEMENT des stocks
     // (avant, il restait affiché jusqu'au rechargement de la page).
     const asrReloadStock=()=>{ const fr=window.__FR||{}; if(!fr.base) return;
-      fetch(fr.base+'/franchisee/fr-stock-catalog'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+      fetch(fr.base+'/franchisee/fr-stock-catalog'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
         .then(r=>r.ok?r.json():null)
         .then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_stock_catalog',a); this.setState(s=>({_rev:(s._rev||0)+1})); } })
         .catch(()=>{}); };
@@ -4834,7 +4845,7 @@ class Component extends DCLogic {
     // REFUSE et le message d'erreur s'affiche tel quel (aucun faux succès).
     const jrDecide=(id,action,msg,officeId)=>()=>{ const fr=window.__FR||{};
       if(!fr.base){ this.printJob('API indisponible — décision non enregistrée'); return; }
-      fetch(fr.base+'/franchisee/join-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({id,action,...(officeId?{officeId}:{})})})
+      fetch(fr.base+'/franchisee/join-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({id,action,...(officeId?{officeId}:{})})})
         .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({jrHandled:{...s.jrHandled,[id]:true}})); this.printJob(msg+(j.clientId?(' · client #'+j.clientId+' → bureau #'+j.officeId):'')); } else this.printJob('⚠ '+((j&&j.error)||'Erreur décision')); })
         .catch(()=>this.printJob('Réseau indisponible — décision non enregistrée')); };
     const joinRequests=joinRaw.map(r=>({...r,
@@ -4871,14 +4882,14 @@ class Component extends DCLogic {
     // Bons / codes — MODÈLE ERP UNIFIÉ (fr-vouchers) : mes bons éditables,
     // bons Marque en lecture seule. Création/édition → POST /franchisee/voucher.
     const vchFR=window.__FR||{};
-    const vchHdrs={headers:(vchFR.token?{'X-Admin-Token':vchFR.token}:{}),credentials:'omit'};
+    const vchHdrs={headers:FRH(),credentials:'omit'};
     const vchQS=vchFR.shop?('?shop='+encodeURIComponent(vchFR.shop)):'';
     const vchReload=()=>{ if(!vchFR.base) return;
       fetch(vchFR.base+'/franchisee/fr-vouchers'+vchQS,vchHdrs)
         .then(r=>r.ok?r.json():null)
         .then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_vouchers',a); this.setState(s2=>({_rev:(s2._rev||0)+1})); } }).catch(()=>{}); };
     const vchPost=(path,body,after)=>{ if(!vchFR.base){ this.printJob('API indisponible'); return; }
-      fetch(vchFR.base+'/franchisee/'+path+vchQS,{method:'POST',headers:{'Content-Type':'application/json',...(vchFR.token?{'X-Admin-Token':vchFR.token}:{})},credentials:'omit',body:JSON.stringify(body)})
+      fetch(vchFR.base+'/franchisee/'+path+vchQS,{method:'POST',headers:{'Content-Type':'application/json',...FRH()},credentials:'omit',body:JSON.stringify(body)})
         .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — action non enregistrée')); };
     const vchLoadTargets=()=>{ if(this._vchTgt||!vchFR.base) return;
       this._vchTgt={clients:[],offices:[],products:[]};
@@ -5204,7 +5215,7 @@ class Component extends DCLogic {
       officeClashMsg:S.officeClash?('La tournée « '+(S.officeClash.vals.tour||'—')+' » dessert déjà « '+S.officeClash.existing.name+' » (CP '+(S.officeClash.existing.postal_code||'—')+') avec la TVA '+(S.officeClash.existing.vat||'—')+' — différente de celle saisie ('+(S.officeClash.vals.vat||'—')+'). Choisissez comment traiter ce client :'):'',
       officeClashCancel:()=>this.setState({officeClash:null}),
       officeClashRoute:()=>{ const c=S.officeClash; if(!c) return; const fr=window.__FR||{};
-        fetch((fr.base||'')+'/franchisee/route-office'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({cp:c.vals.postal_code,vat:c.vals.vat,name:c.vals.name,email:c.vals.email,city:c.vals.city})})
+        fetch((fr.base||'')+'/franchisee/route-office'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({cp:c.vals.postal_code,vat:c.vals.vat,name:c.vals.name,email:c.vals.email,city:c.vals.city})})
           .then(r=>r.json()).then(j=>this.printJob((j&&j.routed)?('✓ Client renvoyé vers '+(j.shop||'le franchisé couvrant ce CP')):((j&&j.error)||'Aucun franchisé ne couvre ce code postal')))
           .catch(()=>this.printJob('Réseau indisponible — renvoi non effectué'));
         this.setState({officeClash:null,formKey:null}); },
@@ -5341,7 +5352,7 @@ class Component extends DCLogic {
         const bcCounts=Object.keys(cnt).sort().map(k=>({label:k,n:String(cnt[k])}));
         const fc=rowsC.find(c=>String(c.id)===String(S.bcFiche))||null;
         const post=(path,body,after)=>{ const fr=window.__FR||{};
-          fetch((fr.base||'')+'/franchisee/'+path+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify(body)})
+          fetch((fr.base||'')+'/franchisee/'+path+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(body)})
             .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — action non enregistrée')); };
         // table() renvoie une COPIE : il faut save() pour que le re-render voie
         // le patch (b2b_clients est TYPED → l'overlay bo-store est sans effet).
@@ -5403,7 +5414,7 @@ class Component extends DCLogic {
           fcToggleCorp:()=>this.setState(s=>({bcCorp:!s.bcCorp})),
           fcVat:S.bcVat||'',fcSetVat:(e)=>this.setState({bcVat:e.target.value}),
           fcViesCheck:()=>{ const fr=window.__FR||{}; const vat=String(this.state.bcVat||'').trim(); if(!vat){ this.printJob('Encodez le n° TVA'); return; }
-            fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(vat)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:(fr.token?{'X-Admin-Token':fr.token}:{}),credentials:'omit'})
+            fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(vat)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
               .then(r=>r.json()).then(j=>this.printJob((j&&j.valid)?('✓ VIES : '+(j.name||'TVA valide')):(j&&j.valid===null?'VIES injoignable — réessayez':'✕ TVA non valide au VIES'))).catch(()=>this.printJob('VIES injoignable')); },
           fcSaveBilling:()=>{ const corp=!!this.state.bcCorp; const vat=String(this.state.bcVat||'').trim();
             if(corp&&!vat){ this.printJob('TVA (VIES) obligatoire pour une personne morale'); return; }
@@ -5578,7 +5589,7 @@ class Component extends DCLogic {
         const siteAdr=(S.valSite&&S.valSite!=='__none__')?S.valSite:'';
         if(!fr.base){ this.printJob('API indisponible — validation non enregistrée'); return; }
         if(isNewT&&tourName&&window.BOServer){ const tr=window.BOServer.table('ws_tours'); tr.push({name:tourName,short:tourName,ret:true}); window.BOServer.save('ws_tours',tr); }
-        fetch(fr.base+'/franchisee/validation-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:{'Content-Type':'application/json',...(fr.token?{'X-Admin-Token':fr.token}:{})},credentials:'omit',body:JSON.stringify({id,action:'accept',tour:tourName,site_adr:siteAdr})})
+        fetch(fr.base+'/franchisee/validation-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({id,action:'accept',tour:tourName,site_adr:siteAdr})})
           .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({valHandled:{...s.valHandled,[id]:'valide'},valModal:null,valSite:'',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''})); setTimeout(()=>this.bcRefreshOffices(),150); this.printJob('✓ Compte Office validé — bureau livrable (ws_offices)'+(tourName?(' · tournée « '+tourName+' »'):'')); } else this.printJob((j&&j.error)||'Erreur validation'); })
           .catch(()=>this.printJob('Réseau indisponible — validation non enregistrée')); },
       valClose:()=>this.setState({valModal:null,valSite:'',valTournee:'',valNewName:'',valZone:'',valZone2:'',valNewZone:''}),

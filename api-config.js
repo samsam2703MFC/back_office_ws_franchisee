@@ -44,5 +44,31 @@
     if (q.get('shop'))  { shop  = q.get('shop');  try { localStorage.setItem('franchiseeShop', shop); } catch (e) {} }
   } catch (e) {}
 
-  window.__FR = { base: base, token: token, shop: shop };
+  // Session TABLETTE (PIN) : jeton opaque de 12 h posé par /bo/pin-login. Il
+  // remplace le jeton admin quand celui-ci est absent — sans lui, la couche
+  // données n'envoyait aucune authentification et la tablette n'affichait que
+  // des écrans vides (l'API /franchisee/* refusait tout).
+  // La boutique de la session fait foi : le serveur ignore le ?shop= d'une
+  // session PIN, on aligne donc l'interface dessus.
+  var pinToken = '', pinShop = '';
+  try {
+    var ps = JSON.parse(localStorage.getItem('boPinSession') || 'null');
+    if (ps && ps.token) { pinToken = ps.token; if (ps.shopId) pinShop = String(ps.shopId); }
+  } catch (e) {}
+  if (!token && pinShop) shop = pinShop;
+
+  window.__FR = { base: base, token: token, shop: shop, pinToken: pinToken };
+
+  /* En-têtes d'authentification, source UNIQUE pour tous les appels du BO.
+     Jeton admin ERP s'il existe, sinon jeton de session tablette (PIN). Les
+     appels écrivaient chacun leur en-tête « X-Admin-Token » en dur : sur une
+     tablette (sans jeton admin), ils partaient donc sans authentification et
+     l'API refusait tout. */
+  window.FRH = function (extra) {
+    var fr = window.__FR || {};
+    var h = extra ? Object.assign({}, extra) : {};
+    if (fr.token)         h['X-Admin-Token'] = fr.token;
+    else if (fr.pinToken) h['X-Pin-Token']   = fr.pinToken;
+    return h;
+  };
 })();
