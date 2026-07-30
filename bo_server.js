@@ -166,7 +166,10 @@
         return Promise.resolve(false);
       }
       if (!frHasAuth(fr)) {
-        noteError('fatal', 'Aucune session — aucune donnée ne peut charger. Ouvrez le BO avec ?shop=…&token=<jeton admin>, ou connectez-vous avec votre PIN tablette.');
+        // PAS une erreur : c'est l'état normal d'une tablette au démarrage.
+        // L'interface affiche le pavé PIN, et l'hydratation repart après la
+        // connexion (rechargement). Un bandeau « ERREUR — PLEASE DEBUG » ici
+        // affolait pour un écran de connexion parfaitement attendu.
         return Promise.resolve(false);
       }
       ensure();
