@@ -94,16 +94,33 @@
   // avant un refetch — sinon le GET gagne la course et écrase l'état local
   // (toggle « Validé » qui « ne marche pas », site supprimé qui « revient »).
   var PENDING = [];
+  // ── Erreurs de chargement/écriture : AFFICHÉES, jamais avalées. ──
+  // Règle go-live : soit la vraie donnée charge, soit l'écran dit « erreur —
+  // please debug ». loadErrors est lu par le bandeau d'erreur (index.html).
+  var ERRORS = [];
+  function noteError(kind, detail){
+    ERRORS.push({ kind: kind, detail: detail, at: new Date().toISOString() });
+    try { if (typeof window !== 'undefined' && window.__BO_RENDER_ERRORS) window.__BO_RENDER_ERRORS(ERRORS); } catch(e){}
+  }
   function syncSave(n, rows){
     try {
       var fr = (typeof window !== 'undefined' && window.__FR) || {};
-      if (!fr.base || !fr.token) return Promise.resolve();
+      if (!fr.base || !fr.token) {
+        // AVANT : écriture silencieusement ignorée (l'utilisateur croyait
+        // enregistrer). Maintenant : erreur visible, rien de fantôme.
+        noteError('ecriture', 'Écriture « ' + n + ' » NON envoyée — ' +
+          (!fr.base ? 'API non configurée' : 'jeton admin manquant (ouvrez ?shop=…&token=<jeton>)'));
+        return Promise.resolve();
+      }
       var p = fetch(fr.base + '/franchisee/save' + (fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : ''), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Admin-Token': fr.token },
         credentials: 'omit',
         body: JSON.stringify({ table: n, rows: rows })
-      }).catch(function(){});
+      }).then(function(r){
+        if (!r.ok) noteError('ecriture', 'Écriture « ' + n + ' » refusée (HTTP ' + r.status + (r.status === 401 ? ' — jeton admin invalide' : '') + ')');
+        return r;
+      }).catch(function(e){ noteError('ecriture', 'Écriture « ' + n + ' » KO (réseau) : ' + (e && e.message || e)); });
       PENDING.push(p);
       var drop = function(){ var i = PENDING.indexOf(p); if (i >= 0) PENDING.splice(i, 1); };
       p.then(drop, drop);
@@ -124,14 +141,24 @@
     // toggle « livraison au bureau » — GET refetché puis injecté ici).
     refresh: function(n, rows){ ensure(); if (Array.isArray(rows)) DB[n] = JSON.parse(JSON.stringify(rows)); return persist(); },
     reset: function(){ DB = JSON.parse(JSON.stringify(SEED)); return persist(); },
-    // Charge la vraie donnée depuis l'API PHP (/franchisee/*) EN MÉMOIRE, avec
-    // repli seed par table : toute table absente/erreur/401/vide garde le seed,
-    // donc le rendu ne casse jamais. Ne persiste pas l'API dans localStorage
-    // (pas de cache périmé). À appeler AVANT le boot du runtime.
-    // Miroir strict de bo_server.js (franchisor) → hydrate().
+    // Erreurs de chargement/écriture accumulées (bandeau index.html).
+    loadErrors: ERRORS,
+    // Charge la vraie donnée depuis l'API PHP (/franchisee/*) EN MÉMOIRE.
+    // RÈGLE GO-LIVE (« vraies données ou bug ») : la réponse API fait foi MÊME
+    // VIDE pour toutes les tables métier ; une table en échec (401/500/réseau)
+    // est VIDÉE et l'échec est AFFICHÉ (« error please debug ») — plus jamais
+    // de « garde le seed » silencieux ni de données périmées du localStorage
+    // présentées comme vraies. À appeler AVANT le boot du runtime.
     hydrate: function(){
       var fr = (typeof window !== 'undefined' && window.__FR) || {};
-      if (!fr.base) return Promise.resolve(false);
+      if (!fr.base) {
+        noteError('fatal', 'API non configurée (window.__FR.base absent) — aucun chargement possible.');
+        return Promise.resolve(false);
+      }
+      if (!fr.token) {
+        noteError('fatal', 'Jeton admin manquant — aucune donnée ne peut charger. Ouvrez le BO avec ?shop=…&token=<jeton admin> (il sera mémorisé).');
+        return Promise.resolve(false);
+      }
       ensure();
       var MAP = {
         kpis:'kpis',
@@ -162,33 +189,43 @@
         fr_assortiment:'fr-assortiment',
         fr_orders:'fr-orders', fr_net_stats:'fr-net-stats', fr_capacity:'fr-capacity'
       };
-      var headers = fr.token ? { 'X-Admin-Token': fr.token } : {};
+      var headers = { 'X-Admin-Token': fr.token };
       var qs = fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : '';
-      // Tables à écriture TYPÉE (vraie table MySQL derrière /franchisee/save) :
-      // pour elles, la réponse API fait foi MÊME VIDE (une table vidée reste
-      // vide — le seed de démo ne doit pas « ressusciter » de lignes), et
-      // l'overlay bo-store (copie potentiellement périmée) ne s'applique pas.
-      // NB : fr_clients reste HORS de ce set — son écran s'édite via bo-store
-      // (pas de bloc typé aller-retour). ws_tour_availability y est ENTRÉE le
-      // jour où son bloc typé PHP a été ajouté (upsert par tournée × jour).
+      // Tables dont l'écriture est TYPÉE (vraie table MySQL) : l'overlay
+      // bo-store (copie potentiellement périmée) ne s'applique pas à elles.
       var TYPED = { ws_tours:1, ws_delivery_zones:1, ws_tour_postcodes:1,
         ws_office_delivery_sites:1, ws_offices:1,
         ws_tour_closures:1, ws_tour_availability:1, ws_franchisor_catchment:1,
         catchment_postcodes:1, b2b_client_company_department:1, params:1,
         b2b_clients:1, fr_assortiment:1,
         fr_orders:1, fr_net_stats:1, fr_capacity:1, fr_vouchers:1, fr_shop_availability:1 };
+      // CONFIGS d'écran (libellés/gabarits, pas des données métier) : une
+      // réponse API vide ne les écrase pas — ce sont des textes d'interface.
+      var CONFIG = { fr_cout_params:1 };
+      var failed = [];
       var jobs = Object.keys(MAP).map(function(key){
-        return fetch(fr.base + '/franchisee/' + MAP[key] + qs, { headers: headers, credentials: 'omit' })
-          .then(function(r){ return r.ok ? r.json() : null; })
-          .then(function(data){ if (Array.isArray(data) && (data.length || TYPED[key])) DB[key] = data; })
-          .catch(function(){ /* garde le seed pour cette table */ });
+        var url = fr.base + '/franchisee/' + MAP[key] + qs;
+        return fetch(url, { headers: headers, credentials: 'omit' })
+          .then(function(r){
+            if (!r.ok) { failed.push(key + ' (HTTP ' + r.status + ')'); DB[key] = []; return null; }
+            return r.json().then(function(data){
+              // La réponse API fait foi, MÊME VIDE (sauf configs d'écran) :
+              // aucune donnée locale/périmée ne se substitue à la base.
+              if (Array.isArray(data) && (data.length || !CONFIG[key])) DB[key] = data;
+              return null;
+            });
+          })
+          .catch(function(){ failed.push(key + ' (réseau/JSON)'); DB[key] = []; });
       });
       return Promise.all(jobs).then(function(){
         // Overlay des éditions BO persistées côté serveur (ws_bo_store) :
         // priorité aux tables éditées via l'UI dont l'écriture n'est pas
         // (encore) typée vers une vraie table.
         return fetch(fr.base + '/franchisee/bo-store' + qs, { headers: headers, credentials: 'omit' })
-          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(r){
+            if (!r.ok) { failed.push('bo-store (HTTP ' + r.status + ')'); return null; }
+            return r.json();
+          })
           .then(function(store){
             if (store && typeof store === 'object' && !Array.isArray(store)) {
               // Les tables TYPÉES viennent de la vraie table MySQL : l'overlay
@@ -198,7 +235,15 @@
             }
             return true;
           })
-          .catch(function(){ return true; });
+          .catch(function(){ failed.push('bo-store (réseau)'); return true; })
+          .then(function(){
+            if (failed.length) {
+              var auth = failed.join(' ').indexOf('HTTP 401') >= 0;
+              noteError('chargement', failed.length + ' chargement(s) en échec — please debug : ' + failed.join(', ') +
+                (auth ? '  ⇒ HTTP 401 = jeton admin invalide/absent : rouvrez le BO avec ?shop=…&token=<jeton admin>.' : ''));
+            }
+            return !failed.length;
+          });
       });
     }
   };

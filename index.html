@@ -5,14 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>L'Atelier By — Console franchisé</title>
 <script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"vendor/react.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"vendor/react-dom.js"};</script>
-<script src="api-config.js?v=2026072480"></script>
-<script src="bo_server.js?v=2026072480"></script>
+<script src="api-config.js?v=2026073010"></script>
+<script src="bo_server.js?v=2026073010"></script>
 <script>
-/* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime,
-   avec repli seed : si l'API ne répond pas / pas de jeton, on rend le seed.
+/* Hydrate la donnée réelle (API PHP /franchisee/*) AVANT de booter le runtime.
+   RÈGLE GO-LIVE : aucune donnée de secours — si l'API ne répond pas ou que le
+   jeton admin manque, un BANDEAU D'ERREUR visible le dit (« please debug »).
    Miroir strict du boot de la Console marque (franchisor). */
 (function(){
-  function boot(){ var s=document.createElement('script'); s.src='./support.js?v=2026072480'; document.head.appendChild(s); }
+  // Bandeau d'erreur (DOM pur, indépendant du runtime : s'affiche même si tout
+  // le reste échoue). Alimenté par BOServer.loadErrors via __BO_RENDER_ERRORS.
+  window.__BO_RENDER_ERRORS = function(errors){
+    try {
+      var el = document.getElementById('bo-errors');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'bo-errors';
+        el.setAttribute('role', 'alert');
+        el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#8d1d2c;color:#fff;' +
+          'font:600 13px/1.45 system-ui,sans-serif;padding:10px 44px 10px 14px;box-shadow:0 3px 14px rgba(0,0,0,.3);white-space:pre-wrap';
+        var x = document.createElement('button');
+        x.textContent = '✕';
+        x.setAttribute('aria-label', 'Fermer');
+        x.style.cssText = 'position:absolute;top:6px;right:8px;background:none;border:none;color:#fff;font-size:16px;cursor:pointer';
+        x.onclick = function(){ el.remove(); };
+        el.appendChild(x);
+        var body = document.createElement('div');
+        body.id = 'bo-errors-body';
+        el.appendChild(body);
+        (document.body || document.documentElement).appendChild(el);
+      }
+      var b = document.getElementById('bo-errors-body');
+      if (b) b.textContent = '⚠ ERREUR — PLEASE DEBUG (' + errors.length + ')\n' +
+        errors.map(function(e){ return '• [' + e.kind + '] ' + e.detail; }).join('\n');
+    } catch(e){}
+  };
+  function boot(){
+    var s=document.createElement('script'); s.src='./support.js?v=2026073010'; document.head.appendChild(s);
+    // Re-render du bandeau après boot (le runtime peut avoir remplacé le body).
+    try { var E = window.BOServer && window.BOServer.loadErrors; if (E && E.length) setTimeout(function(){ window.__BO_RENDER_ERRORS(E); }, 800); } catch(e){}
+  }
   // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
   // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
@@ -45,8 +77,8 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026072480">
-<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026072480"></script>
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026073010">
+<script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026073010"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
@@ -2420,7 +2452,11 @@ class Component extends DCLogic {
     valHandled: {}, valModal: null, valSite: '', valTournee: '',
     valNewName: '', valZone: '', valZone2: '', valNewZone: '',
     tdbCollapsed: {}, openGroups: {}, flags: {}, formKey: null, formVals: {},
-    couts: (typeof window!=='undefined'&&window.BOServer)?{prep:+window.BOServer.getParam('cost_prep_hourly',26),emb:+window.BOServer.getParam('cost_packaging_unit',0.42),carb:+window.BOServer.getParam('cost_fuel_liter',1.78),struct:+window.BOServer.getParam('cost_structure_tour',38),charg:+window.BOServer.getParam('cost_loading_hourly',24)}:{ prep: 26, emb: 0.42, carb: 1.78, struct: 38, charg: 24 },
+    // Coûts : UNIQUEMENT les paramètres réels (ws_param). Les anciens défauts
+    // inventés (26 €/h, 0,42 €, 1,78 €/L, 38 €, 24 €/h) faisaient calculer une
+    // rentabilité fictive présentée comme réelle — go-live : coût absent = 0
+    // affiché comme « non configuré », jamais un chiffre sorti de nulle part.
+    couts: (typeof window!=='undefined'&&window.BOServer)?{prep:+window.BOServer.getParam('cost_prep_hourly',0),emb:+window.BOServer.getParam('cost_packaging_unit',0),carb:+window.BOServer.getParam('cost_fuel_liter',0),struct:+window.BOServer.getParam('cost_structure_tour',0),charg:+window.BOServer.getParam('cost_loading_hourly',0)}:{ prep: 0, emb: 0, carb: 0, struct: 0, charg: 0 },
     toast: '', printed: {},
     newRoutes: [], newZones: [], deletedRoutes: [], delRoute: null,
     rfOpen: false, rfEditId: null, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, driver:'', vehicule:'', postcodes:[], ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
