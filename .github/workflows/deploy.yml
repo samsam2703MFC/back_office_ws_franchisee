@@ -36,6 +36,20 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
+      # TEMPORAIRE (à retirer après lecture) : affiche la ligne admin_token du
+      # config.php de l'API sur le serveur — récupération du jeton BO perdu.
+      - name: Lire admin_token (TEMPORAIRE)
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            'for f in /var/www/html/webshop/api/config.php /var/www/html/api/config.php /var/www/webshop/api/config.php; do \
+               if [ -f "$f" ]; then echo "== $f =="; grep -n "admin_token" "$f" || true; fi; \
+             done; \
+             echo "== env WS_ADMIN_TOKEN =="; printenv WS_ADMIN_TOKEN || echo "(non défini)"'
+
       - name: Prepare remote directory (validates SSH login)
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
