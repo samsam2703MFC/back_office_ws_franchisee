@@ -4504,12 +4504,25 @@ class Component extends DCLogic {
     // Commandes du jour — RÉEL (ws_orders via /franchisee/fr-orders). Le clic
     // sur le statut AVANCE la commande et l'ÉCRIT en base (POST order-status).
     const ordStatFR={pending:'En attente',confirmed:'Confirmée',preparing:'En préparation',ready:'Prête',delivered:'Livrée',completed:'Remise',cancelled:'Annulée'};
-    const ordNext={pending:'confirmed',confirmed:'preparing',preparing:'ready'};
+    // Dernier cran DÉPENDANT DU MODE : une commande livrée devient « Livrée »,
+    // une commande à emporter « Remise » quand le client repart avec. Sans lui,
+    // la chaîne s'arrêtait à « Prête » — le franchisé ne pouvait pas solder sa
+    // journée, et rien ne distinguait une commande en attente du client d'une
+    // commande déjà partie. Les deux statuts existaient en base et étaient
+    // acceptés par l'API : il manquait seulement le bouton.
+    const ordNextOf=(o)=>{
+      const st=o&&o.statut;
+      if(st==='pending')   return 'confirmed';
+      if(st==='confirmed') return 'preparing';
+      if(st==='preparing') return 'ready';
+      if(st==='ready')     return (o&&o.mode==='Livraison')?'delivered':'completed';
+      return null;   // delivered / completed / cancelled : terminal
+    };
     const ordStatColor=(s)=>({pending:['#fbe9eb','var(--color-primary)'],confirmed:['#eef3fb','#2a5a9e'],preparing:['#fff4e5','#b26a00'],ready:['#eaf5ec','#2d7a3e'],delivered:['var(--color-background-secondary)','var(--color-text-muted)'],completed:['var(--color-background-secondary)','var(--color-text-muted)'],cancelled:['#fbe9eb','var(--color-primary)']}[s]||['var(--color-background-secondary)','var(--color-text-muted)']);
     const ordersRaw=SRV('fr_orders');
-    const ordAdvance=(o)=>{ const nx=ordNext[o.statut]; if(!nx) return; const fr=window.__FR||{};
+    const ordAdvance=(o)=>{ const nx=ordNextOf(o); if(!nx) return; const fr=window.__FR||{};
       if(!fr.base){ this.printJob('API indisponible — statut non modifié'); return; }
-      const nxMode=nx==='ready'&&o.mode==='Livraison'?'ready':nx;
+      const nxMode=nx;
       fetch(fr.base+'/franchisee/order-status'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({ref:o.ref,status:nxMode})})
         .then(r=>r.json()).then(j=>{ if(j&&j.ok){ const st2=j.status||nxMode; const rows=SRV('fr_orders'); const i2=rows.findIndex(x=>x.ref===o.ref); if(i2>=0){ rows[i2]={...rows[i2],statut:st2}; if(window.BOServer) window.BOServer.refresh('fr_orders',rows); } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob('✓ Commande '+o.ref+' → « '+(ordStatFR[st2]||st2)+' » (ws_orders)'); } else this.printJob((j&&j.error)||'Erreur statut'); })
         .catch(()=>this.printJob('Réseau indisponible — statut non modifié')); };
@@ -4544,8 +4557,10 @@ class Component extends DCLogic {
           srcPill:pill2(o.source==='POS'?'var(--color-background-secondary)':'#eef3fb',o.source==='POS'?'var(--color-text)':'#2a5a9e'),
           payeTxt:o.paye||'—',
           payePill:pill2(o.paye==='Payé'?'#eaf5ec':(o.paye==='Facturé'?'#eef3fb':'#fbe9eb'),o.paye==='Payé'?'#2d7a3e':(o.paye==='Facturé'?'#2a5a9e':'var(--color-primary)')),
-          statut:(ordStatFR[o.statut]||o.statut)+(ordNext[o.statut]?' →':''),
-          statutStyle:'border:none;cursor:pointer;'+pill2(bg,c),
+          statut:(ordStatFR[o.statut]||o.statut)+(ordNextOf(o)?' →':''),
+          // Statut terminal : plus de flèche, plus de curseur « cliquable » —
+          // un bouton qui ne fait rien laisse croire à une panne.
+          statutStyle:'border:none;'+(ordNextOf(o)?'cursor:pointer;':'cursor:default;')+pill2(bg,c),
           advance:()=>ordAdvance(o) };
       });
     const ordersEmpty=ordersList.length===0;
