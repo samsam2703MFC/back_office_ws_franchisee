@@ -4448,7 +4448,13 @@ class Component extends DCLogic {
       const bxSeen=new Set(); const bx=[];
       siteRowsAll.filter(x=>bKey(x)===rk).forEach(x=>{ const b=(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null); if(b&&!bxSeen.has(normA(b))){ bxSeen.add(normA(b)); bx.push(b); } });
       const canDrop=S.dndOff!=null;
-      const addable=offValid.filter(o=>!bxSeen.has(normA(o.name)));
+      // Un bureau déjà rattaché à un site N'EST PLUS proposé, nulle part. Le
+      // filtre n'excluait que les bureaux de CETTE carte : un bureau posé sur
+      // « Zoning Sud Wavre » restait offert dans le sélecteur de tous les autres
+      // sites, et l'y choisir le déplaçait sans prévenir. offPairedKeys porte
+      // déjà l'ensemble des bureaux rattachés — c'est lui qui fait foi juste
+      // au-dessus pour lister les bureaux SANS site.
+      const addable=offValid.filter(o=>!offPairedKeys.has(normA(o.name)));
       offSiteCards.push({nom:(r.name&&r.name!=='—')?r.name:r.adr,
         adr:(r.adr&&r.adr!=='—')?r.adr:'⚠ adresse à compléter (écran Sites → ✎)',
         tourLbl:(r.tour&&r.tour!=='—')?r.tour:'⏸ sans tournée',
@@ -4459,7 +4465,8 @@ class Component extends DCLogic {
         bx:bx.map(b=>({name:b,remove:()=>offDetach(r,b)})),
         bxEmpty:bx.length===0,
         addSel:'',
-        addOpts:[{value:'',label:'+ Ajouter un bureau…'},...addable.map(o=>({value:offKey(o),label:o.name}))],
+        addOpts:[{value:'',label:addable.length?'+ Ajouter un bureau…':'Aucun bureau libre — tous sont déjà rattachés'},
+                 ...addable.map(o=>({value:offKey(o),label:o.name}))],
         addSet:(e)=>{ const v=e.target.value; if(v) offAttach(r,v); }});
     });
 
