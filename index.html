@@ -418,6 +418,7 @@
                 <span style="{{ r.colDot }}"></span>
                 <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px">{{ r.driver }} · départ {{ r.start }}</div></div>
                 <div style="flex:none;display:flex;gap:5px">
+                  <button onClick="{{ r.toggleOn }}" title="{{ r.tOnTitle }}" style="{{ r.tOnStyle }}">{{ r.tOnLabel }}</button>
                   <button onClick="{{ r.itin }}" title="Voir l'itinéraire sur la carte (ordre des arrêts)" style="{{ r.itinStyle }}">🗺 Itinéraire</button>
                   <button onClick="{{ r.editTile }}" title="Modifier la tournée" style="width:27px;height:27px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-text-muted);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
                   <button onClick="{{ r.delTile }}" title="Supprimer la tournée" style="width:27px;height:27px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
@@ -3895,6 +3896,21 @@ class Component extends DCLogic {
     const unassignedEmpty=unassignedSites.length===0;
     const tvArmOn=!!armKey;
     // TUILES tournées (4 par ligne) : composition exacte sites + bureaux.
+    /* Interrupteur d'activation d'une tournée. Écrit ws_tours.active — la
+       colonne existait et était déjà respectée côté webshop (/delivery-zones,
+       frais de livraison), mais rien ne permettait de la basculer. */
+    const tourToggleActive=(t)=>()=>{ if(!window.BOServer) return;
+      const rows=window.BOServer.table('ws_tours');
+      const i=rows.findIndex(x=>String(x.id)===String(t.id));
+      if(i<0) return;
+      const next=!(rows[i].active!==false&&rows[i].active!==0);
+      rows[i]={...rows[i],active:next};
+      window.BOServer.save('ws_tours',rows);
+      this.setState(st=>({_rev:(st._rev||0)+1}));
+      setTimeout(()=>this.bcRefreshOffices(),150);
+      this.printJob(next?('✓ Tournée « '+t.name+' » activée')
+        :('⏸ Tournée « '+t.name+' » désactivée — elle n’est plus proposée aux sites ni aux bureaux'));
+    };
     const tourTiles=rMeta.filter(t=>t.name).map((t,ti)=>{
       const sites=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(t.name))
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
@@ -3904,8 +3920,17 @@ class Component extends DCLogic {
       const col=tColors[ti%tColors.length];
       const addable=tvList.filter(b=>!b.tour||tNorm(b.tour)!==tNorm(t.name));
       const tvPill=(bg,c)=>'display:inline-flex;align-items:center;height:20px;border-radius:20px;padding:0 9px;font:600 10px/1 var(--font-ui);white-space:nowrap;background:'+bg+';color:'+c;
+      // Activation. Une tournée en préparation ou suspendue ne doit plus être
+      // proposée aux sites ni aux bureaux, sans être supprimée : la supprimer
+      // perdrait ses codes postaux, ses horaires et son historique.
+      const tOn=t.active!==false&&t.active!==0;
       return {name:t.name,short:t.short||'',driver:t.driver||'— non assigné',start:this.hhmm(t.start!=null?t.start:360),
-        col, colDot:'width:10px;height:10px;border-radius:50%;flex:none;background:'+col,
+        col, colDot:'width:10px;height:10px;border-radius:50%;flex:none;background:'+(tOn?col:'var(--color-border-secondary)'),
+        tOn, tOnLabel:tOn?'Active':'Désactivée',
+        tOnStyle:'display:inline-flex;align-items:center;gap:6px;height:27px;border-radius:7px;padding:0 10px;border:.5px solid '+(tOn?'#bfe0c7':'var(--color-border-secondary)')+';background:'+(tOn?'#eaf5ec':'var(--color-background-secondary)')+';color:'+(tOn?'#2d7a3e':'var(--color-text-muted)')+';font:600 10.5px var(--font-ui);cursor:pointer;white-space:nowrap',
+        tOnTitle:tOn?'Désactiver — la tournée cesse d’être proposée aux sites et aux bureaux, sans rien perdre'
+                    :'Réactiver — la tournée redevient proposable',
+        toggleOn:tourToggleActive(t),
         drops:String(nbOff),max:String(max),nbSites:String(sites.length),
         capPill:tvPill(over?'#fbe9eb':(nbOff/max>=0.8?'#fff4e5':'#eaf5ec'),over?'var(--color-primary)':(nbOff/max>=0.8?'#b26a00':'#2d7a3e')),
         capTxt:nbOff+'/'+max+' bureaux',
@@ -4297,7 +4322,11 @@ class Component extends DCLogic {
       return {prim,sec};
     };
     const chipMini='border:none;cursor:pointer;font:500 10px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:4px 8px;color:var(--color-text);white-space:nowrap';
-    const siteTourNames=[...new Set(SRV('ws_tours').map(t=>t.name).filter(Boolean))];
+    // Tournées ACTIVES seulement : une tournée désactivée ne doit plus pouvoir
+    // être choisie pour un site — sinon le site serait rattaché à un circuit qui
+    // ne roule pas, et le webshop refuserait la livraison sans rien expliquer.
+    const tourActive=t=>t.active!==false&&t.active!==0;
+    const siteTourNames=[...new Set(SRV('ws_tours').filter(tourActive).map(t=>t.name).filter(Boolean))];
     const siteRowsAll=SRV('ws_office_delivery_sites');
     // Adresse/nom NORMALISÉS (casse, espaces) : deux variantes de la même
     // adresse = UN SEUL bâtiment — sinon cartes et tags apparaissent en double.
@@ -5319,7 +5348,9 @@ class Component extends DCLogic {
 
     // ===== Assistant onboarding bureau =====
     const O=S.ob, obStep=S.obStep;
-    const obTours=[...new Set(SRV('ws_tours').map(t=>t.name).filter(Boolean))]; // RÉEL uniquement
+    // RÉEL et ACTIF uniquement : proposer une tournée désactivée à la création
+    // d'un bureau reviendrait à créer un bureau non livrable.
+    const obTours=[...new Set(SRV('ws_tours').filter(t=>t.active!==false&&t.active!==0).map(t=>t.name).filter(Boolean))];
     const obZc=zoneChain(O.tour,O.adr);
     const obIn='width:100%;padding:11px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface);box-sizing:border-box';
     const obSteps=this.OB_STEPS.map((label,i)=>({label,n:String(i+1),done:i<obStep,active:i===obStep,
