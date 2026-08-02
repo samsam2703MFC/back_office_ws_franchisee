@@ -3270,12 +3270,19 @@ class Component extends DCLogic {
   stkCommit(draftKey, serverVal, nom, mode, flagKey, pid){
     const S=this.state, raw=S.flags[draftKey];
     const clear=()=>this.setState(st=>{ const f={...st.flags}; delete f[draftKey]; return {flags:f}; });
-    if(raw===undefined){ return; }
-    const v=parseInt(String(raw).trim(),10);
+    const canal=(mode==='delivery'?'online':'en shop');
+    // Aucune sortie muette. Les deux cas « rien à faire » renvoyaient false sans
+    // un mot : on tapait une quantité, on validait, et l'écran restait identique
+    // sans qu'on puisse distinguer « c'était déjà cette valeur » d'une panne.
+    // Un champ qui n'écrit pas doit dire pourquoi il n'écrit pas.
+    if(raw===undefined){ this.printJob('Stock '+canal+' de « '+nom+' » inchangé — aucune saisie à valider'); return; }
+    const txt=String(raw).trim();
+    if(txt===''){ this.printJob('Stock '+canal+' de « '+nom+' » : champ vide — valeur conservée ('+serverVal+')'); clear(); return; }
+    const v=parseInt(txt,10);
     if(!isFinite(v)||v<0){ this.printJob('Quantité invalide — valeur inchangée'); clear(); return; }
     const delta=v-serverVal;
     clear();
-    if(!delta) return;                       // rien à envoyer
+    if(!delta){ this.printJob('Stock '+canal+' de « '+nom+' » déjà à '+serverVal+' — rien à enregistrer'); return; }
     this.stkAdjust(nom, mode, delta, flagKey, serverVal, pid);
   }
   /* Seuil d'alerte d'un produit. Champ VIDE = retour au seuil global : il faut
