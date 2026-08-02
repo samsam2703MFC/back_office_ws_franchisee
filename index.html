@@ -111,31 +111,6 @@
   ::-webkit-scrollbar-thumb{background:rgba(34,34,34,.22);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
 </style>
 </helmet>
-<!-- ÉCRAN DE CONNEXION TABLETTE (PIN 4 chiffres).
-     Affiché uniquement sans jeton admin ET sans session PIN : l'administrateur
-     (jeton ERP) conserve son accès direct. Le clavier est tactile, sans champ
-     texte, pour un usage au doigt en boutique. -->
-<sc-if value="{{ pinNeeded }}" hint-placeholder-val="{{ false }}">
-  <div style="position:fixed;inset:0;z-index:900;background:var(--color-bg);display:flex;align-items:center;justify-content:center">
-    <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:18px;padding:34px 38px;box-shadow:0 18px 50px rgba(0,0,0,.18);text-align:center;width:360px">
-      <img src="img/logo.png" alt="L'Atelier" style="height:32px;width:auto;margin:0 auto 14px;display:block"/>
-      <div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ pinShopTxt }}</div>
-      <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:4px;margin-bottom:18px">Entrez votre code à 4 chiffres</div>
-      <div style="font:700 26px var(--font-ui);letter-spacing:.3em;color:var(--color-primary);margin-bottom:16px">{{ pinDots }}</div>
-      <sc-if value="{{ pinHasErr }}" hint-placeholder-val="{{ false }}">
-        <div style="background:#fbe9eb;color:var(--color-primary);border-radius:9px;padding:8px 12px;font:600 11.5px var(--font-ui);margin-bottom:14px">{{ pinErrTxt }}</div>
-      </sc-if>
-      <div style="display:grid;grid-template-columns:repeat(3,70px);gap:10px;justify-content:center">
-        <sc-for list="{{ pinKeys }}" as="k" hint-placeholder-count="9">
-          <button onClick="{{ k.press }}" style="{{ k.style }}">{{ k.d }}</button>
-        </sc-for>
-        <button onClick="{{ pinClearBtn }}" style="width:70px;height:70px;border-radius:16px;border:.5px solid var(--color-border-secondary);background:var(--color-background-secondary);font:600 13px var(--font-ui);color:var(--color-text-muted);cursor:pointer">Effacer</button>
-        <button onClick="{{ pinKey0.press }}" style="{{ pinKey0.style }}">{{ pinKey0.d }}</button>
-      </div>
-      <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:18px">Les comptes et les accès sont gérés dans la console marque.<br/>Administrateur&nbsp;? Ouvrez cette page avec <code>?shop=…&amp;token=&lt;jeton&gt;</code>.</div>
-    </div>
-  </div>
-</sc-if>
 <div style="display:grid;grid-template-columns:246px 1fr;height:100vh;background:var(--color-bg);overflow:hidden">
 
   <!-- SIDEBAR -->
@@ -143,15 +118,6 @@
     <div style="padding:20px 20px 16px;border-bottom:.5px solid var(--color-border-tertiary)">
       <img src="img/logo.png" alt="L'Atelier" style="height:34px;width:auto;display:block"/>
       <div style="font:400 10px/1.4 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);margin-top:7px">Back-office WebShop</div>
-      <sc-if value="{{ pinActive }}" hint-placeholder-val="{{ false }}">
-        <div style="margin-top:10px;background:var(--color-background-secondary);border-radius:9px;padding:8px 10px;display:flex;align-items:center;gap:8px">
-          <div style="flex:1;min-width:0">
-            <div style="font:600 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ pinNom }}</div>
-            <div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ pinNbSec }} section(s) autorisée(s)</div>
-          </div>
-          <button onClick="{{ pinLogoutBtn }}" title="Se déconnecter" style="background:transparent;border:none;cursor:pointer;color:var(--color-primary);font:600 11px var(--font-ui)">Quitter</button>
-        </div>
-      </sc-if>
     </div>
     <nav class="lz" style="flex:1;overflow-y:auto;padding:10px 12px 20px;display:flex;flex-direction:column;gap:3px">
       <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:4px;border-radius:8px;text-decoration:none;background:var(--color-background-secondary);color:var(--color-text-muted);font:500 12px/1 var(--font-ui)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 19l-7-7 7-7"/><path d="M3 12h18"/></svg><span>Retour à l'ERP</span></a>
@@ -1731,73 +1697,58 @@
       </div>
       </sc-if>
 
-      <!-- ===================== COMPTES TABLETTE (boutique) ===================== -->
-      <sc-if value="{{ isComptesTablette }}" hint-placeholder-val="{{ false }}">
+      <!-- ===================== TABLETTE KITCHEN (boutique) ===================== -->
+      <!-- Le mode tablette n'est plus géré ici : la tablette de comptoir tourne
+           sous Kitchen, qui porte son propre appareil et sa propre session.
+           Cet écran ne fait que livrer ce qu'il faut saisir dans la tablette :
+           l'URL du back-office et un jeton d'appareil révocable. -->
+      <sc-if value="{{ isTabletteKitchen }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:flex;justify-content:space-between;align-items:start;gap:12px">
-          <div style="font:400 12px var(--font-ui);color:var(--color-text-muted);max-width:640px">
-            Connexion par <strong>PIN à 4 chiffres</strong> sur la tablette du magasin. Les accès découlent du <strong>profil</strong> attribué — les profils et leurs sections sont définis par la marque.
-            <br/>L'accès administrateur complet reste le <strong>jeton ERP</strong> : un PIN ne le remplace jamais, et ne permet pas de gérer les comptes.
-          </div>
-          <button onClick="{{ btNew }}" class="btn-primary" style="font-size:12px;flex:none">+ Compte tablette</button>
+        <div style="font:400 12px/1.6 var(--font-ui);color:var(--color-text-muted);max-width:680px">
+          La tablette du magasin fonctionne sous <strong>Kitchen</strong>. Renseignez-y les deux valeurs
+          ci-dessous, dans <em>Paramètres &rsaquo; Mode WebShop</em>. Le jeton est propre à cette boutique et
+          <strong>révocable à tout moment</strong> : le révoquer ferme immédiatement toutes les tablettes qui l'utilisent.
         </div>
-        <sc-if value="{{ btHasErr }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#8d1d2c;color:#fff;border-radius:10px;padding:10px 14px;font:600 12px var(--font-ui)">⚠ {{ btErr }}</div>
-        </sc-if>
-        <sc-if value="{{ btNoRoles }}" hint-placeholder-val="{{ false }}">
-          <div style="background:#fff4e5;color:#b26a00;border-radius:10px;padding:10px 14px;font:600 12px var(--font-ui)">Aucun profil publié par la marque — impossible de créer un compte. La console marque doit d'abord créer les profils (Utilisateurs &amp; profils).</div>
-        </sc-if>
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
-          <div style="display:grid;grid-template-columns:1.4fr 1.2fr .6fr .7fr 1fr 70px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Nom</span><span class="t-admin-label">Profil</span><span class="t-admin-label">Sections</span><span class="t-admin-label">PIN</span><span class="t-admin-label">Dernière connexion</span><span></span></div>
-          <sc-for list="{{ btRows }}" as="u" hint-placeholder-count="3">
-            <div style="{{ u.rowStyle }}">
-              <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ u.nom }}</span>
-              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ u.role }}</span>
-              <span style="font:600 11.5px var(--font-ui);color:var(--color-text)">{{ u.nbSections }}</span>
-              <span style="font:600 11.5px var(--font-ui);color:{{ u.pinColor }}">{{ u.pinTxt }}</span>
-              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ u.lastTxt }}</span>
-              <div style="display:flex;justify-content:flex-end;gap:6px">
-                <button onClick="{{ u.edit }}" title="Modifier" style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:.5px solid var(--color-border-secondary);border-radius:8px;background:transparent;color:var(--color-primary);cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h3l11-11-3-3L4 17z"/><path d="M14 5l3 3"/></svg></button>
-                <button onClick="{{ u.del }}" title="Supprimer" style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:.5px solid var(--color-border-secondary);border-radius:8px;background:transparent;color:var(--color-primary);cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg></button>
-              </div>
+
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px;max-width:680px">
+          <label style="display:flex;flex-direction:column;gap:5px">
+            <span class="t-admin-label">URL du back-office</span>
+            <div style="display:flex;gap:8px">
+              <input value="{{ tkUrl }}" readonly style="flex:1;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 12.5px var(--font-mono, var(--font-ui));background:var(--color-background-secondary)"/>
+              <button onClick="{{ tkCopyUrl }}" class="btn-secondary" style="font-size:12px;flex:none">Copier</button>
             </div>
-          </sc-for>
+          </label>
+
+          <label style="display:flex;flex-direction:column;gap:5px">
+            <span class="t-admin-label">Jeton d'appareil</span>
+            <div style="display:flex;gap:8px">
+              <input value="{{ tkToken }}" readonly style="flex:1;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 12.5px var(--font-mono, var(--font-ui));background:var(--color-background-secondary);letter-spacing:.04em"/>
+              <button onClick="{{ tkCopyToken }}" class="btn-secondary" style="font-size:12px;flex:none">Copier</button>
+            </div>
+            <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ tkTokenHint }}</span>
+          </label>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button onClick="{{ tkGenerate }}" class="btn-primary" style="font-size:12.5px">{{ tkGenLabel }}</button>
+            <sc-if value="{{ tkHasToken }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ tkRevoke }}" class="btn-secondary" style="font-size:12.5px;color:var(--color-primary)">Révoquer</button>
+            </sc-if>
+          </div>
+        </div>
+
+        <sc-if value="{{ tkHasErr }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#8d1d2c;color:#fff;border-radius:10px;padding:10px 14px;font:600 12px var(--font-ui);max-width:680px">⚠ {{ tkErr }}</div>
+        </sc-if>
+
+        <div style="font:400 11px/1.6 var(--font-ui);color:var(--color-text-muted);max-width:680px">
+          Le jeton donne accès aux seules données du comptoir de cette boutique — jamais aux marges,
+          aux coûts ni aux paramètres réseau. Il ne remplace pas le jeton administrateur.
         </div>
       </div>
       </sc-if>
 
     </main>
   </div>
-
-  <!-- Formulaire compte tablette -->
-  <sc-if value="{{ btOpen }}" hint-placeholder-val="{{ false }}">
-  <div style="position:fixed;inset:0;background:rgba(34,34,34,.45);display:flex;align-items:center;justify-content:center;z-index:2100;padding:24px">
-    <div style="background:var(--color-surface);border-radius:14px;width:520px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);padding:22px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div class="t-page-title" style="font-size:18px">{{ btTitle }}</div>
-        <button onClick="{{ btClose }}" style="background:transparent;border:none;font:600 16px var(--font-ui);cursor:pointer;color:var(--color-text-muted)">✕</button>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Nom de l'employé</span>
-          <input value="{{ btF.nom }}" onInput="{{ btSetNom }}" placeholder="ex. Julie D." style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 13px var(--font-ui)"/></label>
-        <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Profil (définit les accès)</span>
-          <select onChange="{{ btSetRole }}" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 13px var(--font-ui)">
-            <option value="">— choisir un profil —</option>
-            <sc-for list="{{ btRoleOpts }}" as="r" hint-placeholder-count="4"><option value="{{ r.id }}" selected="{{ r.sel }}">{{ r.label }}</option></sc-for>
-          </select>
-          <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Les sections viennent du profil — elles se règlent dans la console marque.</span></label>
-        <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">PIN à 4 chiffres</span>
-          <input value="{{ btF.pin }}" onInput="{{ btSetPin }}" inputmode="numeric" maxlength="4" placeholder="••••" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:700 15px var(--font-ui);letter-spacing:.25em"/>
-          <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ btPinHelp }}</span></label>
-        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked="{{ btF.active }}" onChange="{{ btSetActive }}"/><span style="font:500 12.5px var(--font-ui)">Compte actif — décocher ferme immédiatement la tablette</span></label>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
-        <button onClick="{{ btClose }}" class="btn-secondary" style="font-size:12.5px">Annuler</button>
-        <button onClick="{{ btSave }}" class="btn-primary" style="font-size:12.5px">Enregistrer</button>
-      </div>
-    </div>
-  </div>
-  </sc-if>
 
   <sc-if value="{{ toastShow }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:2500;background:var(--color-text);color:#fff;border-radius:10px;padding:14px 22px;font:500 13px var(--font-ui);box-shadow:0 8px 30px rgba(0,0,0,.3)">{{ toast }}</div>
@@ -3068,71 +3019,7 @@ class Component extends DCLogic {
   };
   tr(k){ const lang=this.state.lang; return (this.T[k]&&this.T[k][lang])||(this.T[k]&&this.T[k].FR)||k; }
 
-  // ── SESSION TABLETTE (PIN) ────────────────────────────────────────────────
-  // Chargée depuis localStorage au boot ; revalidée auprès du serveur (une
-  // session révoquée ou expirée côté base doit fermer l'accès, pas seulement
-  // masquer le menu).
-  pinRestore(){
-    let ses=null;
-    try { ses=JSON.parse(localStorage.getItem('boPinSession')||'null'); } catch(e){}
-    if(!ses||!ses.token) return;
-    this.setState({pinSession:ses});
-    const fr=(typeof window!=='undefined'&&window.__FR)||{};
-    if(!fr.base) return;
-    fetch(fr.base+'/bo/pin-me',{headers:{'X-Pin-Token':ses.token},credentials:'omit'})
-      .then(r=>r.ok?r.json():null)
-      .then(j=>{ if(j&&j.ok){ const up={token:ses.token,nom:j.nom,shopId:j.shopId,sections:j.sections||[]};
-          try{ localStorage.setItem('boPinSession',JSON.stringify(up)); }catch(e){}
-          this.setState({pinSession:up}); }
-        else this.pinForget(); })
-      .catch(()=>{ /* hors ligne : on garde la session locale jusqu'au retour réseau */ });
-  }
-  // Quitter la session : on efface AUSSI le jeton de la couche données et on
-  // recharge — sinon les données de la session précédente restaient à l'écran
-  // derrière le pavé PIN.
-  pinForget(){ try{ localStorage.removeItem('boPinSession'); }catch(e){}
-    try{ if(window.__FR) window.__FR.pinToken=''; }catch(e){}
-    this.setState({pinSession:null});
-    setTimeout(function(){ try{ location.reload(); }catch(e){} }, 60); }
-  pinLogout(){ const ses=this.state.pinSession; const fr=(typeof window!=='undefined'&&window.__FR)||{};
-    if(ses&&ses.token&&fr.base){ fetch(fr.base+'/bo/pin-logout',{method:'POST',headers:{'X-Pin-Token':ses.token},credentials:'omit'}).catch(()=>{}); }
-    this.pinForget(); this.setState({pinPad:'',pinErr:null});
-  }
-  pinDigit(d){ return ()=>{ const cur=String(this.state.pinPad||''); if(cur.length>=4) return;
-    const nv=cur+String(d); this.setState({pinPad:nv,pinErr:null});
-    if(nv.length===4) setTimeout(()=>this.pinSubmit(nv),120); }; }
-  pinClear(){ this.setState({pinPad:'',pinErr:null}); }
-  pinSubmit(code){
-    const fr=(typeof window!=='undefined'&&window.__FR)||{};
-    const shop=parseInt(fr.shop||0,10);
-    if(!fr.base){ this.setState({pinErr:'API indisponible — connexion impossible (please debug)',pinPad:''}); return; }
-    if(!shop){ this.setState({pinErr:'Boutique inconnue : ouvrez le back-office avec ?shop=<id>',pinPad:''}); return; }
-    this.setState({pinBusy:true});
-    fetch(fr.base+'/bo/pin-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',
-      body:JSON.stringify({shopId:shop,pin:String(code)})})
-      .then(r=>r.json().then(j=>({ok:r.ok,j})))
-      .then(({ok,j})=>{ this.setState({pinBusy:false,pinPad:''});
-        if(!ok||!j.ok){ this.setState({pinErr:(j&&j.error)||'PIN incorrect'}); return; }
-        const ses={token:j.token,nom:j.nom,shopId:j.shopId,sections:j.sections||[]};
-        try{ localStorage.setItem('boPinSession',JSON.stringify(ses)); }catch(e){}
-        // L'hydratation a déjà eu lieu SANS authentification (écrans vides) :
-        // on recharge pour que la couche données reparte avec le jeton PIN.
-        // Sans ce rechargement, la tablette restait vide après un PIN correct.
-        try{ window.__FR=window.__FR||{}; window.__FR.pinToken=j.token;
-             if(j.shopId) window.__FR.shop=String(j.shopId); }catch(e){}
-        this.setState({pinSession:ses,pinErr:null,screen:(j.sections&&j.sections[0])||'tdb'});
-        setTimeout(function(){ try{ location.reload(); }catch(e){} }, 60);
-      })
-      .catch(()=>this.setState({pinBusy:false,pinPad:'',pinErr:'Réseau indisponible'}));
-  }
   go(s){ return ()=>{ const st={screen:s};
-    // Garde-fou : une session tablette ne peut pas atteindre une section non
-    // autorisée, même en forçant (le masquage du menu ne suffit pas).
-    const ses=this.state.pinSession;
-    if(ses&&Array.isArray(ses.sections)&&ses.sections.indexOf(s)<0){
-      this.printJob('⛔ Section « '+s+' » non autorisée pour ce compte');
-      return;
-    }
     // Stock du jour : à l'ARRIVÉE sur l'écran, si des produits sont sous le
     // seuil bas, la modale d'alerte se rouvre (état null = automatique).
     if(s==='stockJour') st.stkAlert=null;
@@ -3550,7 +3437,7 @@ class Component extends DCLogic {
     if(!this._suiviFit){ const all=[[d.lat,d.lng],...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
       if(all.length>1){ this._suiviFit=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
   }
-  componentDidMount(){ this.pinRestore(); this.ensureMaps();
+  componentDidMount(){ this.ensureMaps();
     // Auto-refresh des COMMANDES : toutes les 60 s tant que l'onglet est
     // visible et qu'un écran « commandes » est affiché — une nouvelle commande
     // webshop apparaît sans recharger la page. Au retour sur l'onglet
@@ -3558,68 +3445,70 @@ class Component extends DCLogic {
     this._ordTimer=setInterval(()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); },60000);
     document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); });
   }
-  componentDidUpdate(){ this.ensureMaps(); this.btEnsure(); }
+  componentDidUpdate(){ this.ensureMaps(); }
 
-  /* ══ COMPTES TABLETTE (franchisé) ═══════════════════════════════════════════
-     Le franchisé crée SES comptes et leur attribue un PROFIL publié par la
-     marque. Il ne coche aucune section : elles découlent du profil, donc il ne
-     peut pas s'octroyer un accès non prévu.
-     Réservé au jeton admin ERP — une session PIN ne peut pas atteindre ces
-     routes (elles ne sont pas cartographiées côté serveur). ── */
-  btEnsure(){ if(this.state.screen!=='comptesTablette' || this._btLoading) return;
-    if(this.state.btList && this.state.btRoles) return;
-    const fr=(typeof window!=='undefined'&&window.__FR)||{};
-    if(!fr.base){ if(!this.state.btErr) this.setState({btErr:'API non configurée — comptes tablette indisponibles (please debug)'}); return; }
-    if(!fr.token){ if(!this.state.btErr) this.setState({btErr:'Réservé à l\u2019administrateur (jeton ERP) — une session tablette ne peut pas gérer les comptes'}); return; }
-    this._btLoading=true;
-    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
-    Promise.all([
-      fetch(fr.base+'/franchisee/bo-users'+qs,{headers:FRH(),credentials:'omit'}).then(r=>{ if(!r.ok) throw new Error('comptes HTTP '+r.status); return r.json(); }),
-      fetch(fr.base+'/franchisee/bo-roles'+qs,{headers:FRH(),credentials:'omit'}).then(r=>{ if(!r.ok) throw new Error('profils HTTP '+r.status); return r.json(); }),
-    ]).then(([list,roles])=>{ this._btLoading=false;
-      this.setState({btList:Array.isArray(list)?list:[], btRoles:Array.isArray(roles)?roles:[], btErr:null}); })
-      .catch(e=>{ this._btLoading=false;
-        this.setState({btErr:'Chargement en échec — please debug : '+(e&&e.message||e)}); });
+  /* ══ TABLETTE KITCHEN (Réglages) ═══════════════════════════════════════════
+     Le mode tablette (PIN, comptes, profils) a été retiré de ce back-office :
+     la tablette de comptoir tourne sous Kitchen, qui porte son propre appareil
+     et sa propre session. Il ne reste ici qu'à fournir ce qu'on saisit dans la
+     tablette : l'URL du back-office et un jeton d'appareil.
+
+     Le jeton est propre à la boutique et RÉVOCABLE : le révoquer ferme
+     immédiatement les tablettes qui l'utilisent. Il ne donne accès qu'aux
+     données du comptoir — jamais aux marges ni aux paramètres réseau — et ne
+     remplace donc pas le jeton administrateur. ── */
+  tkUrl(){
+    try {
+      const base = location.origin + location.pathname.replace(/[^/]*$/, '');
+      const shop = ((window.__FR||{}).shop)||'';
+      return shop ? (base + '?shop=' + encodeURIComponent(shop)) : base;
+    } catch(e){ return ''; }
   }
-  btReload(){ const fr=(typeof window!=='undefined'&&window.__FR)||{}; if(!fr.base) return;
-    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
-    fetch(fr.base+'/franchisee/bo-users'+qs,{headers:FRH(),credentials:'omit'})
-      .then(r=>r.ok?r.json():null)
-      .then(l=>{ if(Array.isArray(l)) this.setState({btList:l}); })
-      .catch(()=>this.printJob('⚠ Rechargement des comptes en échec'));
+  tkCopy(txt, msg){
+    if(!txt){ this.printJob('Rien à copier'); return; }
+    const done = ()=>this.printJob(msg);
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(()=>this.tkCopyFallback(txt,done)); }
+      else this.tkCopyFallback(txt, done);
+    } catch(e){ this.tkCopyFallback(txt, done); }
   }
-  btNew(){ this.setState({bt:{id:0,nom:'',roleId:'',pin:'',active:true}}); }
-  btEdit(u){ this.setState({bt:{id:u.id,nom:u.nom==='(sans nom)'?'':u.nom,
-    roleId:u.roleId?String(u.roleId):'',pin:'',active:!!u.active}}); }
-  btClose(){ this.setState({bt:null}); }
-  btSet(k){ return (e)=>{ const v=(k==='active')?e.target.checked:e.target.value;
-    this.setState(st=>({bt:{...st.bt,[k]:v}})); }; }
-  btSave(){ const u=this.state.bt; if(!u) return;
+  tkCopyFallback(txt, done){
+    try { const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done(); }
+    catch(e){ this.printJob('Copie impossible — sélectionnez le texte à la main'); }
+  }
+  tkGenerate(){
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
-    if(!fr.base||!fr.token){ this.printJob('⚠ ERREUR — jeton administrateur requis : compte NON enregistré'); return; }
-    if(!String(u.nom||'').trim()){ this.printJob('⚠ Nom requis'); return; }
-    if(!u.roleId){ this.printJob('⚠ Profil requis — c\u2019est lui qui détermine les accès'); return; }
-    const pin=String(u.pin||'').replace(/\D/g,'');
-    if(pin && pin.length!==4){ this.printJob('⚠ Le PIN doit comporter exactement 4 chiffres'); return; }
-    if(!u.id && !pin){ this.printJob('⚠ Un PIN à 4 chiffres est requis à la création'); return; }
-    fetch(fr.base+'/franchisee/bo-user'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
-      {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
-       body:JSON.stringify({id:u.id||undefined,nom:u.nom,roleId:parseInt(u.roleId,10),pin:pin,active:u.active?1:0})})
+    if(!fr.base){ this.setState({tkErr:'API non configurée — jeton indisponible (please debug)'}); return; }
+    if(!fr.token){ this.setState({tkErr:'Réservé à l\u2019administrateur (jeton ERP)'}); return; }
+    const shop=parseInt(fr.shop||0,10);
+    if(!shop){ this.setState({tkErr:'Boutique inconnue : ouvrez le back-office avec ?shop=<id>'}); return; }
+    fetch(fr.base+'/franchisee/device-token',{method:'POST',
+      headers:{'Content-Type':'application/json','X-Admin-Token':fr.token},
+      body:JSON.stringify({shopId:shop})})
       .then(r=>r.json().then(j=>({ok:r.ok,j})))
-      .then(({ok,j})=>{ if(!ok||!j.ok){ this.printJob('⚠ '+((j&&j.error)||'Enregistrement refusé')); return; }
-        this.printJob('✔ Compte « '+u.nom+' » enregistré · profil '+(j.role||'—')+(j.pinPose?' · PIN posé':''));
-        this.setState({bt:null}); this.btReload(); })
-      .catch(()=>this.printJob('⚠ Réseau indisponible — compte non enregistré'));
+      .then(({ok,j})=>{
+        if(!ok||!j||j.ok===false){ this.setState({tkErr:(j&&j.error)||'Génération refusée'}); return; }
+        this.setState({tkToken:j.token||'',tkErr:null});
+        this.printJob('Jeton d\u2019appareil généré — copiez-le, il ne sera plus affiché en entier');
+      })
+      .catch(e=>this.setState({tkErr:'Réseau indisponible — '+(e&&e.message?e.message:'échec')}));
   }
-  btDelete(u){ if(!confirm('Supprimer le compte « '+u.nom+' » ? Sa session tablette sera fermée immédiatement.')) return;
+  tkRevoke(){
+    if(!confirm('Révoquer le jeton ? Toutes les tablettes qui l\u2019utilisent seront déconnectées immédiatement.')) return;
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
-    if(!fr.base||!fr.token){ this.printJob('⚠ ERREUR — jeton administrateur requis'); return; }
-    fetch(fr.base+'/franchisee/bo-user-delete'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
-      {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
-       body:JSON.stringify({id:u.id})})
-      .then(r=>r.json()).then(j=>{ if(!j.ok){ this.printJob('⚠ '+(j.error||'Suppression refusée')); return; }
-        this.printJob('✖ Compte supprimé'); this.btReload(); })
-      .catch(()=>this.printJob('⚠ Réseau indisponible — suppression non effectuée'));
+    if(!fr.base||!fr.token){ this.setState({tkErr:'Réservé à l\u2019administrateur (jeton ERP)'}); return; }
+    const shop=parseInt(fr.shop||0,10);
+    fetch(fr.base+'/franchisee/device-token',{method:'DELETE',
+      headers:{'Content-Type':'application/json','X-Admin-Token':fr.token},
+      body:JSON.stringify({shopId:shop})})
+      .then(r=>r.json().then(j=>({ok:r.ok,j})))
+      .then(({ok,j})=>{
+        if(!ok||!j||j.ok===false){ this.setState({tkErr:(j&&j.error)||'Révocation refusée'}); return; }
+        this.setState({tkToken:'',tkErr:null});
+        this.printJob('Jeton révoqué — les tablettes concernées sont déconnectées');
+      })
+      .catch(e=>this.setState({tkErr:'Réseau indisponible — '+(e&&e.message?e.message:'échec')}));
   }
 
   render(){ return null; }
@@ -3629,19 +3518,12 @@ class Component extends DCLogic {
     const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
     const pts=this.points();
     // nav
-    // ===== SESSION TABLETTE (PIN) : filtrage des sections autorisées =====
-    // Admin (jeton ERP) => aucune restriction. Session PIN => seules les
-    // sections cochées dans la console marque sont accessibles ; les autres
-    // sont masquées du menu ET refusées si on tente d'y aller.
-    const pinSes=S.pinSession||null;
-    const allowed=pinSes&&Array.isArray(pinSes.sections)?pinSes.sections:null;
-    const canSee=(k)=>!allowed||allowed.indexOf(k)>=0;
     const nav={}, navStyles={};
     ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{
       nav[k]=this.go(k);
-      navStyles[k]=this.navStyle(k)+(canSee(k)?'':';display:none');
+      navStyles[k]=this.navStyle(k);
     });
-    const paramScreens=['tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','comptesTablette'];
+    const paramScreens=['tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
     const paramsActive=paramScreens.includes(S.screen);
     // Fil d'ariane du paramétrage livraison : 1 · Tournées → 2 · Bureaux
     // (assignés aux sites) → 3 · Clients (la page Clients). Stepper graphique :
@@ -3672,10 +3554,10 @@ class Component extends DCLogic {
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams') };
     const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
-      commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',comptesTablette:'Comptes tablette'};
+      commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
     const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
-      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding',comptesTablette:'bo_users — nom · profil · PIN · état (connexion tablette du magasin)'};
+      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
     // TDB
     const stat=(l,bg,c)=>({label:l,style:this.pill(bg,c)});
@@ -4200,10 +4082,7 @@ class Component extends DCLogic {
       {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['b2bClients','Clients']]},
       {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
       // Réglages : administration de la boutique, pas exploitation quotidienne.
-      // « Comptes tablette » n'est PAS une section de profil : une session PIN
-      // ne peut donc ni la voir (canSee) ni l'atteindre côté serveur — un
-      // vendeur ne se crée pas un compte « admin boutique ».
-      {id:'g_reglages',label:'Réglages',items:[['shopParams','Paramètres du shop'],['comptesTablette','Comptes tablette']]},
+      {id:'g_reglages',label:'Réglages',items:[['shopParams','Paramètres du shop'],['tabletteKitchen','Tablette Kitchen']]},
     ];
     const navSub=(s)=>{ const active=S.screen===s; return 'display:flex;align-items:center;width:100%;padding:9px 12px 9px 32px;border:none;border-radius:8px;cursor:pointer;font:'+(active?'600':'400')+' 12.5px/1 var(--font-ui);text-align:left;'+(active?'background:var(--color-background-secondary);color:var(--color-primary)':'background:transparent;color:var(--color-text-muted)'); };
     const navGroups=groupsDef.map(g=>{
@@ -4216,8 +4095,8 @@ class Component extends DCLogic {
         toggle: single ? this.go(soloScreen) : (()=>{ const cur=S.openGroups[g.id]!==undefined?S.openGroups[g.id]:hasActive; this.setState(st=>({openGroups:{...st.openGroups,[g.id]:!cur}})); }),
         headStyle:'display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:none;border-radius:8px;cursor:pointer;font:600 12px/1 var(--font-ui);text-align:left;background:'+(single&&hasActive?'var(--color-background-secondary)':'transparent')+';margin-top:2px;color:'+(hasActive?'var(--color-primary)':'var(--color-text)'),
         chevStyle:'flex:none;transition:transform .15s'+(single?';opacity:0;width:0':'')+(open?';transform:rotate(90deg)':''),
-        items:g.items.filter(([s2])=>canSee(s2)).map(([s,label])=>({label,go:this.go(s),style:navSub(s)})),
-        groupHidden:!g.items.some(([s2])=>canSee(s2)),
+        items:g.items.map(([s,label])=>({label,go:this.go(s),style:navSub(s)})),
+        groupHidden:false,
       };
     }).filter(g=>!g.groupHidden);
 
@@ -5262,22 +5141,6 @@ class Component extends DCLogic {
 
     return {
       navGroups,
-      // ── Écran de connexion PIN (tablette) ──
-      // Affiché uniquement s'il n'y a NI jeton admin NI session PIN : l'admin
-      // (jeton ERP) garde donc son accès direct, comme aujourd'hui.
-      pinNeeded: !((window.__FR||{}).token) && !S.pinSession,
-      pinDots: (function(n){ let o=''; for(let i=0;i<4;i++) o+= (i<n?'●':'○')+(i<3?' ':''); return o; })(String(S.pinPad||'').length),
-      pinErrTxt: S.pinErr||'', pinHasErr: !!S.pinErr, pinBusy: !!S.pinBusy,
-      pinShopTxt: ((window.__SHOPINFO||{}).name)||('Boutique '+((window.__FR||{}).shop||'?')),
-      pinKeys: [1,2,3,4,5,6,7,8,9].map(d=>({d:String(d),press:this.pinDigit(d),
-        style:'width:70px;height:70px;border-radius:16px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);font:600 24px var(--font-ui);color:var(--color-text);cursor:pointer'})),
-      pinKey0: {d:'0',press:this.pinDigit(0),
-        style:'width:70px;height:70px;border-radius:16px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);font:600 24px var(--font-ui);color:var(--color-text);cursor:pointer'},
-      pinClearBtn: ()=>this.pinClear(),
-      // Bandeau de session active (nom + déconnexion) pour la tablette.
-      pinActive: !!S.pinSession, pinNom: (S.pinSession&&S.pinSession.nom)||'',
-      pinNbSec: (S.pinSession&&(S.pinSession.sections||[]).length)||0,
-      pinLogoutBtn: ()=>this.pinLogout(),
       kTdbTours:this.routesMeta().length,
       kTdbColis:tournees.reduce((a,t)=>a+(t.colis||0),0),
       kTdbOrders:tdbRaw.reduce((a,t)=>a+t.zones.reduce((b,z)=>b+z.sites.reduce((c,s)=>c+s.users.reduce((d,u)=>d+(u.cmd||0),0),0),0),0),
@@ -5653,25 +5516,22 @@ class Component extends DCLogic {
           stripeBtnStyle:'flex:none;border:none;cursor:pointer;border-radius:9px;padding:10px 18px;font:600 12.5px var(--font-ui);'+(sOn?'background:var(--color-background-secondary);color:var(--color-text)':'background:#635bff;color:#fff'),
         }; })(),
       isShopParams:screen==='shopParams',editShop:this.openForm('shop'),
-      // ── Comptes tablette (Réglages) ──
-      isComptesTablette:screen==='comptesTablette',
-      btRows:(S.btList||[]).map(u=>({
-        nom:u.nom, role:u.role, nbSections:u.nbSections+' section'+(u.nbSections>1?'s':''),
-        pinTxt:u.pinPose?'✓ posé':'— aucun',
-        pinColor:u.pinPose?'#2d7a3e':'var(--color-primary)',
-        lastTxt:u.derniereConnexion||'—',
-        rowStyle:'display:grid;grid-template-columns:1.4fr 1.2fr .6fr .7fr 1fr 70px;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)'+(u.active?'':';opacity:.5'),
-        edit:()=>this.btEdit(u), del:()=>this.btDelete(u) })),
-      btErr:S.btErr||'', btHasErr:!!S.btErr,
-      btNoRoles:screen==='comptesTablette' && !!S.btRoles && S.btRoles.length===0,
-      btOpen:!!S.bt, btF:S.bt||{nom:'',roleId:'',pin:'',active:true},
-      btTitle:(S.bt&&S.bt.id)?'Modifier le compte tablette':'Nouveau compte tablette',
-      btPinHelp:(S.bt&&S.bt.id)?'Laisser vide pour conserver le PIN actuel':'4 chiffres — requis à la création',
-      btRoleOpts:(S.btRoles||[]).map(r=>({id:String(r.id),label:r.label+' ('+r.nbSections+' sections)',
-        sel:!!(S.bt&&String(S.bt.roleId)===String(r.id))})),
-      btNew:()=>this.btNew(), btClose:()=>this.btClose(), btSave:()=>this.btSave(),
-      btSetNom:this.btSet('nom'), btSetRole:this.btSet('roleId'),
-      btSetPin:this.btSet('pin'), btSetActive:this.btSet('active'),
+      // ── Tablette Kitchen (Réglages) ──
+      // Le mode tablette a quitté ce back-office : Kitchen porte l'appareil et
+      // sa session. Il ne reste ici que ce qu'il faut y saisir.
+      isTabletteKitchen:screen==='tabletteKitchen',
+      tkUrl:this.tkUrl(),
+      tkToken:S.tkToken||'',
+      tkHasToken:!!S.tkToken,
+      tkTokenHint:S.tkToken
+        ? 'Copiez-le maintenant : il n\u2019est affiché en entier qu\u2019à la génération.'
+        : 'Aucun jeton actif pour cette boutique — générez-en un pour connecter une tablette.',
+      tkGenLabel:S.tkToken?'Régénérer un jeton':'Générer un jeton',
+      tkErr:S.tkErr||'', tkHasErr:!!S.tkErr,
+      tkCopyUrl:()=>this.tkCopy(this.tkUrl(),'URL copiée'),
+      tkCopyToken:()=>this.tkCopy(S.tkToken||'','Jeton copié'),
+      tkGenerate:()=>this.tkGenerate(),
+      tkRevoke:()=>this.tkRevoke(),
       nav,navStyles,setLang,langStyles,t,
       pageTitle:titles[screen],pageSub:subs[screen],
       isMulti:true,
