@@ -4503,7 +4503,7 @@ class Component extends DCLogic {
     const fPill=(f)=>'cursor:pointer;'+pill2(ordFilter===f?'var(--color-primary)':'var(--color-background-secondary)',ordFilter===f?'#fff':'var(--color-text-muted)');
     // Commandes du jour — RÉEL (ws_orders via /franchisee/fr-orders). Le clic
     // sur le statut AVANCE la commande et l'ÉCRIT en base (POST order-status).
-    const ordStatFR={pending:'En attente',confirmed:'Confirmée',preparing:'En préparation',ready:'Prête',delivered:'Livrée',completed:'Remise',cancelled:'Annulée'};
+    const ordStatFR={pending:'En attente',confirmed:'Confirmée',preparing:'En préparation',ready:'Prête',in_delivery:'En livraison',delivered:'Livrée',completed:'Remise',cancelled:'Annulée'};
     // Dernier cran DÉPENDANT DU MODE : une commande livrée devient « Livrée »,
     // une commande à emporter « Remise » quand le client repart avec. Sans lui,
     // la chaîne s'arrêtait à « Prête » — le franchisé ne pouvait pas solder sa
@@ -4515,10 +4515,16 @@ class Component extends DCLogic {
       if(st==='pending')   return 'confirmed';
       if(st==='confirmed') return 'preparing';
       if(st==='preparing') return 'ready';
-      if(st==='ready')     return (o&&o.mode==='Livraison')?'delivered':'completed';
+      // Livraison : la marchandise part d'abord AVEC LE LIVREUR (« En
+      // livraison »), et n'est « Livrée » qu'une fois remise sur place. Sans cet
+      // état intermédiaire, on ne savait pas ce qui était en tournée à un
+      // instant donné. À emporter : « Prête » puis « Remise », rien entre les
+      // deux — le client vient au comptoir.
+      if(st==='ready')       return (o&&o.mode==='Livraison')?'in_delivery':'completed';
+      if(st==='in_delivery') return 'delivered';
       return null;   // delivered / completed / cancelled : terminal
     };
-    const ordStatColor=(s)=>({pending:['#fbe9eb','var(--color-primary)'],confirmed:['#eef3fb','#2a5a9e'],preparing:['#fff4e5','#b26a00'],ready:['#eaf5ec','#2d7a3e'],delivered:['var(--color-background-secondary)','var(--color-text-muted)'],completed:['var(--color-background-secondary)','var(--color-text-muted)'],cancelled:['#fbe9eb','var(--color-primary)']}[s]||['var(--color-background-secondary)','var(--color-text-muted)']);
+    const ordStatColor=(s)=>({pending:['#fbe9eb','var(--color-primary)'],confirmed:['#eef3fb','#2a5a9e'],preparing:['#fff4e5','#b26a00'],ready:['#eaf5ec','#2d7a3e'],in_delivery:['#F2C9A0','#7a4a12'],delivered:['var(--color-background-secondary)','var(--color-text-muted)'],completed:['var(--color-background-secondary)','var(--color-text-muted)'],cancelled:['#fbe9eb','var(--color-primary)']}[s]||['var(--color-background-secondary)','var(--color-text-muted)']);
     const ordersRaw=SRV('fr_orders');
     const ordAdvance=(o)=>{ const nx=ordNextOf(o); if(!nx) return; const fr=window.__FR||{};
       if(!fr.base){ this.printJob('API indisponible — statut non modifié'); return; }
