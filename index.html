@@ -1295,7 +1295,15 @@
               <button onClick="{{ b.set }}" style="{{ b.style }}"><span style="width:8px;height:8px;border-radius:50%;background:currentColor;flex:none"></span>{{ b.label }}<span style="display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;border-radius:9px;background:rgba(0,0,0,.08);padding:0 4px;font-size:10px">{{ b.count }}</span></button>
             </sc-for>
           </div>
-          <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Produit</span><span class="t-admin-label">Catégorie</span><span class="t-admin-label" style="text-align:right">Online</span><span class="t-admin-label" style="text-align:right">En shop</span><span class="t-admin-label" style="text-align:right">Dispo</span><span class="t-admin-label" style="text-align:right">Min.</span><span class="t-admin-label" style="text-align:center">État</span></div>
+          <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Produit</span><span class="t-admin-label">Catégorie</span><span class="t-admin-label" style="text-align:right">Online</span><span class="t-admin-label" style="text-align:right">En shop</span><span class="t-admin-label" style="text-align:right">Dispo</span><span class="t-admin-label" style="text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:5px">Min.<button onClick="{{ stkMinInfoToggle }}" aria-label="Comment le seuil est calculé" style="{{ stkMinInfoStyle }}">i</button></span><span class="t-admin-label" style="text-align:center">État</span></div>
+          <sc-if value="{{ stkMinInfoOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:11px 14px;margin:4px 0 8px;font:400 11.5px/1.65 var(--font-ui);color:var(--color-text)">
+              <strong>Seuil d'alerte</strong> — en dessous, la ligne passe « Sous seuil » et le produit remonte dans l'alerte.<br/>
+              Le chiffre en <span style="color:var(--color-text-muted)">gris</span> est le seuil global de la boutique ; en noir, un seuil propre à ce produit. <strong>Videz le champ</strong> pour revenir au global.<br/>
+              <strong>∿</strong> le calcule à partir des ventes : total des <strong>6 dernières semaines révolues</strong> ÷ nombre de <strong>jours où la boutique a tourné</strong>, <strong>+20 %</strong> de marge.<br/>
+              <span style="color:var(--color-text-muted)">Aujourd'hui est exclu (journée incomplète). Le diviseur compte les jours d'activité de la boutique, pas seulement ceux où ce produit s'est vendu : sinon les jours à zéro seraient ignorés et le seuil trop haut.</span>
+            </div>
+          </sc-if>
           <sc-for list="{{ stockRows }}" as="s" hint-placeholder-count="6">
             <sc-if value="{{ s.hasCat }}" hint-placeholder-val="{{ false }}"><div style="font:600 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted);background:var(--color-background-secondary);padding:6px 8px;margin-top:6px;border-radius:6px">{{ s.catLabel }}</div></sc-if>
             <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
@@ -5627,6 +5635,12 @@ class Component extends DCLogic {
       tabModalOn,tabTour,tabDriver,tabDriverSet,tabClose,tabSend,tabStatusTxt,tabStatusPill,tabCanSend,tabInfo,
       tabHasList,tabNewMode,tabDriverOpts,tabDriverVal,tabDriverPick,
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
+      // (i) de la colonne « Min. » : la regle de calcul du seuil doit etre
+      // lisible depuis l'ecran. Une formule cachee dans une infobulle de survol
+      // n'existe pas sur une tablette.
+      stkMinInfoOpen:!!S.stkMinInfo,
+      stkMinInfoToggle:()=>this.setState(st=>({stkMinInfo:!st.stkMinInfo})),
+      stkMinInfoStyle:'width:16px;height:16px;flex:none;border-radius:50%;border:.5px solid var(--color-border-secondary);background:'+(S.stkMinInfo?'var(--color-primary)':'var(--color-surface)')+';color:'+(S.stkMinInfo?'#fff':'var(--color-text-muted)')+';font:700 10px var(--font-ui);cursor:pointer;line-height:1;padding:0',
       stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
       stkModalTrack,stkModalKnob,stkModalToggle,stkModeBadges,
       ...stkFVals,
