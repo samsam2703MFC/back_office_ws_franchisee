@@ -1302,6 +1302,7 @@
               Le chiffre en <span style="color:var(--color-text-muted)">gris</span> est le seuil global de la boutique ; en noir, un seuil propre à ce produit. <strong>Videz le champ</strong> pour revenir au global.<br/>
               <strong>∿</strong> le calcule à partir des ventes : total des <strong>6 dernières semaines révolues</strong> ÷ nombre de <strong>jours où la boutique a tourné</strong>, <strong>+20 %</strong> de marge.<br/>
               <span style="color:var(--color-text-muted)">Aujourd'hui est exclu (journée incomplète). Le diviseur compte les jours d'activité de la boutique, pas seulement ceux où ce produit s'est vendu : sinon les jours à zéro seraient ignorés et le seuil trop haut.</span>
+              <div style="margin-top:9px;padding-top:9px;border-top:.5px solid var(--color-border-tertiary);font:500 11.5px var(--font-ui)">{{ stkMinInfoTxt }}</div>
             </div>
           </sc-if>
           <sc-for list="{{ stockRows }}" as="s" hint-placeholder-count="6">
@@ -3329,6 +3330,19 @@ class Component extends DCLogic {
         } else this.printJob((j&&j.error)||'Calcul impossible');
       })
       .catch(()=>this.printJob('Reseau indisponible — seuil non calcule'));
+  }
+  /* Contexte du (i) : charge a l'ouverture, pas au demarrage — inutile de
+     solliciter le serveur pour un bloc que personne n'a encore deplie. */
+  stkMinInfoLoad(){
+    if(this.state.stkMinCtx && !this.state.stkMinCtx.err) return;   // deja charge
+    const fr=window.__FR||{};
+    if(!fr.base){ this.setState({stkMinCtx:{err:'API non configurée — valeurs indisponibles.'}}); return; }
+    this.setState({stkMinCtx:null});
+    fetch(fr.base+'/franchisee/stock-threshold-info'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+      {headers:FRH(),credentials:'omit'})
+      .then(r=>r.json())
+      .then(j=>this.setState({stkMinCtx:(j&&j.ok)?j:{err:(j&&j.error)||'Valeurs indisponibles.'}}))
+      .catch(()=>this.setState({stkMinCtx:{err:'Réseau indisponible — valeurs non chargées.'}}));
   }
   drawZonesMap(){ const L=window.L,m=this._zonesFrMap,geo=window.__CPGEO; if(!L||!m||!geo) return;
     const S=this.state;
@@ -5639,7 +5653,20 @@ class Component extends DCLogic {
       // lisible depuis l'ecran. Une formule cachee dans une infobulle de survol
       // n'existe pas sur une tablette.
       stkMinInfoOpen:!!S.stkMinInfo,
-      stkMinInfoToggle:()=>this.setState(st=>({stkMinInfo:!st.stkMinInfo})),
+      // Chiffres REELS de cette boutique, charges a l'ouverture du (i) : seuil
+      // global en vigueur, fenetre de calcul, jours d'activite. Une formule
+      // racontee ne se verifie pas ; des valeurs affichees, si.
+      stkMinInfoTxt:(()=>{ const d=S.stkMinCtx;
+        if(d===undefined||d===null) return 'Chargement des valeurs de la boutique…';
+        if(d.err) return d.err;
+        const j=(d.jours===null||d.jours===undefined)?'—':d.jours;
+        return 'Dans cette boutique : seuil global '+d.global+' · fenêtre du '
+          +d.du+' au '+d.au+' · '+j+' jour(s) d\u2019activité · '
+          +(d.perso?(d.perso+' produit(s) avec un seuil propre'):'aucun seuil propre pour l\u2019instant');
+      })(),
+      stkMinInfoToggle:()=>{ const open=!this.state.stkMinInfo;
+        this.setState({stkMinInfo:open});
+        if(open) this.stkMinInfoLoad(); },
       stkMinInfoStyle:'width:16px;height:16px;flex:none;border-radius:50%;border:.5px solid var(--color-border-secondary);background:'+(S.stkMinInfo?'var(--color-primary)':'var(--color-surface)')+';color:'+(S.stkMinInfo?'#fff':'var(--color-text-muted)')+';font:700 10px var(--font-ui);cursor:pointer;line-height:1;padding:0',
       stkAlertShow,stkAlertModal,stkAlertTitle,stkLowGroups,
       stkModalTrack,stkModalKnob,stkModalToggle,stkModeBadges,
