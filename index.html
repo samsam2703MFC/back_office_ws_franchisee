@@ -1289,8 +1289,8 @@
             <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
               <button onClick="{{ s.toggleLines }}" title="Voir les lignes de commande du jour (Click &amp; Collect / Livraison)" style="display:flex;align-items:center;gap:7px;border:none;background:none;padding:0;cursor:pointer;text-align:left;min-width:0"><span style="{{ s.caretStyle }}">▶</span><span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.nom }}</span><sc-if value="{{ s.hasPort }}" hint-placeholder-val="{{ false }}"><span title="{{ s.portTitle }}" style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 9.5px var(--font-ui);cursor:help;flex:none">◔</span></sc-if></button>
               <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ s.cat }}</span>
-              <div style="display:flex;justify-content:flex-end"><input type="number" value="{{ s.online }}" onChange="{{ s.setOnline }}" style="{{ s.inputStyle }}"/></div>
-              <div style="display:flex;justify-content:flex-end"><input type="number" value="{{ s.shop }}" onChange="{{ s.setShop }}" style="{{ s.inputStyle }}"/></div>
+              <div style="display:flex;justify-content:flex-end"><input type="number" min="0" value="{{ s.onlineTxt }}" onInput="{{ s.setOnline }}" onBlur="{{ s.commitOnline }}" onKeyDown="{{ s.keyOnline }}" title="Entrée pour valider · Échap pour annuler" style="{{ s.inputStyle }}"/></div>
+              <div style="display:flex;justify-content:flex-end"><input type="number" min="0" value="{{ s.shopTxt }}" onInput="{{ s.setShop }}" onBlur="{{ s.commitShop }}" onKeyDown="{{ s.keyShop }}" title="Entrée pour valider · Échap pour annuler" style="{{ s.inputStyle }}"/></div>
               <span style="font:700 13px var(--font-ui);color:{{ s.dispoColor }};text-align:right">{{ s.dispo }}</span>
               <span style="font:500 12px var(--font-ui);color:var(--color-text);text-align:right">{{ s.min }}</span>
               <div style="display:flex;justify-content:center"><span style="{{ s.alertPill }}">{{ s.alertTxt }}</span></div>
@@ -3236,6 +3236,24 @@ class Component extends DCLogic {
     fetch(fr.base+'/franchisee/stock-adjust'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({product:nom,productId:(pid!=null?pid:undefined),mode:mode,delta:delta})})
       .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({flags:{...s.flags,[fk]:j.dispo}})); this.printJob('✓ Stock '+(mode==='delivery'?'online':'en shop')+' de « '+nom+' » : '+j.dispo+' (ws_product_stock)'); } else this.printJob((j&&j.error)||'Erreur ajustement stock'); })
       .catch(()=>this.printJob('Réseau indisponible — ajustement non enregistré')); }
+
+  /* Validation d'un champ de stock saisi à la main. L'API n'accepte qu'un
+     ÉCART (±n) : on compare la valeur tapée à la valeur serveur et on n'envoie
+     que la différence. Le brouillon est effacé dans tous les cas — soit
+     l'ajustement a réussi et stkAdjust a posé la nouvelle valeur, soit on
+     revient à celle du serveur plutôt que de laisser un chiffre qui ne
+     correspond à rien. */
+  stkCommit(draftKey, serverVal, nom, mode, flagKey, pid){
+    const S=this.state, raw=S.flags[draftKey];
+    const clear=()=>this.setState(st=>{ const f={...st.flags}; delete f[draftKey]; return {flags:f}; });
+    if(raw===undefined){ return; }
+    const v=parseInt(String(raw).trim(),10);
+    if(!isFinite(v)||v<0){ this.printJob('Quantité invalide — valeur inchangée'); clear(); return; }
+    const delta=v-serverVal;
+    clear();
+    if(!delta) return;                       // rien à envoyer
+    this.stkAdjust(nom, mode, delta, flagKey, serverVal, pid);
+  }
   drawZonesMap(){ const L=window.L,m=this._zonesFrMap,geo=window.__CPGEO; if(!L||!m||!geo) return;
     const S=this.state;
     const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
@@ -4620,19 +4638,35 @@ class Component extends DCLogic {
     CATALOG.forEach((c,ci)=>{ if(!catActive(ci,c)) return;
       c.prods.forEach((p,pi)=>{ if(!prodActive(ci,pi,p)) return;
         const ok='stkO_'+ci+'_'+pi, sk='stkS_'+ci+'_'+pi;
+        // odk/sdk : brouillon de saisie, distinct de la valeur SERVEUR (ok/sk).
+        const odk='stkOd_'+ci+'_'+pi, sdk='stkSd_'+ci+'_'+pi;
         const online=S.flags[ok]!==undefined?+S.flags[ok]:p.online;
         const shop=S.flags[sk]!==undefined?+S.flags[sk]:p.shop;
+        const onlineTxt=S.flags[odk]!==undefined?S.flags[odk]:String(online);
+        const shopTxt=S.flags[sdk]!==undefined?S.flags[sdk]:String(shop);
         const dispo=online+shop, below=dispo<p.min, near=!below&&dispo<p.min*1.25;
         const status=below?'below':(near?'near':'ok');
         const expanded=S.stkOpen===p.nom;
-        const row={nom:p.nom,cat:c.cat,min:p.min,online,shop,dispo,inputStyle:stkIn,catLabel:c.cat,status,expanded,
+        const row={nom:p.nom,cat:c.cat,min:p.min,online,shop,onlineTxt,shopTxt,dispo,inputStyle:stkIn,catLabel:c.cat,status,expanded,
           dispoColor:below?'var(--color-primary)':(near?'#b26a00':'#2d7a3e'),
           alertPill:below?pill2('#fbe9eb','var(--color-primary)'):(near?pill2('#fff4e5','#b26a00'):pill2('#eaf5ec','#2d7a3e')),
           alertTxt:below?'Sous seuil':(near?'Tension':'OK'),
           caretStyle:'display:inline-block;flex:none;font-size:10px;color:var(--color-text-muted);transition:transform .15s'+(expanded?';transform:rotate(90deg)':''),
           toggleLines:()=>{ if(this.state.stkOpen===p.nom){ this.setState({stkOpen:null,stkLines:null}); } else { this.setState({stkOpen:p.nom,stkLines:null}); this.stkLoadLines(p.nom); } },
-          setOnline:(e)=>{const v=e.target.value;this.setState(st=>({flags:{...st.flags,[ok]:v}}));},
-          setShop:(e)=>{const v=e.target.value;this.setState(st=>({flags:{...st.flags,[sk]:v}}));} };
+          // Les deux champs de saisie ENREGISTRENT désormais. Ils n'écrivaient
+          // que dans l'état local : on tapait une quantité, elle s'affichait, et
+          // elle disparaissait au rechargement — sans le moindre message. Les
+          // seuls contrôles qui appelaient vraiment le serveur étaient les ±,
+          // cachés tant que la ligne n'était pas dépliée.
+          // La saisie vit dans un brouillon séparé (odk/sdk) pour ne pas écraser
+          // la valeur serveur pendant la frappe : la validation compare les deux
+          // et n'envoie que l'ÉCART, seul format accepté par l'API.
+          setOnline:(e)=>{const v=e.target.value;this.setState(st=>({flags:{...st.flags,[odk]:v}}));},
+          setShop:(e)=>{const v=e.target.value;this.setState(st=>({flags:{...st.flags,[sdk]:v}}));},
+          commitOnline:()=>this.stkCommit(odk,online,p.nom,'delivery',ok,p.id),
+          commitShop:()=>this.stkCommit(sdk,shop,p.nom,'collect',sk,p.id),
+          keyOnline:(e)=>{ if(e.key==='Enter') e.target.blur(); if(e.key==='Escape'){ this.setState(st=>{const f={...st.flags}; delete f[odk]; return {flags:f};}); } },
+          keyShop:(e)=>{ if(e.key==='Enter') e.target.blur(); if(e.key==='Escape'){ this.setState(st=>{const f={...st.flags}; delete f[sdk]; return {flags:f};}); } } };
         if(expanded){
           // Panneau déroulant : lignes de commande du jour (S.stkLines — null = chargement),
           // Ruby = collect (Click & Collect), Apricot = delivery (Livraison).
