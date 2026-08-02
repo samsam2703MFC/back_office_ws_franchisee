@@ -3908,7 +3908,11 @@ class Component extends DCLogic {
     // RENTABILITE — RÉEL : totaux = somme des points réels (geo-clients ×
     // modèle de coûts paramétré). Plus aucune valeur inventée.
     const CA=pts.reduce((a,p)=>a+p.ca,0), couts=pts.reduce((a,p)=>a+p.couts,0), marge=CA-couts;
-    const TODAY=new Date().toISOString().slice(0,10);
+    // Date LOCALE : toISOString() renvoie la VEILLE entre minuit et 2 h du
+    // matin sous un fuseau en avance sur UTC — le bouton « Aujourd'hui »
+    // sélectionnait alors hier.
+    const TODAY=(()=>{ const d=new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
     const periodDate=S.periodDate||TODAY;
     const periodDateSet=(e)=>{ const v=e.target.value; this.setState({periodDate:v}); };
     const periodToday=()=>this.setState({periodDate:TODAY});
@@ -4535,7 +4539,14 @@ class Component extends DCLogic {
     // Filtres de DATE : Aujourd'hui / Cette semaine / Ce mois-ci — l'API
     // renvoie les commandes du jour ET des prochains jours (31 j).
     const ordRange=S.ordRange||'today';
-    const d0=new Date(); const isoOf=(dt)=>dt.toISOString().slice(0,10);
+    // Bornes de période en date LOCALE. toISOString() convertit en UTC : les
+    // bornes construites à minuit local (fin de semaine, fin de mois) reculaient
+    // d'un jour sous un fuseau en avance sur UTC. Le DERNIER JOUR de la semaine
+    // et du mois était donc systématiquement exclu — une commande livrée le
+    // 31 août n'apparaissait pas dans « Ce mois-ci », et personne ne la
+    // préparait. Même piège que sur les réservations de stock et le catalogue.
+    const d0=new Date();
+    const isoOf=(dt)=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
     const todayIso=isoOf(d0);
     const eow=new Date(d0); eow.setDate(d0.getDate()+((7-((d0.getDay()+6)%7))-1)); // dimanche
     const eom=new Date(d0.getFullYear(),d0.getMonth()+1,0);
