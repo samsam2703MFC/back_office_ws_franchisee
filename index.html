@@ -40,6 +40,18 @@
         errors.map(function(e){ return '• [' + e.kind + '] ' + e.detail; }).join('\n');
     } catch(e){}
   };
+  /* Molette et champs numériques : au-dessus d'un <input type="number"> ayant le
+     focus, chaque cran de défilement INCRÉMENTE la valeur. Sur un champ de
+     stock ou de prix, cela corrompt la donnée en silence — on croit faire
+     défiler la page, on modifie un chiffre. Vu en test : un stock passé de 4 à
+     394 sans que personne n'ait tapé ce nombre.
+     Le champ perd le focus au premier cran : la page défile, la valeur ne bouge
+     plus. */
+  document.addEventListener('wheel', function (e) {
+    var el = e.target;
+    if (el && el.tagName === 'INPUT' && el.type === 'number' && el === document.activeElement) el.blur();
+  }, { passive: true });
+
   function boot(){
     var s=document.createElement('script'); s.src='./support.js?v=2026073014'; document.head.appendChild(s);
     // Re-render du bandeau après boot (le runtime peut avoir remplacé le body).
@@ -1289,8 +1301,8 @@
             <div style="display:grid;grid-template-columns:1.7fr 1fr .8fr .8fr .8fr .8fr 1fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
               <button onClick="{{ s.toggleLines }}" title="Voir les lignes de commande du jour (Click &amp; Collect / Livraison)" style="display:flex;align-items:center;gap:7px;border:none;background:none;padding:0;cursor:pointer;text-align:left;min-width:0"><span style="{{ s.caretStyle }}">▶</span><span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.nom }}</span><sc-if value="{{ s.hasPort }}" hint-placeholder-val="{{ false }}"><span title="{{ s.portTitle }}" style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 9.5px var(--font-ui);cursor:help;flex:none">◔</span></sc-if></button>
               <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ s.cat }}</span>
-              <div style="display:flex;justify-content:flex-end"><input type="number" min="0" value="{{ s.onlineTxt }}" onInput="{{ s.setOnline }}" onBlur="{{ s.commitOnline }}" onKeyDown="{{ s.keyOnline }}" title="Entrée pour valider · Échap pour annuler" style="{{ s.inputStyle }}"/></div>
-              <div style="display:flex;justify-content:flex-end"><input type="number" min="0" value="{{ s.shopTxt }}" onInput="{{ s.setShop }}" onBlur="{{ s.commitShop }}" onKeyDown="{{ s.keyShop }}" title="Entrée pour valider · Échap pour annuler" style="{{ s.inputStyle }}"/></div>
+              <div style="display:flex;justify-content:flex-end"><input type="text" inputmode="numeric" pattern="[0-9]*" value="{{ s.onlineTxt }}" onInput="{{ s.setOnline }}" onBlur="{{ s.commitOnline }}" onKeyDown="{{ s.keyOnline }}" title="Entrée pour valider · Échap pour annuler" style="{{ s.inputStyle }}"/></div>
+              <div style="display:flex;justify-content:flex-end"><input type="text" inputmode="numeric" pattern="[0-9]*" value="{{ s.shopTxt }}" onInput="{{ s.setShop }}" onBlur="{{ s.commitShop }}" onKeyDown="{{ s.keyShop }}" title="Entrée pour valider · Échap pour annuler" style="{{ s.inputStyle }}"/></div>
               <span style="font:700 13px var(--font-ui);color:{{ s.dispoColor }};text-align:right">{{ s.dispo }}</span>
               <span style="font:500 12px var(--font-ui);color:var(--color-text);text-align:right">{{ s.min }}</span>
               <div style="display:flex;justify-content:center"><span style="{{ s.alertPill }}">{{ s.alertTxt }}</span></div>
