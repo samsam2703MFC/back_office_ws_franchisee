@@ -1731,8 +1731,73 @@
       </div>
       </sc-if>
 
+      <!-- ===================== COMPTES TABLETTE (boutique) ===================== -->
+      <sc-if value="{{ isComptesTablette }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:space-between;align-items:start;gap:12px">
+          <div style="font:400 12px var(--font-ui);color:var(--color-text-muted);max-width:640px">
+            Connexion par <strong>PIN à 4 chiffres</strong> sur la tablette du magasin. Les accès découlent du <strong>profil</strong> attribué — les profils et leurs sections sont définis par la marque.
+            <br/>L'accès administrateur complet reste le <strong>jeton ERP</strong> : un PIN ne le remplace jamais, et ne permet pas de gérer les comptes.
+          </div>
+          <button onClick="{{ btNew }}" class="btn-primary" style="font-size:12px;flex:none">+ Compte tablette</button>
+        </div>
+        <sc-if value="{{ btHasErr }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#8d1d2c;color:#fff;border-radius:10px;padding:10px 14px;font:600 12px var(--font-ui)">⚠ {{ btErr }}</div>
+        </sc-if>
+        <sc-if value="{{ btNoRoles }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff4e5;color:#b26a00;border-radius:10px;padding:10px 14px;font:600 12px var(--font-ui)">Aucun profil publié par la marque — impossible de créer un compte. La console marque doit d'abord créer les profils (Utilisateurs &amp; profils).</div>
+        </sc-if>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
+          <div style="display:grid;grid-template-columns:1.4fr 1.2fr .6fr .7fr 1fr 70px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Nom</span><span class="t-admin-label">Profil</span><span class="t-admin-label">Sections</span><span class="t-admin-label">PIN</span><span class="t-admin-label">Dernière connexion</span><span></span></div>
+          <sc-for list="{{ btRows }}" as="u" hint-placeholder-count="3">
+            <div style="{{ u.rowStyle }}">
+              <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ u.nom }}</span>
+              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ u.role }}</span>
+              <span style="font:600 11.5px var(--font-ui);color:var(--color-text)">{{ u.nbSections }}</span>
+              <span style="font:600 11.5px var(--font-ui);color:{{ u.pinColor }}">{{ u.pinTxt }}</span>
+              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ u.lastTxt }}</span>
+              <div style="display:flex;justify-content:flex-end;gap:6px">
+                <button onClick="{{ u.edit }}" title="Modifier" style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:.5px solid var(--color-border-secondary);border-radius:8px;background:transparent;color:var(--color-primary);cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h3l11-11-3-3L4 17z"/><path d="M14 5l3 3"/></svg></button>
+                <button onClick="{{ u.del }}" title="Supprimer" style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:.5px solid var(--color-border-secondary);border-radius:8px;background:transparent;color:var(--color-primary);cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg></button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
     </main>
   </div>
+
+  <!-- Formulaire compte tablette -->
+  <sc-if value="{{ btOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.45);display:flex;align-items:center;justify-content:center;z-index:2100;padding:24px">
+    <div style="background:var(--color-surface);border-radius:14px;width:520px;max-width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);padding:22px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="t-page-title" style="font-size:18px">{{ btTitle }}</div>
+        <button onClick="{{ btClose }}" style="background:transparent;border:none;font:600 16px var(--font-ui);cursor:pointer;color:var(--color-text-muted)">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Nom de l'employé</span>
+          <input value="{{ btF.nom }}" onInput="{{ btSetNom }}" placeholder="ex. Julie D." style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 13px var(--font-ui)"/></label>
+        <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Profil (définit les accès)</span>
+          <select onChange="{{ btSetRole }}" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 13px var(--font-ui)">
+            <option value="">— choisir un profil —</option>
+            <sc-for list="{{ btRoleOpts }}" as="r" hint-placeholder-count="4"><option value="{{ r.id }}" selected="{{ r.sel }}">{{ r.label }}</option></sc-for>
+          </select>
+          <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Les sections viennent du profil — elles se règlent dans la console marque.</span></label>
+        <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">PIN à 4 chiffres</span>
+          <input value="{{ btF.pin }}" onInput="{{ btSetPin }}" inputmode="numeric" maxlength="4" placeholder="••••" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:700 15px var(--font-ui);letter-spacing:.25em"/>
+          <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ btPinHelp }}</span></label>
+        <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" checked="{{ btF.active }}" onChange="{{ btSetActive }}"/><span style="font:500 12.5px var(--font-ui)">Compte actif — décocher ferme immédiatement la tablette</span></label>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">
+        <button onClick="{{ btClose }}" class="btn-secondary" style="font-size:12.5px">Annuler</button>
+        <button onClick="{{ btSave }}" class="btn-primary" style="font-size:12.5px">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
 
   <sc-if value="{{ toastShow }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:2500;background:var(--color-text);color:#fff;border-radius:10px;padding:14px 22px;font:500 13px var(--font-ui);box-shadow:0 8px 30px rgba(0,0,0,.3)">{{ toast }}</div>
@@ -3493,7 +3558,69 @@ class Component extends DCLogic {
     this._ordTimer=setInterval(()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); },60000);
     document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); });
   }
-  componentDidUpdate(){ this.ensureMaps(); }
+  componentDidUpdate(){ this.ensureMaps(); this.btEnsure(); }
+
+  /* ══ COMPTES TABLETTE (franchisé) ═══════════════════════════════════════════
+     Le franchisé crée SES comptes et leur attribue un PROFIL publié par la
+     marque. Il ne coche aucune section : elles découlent du profil, donc il ne
+     peut pas s'octroyer un accès non prévu.
+     Réservé au jeton admin ERP — une session PIN ne peut pas atteindre ces
+     routes (elles ne sont pas cartographiées côté serveur). ── */
+  btEnsure(){ if(this.state.screen!=='comptesTablette' || this._btLoading) return;
+    if(this.state.btList && this.state.btRoles) return;
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base){ if(!this.state.btErr) this.setState({btErr:'API non configurée — comptes tablette indisponibles (please debug)'}); return; }
+    if(!fr.token){ if(!this.state.btErr) this.setState({btErr:'Réservé à l\u2019administrateur (jeton ERP) — une session tablette ne peut pas gérer les comptes'}); return; }
+    this._btLoading=true;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    Promise.all([
+      fetch(fr.base+'/franchisee/bo-users'+qs,{headers:FRH(),credentials:'omit'}).then(r=>{ if(!r.ok) throw new Error('comptes HTTP '+r.status); return r.json(); }),
+      fetch(fr.base+'/franchisee/bo-roles'+qs,{headers:FRH(),credentials:'omit'}).then(r=>{ if(!r.ok) throw new Error('profils HTTP '+r.status); return r.json(); }),
+    ]).then(([list,roles])=>{ this._btLoading=false;
+      this.setState({btList:Array.isArray(list)?list:[], btRoles:Array.isArray(roles)?roles:[], btErr:null}); })
+      .catch(e=>{ this._btLoading=false;
+        this.setState({btErr:'Chargement en échec — please debug : '+(e&&e.message||e)}); });
+  }
+  btReload(){ const fr=(typeof window!=='undefined'&&window.__FR)||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/bo-users'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(l=>{ if(Array.isArray(l)) this.setState({btList:l}); })
+      .catch(()=>this.printJob('⚠ Rechargement des comptes en échec'));
+  }
+  btNew(){ this.setState({bt:{id:0,nom:'',roleId:'',pin:'',active:true}}); }
+  btEdit(u){ this.setState({bt:{id:u.id,nom:u.nom==='(sans nom)'?'':u.nom,
+    roleId:u.roleId?String(u.roleId):'',pin:'',active:!!u.active}}); }
+  btClose(){ this.setState({bt:null}); }
+  btSet(k){ return (e)=>{ const v=(k==='active')?e.target.checked:e.target.value;
+    this.setState(st=>({bt:{...st.bt,[k]:v}})); }; }
+  btSave(){ const u=this.state.bt; if(!u) return;
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base||!fr.token){ this.printJob('⚠ ERREUR — jeton administrateur requis : compte NON enregistré'); return; }
+    if(!String(u.nom||'').trim()){ this.printJob('⚠ Nom requis'); return; }
+    if(!u.roleId){ this.printJob('⚠ Profil requis — c\u2019est lui qui détermine les accès'); return; }
+    const pin=String(u.pin||'').replace(/\D/g,'');
+    if(pin && pin.length!==4){ this.printJob('⚠ Le PIN doit comporter exactement 4 chiffres'); return; }
+    if(!u.id && !pin){ this.printJob('⚠ Un PIN à 4 chiffres est requis à la création'); return; }
+    fetch(fr.base+'/franchisee/bo-user'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+      {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+       body:JSON.stringify({id:u.id||undefined,nom:u.nom,roleId:parseInt(u.roleId,10),pin:pin,active:u.active?1:0})})
+      .then(r=>r.json().then(j=>({ok:r.ok,j})))
+      .then(({ok,j})=>{ if(!ok||!j.ok){ this.printJob('⚠ '+((j&&j.error)||'Enregistrement refusé')); return; }
+        this.printJob('✔ Compte « '+u.nom+' » enregistré · profil '+(j.role||'—')+(j.pinPose?' · PIN posé':''));
+        this.setState({bt:null}); this.btReload(); })
+      .catch(()=>this.printJob('⚠ Réseau indisponible — compte non enregistré'));
+  }
+  btDelete(u){ if(!confirm('Supprimer le compte « '+u.nom+' » ? Sa session tablette sera fermée immédiatement.')) return;
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base||!fr.token){ this.printJob('⚠ ERREUR — jeton administrateur requis'); return; }
+    fetch(fr.base+'/franchisee/bo-user-delete'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+      {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+       body:JSON.stringify({id:u.id})})
+      .then(r=>r.json()).then(j=>{ if(!j.ok){ this.printJob('⚠ '+(j.error||'Suppression refusée')); return; }
+        this.printJob('✖ Compte supprimé'); this.btReload(); })
+      .catch(()=>this.printJob('⚠ Réseau indisponible — suppression non effectuée'));
+  }
 
   render(){ return null; }
 
@@ -3514,7 +3641,7 @@ class Component extends DCLogic {
       nav[k]=this.go(k);
       navStyles[k]=this.navStyle(k)+(canSee(k)?'':';display:none');
     });
-    const paramScreens=['tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
+    const paramScreens=['tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','comptesTablette'];
     const paramsActive=paramScreens.includes(S.screen);
     // Fil d'ariane du paramétrage livraison : 1 · Tournées → 2 · Bureaux
     // (assignés aux sites) → 3 · Clients (la page Clients). Stepper graphique :
@@ -3545,10 +3672,10 @@ class Component extends DCLogic {
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams') };
     const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
-      commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop'};
+      commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',comptesTablette:'Comptes tablette'};
     const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
-      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding'};
+      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding',comptesTablette:'bo_users — nom · profil · PIN · état (connexion tablette du magasin)'};
 
     // TDB
     const stat=(l,bg,c)=>({label:l,style:this.pill(bg,c)});
@@ -4072,6 +4199,11 @@ class Component extends DCLogic {
       // géographique (l'écran reste dans le code, réversible).
       {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['b2bClients','Clients']]},
       {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
+      // Réglages : administration de la boutique, pas exploitation quotidienne.
+      // « Comptes tablette » n'est PAS une section de profil : une session PIN
+      // ne peut donc ni la voir (canSee) ni l'atteindre côté serveur — un
+      // vendeur ne se crée pas un compte « admin boutique ».
+      {id:'g_reglages',label:'Réglages',items:[['shopParams','Paramètres du shop'],['comptesTablette','Comptes tablette']]},
     ];
     const navSub=(s)=>{ const active=S.screen===s; return 'display:flex;align-items:center;width:100%;padding:9px 12px 9px 32px;border:none;border-radius:8px;cursor:pointer;font:'+(active?'600':'400')+' 12.5px/1 var(--font-ui);text-align:left;'+(active?'background:var(--color-background-secondary);color:var(--color-primary)':'background:transparent;color:var(--color-text-muted)'); };
     const navGroups=groupsDef.map(g=>{
@@ -5521,6 +5653,25 @@ class Component extends DCLogic {
           stripeBtnStyle:'flex:none;border:none;cursor:pointer;border-radius:9px;padding:10px 18px;font:600 12.5px var(--font-ui);'+(sOn?'background:var(--color-background-secondary);color:var(--color-text)':'background:#635bff;color:#fff'),
         }; })(),
       isShopParams:screen==='shopParams',editShop:this.openForm('shop'),
+      // ── Comptes tablette (Réglages) ──
+      isComptesTablette:screen==='comptesTablette',
+      btRows:(S.btList||[]).map(u=>({
+        nom:u.nom, role:u.role, nbSections:u.nbSections+' section'+(u.nbSections>1?'s':''),
+        pinTxt:u.pinPose?'✓ posé':'— aucun',
+        pinColor:u.pinPose?'#2d7a3e':'var(--color-primary)',
+        lastTxt:u.derniereConnexion||'—',
+        rowStyle:'display:grid;grid-template-columns:1.4fr 1.2fr .6fr .7fr 1fr 70px;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)'+(u.active?'':';opacity:.5'),
+        edit:()=>this.btEdit(u), del:()=>this.btDelete(u) })),
+      btErr:S.btErr||'', btHasErr:!!S.btErr,
+      btNoRoles:screen==='comptesTablette' && !!S.btRoles && S.btRoles.length===0,
+      btOpen:!!S.bt, btF:S.bt||{nom:'',roleId:'',pin:'',active:true},
+      btTitle:(S.bt&&S.bt.id)?'Modifier le compte tablette':'Nouveau compte tablette',
+      btPinHelp:(S.bt&&S.bt.id)?'Laisser vide pour conserver le PIN actuel':'4 chiffres — requis à la création',
+      btRoleOpts:(S.btRoles||[]).map(r=>({id:String(r.id),label:r.label+' ('+r.nbSections+' sections)',
+        sel:!!(S.bt&&String(S.bt.roleId)===String(r.id))})),
+      btNew:()=>this.btNew(), btClose:()=>this.btClose(), btSave:()=>this.btSave(),
+      btSetNom:this.btSet('nom'), btSetRole:this.btSet('roleId'),
+      btSetPin:this.btSet('pin'), btSetActive:this.btSet('active'),
       nav,navStyles,setLang,langStyles,t,
       pageTitle:titles[screen],pageSub:subs[screen],
       isMulti:true,
