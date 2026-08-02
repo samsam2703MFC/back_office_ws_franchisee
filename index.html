@@ -4399,8 +4399,18 @@ class Component extends DCLogic {
     // sélecteur « + Ajouter un bureau » par site, dépôt au clic après saisie.
     const offValid=SRV('ws_offices').filter(o=>o.status==='validated');
     const offKey=(o)=>String(o.id!=null?o.id:o.name);
+    /* ÉTAPE 3 ne montre que les sites RATTACHÉS À UNE TOURNÉE. Un site sans
+       tournée n'est desservi par personne : y rattacher un bureau ne mène nulle
+       part, et le bureau paraissait pourtant « placé ». Sa place est à l'étape 2
+       (Sites → tournées), où il figure sous « Sites non assignés ».
+       Corollaire indispensable : un bureau rattaché à un site SANS tournée
+       compte comme NON rattaché — sinon, en masquant la carte, on le rendrait
+       invisible tout en le déclarant placé. Il retombe donc dans le panneau
+       ambre des bureaux sans site, d'où il peut être réassigné. */
+    const siteHasTour=r=>!!(r.tour&&r.tour!=='—');
+    const siteRowsTour=siteRowsAll.filter(siteHasTour);
     const offPairedKeys=new Set();
-    siteRowsAll.forEach(r=>{ const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null); if(b) offPairedKeys.add(normA(b)); });
+    siteRowsTour.forEach(r=>{ const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null); if(b) offPairedKeys.add(normA(b)); });
     // CLÉ DE BÂTIMENT : adresse normalisée, SINON nom normalisé — un site créé
     // sans adresse (ex. « Zoning Sud Wavre ») reste assignable partout ; avant,
     // tout était indexé par adresse et ces sites étaient invisibles de l'étape 3.
@@ -4462,7 +4472,7 @@ class Component extends DCLogic {
     // des bureaux sans site ET aux cartes de l'étape 3. Les sites sans adresse
     // (ex. « Zoning Sud Wavre ») sont INCLUS.
     const bldSeen=new Set(); const bldList=[];
-    siteRowsAll.forEach(r=>{ const k=bKey(r); if(!k||bldSeen.has(k)) return; bldSeen.add(k); bldList.push({...r,_k:k}); });
+    siteRowsTour.forEach(r=>{ const k=bKey(r); if(!k||bldSeen.has(k)) return; bldSeen.add(k); bldList.push({...r,_k:k}); });
     // VUE VISUELLE : bureaux validés SANS site — mini-cartes dans un panneau
     // d'alerte ambre, avec assignation directe (sélecteur de site) OU saisie ⠿.
     const offAssignChips=offValid.filter(o=>!offPairedKeys.has(normA(o.name))).map(o=>{ const g=S.dndOff!=null&&String(S.dndOff)===offKey(o);
@@ -4477,15 +4487,15 @@ class Component extends DCLogic {
     const offAssignEmpty=offValid.length===0;
     const offNoFree=offValid.length>0&&offAssignChips.length===0;
     const offHasFree=offAssignChips.length>0;
-    const offFreeTitle=offAssignChips.length+' bureau(x) validé(s) sans site de livraison — non desservis tant qu’ils ne sont pas assignés';
+    const offFreeTitle=offAssignChips.length+' bureau(x) validé(s) non desservis — sans site de livraison, ou rattachés à un site qui n’est sur aucune tournée';
     // Cartes SITES : chips bureaux (× = retirer) + sélecteur d'ajout direct.
     // Un bâtiment = clé adresse OU nom — les sites sans adresse ont leur carte.
     const offSeenAdr=new Set(); const offSiteCards=[];
-    siteRowsAll.forEach(r=>{ const rk=bKey(r); if(!rk||offSeenAdr.has(rk)) return; offSeenAdr.add(rk);
+    siteRowsTour.forEach(r=>{ const rk=bKey(r); if(!rk||offSeenAdr.has(rk)) return; offSeenAdr.add(rk);
       // Bureaux du bâtiment, dédupliqués par nom NORMALISÉ (deux graphies du
       // même bureau = un seul tag).
       const bxSeen=new Set(); const bx=[];
-      siteRowsAll.filter(x=>bKey(x)===rk).forEach(x=>{ const b=(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null); if(b&&!bxSeen.has(normA(b))){ bxSeen.add(normA(b)); bx.push(b); } });
+      siteRowsTour.filter(x=>bKey(x)===rk).forEach(x=>{ const b=(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null); if(b&&!bxSeen.has(normA(b))){ bxSeen.add(normA(b)); bx.push(b); } });
       const canDrop=S.dndOff!=null;
       // Un bureau déjà rattaché à un site N'EST PLUS proposé, nulle part. Le
       // filtre n'excluait que les bureaux de CETTE carte : un bureau posé sur
