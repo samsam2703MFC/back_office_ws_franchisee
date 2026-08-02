@@ -1377,7 +1377,7 @@
             <div style="height:.5px;background:var(--color-border-tertiary);margin:13px 0"></div>
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
               <div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Bureau proche détecté : <span style="color:var(--color-text);font-weight:500">{{ r.proche }}</span></div>
-              <div style="display:flex;gap:8px"><button onClick="{{ r.lier }}" class="btn-primary" style="padding:8px 14px;font-size:12px">Lier</button><button onClick="{{ r.rejeter }}" class="btn-secondary" style="padding:8px 14px;font-size:12px">Rejeter</button></div>
+              <div style="display:flex;gap:8px"><sc-if value="{{ r.notFound }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.creer }}" class="btn-primary" style="padding:8px 14px;font-size:12px">Créer ce bureau</button></sc-if><button onClick="{{ r.lier }}" class="{{ r.lierClass }}" style="padding:8px 14px;font-size:12px">Lier</button><button onClick="{{ r.rejeter }}" class="btn-secondary" style="padding:8px 14px;font-size:12px">Rejeter</button></div>
             </div>
           </div>
         </sc-for>
@@ -5059,8 +5059,37 @@ class Component extends DCLogic {
       fetch(fr.base+'/franchisee/join-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({id,action,...(officeId?{officeId}:{})})})
         .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.setState(s=>({jrHandled:{...s.jrHandled,[id]:true}})); this.printJob(msg+(j.clientId?(' · client #'+j.clientId+' → bureau #'+j.officeId):'')); } else this.printJob('⚠ '+((j&&j.error)||'Erreur décision')); })
         .catch(()=>this.printJob('Réseau indisponible — décision non enregistrée')); };
+    /* « Bureau à créer » : le message disait quoi faire et laissait le franchisé
+       retrouver l'écran Bureaux puis retaper le nom, l'adresse et le contact que
+       le client venait de saisir. On propose la création sur place, et le
+       formulaire s'ouvre PRÉ-REMPLI avec la demande — la donnée est déjà là, la
+       ressaisir n'ajoute que des occasions de se tromper. */
+    const jrCreate=(r)=>()=>{
+      const nom=(r.officeName||'').trim();
+      if(!nom){ this.printJob('Demande sans nom de bureau — impossible de pré-remplir'); return; }
+      if(!confirm('Aucun bureau validé ne porte ce nom.\n\nCréer « '+nom+' » maintenant ?\nLe formulaire s’ouvrira pré-rempli avec la demande.')) return;
+      // Adresse libre → adresse / CP / localité. Même règle que obSetCp pour la
+      // localité : renseignée seulement si le référentiel la confirme, jamais
+      // devinée.
+      const raw=String(r.address||'');
+      const m=raw.match(/\b([1-9][0-9]{3})\b\s*(.*)$/);
+      const cp=m?m[1]:'';
+      const locTxt=m?(m[2]||'').trim():'';
+      const locs=this.obLocsOf(cp);
+      const localite=locs.length===1?locs[0]:(locs.indexOf(locTxt)>=0?locTxt:'');
+      const adr=m?raw.slice(0,m.index).replace(/[,\s]+$/,''):raw;
+      this.obOpen();                       // réinitialise ob…
+      this.setState(s=>({ob:{...s.ob,      // …et on pose la demande par-dessus
+        raison:nom, adr:adr, cp:cp, localite:localite, office:nom,
+        contactNom:r.clientName||'', contactEmail:r.email||'', contactTel:r.phone||''}}));
+    };
     const joinRequests=joinRaw.map(r=>({...r,
       dupPill:r.dup?pill2('#eaf5ec','#2d7a3e'):pill2('#fff4e5','#b26a00'), dupTxt:r.dup?'Bureau trouvé':'Bureau à créer',
+      // Sans bureau détecté, « Lier » ne peut que refuser : il cesse d'être
+      // l'action principale, sans disparaître (la détection par nom peut rater
+      // un bureau qui existe bel et bien).
+      notFound:!r.dup, lierClass:r.dup?'btn-primary':'btn-secondary',
+      creer:jrCreate(r),
       lier:jrDecide(r.id,'link','✔ Client rattaché (client.office_id écrit · demande → linked)',r.officeId),
       rejeter:jrDecide(r.id,'reject','Demande rejetée (ws_office_join_requests → rejected)') }));
     const joinCount=joinRaw.length;
