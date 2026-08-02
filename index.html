@@ -1304,7 +1304,7 @@
               <div style="display:flex;justify-content:flex-end"><input type="text" inputmode="numeric" pattern="[0-9]*" value="{{ s.onlineTxt }}" onInput="{{ s.setOnline }}" onBlur="{{ s.commitOnline }}" onKeyDown="{{ s.keyOnline }}" title="Entrée pour valider · Échap pour annuler" style="{{ s.inputStyle }}"/></div>
               <div style="display:flex;justify-content:flex-end"><input type="text" inputmode="numeric" pattern="[0-9]*" value="{{ s.shopTxt }}" onInput="{{ s.setShop }}" onBlur="{{ s.commitShop }}" onKeyDown="{{ s.keyShop }}" title="Entrée pour valider · Échap pour annuler" style="{{ s.inputStyle }}"/></div>
               <span style="font:700 13px var(--font-ui);color:{{ s.dispoColor }};text-align:right">{{ s.dispo }}</span>
-              <span style="font:500 12px var(--font-ui);color:var(--color-text);text-align:right">{{ s.min }}</span>
+              <div style="display:flex;justify-content:flex-end"><input type="text" inputmode="numeric" pattern="[0-9]*" value="{{ s.minTxt }}" onInput="{{ s.setMin }}" onBlur="{{ s.commitMin }}" onKeyDown="{{ s.keyMin }}" title="{{ s.minTitle }}" style="{{ s.minStyle }}"/></div>
               <div style="display:flex;justify-content:center"><span style="{{ s.alertPill }}">{{ s.alertTxt }}</span></div>
             </div>
             <sc-if value="{{ s.expanded }}" hint-placeholder-val="{{ false }}">
@@ -3266,6 +3266,35 @@ class Component extends DCLogic {
     if(!delta) return;                       // rien à envoyer
     this.stkAdjust(nom, mode, delta, flagKey, serverVal, pid);
   }
+  /* Seuil d'alerte d'un produit. Champ VIDE = retour au seuil global : il faut
+     pouvoir revenir en arriere sans avoir a deviner quel etait le nombre
+     d'origine. On memorise la valeur serveur ET son origine (propre ou
+     heritee) pour que l'affichage le dise sans recharger la page. */
+  stkMinCommit(draftKey, serverVal, nom, pid){
+    const S=this.state, raw=S.flags[draftKey];
+    const clear=()=>this.setState(st=>{ const f={...st.flags}; delete f[draftKey]; return {flags:f}; });
+    if(raw===undefined) return;
+    const txt=String(raw).trim();
+    let min=null;
+    if(txt!==''){ const v=parseInt(txt,10);
+      if(!isFinite(v)||v<0){ this.printJob('Seuil invalide — valeur inchangee'); clear(); return; }
+      min=v; }
+    if(min===serverVal){ clear(); return; }              // rien a envoyer
+    const fr=window.__FR||{};
+    if(!fr.base){ this.printJob('API indisponible — seuil non enregistre'); clear(); return; }
+    const suffix=draftKey.replace(/^stkMin_/,'');
+    fetch(fr.base+'/franchisee/stock-threshold'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+      {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+       body:JSON.stringify({product:nom,productId:(pid!=null?pid:undefined),min:min})})
+      .then(r=>r.json()).then(j=>{
+        if(j&&j.ok){ this.setState(st=>({flags:{...st.flags,
+            ['stkMinV_'+suffix]:j.effectif, ['stkMinO_'+suffix]:(j.min!==null)}}));
+          this.printJob('✓ Seuil de « '+nom+' » : '+j.effectif+(j.min===null?' (seuil global)':'')); }
+        else this.printJob((j&&j.error)||'Erreur seuil');
+      })
+      .catch(()=>this.printJob('Reseau indisponible — seuil non enregistre'))
+      .finally(clear);
+  }
   drawZonesMap(){ const L=window.L,m=this._zonesFrMap,geo=window.__CPGEO; if(!L||!m||!geo) return;
     const S=this.state;
     const cats=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]);
@@ -4654,12 +4683,17 @@ class Component extends DCLogic {
         const odk='stkOd_'+ci+'_'+pi, sdk='stkSd_'+ci+'_'+pi;
         const online=S.flags[ok]!==undefined?+S.flags[ok]:p.online;
         const shop=S.flags[sk]!==undefined?+S.flags[sk]:p.shop;
+        const mdk='stkMin_'+ci+'_'+pi;
         const onlineTxt=S.flags[odk]!==undefined?S.flags[odk]:String(online);
         const shopTxt=S.flags[sdk]!==undefined?S.flags[sdk]:String(shop);
-        const dispo=online+shop, below=dispo<p.min, near=!below&&dispo<p.min*1.25;
+        // Seuil : la valeur serveur peut avoir ete mise a jour dans ce rendu.
+        const minSrv=S.flags['stkMinV_'+ci+'_'+pi]!==undefined?+S.flags['stkMinV_'+ci+'_'+pi]:p.min;
+        const minOwn=S.flags['stkMinO_'+ci+'_'+pi]!==undefined?!!S.flags['stkMinO_'+ci+'_'+pi]:!!p.minOwn;
+        const minTxt=S.flags[mdk]!==undefined?S.flags[mdk]:String(minSrv);
+        const dispo=online+shop, below=dispo<minSrv, near=!below&&dispo<minSrv*1.25;
         const status=below?'below':(near?'near':'ok');
         const expanded=S.stkOpen===p.nom;
-        const row={nom:p.nom,cat:c.cat,min:p.min,online,shop,onlineTxt,shopTxt,dispo,inputStyle:stkIn,catLabel:c.cat,status,expanded,
+        const row={nom:p.nom,cat:c.cat,min:minSrv,online,shop,onlineTxt,shopTxt,dispo,inputStyle:stkIn,catLabel:c.cat,status,expanded,
           dispoColor:below?'var(--color-primary)':(near?'#b26a00':'#2d7a3e'),
           alertPill:below?pill2('#fbe9eb','var(--color-primary)'):(near?pill2('#fff4e5','#b26a00'):pill2('#eaf5ec','#2d7a3e')),
           alertTxt:below?'Sous seuil':(near?'Tension':'OK'),
@@ -4678,7 +4712,17 @@ class Component extends DCLogic {
           commitOnline:()=>this.stkCommit(odk,online,p.nom,'delivery',ok,p.id),
           commitShop:()=>this.stkCommit(sdk,shop,p.nom,'collect',sk,p.id),
           keyOnline:(e)=>{ if(e.key==='Enter') e.target.blur(); if(e.key==='Escape'){ this.setState(st=>{const f={...st.flags}; delete f[odk]; return {flags:f};}); } },
-          keyShop:(e)=>{ if(e.key==='Enter') e.target.blur(); if(e.key==='Escape'){ this.setState(st=>{const f={...st.flags}; delete f[sdk]; return {flags:f};}); } } };
+          keyShop:(e)=>{ if(e.key==='Enter') e.target.blur(); if(e.key==='Escape'){ this.setState(st=>{const f={...st.flags}; delete f[sdk]; return {flags:f};}); } },
+          // Seuil d'alerte PAR PRODUIT. Il etait affiche en lecture seule et
+          // valait le meme nombre pour tout le catalogue : une baguette et un
+          // gateau d'anniversaire alertaient au meme chiffre. Vider le champ
+          // rend la main au parametre global.
+          minTxt, minStyle:stkIn+(minOwn?'':';color:var(--color-text-muted)'),
+          minTitle:minOwn?'Seuil propre a cette boutique — videz le champ pour revenir au seuil global'
+                         :'Seuil global — saisissez une valeur pour un seuil propre a ce produit',
+          setMin:(e)=>{const v=e.target.value;this.setState(st=>({flags:{...st.flags,[mdk]:v}}));},
+          commitMin:()=>this.stkMinCommit(mdk,p.min,p.nom,p.id),
+          keyMin:(e)=>{ if(e.key==='Enter') e.target.blur(); if(e.key==='Escape'){ this.setState(st=>{const f={...st.flags}; delete f[mdk]; return {flags:f};}); } } };
         if(expanded){
           // Panneau déroulant : lignes de commande du jour (S.stkLines — null = chargement),
           // Ruby = collect (Click & Collect), Apricot = delivery (Livraison).
