@@ -52,6 +52,30 @@
     if (el && el.tagName === 'INPUT' && el.type === 'number' && el === document.activeElement) el.blur();
   }, { passive: true });
 
+  /* Modales et sélection de texte : les fonds de modale se ferment au clic, et
+     le panneau arrête la propagation. Mais quand on sélectionne du texte dans un
+     champ et qu'on tire la souris au-delà du panneau, le relâchement a lieu sur
+     le FOND : le navigateur émet alors un `click` sur l'ancêtre commun des deux
+     extrémités du geste — le fond — et la modale se ferme, saisie perdue.
+     Vu en test : le formulaire d'onboarding bureau disparaissait dès qu'on
+     sélectionnait horizontalement dans un champ.
+
+     Un clic de fermeture légitime commence ET finit sur le fond. On mémorise
+     donc où la pression a eu lieu, et on avale en phase de CAPTURE (avant React)
+     les clics dont le geste a débuté ailleurs. Un seul garde couvre les neuf
+     modales, présentes et à venir. */
+  var __mdown = null;
+  document.addEventListener('mousedown', function (e) { __mdown = e.target; }, true);
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || t.nodeType !== 1 || t === __mdown) return;
+    // Signature d'un fond de modale : inline `position:fixed; inset:0`.
+    if (t.style && t.style.position === 'fixed' && (t.style.inset === '0px' || t.style.inset === '0')) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
+
   function boot(){
     var s=document.createElement('script'); s.src='./support.js?v=2026073014'; document.head.appendChild(s);
     // Re-render du bandeau après boot (le runtime peut avoir remplacé le body).
