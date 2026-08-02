@@ -2562,7 +2562,7 @@ class Component extends DCLogic {
     obOpen: false, obStep: 0,
     ob: { raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
-      adr:'', cp:'', localite:'', etage:'', tour:'Tournée Centre-ville', acc:6, office:'',
+      adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
       remiseWeb:'10', franco:'250 €', drop:8,
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
@@ -2573,7 +2573,7 @@ class Component extends DCLogic {
   obOpen(){ this.setState({obOpen:true,obStep:0,
     ob:{ raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
-      adr:'', cp:'', localite:'', etage:'', tour:'Tournée Centre-ville', acc:6, office:'',
+      adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
       remiseWeb:'10', franco:'250 €', drop:8,
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
     obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'' }); this.zfGeoEnsure(); }
@@ -2602,6 +2602,13 @@ class Component extends DCLogic {
     if(!/^[1-9][0-9]{3}$/.test(obCp)){ this.setState({obStep:2}); this.printJob('⚠ Code postal du client requis (4 chiffres)'); return; }
     const obLocs=this.obLocsOf(obCp);
     if(obLocs.length>1&&!o.localite){ this.setState({obStep:2}); this.printJob('⚠ Choisissez la localité du code postal '+obCp); return; }
+    /* TOURNÉE OBLIGATOIRE. Le formulaire naissait avec « Tournée Centre-ville »,
+       un nom inventé absent de la liste réelle : le <select> affichait la
+       première tournée, l'état gardait le fantôme, et le serveur créait le
+       bureau SANS tournée faute de correspondance. Côté client, la carte
+       affichait alors « En attente de validation » sans que personne ne sache
+       pourquoi. Un bureau sans tournée n'est pas livrable : on refuse. */
+    if(!String(o.tour||'').trim()){ this.setState({obStep:2}); this.printJob('⚠ Tournée rattachée requise — un bureau sans tournée n’est pas livrable'); return; }
     const obLocalite=o.localite||obLocs[0]||'';
     const clients=window.BOServer.table('fr_clients');
     const num=1000+Math.floor(Math.random()*8999); const code='CL-'+num;
@@ -5329,7 +5336,11 @@ class Component extends DCLogic {
       obCpLocDisplay:(this.obLocsOf(O.cp).length===1?this.obLocsOf(O.cp)[0]:(O.localite||'')),
       obSetRemiseWeb:this.obSet('remiseWeb'),obSetFranco:this.obSet('franco'),obSetDrop:this.obSet('drop'),
       obSetVCode:this.obSet('vCode'),obSetVValeur:this.obSet('vValeur'),
-      obTourOpts:obTours.map(t=>({value:t,label:t})),
+      // Option vide en tête : sans elle, le <select> affichait la première
+      // tournée alors que l'état ne contenait rien (ou un nom inventé), et le
+      // bureau partait sans tournée sans que l'écran l'ait jamais montré.
+      obTourOpts:[{value:'',label:obTours.length?'— Choisir une tournée —':'— Aucune tournée définie —'}]
+        .concat(obTours.map(t=>({value:t,label:t}))),
       obSegOpts:['horeca','retail','corporate','event'].map(t=>({value:t,label:t})),
       obChainView,
       obDepts:obDeptsView, obDeptEmpty:S.obDepts.length===0,
