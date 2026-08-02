@@ -2631,7 +2631,10 @@ class Component extends DCLogic {
     if(o.sendAdhesion&&S.obStaff.length) parts.push(S.obStaff.length+' demande(s) d\'adhésion');
     parts.push('voucher '+vcode);
     this.setState({obOpen:false,screen:'b2bClients',selClient:newIdx,_rev:(S._rev||0)+1});
-    this.printJob('✔ Bureau '+(o.raison||'')+' créé · '+parts.join(' · '));
+    // Le bureau naît NON VALIDÉ : sans cette mention, le franchisé croit avoir
+    // terminé alors que la livraison bureau reste fermée tant qu'il n'a pas
+    // valide la fiche.
+    this.printJob('✔ Bureau '+(o.raison||'')+' créé — À VALIDER pour ouvrir la livraison · '+parts.join(' · '));
     // Écriture serveur typée : création réelle du bureau (office + site +
     // départements + voucher de bienvenue) via l'API. Best-effort — le local
     // reste la source d'affichage immédiate, le serveur fait foi au rechargement.
