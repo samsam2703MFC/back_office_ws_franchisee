@@ -4383,12 +4383,22 @@ class Component extends DCLogic {
         const rows=window.BOServer.table('ws_office_delivery_sites');
         const rk=bKey(r);
         const tpl=rows.find(x=>rk&&bKey(x)===rk)||r;
-        const ex=rows.findIndex(x=>(x.office_client_id!=null&&off.id!=null&&x.office_client_id===off.id)||x.bureau===off.name||x.office===off.name);
+        /* UN bureau, UN site — donc UNE tournée. On collectait la PREMIÈRE ligne
+           référençant le bureau (findIndex) et on la déplaçait ; les autres
+           restaient en place. Un bureau pouvait ainsi figurer sur deux sites de
+           tournées différentes, et donc être livré deux fois. L'unicité n'était
+           garantie ni à l'écriture, ni à l'affichage.
+           On les recense toutes : la première porte le rattachement, les autres
+           sont libérées (la ligne de site reste, seul le bureau la quitte). */
+        const idxs=[];
+        rows.forEach((x,i)=>{ if((x.office_client_id!=null&&off.id!=null&&x.office_client_id===off.id)||x.bureau===off.name||x.office===off.name) idxs.push(i); });
+        const ex=idxs.length?idxs[0]:-1;
         if(ex>=0){
           const oldKey=bKey(rows[ex]);
           if(oldKey&&oldKey!==bKey(tpl)&&!rows.some((x,xi)=>xi!==ex&&bKey(x)===oldKey))
             rows.push({...rows[ex],id:undefined,bureau:'—',office:'—',office_client_id:null});
           rows[ex]={...rows[ex],name:tpl.name,adr:tpl.adr,etage:tpl.etage,acc:tpl.acc,tour:tpl.tour,bureau:off.name,office:off.name,office_client_id:(off.id!=null?off.id:rows[ex].office_client_id)};
+          idxs.slice(1).forEach(i=>{ rows[i]={...rows[i],bureau:'—',office:'—',office_client_id:null}; });
         }
         else{ const free=rows.findIndex(x=>rk&&bKey(x)===rk&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
           if(free>=0) rows[free]={...rows[free],bureau:off.name,office:off.name,office_client_id:off.id};
@@ -5121,7 +5131,10 @@ class Component extends DCLogic {
       const adr=m?raw.slice(0,m.index).replace(/[,\s]+$/,''):raw;
       this.obOpen();                       // réinitialise ob…
       this.setState(s=>({ob:{...s.ob,      // …et on pose la demande par-dessus
-        raison:nom, adr:adr, cp:cp, localite:localite, office:nom,
+        // `office` = nom du SITE dans le bâtiment, pas la société : le
+        // pré-remplir avec la raison sociale produisait « Asima sp z oo — Asima
+        // sp z oo » comme libellé de site. Laissé vide, à compléter.
+        raison:nom, adr:adr, cp:cp, localite:localite,
         contactNom:r.clientName||'', contactEmail:r.email||'', contactTel:r.phone||''}}));
     };
     const joinRequests=joinRaw.map(r=>({...r,
