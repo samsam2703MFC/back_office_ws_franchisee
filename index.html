@@ -3275,15 +3275,35 @@ class Component extends DCLogic {
     // un mot : on tapait une quantité, on validait, et l'écran restait identique
     // sans qu'on puisse distinguer « c'était déjà cette valeur » d'une panne.
     // Un champ qui n'écrit pas doit dire pourquoi il n'écrit pas.
-    if(raw===undefined){ this.printJob('Stock '+canal+' de « '+nom+' » inchangé — aucune saisie à valider'); return; }
+    if(raw===undefined){ return; }           // pas de saisie en cours : rien à valider
     const txt=String(raw).trim();
     if(txt===''){ this.printJob('Stock '+canal+' de « '+nom+' » : champ vide — valeur conservée ('+serverVal+')'); clear(); return; }
     const v=parseInt(txt,10);
     if(!isFinite(v)||v<0){ this.printJob('Quantité invalide — valeur inchangée'); clear(); return; }
-    const delta=v-serverVal;
     clear();
-    if(!delta){ this.printJob('Stock '+canal+' de « '+nom+' » déjà à '+serverVal+' — rien à enregistrer'); return; }
-    this.stkAdjust(nom, mode, delta, flagKey, serverVal, pid);
+    // La valeur tapée part TELLE QUELLE. Elle était convertie en écart
+    // (v − valeur affichée) : quand l'affichage venait du minimum hebdomadaire
+    // et non d'une ligne de stock, cet écart s'appliquait à une ligne
+    // inexistante, créée à max(0, écart) — taper 8 sur un affichage à 10
+    // enregistrait 0. Une écriture absolue n'a pas de référence à supposer, et
+    // se répète sans dériver.
+    this.stkSetDispo(nom, mode, v, flagKey, pid);
+  }
+  /* Pose le DISPONIBLE du jour à la valeur saisie. Le serveur y ajoute le
+     réservé et le vendu pour retrouver le total : lui seul les connaît, et ils
+     changent pendant qu'on saisit. */
+  stkSetDispo(nom, mode, dispo, fk, pid){ const fr=window.__FR||{};
+    const canal=(mode==='delivery'?'online':'en shop');
+    if(!fr.base){ this.printJob('API indisponible — stock non enregistré'); return; }
+    fetch(fr.base+'/franchisee/stock-adjust'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+      {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+       body:JSON.stringify({product:nom,productId:(pid!=null?pid:undefined),mode:mode,dispo:dispo})})
+      .then(r=>r.json()).then(j=>{
+        if(j&&j.ok){ this.setState(s=>({flags:{...s.flags,[fk]:j.dispo}}));
+          this.printJob('✓ Stock '+canal+' de « '+nom+' » : '+j.dispo+' (total '+j.total+' en base)'); }
+        else this.printJob((j&&j.error)||'Erreur enregistrement stock');
+      })
+      .catch(()=>this.printJob('Réseau indisponible — stock non enregistré'));
   }
   /* Seuil d'alerte d'un produit. Champ VIDE = retour au seuil global : il faut
      pouvoir revenir en arriere sans avoir a deviner quel etait le nombre
