@@ -2653,14 +2653,25 @@ class Component extends DCLogic {
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur}})
-      }).then(r=>r.ok?r.json():null).then(()=>{
+      }).then(async r=>{
+        // Un refus serveur était AVALÉ : `r.ok ? … : null` puis `.catch(()=>{})`.
+        // L'écran affichait « ✔ Bureau créé » — issu de l'écriture locale — alors
+        // que la base ne contenait rien, et le bureau disparaissait au premier
+        // rechargement sans que personne sache pourquoi. Depuis que la tournée
+        // est obligatoire, ce refus est un cas NORMAL : il doit se lire.
+        if(!r.ok){ const j=await r.json().catch(()=>null);
+          this.printJob('⚠ Bureau NON enregistré — '+((j&&j.error)||('HTTP '+r.status))+' — corrigez et recréez');
+          return null; }
+        return await r.json().catch(()=>null);
+      }).then(j=>{
+        if(j===null) return;
         // Le serveur a créé office + LIGNE CLIENT (double lien) : refetch pour
         // que le nouveau client apparaisse tout de suite dans le menu Clients.
         const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={headers:FRH(),credentials:'omit'};
         fetch(fr.base+'/franchisee/b2b-clients'+qs2,H2).then(r=>r.ok?r.json():null)
           .then(a2=>{ if(Array.isArray(a2)&&window.BOServer) window.BOServer.refresh('b2b_clients',a2); this.bcRefreshOffices(); })
           .catch(()=>{});
-      }).catch(()=>{});
+      }).catch(()=>this.printJob('⚠ Bureau NON enregistré — réseau indisponible'));
     } catch(e){}
   }
   toggleParam(cle){ return ()=>{ if(!window.BOServer) return; const cur=window.BOServer.getParam(cle,false); window.BOServer.setParam(cle,!cur); this.setState({_rev:(this.state._rev||0)+1}); }; }
