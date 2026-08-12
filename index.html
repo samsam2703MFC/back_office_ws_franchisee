@@ -926,9 +926,14 @@
                   </sc-for>
                   <sc-if value="{{ ot.bxEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);align-self:center">Aucun bureau sur ce site</span></sc-if>
                 </div>
-                <select value="{{ ot.addSel }}" onChange="{{ ot.addSet }}" style="height:28px;border:.5px dashed var(--color-border-secondary);border-radius:8px;padding:0 8px;font:500 11.5px var(--font-ui);background:transparent;color:var(--color-text-muted);max-width:100%;cursor:pointer">
-                  <sc-for list="{{ ot.addOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for>
-                </select>
+                <input type="text" value="{{ ot.addQ }}" onInput="{{ ot.addQSet }}" placeholder="{{ ot.addQPlaceholder }}" disabled="{{ ot.addQDisabled }}" style="{{ ot.addQStyle }}"/>
+                <div style="display:flex;flex-direction:column;gap:1px;margin-top:3px">
+                  <sc-for list="{{ ot.addHits }}" as="h" hint-placeholder-count="3">
+                    <button onClick="{{ h.pick }}" title="Rattacher ce bureau à ce site" style="{{ h.style }}">{{ h.label }}</button>
+                  </sc-for>
+                  <sc-if value="{{ ot.addNoHit }}" hint-placeholder-val="{{ false }}"><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);padding:4px 9px">Aucun bureau libre ne correspond</span></sc-if>
+                  <sc-if value="{{ ot.addHasMore }}" hint-placeholder-val="{{ false }}"><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);padding:2px 9px">{{ ot.addMoreTxt }}</span></sc-if>
+                </div>
                 <sc-if value="{{ ot.canDrop }}" hint-placeholder-val="{{ false }}"><span style="font:600 10px var(--font-ui);color:var(--color-primary)">⤓ Déposer le bureau saisi ici</span></sc-if>
               </div>
             </sc-for>
@@ -4502,7 +4507,7 @@ class Component extends DCLogic {
     // Cartes SITES : chips bureaux (× = retirer) + sélecteur d'ajout direct.
     // Un bâtiment = clé adresse OU nom — les sites sans adresse ont leur carte.
     const offSeenAdr=new Set(); const offSiteCards=[];
-    siteRowsTour.forEach(r=>{ const rk=bKey(r); if(!rk||offSeenAdr.has(rk)) return; offSeenAdr.add(rk);
+    siteRowsTour.forEach((r,cardIdx)=>{ const rk=bKey(r); if(!rk||offSeenAdr.has(rk)) return; offSeenAdr.add(rk);
       // Bureaux du bâtiment, dédupliqués par nom NORMALISÉ (deux graphies du
       // même bureau = un seul tag).
       const bxSeen=new Set(); const bx=[];
@@ -4524,10 +4529,29 @@ class Component extends DCLogic {
         drop:()=>{ const key=this.state.dndOff; if(key!=null) offAttach(r,key); },
         bx:bx.map(b=>({name:b,remove:()=>offDetach(r,b)})),
         bxEmpty:bx.length===0,
-        addSel:'',
-        addOpts:[{value:'',label:addable.length?'+ Ajouter un bureau…':'Aucun bureau libre — tous sont déjà rattachés'},
-                 ...addable.map(o=>({value:offKey(o),label:o.name}))],
-        addSet:(e)=>{ const v=e.target.value; if(v) offAttach(r,v); }});
+        /* RECHERCHE plutôt que liste déroulante. Un sélecteur reste praticable
+           à dix bureaux, plus du tout à deux cents : il faut faire défiler pour
+           trouver un nom qu'on connaît déjà. On tape, on voit les
+           correspondances, on clique. La recherche porte sur le nom ET la
+           localité — deux bureaux peuvent porter le même nom de société. */
+        ...(()=>{
+          const qk='offQ_'+cardIdx;
+          const q=normA(S.flags[qk]||'');
+          const label=o=>o.name+((o.postal_code||o.city)?(' · '+((o.postal_code||'')+' '+(o.city||'')).trim()):'');
+          const hits=(q===''?addable:addable.filter(o=>normA(label(o)).indexOf(q)>=0)).slice(0,8);
+          return {
+            addQ:S.flags[qk]||'',
+            addQSet:(e)=>{ const v=e.target.value; this.setState(st=>({flags:{...st.flags,[qk]:v}})); },
+            addQStyle:'height:29px;width:100%;border:.5px dashed var(--color-border-secondary);border-radius:8px;padding:0 9px;font:500 11.5px var(--font-ui);background:transparent;color:var(--color-text)',
+            addQPlaceholder:addable.length?'Rechercher un bureau à rattacher…':'Aucun bureau libre — tous sont déjà rattachés',
+            addQDisabled:addable.length===0,
+            addHits:hits.map(o=>({ label:label(o),
+              style:'display:block;width:100%;text-align:left;border:none;background:transparent;color:var(--color-text);font:500 11.5px var(--font-ui);padding:6px 9px;cursor:pointer;border-radius:6px',
+              pick:()=>{ this.setState(st=>{ const f={...st.flags}; delete f[qk]; return {flags:f}; }); offAttach(r,offKey(o)); } })),
+            addNoHit:addable.length>0&&hits.length===0,
+            addMoreTxt:(q===''&&addable.length>8)?('… et '+(addable.length-8)+' autres — affinez la recherche'):'',
+            addHasMore:q===''&&addable.length>8 };
+        })()});
     });
 
     // Ordre de mise en place : 1· tournées, 2· assignation des SITES aux tournées
