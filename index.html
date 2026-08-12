@@ -5688,9 +5688,16 @@ class Component extends DCLogic {
         const post=(path,body,after)=>{ const fr=window.__FR||{};
           fetch((fr.base||'')+'/franchisee/'+path+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(body)})
             .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — action non enregistrée')); };
-        // table() renvoie une COPIE : il faut save() pour que le re-render voie
-        // le patch (b2b_clients est TYPED → l'overlay bo-store est sans effet).
-        const patchLocal=(id,patch)=>{ if(window.BOServer){ const rs=window.BOServer.table('b2b_clients'); const i2=rs.findIndex(x=>String(x.id)===String(id)); if(i2>=0){ rs[i2]={...rs[i2],...patch}; window.BOServer.save('b2b_clients',rs); } } this.setState(s=>({_rev:(s._rev||0)+1})); };
+        /* Rafraîchissement LOCAL après une écriture déjà faite par son endpoint
+           dédié (post(...) ci-dessus). On appelait save(), qui téléverse la
+           table ENTIÈRE à /franchisee/save — pour rien : b2b_clients n'a pas de
+           branche d'écriture typée, et l'overlay bo-store est ignoré à la
+           lecture pour cette table. Passé quelques centaines de clients, ce
+           payload inutile dépassait 500 000 caractères et l'écran affichait
+           « Écriture refusée (HTTP 413) » alors que la modification, elle,
+           avait bien été enregistrée par l'endpoint.
+           refresh() met à jour la copie en mémoire sans aucune requête. */
+        const patchLocal=(id,patch)=>{ if(window.BOServer){ const rs=window.BOServer.table('b2b_clients'); const i2=rs.findIndex(x=>String(x.id)===String(id)); if(i2>=0){ rs[i2]={...rs[i2],...patch}; window.BOServer.refresh('b2b_clients',rs); } } this.setState(s=>({_rev:(s._rev||0)+1})); };
         const togStyle=(on,onBg,onC)=>'border:1.5px solid '+(on?onC:'var(--color-border-secondary)')+';background:'+(on?onBg:'transparent')+';color:'+(on?onC:'var(--color-text-muted)')+';border-radius:8px;padding:7px 13px;font:600 11.5px var(--font-ui);cursor:pointer;flex:none';
         const base={ isB2bClients:screen==='b2bClients',
           bcQ:S.bcQ||'',bcSetQ:(e)=>this.setState({bcQ:e.target.value}),
