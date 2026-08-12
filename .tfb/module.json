@@ -106,6 +106,16 @@
         "en": "What a tour or a customer actually returns once delivery costs are set against it. The conversation about fees happens on figures, not on hunches."
       },
       "screenshots": [{ "file": "docs/landing/franchisee-rentabilite.png", "alt": { "fr": "Rentabilité par tournée et par client", "en": "Profitability per tour and per customer" } }]
+    },
+    {
+      "key": "recherche",
+      "icon": "search",
+      "name": { "fr": "Recherche profonde", "en": "Deep search" },
+      "description": {
+        "fr": "Un champ en tête de menu qui cherche dans les écrans, leurs onglets et leurs explications. Taper « cut-off » sort les cinq endroits où une heure limite se règle ; le franchisé va au bon réglage sans connaître l'arborescence.",
+        "en": "One field at the top of the menu that searches the screens, their tabs and their explanations. Typing \"cut-off\" surfaces the five places a cut-off time is set; the franchisee reaches the right setting without knowing the tree."
+      },
+      "screenshots": [{ "file": "docs/landing/franchisee-recherche.png", "alt": { "fr": "Recherche dans les menus, onglets et explications", "en": "Search across menus, tabs and explanations" } }]
     }
   ]
 }
