@@ -89,3 +89,30 @@ Sans source serveur (→ seed) : `fr_live_eta` (ETA télémétrie), `fr_renta_kp
   Bureaux & sites.
 - Hydratation de bout en bout : client servi par l'API affiché à l'écran,
   seed remplacé ; 25 endpoints appelés ; API morte ⇒ seed intact.
+
+## Recherche profonde (sidebar) — remplace « Retour à l'ERP »
+
+Le lien de retour vers l'ERP en tête de nav cède la place à un champ de
+recherche qui couvre **les menus, les sous-menus (onglets d'écran) et les
+explications**.
+
+- `searchDefs()` (à côté de `srcMeta`) déclare une entrée par écran ou par
+  onglet réellement atteignable : `s` (écran), `tab` (`[clé d'état, valeur]`),
+  `g` (chemin affiché), `grp` (groupe de nav à déplier), `meta` (clé `srcMeta`
+  quand l'onglet a sa propre fiche), `k` (mots-clés métier que l'écran
+  n'affiche pas : « carte », « rupture », « franco », « VIES »…).
+- Le texte indexé est repris des tables existantes — `titles`, `subs` et
+  `srcMeta` (origine des données + formule de calcul) : **un écran documenté
+  une fois est cherchable, sans duplication de libellés**. La fiche générique
+  de `srcMeta` (repli) est volontairement exclue de l'index, sinon elle fait
+  remonter tous les écrans à la fois.
+- Correspondance sans accents ni casse, **en début de mot** (« vies » trouve
+  VIES, pas « servies ») ; tous les mots saisis doivent être trouvés ; le score
+  privilégie le titre, puis les mots-clés, puis les explications. L'extrait
+  affiché sous chaque résultat est la première explication qui contient
+  réellement un des mots cherchés.
+- Ouvrir un résultat pose l'écran, l'onglet, et déplie le groupe de nav
+  correspondant. Clavier : ↑ ↓ pour parcourir, ⏎ pour ouvrir, Échap pour
+  fermer.
+- Ajouter un écran ⇒ ajouter une ligne dans `searchDefs()` (les libellés
+  suivent `titles`/`subs`).

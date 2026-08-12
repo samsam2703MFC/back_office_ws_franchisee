@@ -80,7 +80,30 @@
       <div style="font:400 10px/1.4 var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);margin-top:7px">Back-office WebShop</div>
     </div>
     <nav class="lz" style="flex:1;overflow-y:auto;padding:10px 12px 20px;display:flex;flex-direction:column;gap:3px">
-      <a href="#" style="display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:4px;border-radius:8px;text-decoration:none;background:var(--color-background-secondary);color:var(--color-text-muted);font:500 12px/1 var(--font-ui)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 19l-7-7 7-7"/><path d="M3 12h18"/></svg><span>Retour à l'ERP</span></a>
+      <!-- Recherche profonde : menus, sous-menus (onglets) et explications -->
+      <div style="position:relative;z-index:2600;margin-bottom:6px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:11px;top:10px;color:var(--color-text-muted);pointer-events:none"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+        <input value="{{ dsQuery }}" onInput="{{ dsSetQuery }}" onKeyDown="{{ dsKey }}" onFocus="{{ dsFocus }}" placeholder="Rechercher un écran…" aria-label="Recherche dans le back-office" style="width:100%;box-sizing:border-box;padding:9px 28px 9px 32px;border-radius:8px;border:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text);font:500 12px var(--font-ui);outline:none"/>
+        <sc-if value="{{ dsHasQuery }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ dsClear }}" title="Effacer la recherche" style="position:absolute;right:5px;top:6px;width:22px;height:22px;border:none;border-radius:6px;background:transparent;color:var(--color-text-muted);cursor:pointer;font:600 14px/1 var(--font-ui)">×</button>
+        </sc-if>
+      </div>
+      <sc-if value="{{ dsOpen }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ dsClear }}" style="position:fixed;top:0;right:0;bottom:0;left:0;z-index:2400;background:transparent"></div>
+        <div style="position:fixed;left:258px;top:150px;width:min(470px,calc(100vw - 286px));max-height:min(560px,calc(100vh - 186px));overflow-y:auto;z-index:2500;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;box-shadow:0 18px 46px rgba(0,0,0,.22);padding:8px">
+          <div style="padding:6px 12px 8px;font:600 10px var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">{{ dsCountLabel }}</div>
+          <sc-for list="{{ dsResults }}" as="r" hint-placeholder-count="4">
+            <button onClick="{{ r.go }}" onMouseEnter="{{ r.hover }}" style="{{ r.style }}">
+              <span style="font:600 9.5px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted)">{{ r.path }}</span>
+              <span style="{{ r.titleStyle }}">{{ r.title }}</span>
+              <span style="font:400 11px/1.45 var(--font-ui);color:var(--color-text-muted)">{{ r.desc }}</span>
+            </button>
+          </sc-for>
+          <sc-if value="{{ dsEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:12px;font:400 12px/1.5 var(--font-ui);color:var(--color-text-muted)">Aucun écran ne correspond à « {{ dsQuery }} ». Essayez un mot du métier : carte, franco, cut-off, voucher, rupture…</div>
+          </sc-if>
+        </div>
+      </sc-if>
       <div style="margin:4px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">Exploitation</div>
       <button onClick="{{ nav.tdb }}" style="{{ navStyles.tdb }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>{{ t.navTdb }}</span></button>
       <button onClick="{{ nav.prep }}" style="{{ navStyles.prep }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><span>{{ t.navPrep }}</span></button>
@@ -1710,6 +1733,7 @@ class Component extends DCLogic {
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
     profileOpen: false, srcOpen: false, paramDrafts: {},
+    dsQuery: '', dsOpen: false, dsIdx: 0,
   };
   printJob(msg){ this.setState({toast:msg}); clearTimeout(this._tt); this._tt=setTimeout(()=>this.setState({toast:''}),2800); }
   OB_STEPS=['Société','Contact','Delivery site','Départements','Webshop & voucher','Personnel & adhésion','Récapitulatif'];
@@ -1825,6 +1849,57 @@ class Component extends DCLogic {
     shopParams:{table:'ws_shops',origin:'Form shop — coordonnées · horaires · branding boutique',calc:'Champs enseigne/adresse/… ⇒ BOServer.save(ws_shops)',dev:'1 j'},
     statsReseau:{table:'ERP consolidé (lecture seule)',origin:'Stats multi-boutiques poussées par l\'ERP',calc:'Aucun formulaire ; agrégats read-only + exports CSV',dev:'1 j'},
   }; return M[screen]||{table:'ws_param · tables du module',origin:'Données de démonstration servies par la couche BOServer (localStorage)',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
+  // ===== Recherche profonde — index de navigation du back-office =====
+  // Une entrée = un écran, ou un onglet d'écran, réellement atteignable depuis
+  // la nav. Le titre et le sous-titre viennent des tables `titles`/`subs`, les
+  // explications de `srcMeta` (origine des données + calcul) : tout cela est
+  // indexé automatiquement. `k` n'ajoute que les mots-clés et synonymes métier
+  // que l'écran n'affiche pas lui-même (« carte », « TVA », « rupture »…).
+  //   s    : écran (state.screen)          tab : [clé d'état, valeur] de l'onglet
+  //   g    : chemin affiché dans la liste   grp : groupe de nav à déplier
+  //   meta : clé srcMeta si ≠ de l'écran   label/desc : libellés spécifiques
+  searchDefs(){ return [
+    // ---- Exploitation ----
+    {s:'tdb',g:'Exploitation',k:'accueil journee kpi tournees colis alertes arbre commandes du jour vue ensemble'},
+    {s:'prep',g:'Exploitation',k:'bon de chargement scan colis picking etiquettes preparer emballage'},
+    {s:'suivi',g:'Exploitation',label:'Livraison du jour',meta:'suivi',k:'carte map temps reel chauffeur livreur position gps eta tracking avancement tournee en cours ma boutique'},
+    {s:'stockJour',g:'Exploitation',k:'rupture seuil minimum online webshop en shop reassort inventaire disponible produit'},
+    {s:'demandesB2B',tab:['b2bTab','acces'],g:'Exploitation › Demandes B2B',label:'Accès comptes Office',meta:'validations',k:'vies tva validation en attente compte client professionnel valider refuser'},
+    {s:'demandesB2B',tab:['b2bTab','rattach'],g:'Exploitation › Demandes B2B',label:'Rattachement bureaux',meta:'demandesB2B',desc:'Demandes du personnel à rattacher à un bureau existant — lier · créer · rejeter',k:'join request salarie employe lier rejeter adhesion'},
+    {s:'demandesB2B',tab:['b2bTab','nouveau'],g:'Exploitation › Demandes B2B',label:'Nouveaux bureaux',meta:'demandesB2B',desc:'Demandes de création d\'un nouveau bureau — ouvre l\'onboarding en 7 étapes',k:'onboarding creation nouveau client prospect wizard'},
+    {s:'incidents',g:'Exploitation',k:'avoir preuve relivraison litige casse retard reclamation geste commercial'},
+    // ---- Pilotage ----
+    {s:'capacite',g:'Pilotage',label:'Capacité · remplissage',k:'surbooking creneaux reserve max calendrier saturation tension'},
+    {s:'rentabilite',g:'Pilotage',k:'marge ca chiffre affaires couts kilometres perte deficit point client'},
+    {s:'geoAnalyse',g:'Pilotage',label:'Analyse géo',k:'carte map clients arrondissement code postal cp commune particuliers office chalandise zone territoire densite'},
+    // ---- Paramétrage › Livraison ----
+    {s:'tournees',g:'Paramétrage › Livraison',grp:'g_liv',k:'constructeur glisser deposer chauffeur vehicule eta publication tablette route itineraire'},
+    {s:'horaires',g:'Paramétrage › Livraison',grp:'g_liv',label:'Horaires & fermetures',k:'fenetre depart fin cut-off capacite fermeture ferie conge technique jour non roule'},
+    {s:'zones',g:'Paramétrage › Livraison',grp:'g_liv',k:'code postal cp primaire secondaire franco vehicule territoire carte commune chalandise'},
+    {s:'frais',g:'Paramétrage › Livraison',grp:'g_liv',label:'Frais de livraison',k:'cascade franco palier seuil gratuit facturation port'},
+    {s:'params',g:'Paramétrage › Livraison',grp:'g_liv',label:'Coût & temps',k:'cout horaire carburant emballage structure chargement version simulation'},
+    // ---- Paramétrage › Clients B2B ----
+    {s:'clients',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Bureaux & sites',k:'compte b2b plafond encours remise facturation differee tva segment horeca fiche client'},
+    {s:'offices',g:'Paramétrage › Clients B2B',grp:'g_b2b',k:'bureau client statut valide departements effectif'},
+    {s:'sites',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Sites de livraison',k:'adresse etage local temps acces quai reception chaine tournee zone'},
+    {s:'bureauParams',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Règles par bureau',k:'jours autorises cut-off tournee assignee par bureau'},
+    {s:'emailsBureau',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Contacts email',k:'mail role principal facturation livraison destinataire notification'},
+    // ---- Paramétrage › Boutique ----
+    {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','dispo'],g:'Paramétrage › Boutique',label:'Disponibilité boutique',k:'jours heures webshop comptoir bureau ouverture livraison'},
+    {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','cal'],g:'Paramétrage › Boutique',label:'Règles calendrier',meta:'calendarRules',k:'open days cut-off lead time delai mode retrait livraison'},
+    {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','except'],g:'Paramétrage › Boutique',label:'Jours exceptionnels',meta:'joursExcept',k:'fermeture horaire special date ferie vacances'},
+    {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','creneaux'],g:'Paramétrage › Boutique',label:'Créneaux',meta:'creneaux',k:'libelle plage horaire capacite mode slot'},
+    {s:'assortiment',grp:'g_boutique',tab:['assortTab','assort'],g:'Paramétrage › Boutique',label:'Assortiment boutique',k:'catalogue produits actifs verrou marque mandatoire categorie'},
+    {s:'assortiment',grp:'g_boutique',tab:['assortTab','cat'],g:'Paramétrage › Boutique',label:'Dispo par catégorie',meta:'dispoCat',k:'categorie delai cut-off activer desactiver livrable'},
+    {s:'assortiment',grp:'g_boutique',tab:['assortTab','prod'],g:'Paramétrage › Boutique',label:'Dispo par produit',meta:'dispoProd',k:'exception produit ecrase categorie regle'},
+    {s:'pricingRules',grp:'g_boutique',tab:['promoTab','prix'],g:'Paramétrage › Boutique',label:'Règles de prix',k:'promotion remise locale reseau marque tarif'},
+    {s:'pricingRules',grp:'g_boutique',tab:['promoTab','bons'],g:'Paramétrage › Boutique',label:'Bons / codes',meta:'vouchers',k:'voucher code promo bienvenue bon reduction'},
+    {s:'pricingRules',grp:'g_boutique',tab:['promoTab','remise'],g:'Paramétrage › Boutique',label:'Remise webshop',meta:'remiseWebshop',k:'remise automatique panier b2b pourcentage minimum'},
+    {s:'paiements',g:'Paramétrage › Boutique',grp:'g_boutique',label:'Paiements',k:'carte bancaire virement especes comptoir profil guest registered company moyen'},
+    // ---- Boutique & réseau ----
+    {s:'shopParams',g:'Ma boutique',label:'Paramètres du shop',k:'enseigne adresse horaires branding logo coordonnees magasin'},
+    {s:'statsReseau',g:'Ma boutique',label:'Stats réseau consolidées',k:'erp multi boutiques export csv comparaison classement'},
+  ]; }
   formDefs(){
     const tours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
     const bureaux=['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
@@ -2321,6 +2396,66 @@ class Component extends DCLogic {
     const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding'};
+
+    // ===== Recherche profonde (barre de nav) =====
+    // Cherche dans les menus, les sous-menus (onglets) ET les explications :
+    // sous-titre d'écran, origine des données et formule de calcul (srcMeta).
+    // Tous les mots saisis doivent être trouvés ; le score privilégie le titre,
+    // puis les mots-clés, puis les explications, avec un bonus en début de mot.
+    const dsNorm=(v)=>String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    const dsQuery=S.dsQuery||'';
+    const dsTokens=dsNorm(dsQuery).split(/[^a-z0-9]+/).filter(Boolean);
+    // srcMeta renvoie un texte générique pour les écrans qu'il ne décrit pas :
+    // on ne l'indexe pas, sinon il fait remonter tous les écrans à la fois.
+    const dsGeneric=this.srcMeta('__aucun__').origin;
+    const dsEntries=this.searchDefs().map(d=>{ const m=this.srcMeta(d.meta||d.s)||{};
+      const own=m.origin!==dsGeneric;
+      return {...d, label:d.label||titles[d.meta]||titles[d.s]||d.s, desc:d.desc||subs[d.meta]||subs[d.s]||'',
+        expl:own?(m.origin||''):'', calc:own?(m.calc||''):'', tbl:own?(m.table||''):''}; });
+    // Un mot ne compte que s'il ouvre un mot du texte : « vies » trouve VIES,
+    // pas « servies ». Recherche insensible aux accents et à la casse.
+    const dsFind=(hay,tk)=>{ let at=hay.indexOf(tk);
+      while(at>=0){ if(at===0||!/[a-z0-9]/.test(hay.charAt(at-1))) return true; at=hay.indexOf(tk,at+1); }
+      return false; };
+    const dsScore=(e)=>{
+      const fields=[[e.label,120],[e.k,70],[e.g,45],[e.desc,45],[e.expl,30],[e.calc,22],[e.tbl,22]];
+      let total=0;
+      for(let i=0;i<dsTokens.length;i++){ const tk=dsTokens[i]; let best=0;
+        for(let j=0;j<fields.length;j++){ const hay=dsNorm(fields[j][0]);
+          if(hay&&dsFind(hay,tk)) best=Math.max(best,fields[j][1]); }
+        if(!best) return 0;               // un mot non trouvé ⇒ l'entrée est écartée
+        total+=best; }
+      return total;
+    };
+    // Extrait montré sous le titre : la première explication qui contient
+    // vraiment un des mots cherchés, sinon le sous-titre de l'écran.
+    const dsSnippet=(e)=>{ const cands=[e.desc,e.expl,e.calc,e.tbl];
+      for(let i=0;i<cands.length;i++){ const hay=dsNorm(cands[i]);
+        if(hay&&dsTokens.some(tk=>dsFind(hay,tk))) return cands[i]; }
+      return e.desc||e.expl||''; };
+    const dsRanked=dsTokens.length
+      ? dsEntries.map(e=>({e,sc:dsScore(e)})).filter(x=>x.sc>0).sort((a,b)=>b.sc-a.sc).slice(0,12)
+      : [];
+    const dsSel=dsRanked.length?Math.max(0,Math.min(S.dsIdx||0,dsRanked.length-1)):0;
+    const dsClear=()=>this.setState({dsQuery:'',dsOpen:false,dsIdx:0});
+    const dsPick=(e)=>()=>{ const st={screen:e.s,dsQuery:'',dsOpen:false,dsIdx:0};
+      if(e.tab) st[e.tab[0]]=e.tab[1];
+      if(e.grp){ st.paramsOpen=true; st.openGroups={...S.openGroups,[e.grp]:true}; }
+      this.setState(st); };
+    const dsResults=dsRanked.map((x,i)=>{ const e=x.e, on=i===dsSel;
+      return { path:e.g, title:e.label, desc:dsSnippet(e), go:dsPick(e), hover:()=>this.setState({dsIdx:i}),
+        style:'display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;border:none;cursor:pointer;padding:9px 12px;border-radius:9px;background:'+(on?'var(--color-background-secondary)':'transparent'),
+        titleStyle:'font:600 12.5px var(--font-ui);color:'+(on?'var(--color-primary)':'var(--color-text)') }; });
+    const dsSetQuery=(ev)=>this.setState({dsQuery:ev.target.value,dsOpen:true,dsIdx:0});
+    const dsKey=(ev)=>{ const n=dsResults.length, k=ev.key;
+      if(k==='ArrowDown'){ if(ev.preventDefault) ev.preventDefault(); this.setState({dsOpen:true,dsIdx:n?(dsSel+1)%n:0}); }
+      else if(k==='ArrowUp'){ if(ev.preventDefault) ev.preventDefault(); this.setState({dsOpen:true,dsIdx:n?(dsSel-1+n)%n:0}); }
+      else if(k==='Enter'){ const r=dsResults[dsSel]; if(r) r.go(); }
+      else if(k==='Escape') dsClear(); };
+    const dsVals={ dsQuery, dsResults, dsSetQuery, dsKey, dsClear,
+      dsOpen:!!(S.dsOpen&&dsTokens.length), dsHasQuery:!!dsQuery, dsEmpty:dsTokens.length>0&&dsResults.length===0,
+      dsCountLabel:dsResults.length?(dsResults.length+' résultat'+(dsResults.length>1?'s':'')):'Aucun résultat',
+      dsFocus:()=>{ if(this.state.dsQuery) this.setState({dsOpen:true}); } };
 
     // TDB
     const stat=(l,bg,c)=>({label:l,style:this.pill(bg,c)});
@@ -3077,6 +3212,7 @@ class Component extends DCLogic {
 
     return {
       navGroups,
+      ...dsVals,
       kTdbTours:this.routesMeta().length,
       kTdbColis:tournees.reduce((a,t)=>a+(t.colis||0),0),
       kTdbOrders:tdbRaw.reduce((a,t)=>a+t.zones.reduce((b,z)=>b+z.sites.reduce((c,s)=>c+s.users.reduce((d,u)=>d+(u.cmd||0),0),0),0),0),
