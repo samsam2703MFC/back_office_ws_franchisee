@@ -55,13 +55,24 @@ jobs:
           # l'id une fois via /franchisee/me, comme le fait le boot de l'app.
           SHOP="${SHOP_ID:-}"
           if [ -z "$SHOP" ]; then
-            ME=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/me" 2>/dev/null | tr -d ' \n')
+            ME=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/me" 2>/dev/null)
+            MEC=$(printf '%s' "$ME" | tr -d ' \n')   # compacté : UNIQUEMENT pour les ids numériques
             # Plusieurs formes possibles selon la version du PHP ; on les essaie
             # dans l'ordre du plus explicite au plus permissif.
-            SHOP=$(printf '%s' "$ME" | grep -o '"shop":{[^}]*}' | grep -o '"id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
-            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$ME" | grep -o '"shop_id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
-            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$ME" | grep -o '"shop":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
-            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$ME" | grep -o '"id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
+            # 1. shop objet avec id · 2. shop_id · 3. shop chaîne (slug — l'API
+            # accepte ?shop=<slug|id>, comme api-config.js) · 4. id de tête.
+            SHOP=$(printf '%s' "$MEC" | grep -o '"shop":{[^}]*}' | grep -o '"id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
+            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$MEC" | grep -o '"shop_id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
+            # Le slug se lit sur le payload BRUT : compacter transformerait
+            # « L Atelier BXL » en « LAtelierBXL » et fabriquerait une portée
+            # qui n'existe pas. Le motif exige un slug d'un seul tenant.
+            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$ME" | grep -o '"shop"[[:space:]]*:[[:space:]]*"[A-Za-z0-9_-]\{1,\}"' | head -1 | sed 's/.*"\([A-Za-z0-9_-]\{1,\}\)"$/\1/')
+            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$MEC" | grep -o '"id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
+            # Une valeur avec espaces ou accents ne peut pas partir telle quelle
+            # dans une URL : on préfère le dire que de sonder une portée fausse.
+            if [ -n "$SHOP" ] && printf '%s' "$SHOP" | grep -q '[^A-Za-z0-9_-]'; then
+              echo "  portée « $SHOP » non utilisable en URL — posez la variable SHOP_ID"; SHOP=''
+            fi
             # Diagnostic sans fuite : on n'imprime que les NOMS de champs.
             [ -z "$SHOP" ] && echo "  /franchisee/me — champs vus : $(printf '%s' "$ME" | grep -o '"[a-zA-Z_]\{1,\}":' | tr -d '\":' | sort -u | tr '\n' ' ')"
           fi
