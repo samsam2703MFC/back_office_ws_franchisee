@@ -200,7 +200,7 @@
         fr_tour_dispatch:'tour-dispatch-status', fr_drivers:'drivers',
         fr_erp_portions:'erp-portion-rules',
         fr_live_eta:'fr-live-eta', fr_live_table:'fr-live-table',
-        fr_renta_kpis:'fr-renta-kpis', fr_cout_params:'fr-cout-params',
+        fr_renta_kpis:'fr-renta-kpis', fr_renta_evolution:'fr-renta-evolution', fr_cout_params:'fr-cout-params',
         fr_validations:'fr-validations', fr_dispo_cats:'fr-dispo-cats',
         fr_stock_catalog:'fr-stock-catalog', fr_join_requests:'fr-join-requests',
         fr_assortiment:'fr-assortiment',

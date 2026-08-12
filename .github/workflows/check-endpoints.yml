@@ -1,0 +1,117 @@
+name: Vérifier les endpoints /franchisee/*
+
+# Diagnostic en LECTURE SEULE : depuis le serveur (en localhost, donc sans
+# exposer l'hôte), interroge chaque endpoint que la console appelle et publie
+# son code HTTP. Rien n'est écrit, aucun POST n'est émis.
+#
+# Depuis la suppression du seed, un écran vide = un endpoint qui ne répond pas.
+# Ce workflow dit lequel, et sépare les deux causes qui n'ont pas le même
+# remède :
+#   404       → la route n'existe pas côté PHP : la table restera vide tant
+#               qu'elle n'est pas écrite
+#   401 / 403 → la route existe et exige le jeton admin : comportement normal
+#   200       → la route répond ; avec un jeton, le rapport indique aussi le
+#               nombre de lignes, donc si la table est vide côté base
+#
+# Lancement : onglet Actions → ce workflow → « Run workflow ».
+#
+# Secrets :  SSH_HOST · SSH_USER · SSH_PASSWORD  (les mêmes que le déploiement)
+#            ADMIN_TOKEN — FACULTATIF. S'il est défini, les appels portent
+#            l'en-tête X-Admin-Token et le rapport compte les lignes renvoyées.
+#            Il est transmis par l'entrée standard de SSH, jamais sur la ligne
+#            de commande distante (il n'apparaît donc pas dans les processus du
+#            serveur). Sans lui, le rapport s'arrête aux codes HTTP — ce qui
+#            suffit déjà à repérer les routes manquantes.
+# Vars :     SSH_PORT (défaut 22) · API_BASE (défaut /webshop/api)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Écrire la sonde
+        run: |
+          cat > probe.sh << 'PROBE'
+          set -u
+          BASE="http://localhost${API_BASE}"
+          if [ -n "${ADMIN_TOKEN:-}" ]; then
+            HDR=(-H "X-Admin-Token: ${ADMIN_TOKEN}"); AUTH="avec jeton admin"
+          else
+            HDR=(); AUTH="SANS jeton admin — 401/403 signifie « route en place »"
+          fi
+          echo "Base API : $BASE   ·   $AUTH"
+          echo
+
+          # Les 50 tables hydratées au démarrage de la console.
+          TABLES="b2b-clients b2b-departments catchment-postcodes drivers 
+          erp-portion-rules fr-alertes fr-assortiment fr-capacity fr-clients 
+          fr-cout-params fr-dispo-cats fr-incidents fr-join-requests 
+          fr-live-drivers fr-live-eta fr-live-table fr-net-stats fr-orders 
+          fr-prep-lines fr-prep-points fr-renta-evolution fr-renta-kpis 
+          fr-rentabilite fr-shop-availability fr-stock-catalog 
+          fr-tdb-tournees fr-tdb-tree fr-validations fr-vouchers params 
+          tour-dispatch-status users ws-calendar-rules ws-delivery-fee-rules 
+          ws-delivery-zones ws-franchisor-catchment 
+          ws-office-delivery-settings ws-office-delivery-sites 
+          ws-office-emails ws-offices ws-payment-methods 
+          ws-pricing-rules-local ws-product-availability ws-shop-exceptions 
+          ws-slots ws-tour-availability ws-tour-closures ws-tour-postcodes 
+          ws-tours ws-vouchers-local"
+
+          # Appelés directement par les écrans, hors hydratation.
+          DIRECT="me geo-clients bo-store zone-check client-orders stock-product-orders stock-threshold-info fr-voucher-targets"
+
+          missing=0
+          probe() {                      # $1 = URL   $2 = libellé
+            out=$(curl -s --max-time 12 "${HDR[@]}" -w '\n%{http_code}' "$1" 2>/dev/null)
+            code=$(printf '%s' "$out" | tail -n1)
+            payload=$(printf '%s' "$out" | sed '$d')
+            note=''
+            case "$code" in
+              200)
+                head2=$(printf '%s' "$payload" | tr -d ' \n' | head -c2)
+                if [ "$head2" = "[]" ]; then note='0 ligne'
+                elif [ "${head2#[}" != "$head2" ]; then
+                  n=$(printf '%s' "$payload" | grep -o '}[[:space:]]*,[[:space:]]*{' | wc -l | tr -d ' ')
+                  note="$((n+1)) ligne(s)"
+                else note='objet'; fi ;;
+              404)     note='ROUTE ABSENTE'; missing=$((missing+1)) ;;
+              401|403) note='auth requise' ;;
+              000)     note='pas de réponse' ;;
+              *)       note='—' ;;
+            esac
+            printf '  %-3s  %-14s  %s\n' "$code" "$note" "$2"
+          }
+
+          echo "== Tables hydratées au démarrage =="
+          for t in $TABLES; do probe "$BASE/franchisee/$t" "$t"; done
+          echo
+          echo "== Appelés par les écrans =="
+          for t in $DIRECT; do probe "$BASE/franchisee/$t" "$t"; done
+          echo
+          echo "== Référentiel postal (cartes, zones, analyse géo) =="
+          probe "$BASE/geo/postcodes?all=1"    "geo/postcodes?all=1"
+          probe "$BASE/geo/postcodes?groups=1" "geo/postcodes?groups=1"
+          echo
+          echo "Routes absentes : $missing"
+          echo "404 = route à écrire côté PHP · 401/403 = route en place."
+          PROBE
+
+      - name: Interroger les endpoints depuis le serveur
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          API_BASE: ${{ vars.API_BASE || '/webshop/api' }}
+        run: |
+          # Le jeton et la base partent par stdin, pas par la ligne de commande.
+          { printf 'API_BASE=%q\n' "$API_BASE"
+            printf 'ADMIN_TOKEN=%q\n' "${ADMIN_TOKEN:-}"
+            cat probe.sh
+          } | sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+                -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s
