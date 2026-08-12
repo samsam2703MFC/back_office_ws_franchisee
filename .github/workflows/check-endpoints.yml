@@ -73,8 +73,19 @@ jobs:
             if [ -n "$SHOP" ] && printf '%s' "$SHOP" | grep -q '[^A-Za-z0-9_-]'; then
               echo "  portée « $SHOP » non utilisable en URL — posez la variable SHOP_ID"; SHOP=''
             fi
-            # Diagnostic sans fuite : on n'imprime que les NOMS de champs.
-            [ -z "$SHOP" ] && echo "  /franchisee/me — champs vus : $(printf '%s' "$ME" | grep -o '"[a-zA-Z_]\{1,\}":' | tr -d '\":' | sort -u | tr '\n' ' ')"
+            # Diagnostic sans fuite : NOMS de champs, et TYPE du champ shop —
+            # jamais sa valeur (le dépôt et ses journaux sont publics).
+            if [ -z "$SHOP" ]; then
+              echo "  /franchisee/me — champs vus : $(printf '%s' "$ME" | grep -o '"[a-zA-Z_]\{1,\}":' | tr -d '\":' | sort -u | tr '\n' ' ')"
+              RAW=$(printf '%s' "$MEC" | grep -o '"shop":[^,}]*' | head -1 | sed 's/^"shop"://')
+              case "$RAW" in
+                null)  echo "  /franchisee/me — shop = null : ce jeton n'est rattaché à AUCUNE boutique (portée réseau)" ;;
+                '""')  echo "  /franchisee/me — shop = chaîne vide" ;;
+                '')    echo "  /franchisee/me — champ shop introuvable" ;;
+                \"*)   echo "  /franchisee/me — shop = chaîne de $(printf '%s' "$RAW" | wc -c | tr -d ' ') caractères, non réduite à un slug simple" ;;
+                *)     echo "  /franchisee/me — shop = valeur non textuelle" ;;
+              esac
+            fi
           fi
           if [ -n "$SHOP" ]; then QS="?shop=$SHOP"; echo "Portée    : boutique $SHOP"
           else QS=''; echo "Portée    : AUCUNE — /franchisee/me n'a pas rendu d'id ; les endpoints qui exigent la portée renverront [] à tort"; fi
