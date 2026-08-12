@@ -153,6 +153,21 @@ jobs:
           probe "$BASE/geo/postcodes?all=1"    "geo/postcodes?all=1"
           probe "$BASE/geo/postcodes?groups=1" "geo/postcodes?groups=1"
           echo
+          echo "== Page servie (ce que le navigateur reçoit vraiment) =="
+          PAGE="http://localhost/webshop/backoffice_franchisee/"
+          HTML=$(curl -s --max-time 15 "$PAGE" 2>/dev/null)
+          echo "  octets reçus : $(printf '%s' "$HTML" | wc -c | tr -d ' ')"
+          # Marqueurs : chacun n'apparaît que si le déploiement porte bien la
+          # version correspondante. Absent ⇒ le serveur n'a pas le dernier code ;
+          # présent alors que l'écran manque à l'écran ⇒ cache du navigateur.
+          for probe in "Avis clients:écran Avis" "REVIEWS_PATH:appel des avis" "langList:sélecteur de langue" "searchDefs:recherche du menu" "assign():constructeur de tournées"; do
+            needle=${probe%%:*}; label=${probe#*:}
+            if printf '%s' "$HTML" | grep -qF -- "$needle"; then echo "  présent  $label"
+            else echo "  ABSENT   $label"; fi
+          done
+          echo "  en-têtes de cache :"
+          curl -sI --max-time 15 "$PAGE" | grep -i '^\(cache-control\|etag\|last-modified\|expires\)' | sed 's/^/    /'
+          echo
           echo "Routes absentes : $missing"
           echo "404 = route à écrire côté PHP · 401/403 = route en place."
           PROBE
