@@ -23,11 +23,17 @@ name: Vérifier les endpoints /franchisee/*
 #            serveur). Sans lui, le rapport s'arrête aux codes HTTP — ce qui
 #            suffit déjà à repérer les routes manquantes.
 # Vars :     SSH_PORT (défaut 22) · API_BASE (défaut /webshop/api)
-#            SHOP_ID — facultatif : force la boutique sondée. Par défaut elle
-#            est résolue via /franchisee/me, comme au démarrage de la console.
+#            SHOP_ID — facultatif : force la boutique sondée (Variables OU
+#            Secrets). Le champ « shop » saisi au lancement prime sur elle ;
+#            sans ni l'un ni l'autre, la portée est cherchée via /franchisee/me.
 
 on:
   workflow_dispatch:
+    inputs:
+      shop:
+        description: "Portée boutique (slug ou id, celui de ?shop=… dans l'URL de la console). Laisser vide pour tenter la détection."
+        required: false
+        type: string
 
 jobs:
   check:
@@ -53,9 +59,12 @@ jobs:
           # renvoie [] si la portée manque. Sonder sans portée ferait donc passer
           # une boutique correctement configurée pour une base vide. On résout
           # l'id une fois via /franchisee/me, comme le fait le boot de l'app.
-          SHOP="${SHOP_ID:-}"
-          if [ -n "$SHOP" ]; then echo "  portée fournie par SHOP_ID"
-          else echo "  SHOP_ID vide — vérifiez qu'elle existe dans Variables ou Secrets, à l'échelle du dépôt"; fi
+          # Ordre : saisie au lancement, puis variable/secret du dépôt, puis
+          # détection. Le champ de lancement ne peut pas être mal rangé.
+          SHOP="${SHOP_INPUT:-}"
+          if [ -n "$SHOP" ]; then echo "  portée saisie au lancement"
+          elif [ -n "${SHOP_ID:-}" ]; then SHOP="$SHOP_ID"; echo "  portée fournie par SHOP_ID"
+          else echo "  aucune portée fournie (champ de lancement vide, SHOP_ID absente des Variables et des Secrets)"; fi
           if [ -z "$SHOP" ]; then
             ME=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/me" 2>/dev/null)
             MEC=$(printf '%s' "$ME" | tr -d ' \n')   # compacté : UNIQUEMENT pour les ids numériques
@@ -157,11 +166,13 @@ jobs:
           # un secret, mais autant accepter les deux plutôt que rendre un
           # rapport faux parce qu'il a été posé du mauvais côté.
           SHOP_ID: ${{ vars.SHOP_ID || secrets.SHOP_ID }}
+          SHOP_INPUT: ${{ inputs.shop }}
         run: |
           # Le jeton et la base partent par stdin, pas par la ligne de commande.
           { printf 'API_BASE=%q\n' "$API_BASE"
             printf 'ADMIN_TOKEN=%q\n' "${ADMIN_TOKEN:-}"
             printf 'SHOP_ID=%q\n' "${SHOP_ID:-}"
+            printf 'SHOP_INPUT=%q\n' "${SHOP_INPUT:-}"
             cat probe.sh
           } | sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
                 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
