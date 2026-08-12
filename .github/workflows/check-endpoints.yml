@@ -23,6 +23,8 @@ name: Vérifier les endpoints /franchisee/*
 #            serveur). Sans lui, le rapport s'arrête aux codes HTTP — ce qui
 #            suffit déjà à repérer les routes manquantes.
 # Vars :     SSH_PORT (défaut 22) · API_BASE (défaut /webshop/api)
+#            SHOP_ID — facultatif : force la boutique sondée. Par défaut elle
+#            est résolue via /franchisee/me, comme au démarrage de la console.
 
 on:
   workflow_dispatch:
@@ -45,6 +47,19 @@ jobs:
             HDR=(); AUTH="SANS jeton admin — 401/403 signifie « route en place »"
           fi
           echo "Base API : $BASE   ·   $AUTH"
+
+          # PORTÉE BOUTIQUE. La console passe ?shop=<id> sur TOUS ses appels, et
+          # certains endpoints n'ont pas de sens sans elle — ws-payment-methods
+          # renvoie [] si la portée manque. Sonder sans portée ferait donc passer
+          # une boutique correctement configurée pour une base vide. On résout
+          # l'id une fois via /franchisee/me, comme le fait le boot de l'app.
+          SHOP="${SHOP_ID:-}"
+          if [ -z "$SHOP" ]; then
+            ME=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/me" 2>/dev/null)
+            SHOP=$(printf '%s' "$ME" | sed -n 's/.*"shop"[^{]*{[^}]*"id"[[:space:]]*:[[:space:]]*"\{0,1\}\([0-9]\{1,\}\).*/\1/p' | head -1)
+          fi
+          if [ -n "$SHOP" ]; then QS="?shop=$SHOP"; echo "Portée    : boutique $SHOP"
+          else QS=''; echo "Portée    : AUCUNE — /franchisee/me n'a pas rendu d'id ; les endpoints qui exigent la portée renverront [] à tort"; fi
           echo
 
           # Les 50 tables hydratées au démarrage de la console.
@@ -89,10 +104,10 @@ jobs:
           }
 
           echo "== Tables hydratées au démarrage =="
-          for t in $TABLES; do probe "$BASE/franchisee/$t" "$t"; done
+          for t in $TABLES; do probe "$BASE/franchisee/$t$QS" "$t"; done
           echo
           echo "== Appelés par les écrans =="
-          for t in $DIRECT; do probe "$BASE/franchisee/$t" "$t"; done
+          for t in $DIRECT; do probe "$BASE/franchisee/$t$QS" "$t"; done
           echo
           echo "== Référentiel postal (cartes, zones, analyse géo) =="
           probe "$BASE/geo/postcodes?all=1"    "geo/postcodes?all=1"
@@ -107,10 +122,12 @@ jobs:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
           ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
           API_BASE: ${{ vars.API_BASE || '/webshop/api' }}
+          SHOP_ID: ${{ vars.SHOP_ID }}
         run: |
           # Le jeton et la base partent par stdin, pas par la ligne de commande.
           { printf 'API_BASE=%q\n' "$API_BASE"
             printf 'ADMIN_TOKEN=%q\n' "${ADMIN_TOKEN:-}"
+            printf 'SHOP_ID=%q\n' "${SHOP_ID:-}"
             cat probe.sh
           } | sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
                 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
