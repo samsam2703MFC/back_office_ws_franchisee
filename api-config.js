@@ -45,4 +45,15 @@
   } catch (e) {}
 
   window.__FR = { base: base, token: token, shop: shop };
+
+  /* En-têtes d'authentification, source UNIQUE pour tous les appels du BO.
+     Le mode tablette (session PIN) a été retiré : la tablette de comptoir
+     tourne sous Kitchen, avec son propre appareil et son propre jeton. Ce
+     back-office n'a donc plus qu'une identité, le jeton admin ERP. */
+  window.FRH = function (extra) {
+    var fr = window.__FR || {};
+    var h = extra ? Object.assign({}, extra) : {};
+    if (fr.token) h['X-Admin-Token'] = fr.token;
+    return h;
+  };
 })();

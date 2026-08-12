@@ -437,6 +437,13 @@
         else if (key === "for") key = "htmlFor";
         else if (key.startsWith("on"))
           key = EVENT_MAP[key] || "on" + key[2].toUpperCase() + key.slice(3);
+        // Attributs a tiret : React les attend en camelCase (strokeWidth,
+        // fillRule, httpEquiv...). Ils passaient bruts, et chaque icone SVG
+        // produisait un avertissement « Invalid DOM property 'stroke-width' » —
+        // des dizaines par page, qui noyaient les vraies erreurs de la console.
+        // data-* et aria-* sont les deux exceptions : React les veut a tiret.
+        else if (key.includes("-") && !key.startsWith("data-") && !key.startsWith("aria-"))
+          key = kebabToCamel(key);
       }
       propGetters.push([key, compileAttr(value)]);
     }
