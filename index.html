@@ -129,7 +129,7 @@
     </nav>
     <div style="border-top:.5px solid var(--color-border-tertiary);padding:8px 12px;display:flex;align-items:center;gap:8px">
       <div style="position:relative;flex:none">
-        <button onClick="{{ openProfile }}" title="Profil · paramètres site" style="width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 11px var(--font-ui);border:none;cursor:pointer">TL</button>
+        <button onClick="{{ openProfile }}" title="Profil · paramètres site" style="width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 11px var(--font-ui);border:none;cursor:pointer">{{ meInit }}</button>
         <span title="Alertes" style="position:absolute;top:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--color-primary);border:2px solid var(--color-surface)"></span>
       </div>
       <div style="flex:1;min-width:0"></div>
@@ -182,8 +182,8 @@
           </div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
             <div class="t-admin-label">Cut-off restant</div>
-            <div style="font:700 30px/1 var(--font-ui);color:var(--color-primary);margin:8px 0 4px">2 h 14</div>
-            <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">clôture saisie à 12:00</div>
+            <div style="font:700 30px/1 var(--font-ui);color:var(--color-primary);margin:8px 0 4px">{{ kCutLeft }}</div>
+            <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ kCutLabel }}</div>
           </div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
             <div class="t-admin-label">Tournées du jour</div>
@@ -676,12 +676,12 @@
         <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:20px;margin-bottom:20px">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
             <div class="t-section-title" style="font-size:16px;margin-bottom:2px">Décomposition CA → marge</div>
-            <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:8px">période courante · 3 tournées</div>
+            <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:8px">période courante · {{ rentaToursTxt }}</div>
             <div>{{ waterfallSvg }}</div>
           </div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
             <div class="t-section-title" style="font-size:16px;margin-bottom:2px">Évolution marge %</div>
-            <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:8px">6 dernières semaines · bande cible 30 % / alerte 15 %</div>
+            <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:8px">{{ rentaEvoTxt }}</div>
             <div>{{ evoSvg }}</div>
           </div>
         </div>
@@ -973,9 +973,9 @@
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div class="t-section-title" style="font-size:15px;margin-bottom:14px">Jours & heures de livraison — boutique</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px">
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Durée créneau</div><div style="font:700 18px var(--font-ui);color:var(--color-text)">120 min</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Cut-off global</div><div style="font:700 18px var(--font-ui);color:var(--color-primary)">17:00 J-1</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Lead time</div><div style="font:700 18px var(--font-ui);color:var(--color-text)">24 h</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Durée créneau</div><div style="font:700 18px var(--font-ui);color:var(--color-text)">{{ shopSlotLen }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Cut-off global</div><div style="font:700 18px var(--font-ui);color:var(--color-primary)">{{ shopCutoff }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Lead time</div><div style="font:700 18px var(--font-ui);color:var(--color-text)">{{ shopLead }}</div></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Jour</span><span class="t-admin-label" style="color:var(--color-primary);text-align:center">Webshop</span><span class="t-admin-label" style="color:#E8A15C;text-align:center">Livraison matin</span><span class="t-admin-label" style="color:#8C4A2F;text-align:center">Livraison après-midi</span></div>
           <sc-for list="{{ shopHours }}" as="d" hint-placeholder-count="7">
@@ -1318,10 +1318,10 @@
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="t-section-title" style="font-size:15px">Coordonnées & horaires</div><button onClick="{{ editShop }}" class="btn-secondary" style="font-size:12px;flex:none">Modifier</button></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">L'Atelier — Bruxelles-Centre</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">Rue du Marché 12, 1000 BXL</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">07:00</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">18:30</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopName }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopAddr }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopOpen }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopClose }}</div></div>
           </div>
         </div>
       </div>
@@ -1359,9 +1359,9 @@
     <div class="lz" style="background:var(--color-surface);border-radius:14px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
       <div style="padding:20px 24px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center"><div class="t-page-title" style="font-size:18px">Nouvelle tournée</div><button onClick="{{ rfClose }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button></div>
       <div style="padding:22px 24px;display:flex;flex-direction:column;gap:14px">
-        <div><div class="t-admin-label" style="margin-bottom:5px">Nom complet</div><input value="{{ rf.name }}" onInput="{{ rfSet.name }}" placeholder="ex. Tournée Brabant Wallon — Lundi" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
+        <div><div class="t-admin-label" style="margin-bottom:5px">Nom complet</div><input value="{{ rf.name }}" onInput="{{ rfSet.name }}" placeholder="nom complet de la tournée" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div><div class="t-admin-label" style="margin-bottom:5px">Nom court (boutons)</div><input value="{{ rf.short }}" onInput="{{ rfSet.short }}" placeholder="ex. Brabant" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
+          <div><div class="t-admin-label" style="margin-bottom:5px">Nom court (boutons)</div><input value="{{ rf.short }}" onInput="{{ rfSet.short }}" placeholder="nom court" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
           <div><div class="t-admin-label" style="margin-bottom:5px">Heure de départ</div><input type="time" value="{{ rf.start }}" onInput="{{ rfSet.start }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -1412,7 +1412,7 @@
     <div class="lz" style="background:var(--color-surface);border-radius:14px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
       <div style="padding:20px 24px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center"><div class="t-page-title" style="font-size:18px">Nouvelle zone de livraison</div><button onClick="{{ zfClose }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button></div>
       <div style="padding:22px 24px;display:flex;flex-direction:column;gap:14px">
-        <div><div class="t-admin-label" style="margin-bottom:5px">Nom de la zone</div><input value="{{ zf.name }}" onInput="{{ zfSet.name }}" placeholder="ex. Zoning Fleming, Louvain-la-Neuve" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
+        <div><div class="t-admin-label" style="margin-bottom:5px">Nom de la zone</div><input value="{{ zf.name }}" onInput="{{ zfSet.name }}" placeholder="nom de la zone" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
         <div><div class="t-admin-label" style="margin-bottom:6px">Type</div><div style="display:flex;gap:8px"><button onClick="{{ zfPrimary }}" style="{{ zfPrimaryStyle }}">Zone primaire</button><button onClick="{{ zfSecondary }}" style="{{ zfSecondaryStyle }}">Zone secondaire</button></div></div>
         <sc-if value="{{ zfIsSecondary }}" hint-placeholder-val="{{ false }}">
           <div><div class="t-admin-label" style="margin-bottom:5px">Zone primaire de rattachement</div><select value="{{ zf.parent }}" onChange="{{ zfSet.parent }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"><sc-for list="{{ zoneParentOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
@@ -1547,7 +1547,7 @@
 
         <sc-if value="{{ obStep0 }}" hint-placeholder-val="{{ true }}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Nom de l'entreprise *</label><input value="{{ ob.raison }}" onInput="{{ obSetRaison }}" placeholder="ex. Boucherie Charlier SPRL" style="{{ obInStyle }}"/></div>
+          <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Nom de l'entreprise *</label><input value="{{ ob.raison }}" onInput="{{ obSetRaison }}" placeholder="raison sociale du client" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">N° TVA</label><input value="{{ ob.tva }}" onInput="{{ obSetTva }}" placeholder="BE 0xxx.xxx.xxx" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Segment</label><select value="{{ ob.seg }}" onChange="{{ obSetSeg }}" style="{{ obInStyle }}"><sc-for list="{{ obSegOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Conditions de paiement</label><input value="{{ ob.paiement }}" onInput="{{ obSetPaiement }}" placeholder="ex. 30 j fin de mois" style="{{ obInStyle }}"/></div>
@@ -1575,7 +1575,7 @@
             <sc-if value="{{ obCpLocMulti }}" hint-placeholder-val="{{ false }}"><select value="{{ ob.localite }}" onChange="{{ obSetLocalite }}" style="{{ obInStyle }}"><option value="">— Choisir la localité —</option><sc-for list="{{ obCpLocs }}" as="c" hint-placeholder-count="2"><option value="{{ c.v }}">{{ c.v }}</option></sc-for></select></sc-if>
             <sc-if value="{{ obCpLocMono }}" hint-placeholder-val="{{ true }}"><input value="{{ obCpLocDisplay }}" readonly placeholder="— automatique dès le CP saisi —" style="{{ obInStyle }}"/></sc-if>
           </div>
-          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Office / bâtiment</label><input value="{{ ob.office }}" onInput="{{ obSetOffice }}" placeholder="ex. Siège, Cafétéria HQ" style="{{ obInStyle }}"/></div>
+          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Office / bâtiment</label><input value="{{ ob.office }}" onInput="{{ obSetOffice }}" placeholder="nom de l'office" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Étage / local</label><input value="{{ ob.etage }}" onInput="{{ obSetEtage }}" placeholder="ex. Sous-sol / quai" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Tournée rattachée</label><select value="{{ ob.tour }}" onChange="{{ obSetTour }}" style="{{ obInStyle }}"><sc-for list="{{ obTourOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Temps d'accès (min)</label><input type="number" value="{{ ob.acc }}" onInput="{{ obSetAcc }}" style="{{ obInStyle }}"/></div>
@@ -1590,7 +1590,7 @@
         <div style="font:400 12px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Rattachez les départements de ce site (propres à l'entreprise). Créez-en un nouveau si nécessaire.</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"><sc-for list="{{ obDeptQuick }}" as="q" hint-placeholder-count="7"><button onClick="{{ q.pick }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:999px;padding:6px 12px;font:500 11px var(--font-ui);color:var(--color-text);cursor:pointer">{{ q.label }}</button></sc-for></div>
         <div style="display:flex;gap:8px;align-items:end;margin-bottom:16px">
-          <div style="flex:1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Nom du département (libre)</label><input value="{{ obDeptDraft }}" onInput="{{ obSetDeptDraft }}" placeholder="ex. Marketing" style="{{ obInStyle }}"/></div>
+          <div style="flex:1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Nom du département (libre)</label><input value="{{ obDeptDraft }}" onInput="{{ obSetDeptDraft }}" placeholder="nom du département" style="{{ obInStyle }}"/></div>
           <div style="width:110px"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Effectif</label><input type="number" value="{{ obDeptEff }}" onInput="{{ obSetDeptEff }}" style="{{ obInStyle }}"/></div>
           <button onClick="{{ obAddDept }}" class="btn-primary" style="font-size:13px;flex:none;height:42px">+ Ajouter</button>
         </div>
@@ -1613,7 +1613,7 @@
         </div>
         <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:6px;margin-bottom:14px">Voucher de bienvenue</div>
         <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px">
-          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Code (auto si vide)</label><input value="{{ ob.vCode }}" onInput="{{ obSetVCode }}" placeholder="ex. BIENVENUE" style="{{ obInStyle }}"/></div>
+          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Code (auto si vide)</label><input value="{{ ob.vCode }}" onInput="{{ obSetVCode }}" placeholder="code du bon" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Valeur / effet</label><input value="{{ ob.vValeur }}" onInput="{{ obSetVValeur }}" placeholder="ex. −10 % sur la première commande" style="{{ obInStyle }}"/></div>
         </div>
         </sc-if>
@@ -1627,7 +1627,7 @@
         </div>
         <div style="background:var(--color-background-secondary);border-radius:10px;padding:13px 15px;margin-bottom:16px">
           <div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px">Import CSV — une ligne par personne · « Nom, email »</div>
-          <textarea value="{{ obCsv }}" onInput="{{ obSetCsv }}" placeholder="Marie Dupuis, marie@exemple.be&#10;Jan Peeters, jan@exemple.be" style="width:100%;min-height:74px;padding:10px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 12px var(--font-mono,monospace);color:var(--color-text);background:var(--color-surface);box-sizing:border-box;resize:vertical"></textarea>
+          <textarea value="{{ obCsv }}" onInput="{{ obSetCsv }}" placeholder="Nom Prénom, adresse@exemple.be&#10;une ligne par personne" style="width:100%;min-height:74px;padding:10px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 12px var(--font-mono,monospace);color:var(--color-text);background:var(--color-surface);box-sizing:border-box;resize:vertical"></textarea>
           <button onClick="{{ obLoadCsv }}" class="btn-secondary" style="font-size:12px;margin-top:10px;display:flex;align-items:center;gap:7px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M8 11l4 4 4-4M4 21h16"/></svg>Charger le CSV</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="t-admin-label">Personnel ajouté</span><span style="font:600 11px var(--font-ui);color:var(--color-text-muted)">{{ obStaffCount }}</span></div>
@@ -1679,8 +1679,8 @@
   <div onClick="{{ closeProfile }}" style="position:fixed;inset:0;background:rgba(34,34,34,.5);display:flex;align-items:center;justify-content:center;z-index:2300;padding:24px">
     <div onClick="{{ stop }}" style="background:var(--color-surface);border-radius:16px;width:560px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(0,0,0,.32);overflow:hidden">
       <div style="padding:22px 26px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:14px">
-        <span style="width:46px;height:46px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px var(--font-ui);flex:none">TL</span>
-        <div style="flex:1"><div class="t-page-title" style="font-size:18px">Thomas Legrand</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Admin réseau · Dev · Siège · thomas.legrand@latelierby.be</div></div>
+        <span style="width:46px;height:46px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px var(--font-ui);flex:none">{{ meInit }}</span>
+        <div style="flex:1"><div class="t-page-title" style="font-size:18px">{{ meName }}</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ meSub }}</div></div>
         <button onClick="{{ closeProfile }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:24px;line-height:1;padding:0">×</button>
       </div>
       <div style="padding:18px 26px;overflow-y:auto;flex:1">
@@ -1712,11 +1712,13 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;100%&quot;}}">
 class Component extends DCLogic {
   state = {
-    screen: 'tdb', lang: 'FR', scan: 18, bonValide: false,
-    seqIds: [1,2,4,7], selClient: 0, selInc: 0, analyse: 'tournee',
-    sim: 8, alpha: 40, beta: 40, gamma: 20, dragFrom: null,
-    routeAssign: { r1:[1,2,4], r2:[3,5,8], r3:[6,9], r4:[7,10], r5:[], r6:[] }, selRoute: 'r1',
-    siteOpen: {}, selSiteId: 1, siteAcc: {}, drop: {}, siteModal: null,
+    screen: 'tdb', lang: 'FR', scan: 0, bonValide: false,
+    seqIds: [], selClient: 0, selInc: 0, analyse: 'tournee',
+    sim: null, alpha: 40, beta: 40, gamma: 20, dragFrom: null,
+    // Aucune affectation par défaut : les tournées partent vides et se
+    // remplissent avec les sites réellement servis par l'API.
+    routeAssign: {}, selRoute: null,
+    siteOpen: {}, selSiteId: null, siteAcc: {}, drop: {}, siteModal: null,
     valHandled: {}, valModal: null, valSite: '', valTournee: '',
     valNewName: '', valZone: '', valZone2: '', valNewZone: '',
     tdbCollapsed: {}, openGroups: {}, flags: {}, formKey: null, formVals: {},
@@ -1724,12 +1726,12 @@ class Component extends DCLogic {
     toast: '', printed: {},
     newRoutes: [], newZones: [], deletedRoutes: [], delRoute: null,
     rfOpen: false, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, driver:'', vehicule:'', zonePrim:'', zoneSec:'', ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
-    zfOpen: false, zf: { name:'', type:'primary', parent:'', catchment:'', cp:'', vehicule:'Standard', franco:'250 €', delai:'J+1', service:15, access:10 },
+    zfOpen: false, zf: { name:'', type:'primary', parent:'', catchment:'', cp:'', vehicule:'Standard', franco:'', delai:'', service:0, access:0 },
     obOpen: false, obStep: 0,
     ob: { raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
-      adr:'', cp:'', localite:'', etage:'', tour:'Tournée Centre-ville', acc:6, office:'',
-      remiseWeb:'10', franco:'250 €', drop:8,
+      adr:'', cp:'', localite:'', etage:'', tour:'', acc:0, office:'',
+      remiseWeb:'', franco:'', drop:0,
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
     profileOpen: false, srcOpen: false, paramDrafts: {},
@@ -1740,8 +1742,8 @@ class Component extends DCLogic {
   obOpen(){ this.setState({obOpen:true,obStep:0,
     ob:{ raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
-      adr:'', cp:'', localite:'', etage:'', tour:'Tournée Centre-ville', acc:6, office:'',
-      remiseWeb:'10', franco:'250 €', drop:8,
+      adr:'', cp:'', localite:'', etage:'', tour:'', acc:0, office:'',
+      remiseWeb:'', franco:'', drop:0,
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
     obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'' }); this.zfGeoEnsure(); }
   obClose(){ this.setState({obOpen:false}); }
@@ -1901,15 +1903,19 @@ class Component extends DCLogic {
     {s:'statsReseau',g:'Ma boutique',label:'Stats réseau consolidées',k:'erp multi boutiques export csv comparaison classement'},
   ]; }
   formDefs(){
-    const tours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
-    const bureaux=['Boucherie Charlier','Hôtel Nord SA','Café des Arts','Traiteur Piotrowski','Événements Lumière','Résidence Les Tilleuls'];
-    const cats=['Pâtisserie fraîche','Boulangerie','Traiteur / plats','Chocolaterie','Glaces & surgelés','Épicerie fine'];
+    // Les listes déroulantes sont peuplées par les tables réelles : pas de
+    // valeurs d'exemple. Tant qu'une table est vide, le choix l'est aussi.
+    const SRVF=(n)=>(window.BOServer?window.BOServer.table(n):[]);
+    const uniq=(a)=>a.filter(v=>v&&String(v).trim()).filter((v,i,x)=>x.indexOf(v)===i);
+    const tours=uniq(SRVF('ws_tours').map(t=>t.nom||t.name||t.libelle));
+    const bureaux=uniq(SRVF('ws_offices').map(o=>o.name||o.nom).concat(SRVF('ws_office_delivery_sites').map(o=>o.bureau)));
+    const cats=uniq(SRVF('fr_dispo_cats').map(c=>c.nom||c.name||c.cat).concat(SRVF('fr_stock_catalog').map(c=>c.cat)));
     const sel=(a)=>a.map(x=>({value:x,label:x}));
     const catchmentSel=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]).map(c=>({value:c.name,label:c.name}));
     return {
       horaire:{ title:'Nouvelle fenêtre horaire', table:'ws_tour_availability', tbl:'ws_tour_availability', save:'Créer la fenêtre',
         fields:[
-          {k:'tour',label:'Tournée',type:'select',options:sel(tours),def:tours[0]},
+          {k:'tour',label:'Tournée',type:'select',options:sel(tours),def:tours[0]||''},
           {k:'jour',label:'Jour(s) de semaine',type:'text',ph:'ex. Lun–Ven ou Mar · Jeu'},
           {k:'dep',label:'Heure de départ',type:'text',def:'06:00',ph:'HH:MM'},
           {k:'fin',label:'Heure de fin',type:'text',def:'12:00',ph:'HH:MM'},
@@ -1921,12 +1927,12 @@ class Component extends DCLogic {
           {k:'tour',label:'Tournée',type:'select',options:sel(['Toutes les tournées',...tours]),def:'Toutes les tournées'},
           {k:'date',label:'Date',type:'text',ph:'JJ/MM/AAAA'},
           {k:'type',label:'Motif',type:'select',options:sel(['Férié','Congé','Technique']),def:'Férié'},
-          {k:'motif',label:'Détail',type:'text',ph:'ex. Congé chauffeur — M. Dubois'},
+          {k:'motif',label:'Détail',type:'text',ph:'motif de la fermeture'},
         ]},
       fee:{ title:'Nouvelle règle de frais', table:'ws_delivery_fee_rules', tbl:'ws_delivery_fee_rules', save:'Créer la règle',
         fields:[
           {k:'niveau',label:'Niveau (cascade)',type:'select',options:sel(['Site','Bureau','Tournée','Boutique']),def:'Bureau'},
-          {k:'cible',label:'Cible',type:'text',ph:'ex. Boucherie Charlier'},
+          {k:'cible',label:'Cible',type:'text',ph:'nom du bureau client'},
           {k:'franco',label:'Franco de port (seuil)',type:'text',ph:'ex. 150 € ou —'},
           {k:'montant',label:'Montant des frais',type:'text',ph:'ex. 6,50 €'},
           {k:'paiement',label:'Paiement',type:'select',options:sel(['Comptant','Différé','Facturé au bureau','Selon bureau']),def:'Selon bureau'},
@@ -1948,13 +1954,13 @@ class Component extends DCLogic {
         ]},
       site:{ title:'Nouveau site de livraison', table:'ws_office_delivery_sites', tbl:'ws_office_delivery_sites', save:'Créer le site',
         fields:[
-          {k:'bureau',label:'Bureau (compte B2B)',type:'select',options:sel(bureaux),def:bureaux[0],section:'Rattachement'},
-          {k:'office',label:'Office / bâtiment',type:'text',ph:'ex. Siège, Économat, Cafétéria HQ',section:'Rattachement'},
-          {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Rattachement'},
+          {k:'bureau',label:'Bureau (compte B2B)',type:'select',options:sel(bureaux),def:bureaux[0]||'',section:'Rattachement'},
+          {k:'office',label:'Office / bâtiment',type:'text',ph:'nom de l\'office',section:'Rattachement'},
+          {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0]||'',section:'Rattachement'},
           {k:'adr',label:'Adresse',type:'text',ph:'Rue, n°, code postal, ville',section:'Site'},
           {k:'etage',label:'Étage / local',type:'text',ph:'ex. Sous-sol / quai',section:'Site'},
           {k:'acc',label:'Temps d\'accès au site (min)',type:'number',def:6,section:'Site'},
-          {k:'contact_name',label:'Personne de contact',type:'text',ph:'ex. Facility, Économe',section:'Contact'},
+          {k:'contact_name',label:'Personne de contact',type:'text',ph:'nom du contact sur place',section:'Contact'},
           {k:'contact_phone',label:'Téléphone',type:'text',ph:'+32 …',section:'Contact'},
         ]},
       deliveryZone:{ title:'Zone de livraison (groupement de bureaux)', table:'ws_delivery_zones', tbl:'ws_delivery_zones', save:'Enregistrer la zone',
@@ -1963,7 +1969,7 @@ class Component extends DCLogic {
           {k:'catchment',label:'Rattachement chalandise (cadre marque · verrouillé)',type:'select',options:[{value:'',label:'— Territoire marque autorisé —'},...catchmentSel]},
           {k:'cp',label:'Codes postaux (séparés par ·)',type:'text',ph:'ex. 1000 · 1020 · 1030'},
           {k:'vehicule',label:'Véhicule requis',type:'text',def:'Standard'},
-          {k:'franco',label:'Franco de port',type:'text',def:'250 €'},
+          {k:'franco',label:'Franco de port',type:'text',ph:'ex. 250 €'},
           {k:'delai',label:'Délai (lead time)',type:'select',options:sel(['J+0','J+1','J+2','J+3']),def:'J+1'},
           {k:'service',label:'Temps de service (min)',type:'number',def:15},
           {k:'sort_order',label:'Ordre d\'affichage',type:'number',def:1},
@@ -1971,16 +1977,16 @@ class Component extends DCLogic {
         ]},
       office:{ title:'Office (bureau)', table:'ws_offices', tbl:'ws_offices', save:'Enregistrer l\'office',
         fields:[
-          {k:'name',label:'Nom de l\'office',type:'text',ph:'ex. KBC — Cafétéria HQ',section:'Identité'},
+          {k:'name',label:'Nom de l\'office',type:'text',ph:'nom du site de livraison',section:'Identité'},
           {k:'vat',label:'N° TVA',type:'text',ph:'BE 0xxx.xxx.xxx',section:'Identité'},
           {k:'status',label:'Statut',type:'select',options:sel(['pending','validated']),def:'pending',section:'Identité'},
           {k:'address',label:'Adresse',type:'text',ph:'Rue, n°',section:'Coordonnées'},
           {k:'postal_code',label:'Code postal',type:'text',ph:'1000',section:'Coordonnées'},
           {k:'city',label:'Ville',type:'text',ph:'Bruxelles',section:'Coordonnées'},
-          {k:'contact',label:'Personne de contact',type:'text',ph:'ex. Facility',section:'Contact'},
+          {k:'contact',label:'Personne de contact',type:'text',ph:'nom du contact sur place',section:'Contact'},
           {k:'email',label:'Email',type:'text',ph:'contact@exemple.be',section:'Contact'},
           {k:'phone',label:'Téléphone',type:'text',ph:'+32 …',section:'Contact'},
-          {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Livraison (ws_office_delivery_settings)'},
+          {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0]||'',section:'Livraison (ws_office_delivery_settings)'},
           {k:'allowed_days',label:'Jours autorisés',type:'text',ph:'ex. Lun–Ven',section:'Livraison (ws_office_delivery_settings)'},
           {k:'delivery_cutoff',label:'Cut-off commande',type:'text',ph:'17:00 J-1',section:'Livraison (ws_office_delivery_settings)'},
           {k:'delivery_notes',label:'Consignes de livraison',type:'text',ph:'ex. Accès quai côté rue',section:'Livraison (ws_office_delivery_settings)'},
@@ -1988,16 +1994,16 @@ class Component extends DCLogic {
         ]},
       department:{ title:'Département du site', table:'b2b_client_company_department', tbl:'b2b_client_company_department', save:'Enregistrer le département',
         fields:[
-          {k:'company',label:'Société (compte B2B)',type:'select',options:sel(bureaux),def:bureaux[0],section:'Rattachement'},
+          {k:'company',label:'Société (compte B2B)',type:'select',options:sel(bureaux),def:bureaux[0]||'',section:'Rattachement'},
           {k:'site',label:'Delivery site',type:'text',ph:'Adresse du site',section:'Rattachement'},
-          {k:'office',label:'Office / bâtiment',type:'text',ph:'ex. Siège, Cafétéria HQ',section:'Rattachement'},
-          {k:'dept',label:'Département (nom libre)',type:'text',ph:'ex. Marketing, Bureau, Production',section:'Département'},
+          {k:'office',label:'Office / bâtiment',type:'text',ph:'nom de l\'office',section:'Rattachement'},
+          {k:'dept',label:'Département (nom libre)',type:'text',ph:'nom du département',section:'Département'},
           {k:'effectif',label:'Effectif',type:'number',def:5,section:'Département'},
           {k:'contact',label:'Email du département',type:'text',ph:'dept@exemple.be',section:'Département'},
         ]},
       clientEdit:{ title:'Éditer le client B2B', table:'fr_clients', tbl:'fr_clients', save:'Enregistrer les modifications',
         fields:[
-          {k:'raison',label:'Nom de l\'entreprise',type:'text',ph:'ex. Boucherie Charlier',section:'Identité'},
+          {k:'raison',label:'Nom de l\'entreprise',type:'text',ph:'nom du bureau client',section:'Identité'},
           {k:'tva',label:'N° TVA',type:'text',ph:'BE 0xxx.xxx.xxx',section:'Identité'},
           {k:'seg',label:'Segment',type:'select',options:sel(['horeca','retail','corporate','event']),def:'horeca',section:'Identité'},
           {k:'paiement',label:'Conditions de paiement',type:'text',def:'30 j fin de mois',section:'Conditions'},
@@ -2013,27 +2019,27 @@ class Component extends DCLogic {
         ]},
       bureauParam:{ title:'Paramètres livraison — bureau', table:'ws_office_delivery_settings', tbl:'ws_office_delivery_settings', save:'Enregistrer',
         fields:[
-          {k:'bureau',label:'Bureau',type:'select',options:sel(bureaux),def:bureaux[0]},
-          {k:'tour',label:'Tournée assignée',type:'select',options:sel(tours),def:tours[0]},
+          {k:'bureau',label:'Bureau',type:'select',options:sel(bureaux),def:bureaux[0]||''},
+          {k:'tour',label:'Tournée assignée',type:'select',options:sel(tours),def:tours[0]||''},
           {k:'cut',label:'Cut-off spécifique',type:'text',def:'17:00 J-1'},
           {k:'drop',label:'Drop minutes (temps de dépôt)',type:'number',def:8},
         ]},
       dispoProd:{ title:'Exception produit', table:'ws_product_availability', tbl:'ws_product_availability', save:'Créer l\'exception',
         fields:[
           {k:'produit',label:'Produit',type:'text',ph:'ex. Pièce montée sur commande'},
-          {k:'cat',label:'Catégorie parente',type:'select',options:sel(cats),def:cats[0]},
+          {k:'cat',label:'Catégorie parente',type:'select',options:sel(cats),def:cats[0]||''},
           {k:'rule',label:'Exception',type:'select',options:sel(['Sur devis','Saisonnier','Non livrable','Délai spécifique']),def:'Sur devis'},
         ]},
       email:{ title:'Nouvel email bureau', table:'ws_office_emails', tbl:'ws_office_emails', save:'Ajouter l\'email',
         fields:[
-          {k:'bureau',label:'Bureau',type:'select',options:sel(bureaux),def:bureaux[0]},
+          {k:'bureau',label:'Bureau',type:'select',options:sel(bureaux),def:bureaux[0]||''},
           {k:'addr',label:'Adresse email',type:'text',ph:'contact@exemple.be'},
           {k:'role',label:'Rôle',type:'select',options:sel(['Principal','Facturation','Livraison']),def:'Principal'},
         ]},
       stock:{ title:'Ligne de stock du jour', table:'ws_product_stock', save:'Enregistrer le stock',
         fields:[
-          {k:'produit',label:'Produit',type:'text',ph:'ex. Éclair chocolat'},
-          {k:'cat',label:'Catégorie',type:'select',options:sel(cats),def:cats[0]},
+          {k:'produit',label:'Produit',type:'text',ph:'nom du produit'},
+          {k:'cat',label:'Catégorie',type:'select',options:sel(cats),def:cats[0]||''},
           {k:'online',label:'Stock online (webshop)',type:'number',def:20},
           {k:'shop',label:'Stock en shop (comptoir)',type:'number',def:20},
           {k:'min',label:'Stock minimum disponible',type:'number',def:10},
@@ -2060,8 +2066,8 @@ class Component extends DCLogic {
         ]},
       shop:{ title:'Paramètres du shop', table:'ws_shops', save:'Enregistrer',
         fields:[
-          {k:'enseigne',label:'Enseigne',type:'text',def:'L\'Atelier — Bruxelles-Centre'},
-          {k:'adresse',label:'Adresse',type:'text',def:'Rue du Marché 12, 1000 BXL'},
+          {k:'enseigne',label:'Enseigne',type:'text',ph:'nom commercial du magasin'},
+          {k:'adresse',label:'Adresse',type:'text',ph:'rue, numéro, code postal, localité'},
           {k:'open',label:'Ouverture',type:'text',def:'07:00'},
           {k:'close',label:'Fermeture',type:'text',def:'18:30'},
         ]},
@@ -2084,42 +2090,95 @@ class Component extends DCLogic {
   toMin(s){ const [h,m]=s.split(':').map(Number); return h*60+m; }
   travelMin(a,b){ const R=6371,toR=x=>x*Math.PI/180; const dLa=toR(b.lat-a.lat),dLo=toR(b.lng-a.lng); const s=Math.sin(dLa/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLo/2)**2; const km=2*R*Math.asin(Math.sqrt(s)); return {min:Math.max(4,Math.round(km*2.2)),km}; }
   routesMeta(){ return (window.BOServer?window.BOServer.table('ws_tours'):[]); }
+  // Un site livré, tel qu'il sert au constructeur de tournées : la zone vient
+  // des zones de livraison réelles (par code postal), les arrêts des
+  // départements du site, le temps d'accès de la fiche site. Aucune valeur de
+  // remplissage : ce qui n'est pas renseigné reste vide.
   sitesData(){
-    const zoneById={1:'Bruxelles Centre',2:'Sablon',4:'Sablon',7:'Schaerbeek',3:'Ixelles',5:'Uccle',8:'Waterloo',6:'Etterbeek',9:'Leuven',10:'Anderlecht'};
-    const off={1:[{name:'Le Cirio — Bar',drop:5},{name:'Le Cirio — Cuisine',drop:6},{name:'Le Cirio — Cave',drop:4}],2:[{name:'Rocco Forte — Économat',drop:5}],4:[{name:'Dandoy — Boutique',drop:4},{name:'Dandoy — Réserve',drop:3}],7:[{name:'Boulangerie du Parc',drop:5}],3:[{name:'Belga — Comptoir',drop:5}],5:[{name:'Le Chalet — Cuisine',drop:6}],8:[{name:'Event Château — Traiteur',drop:8,ws:'11:00',we:'13:00'}],6:[{name:'Delcourt — Atelier',drop:6}],9:[{name:'KBC — Cafétéria HQ',drop:7,ws:'07:00',we:'09:00'},{name:'KBC — Étage direction',drop:4},{name:'KBC — Accueil',drop:3}],10:[{name:'Cureghem — Cuisine',drop:6}]};
-    return this.points().map(p=>({id:p.id,name:p.libelle,ville:p.ville,lat:p.lat,lng:p.lng,zone:zoneById[p.id]||'—',access:10,offices:off[p.id]||[{name:p.client,drop:5}],notes:p.id===8?'Accès traiteur par l\'arrière · badge requis':'Quai de service · sonner interphone'}));
+    const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
+    const rows=SRV('ws_office_delivery_sites'), depts=SRV('b2b_client_company_department');
+    const zones=SRV('ws_delivery_zones');
+    const zoneOf=(cp)=>{ const z=zones.find(z=>this.zfCpsOf(z.cp).indexOf(cp)>=0); return z?(z.nom||z.name||''):''; };
+    const byId={}; rows.forEach((r,i)=>{ byId[r.id!=null?r.id:i+1]=r; });
+    return this.points().map(p=>{
+      const r=byId[p.id]||{};
+      const own=depts.filter(d=>d.site===r.adr||d.site===r.name);
+      return {id:p.id,name:p.libelle,ville:p.ville,lat:p.lat,lng:p.lng,
+        zone:zoneOf(this.cpOf(r))||'—',
+        access:+(r.acc!=null?r.acc:r.site_access_minutes)||0,
+        offices:own.length?own.map(d=>({name:d.dept,drop:+d.drop||0}))
+                          :[{name:r.office||r.bureau||p.client,drop:+(r.drop||0)}],
+        notes:r.notes||r.floor_room||r.etage||''};
+    });
   }
   computeRoute(rid){
     const S=this.state, sites=this.sitesData(), sm={}; sites.forEach(s=>sm[s.id]=s);
-    const r=this.routesMeta().find(x=>x.id===rid), d=this.depot();
-    const accOf=id=>S.siteAcc[id]!=null?S.siteAcc[id]:sm[id].access;
+    const r=this.routesMeta().find(x=>x.id===rid); const d=this.depot();
+    if(!r) return {drops:0,stops:[],warns:[],etaEnd:'—',km:0,amplitude:0};
+    const accOf=id=>S.siteAcc[id]!=null?S.siteAcc[id]:((sm[id]||{}).access||0);
     const dropOf=(id,i,def)=>S.drop[id+'-'+i]!=null?S.drop[id+'-'+i]:def;
-    const ids=S.routeAssign[rid]||[]; let t=r.start, prev={lat:d.lat,lng:d.lng}, drops=0, km=0; const stops=[], warns=[];
-    ids.forEach(id=>{ const s=sm[id]; if(!s) return; const tv=this.travelMin(prev,s); km+=tv.km; const arrival=t+tv.min; const acc=accOf(id);
+    const ids=this.assign()[rid]||[]; let t=r.start, prev=d?{lat:d.lat,lng:d.lng}:null, drops=0, km=0; const stops=[], warns=[];
+    ids.forEach(id=>{ const s=sm[id]; if(!s||s.lat==null) return; const tv=prev?this.travelMin(prev,s):{min:0,km:0}; km+=tv.km; const arrival=t+tv.min; const acc=accOf(id);
       let ot=arrival+acc; const offs=s.offices.map((o,i)=>{ const dr=dropOf(id,i,o.drop); const eta=ot; ot+=dr; let w=false; if(o.we&&eta>this.toMin(o.we)){ w=true; warns.push(o.name+' livré '+this.hhmm(eta)+' · fenêtre '+o.ws+'–'+o.we); } return {name:o.name,drop:dr,eta:this.hhmm(eta),warn:w}; });
       const dropSum=s.offices.reduce((a,o,i)=>a+dropOf(id,i,o.drop),0); const siteTotal=acc+dropSum; const departure=arrival+siteTotal;
       drops+=s.offices.length; stops.push({id,name:s.name,ville:s.ville,zone:s.zone,acc,arrival:this.hhmm(arrival),siteTotal,departure:this.hhmm(departure),travel:tv.min,offices:offs,warn:offs.some(o=>o.warn)});
       t=departure; prev=s; });
-    let eta=t; if(r.ret) eta+=this.travelMin(prev,d).min;
+    let eta=t; if(r.ret&&d&&prev) eta+=this.travelMin(prev,d).min;
     return {...r,drops,stops,warns,etaEnd:this.hhmm(eta),km:Math.round(km*10)/10,amplitude:eta-r.start};
   }
 
   eur(n){ return new Intl.NumberFormat('fr-BE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n); }
 
-  points(){ return [
-    {id:1, libelle:'Brasserie Le Cirio', ville:'Grand-Place', client:'Le Cirio SA', lat:50.8467, lng:4.3525, ca:420, couts:190, colis:8, kg:96, vol:640, seg:'horeca'},
-    {id:2, libelle:'Hôtel Amigo', ville:'Sablon', client:'Rocco Forte', lat:50.8451, lng:4.3520, ca:380, couts:175, colis:6, kg:72, vol:520, seg:'horeca'},
-    {id:3, libelle:'Café Belga', ville:'Ixelles', client:'Belga SPRL', lat:50.8275, lng:4.3705, ca:210, couts:150, colis:4, kg:48, vol:360, seg:'horeca'},
-    {id:4, libelle:'Maison Dandoy', ville:'Sablon', client:'Dandoy', lat:50.8410, lng:4.3560, ca:340, couts:160, colis:5, kg:60, vol:420, seg:'retail'},
-    {id:5, libelle:'Resto Le Chalet', ville:'Uccle', client:'Chalet SPRL', lat:50.8003, lng:4.3376, ca:165, couts:145, colis:3, kg:36, vol:280, seg:'horeca'},
-    {id:6, libelle:'Traiteur Delcourt', ville:'Etterbeek', client:'Delcourt', lat:50.8367, lng:4.3897, ca:290, couts:170, colis:5, kg:60, vol:420, seg:'horeca'},
-    {id:7, libelle:'Boulangerie du Parc', ville:'Schaerbeek', client:'Franchise BXL-N', lat:50.8676, lng:4.3737, ca:260, couts:140, colis:4, kg:48, vol:340, seg:'boutique_franchise'},
-    {id:8, libelle:'Event Château', ville:'Waterloo', client:'Événements Sud', lat:50.7147, lng:4.3990, ca:40, couts:118, colis:1, kg:12, vol:90, seg:'event'},
-    {id:9, libelle:'Corporate KBC', ville:'Leuven', client:'KBC Group', lat:50.8798, lng:4.7005, ca:150, couts:165, colis:3, kg:36, vol:260, seg:'corporate'},
-    {id:10, libelle:'Horeca Cureghem', ville:'Anderlecht', client:'Cureghem SPRL', lat:50.8367, lng:4.3080, ca:300, couts:160, colis:5, kg:60, vol:420, seg:'horeca'},
-  ]; }
+  // Code postal d'une ligne : colonne dédiée, sinon extrait de l'adresse.
+  cpOf(r){ const m=String((r&&(r.cp||r.adr||r.address))||'').match(/\b([1-9][0-9]{3})\b/); return m?m[1]:''; }
 
-  depot(){ return {lat:50.8100, lng:4.3200, libelle:"L'Atelier — Forest"}; }
+  // Les points livrés = les sites de livraison RÉELS de la boutique
+  // (ws_office_delivery_sites), géocodés par code postal via le référentiel
+  // /geo/postcodes et chiffrés avec fr_rentabilite. Rien n'est inventé : sans
+  // site servi par l'API, la liste est vide et les écrans le montrent.
+  points(){
+    const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
+    const geo=window.__CPGEO;
+    const money={};
+    SRV('fr_rentabilite').forEach(t=>(t.sites||[]).forEach(st=>{
+      money[st.nom]=(st.offices||[]).reduce((a,o)=>({ca:a.ca+(+o.ca||0),couts:a.couts+(+o.couts||0)}),{ca:0,couts:0});
+    }));
+    return SRV('ws_office_delivery_sites').map((r,i)=>{
+      const cp=this.cpOf(r), e=(geo&&geo.idx)?geo.idx[cp]:null;
+      const m=money[r.name]||money[r.bureau]||{ca:0,couts:0};
+      return {id:r.id!=null?r.id:i+1, libelle:r.name||r.bureau||r.adr||'—',
+        ville:r.localite||(e?e.city:'')||cp||'—', client:r.bureau||r.office||'—',
+        lat:e?e.lat:null, lng:e?e.lng:null, ca:m.ca, couts:m.couts, seg:r.seg||''};
+    });
+  }
+  // Les points effectivement plaçables sur une carte / dans un calcul d'ETA.
+  geoPoints(){ return this.points().filter(p=>p.lat!=null&&p.lng!=null); }
+
+  // Affectation site → tournée. La base, c'est ce qui est réellement enregistré
+  // sur les sites de livraison (tournee_id, sinon le nom de la tournée) ; les
+  // déplacements faits dans le constructeur la surchargent le temps de la
+  // session. Aucune affectation n'est inventée.
+  assign(){
+    const base={}; const meta=this.routesMeta();
+    meta.forEach(r=>{ base[r.id]=[]; });
+    const byName={}; meta.forEach(r=>{ const n=r.name||r.nom; if(n) byName[n]=r.id; });
+    (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).forEach((r,i)=>{
+      const sid=r.id!=null?r.id:i+1;
+      const rid=(r.tournee_id!=null&&base[r.tournee_id])?r.tournee_id:byName[r.tour];
+      if(rid!==undefined&&base[rid]) base[rid].push(sid);
+    });
+    const ov=this.state.routeAssign||{};
+    Object.keys(ov).forEach(k=>{ base[k]=ov[k]; });
+    return base;
+  }
+  // Tournée sélectionnée : celle choisie, sinon la première tournée réelle.
+  curRoute(){ const m=this.routesMeta(); const sel=this.state.selRoute;
+    if(sel&&m.some(r=>r.id===sel)) return sel; return m.length?m[0].id:null; }
+
+  // Le dépôt = la boutique de la portée, servie par /franchisee/geo-clients.
+  // null tant qu'elle n'est pas connue : on ne pose pas un magasin au hasard.
+  depot(){ const d=this._geoAData, s=(d&&Array.isArray(d.shops))?d.shops[0]:null;
+    return (s&&s.lat!=null&&s.lng!=null)?{lat:+s.lat,lng:+s.lng,libelle:s.name||s.nom||'Boutique'}:null; }
 
   T = {
     navTdb:{FR:'Tableau de bord',NL:'Dashboard',EN:'Dashboard',PL:'Pulpit'},
@@ -2159,14 +2218,20 @@ class Component extends DCLogic {
   pill(bg,color){ return `display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font:600 10.5px var(--font-ui);white-space:nowrap;background:${bg};color:${color}`; }
 
   // ---- charts ----
+  // Décomposition CA → marge, construite sur les chiffres réels des points
+  // livrés (fr_rentabilite). Le détail par poste de coût n'est servi par aucune
+  // table : tant qu'il ne l'est pas, on montre le coût de service en un bloc
+  // plutôt qu'une ventilation inventée.
   waterfall(){
+    const pts=this.points();
+    const ca=pts.reduce((a,p)=>a+(+p.ca||0),0), co=pts.reduce((a,p)=>a+(+p.couts||0),0);
+    if(!ca&&!co) return this.emptyChart(250,'Aucun point livré sur la période');
     const steps=[
-      {label:'CA livré',v:2555,type:'total'},
-      {label:'Chauffeur',v:-470},{label:'Véhicule',v:-385},{label:'Prépa.',v:-240},
-      {label:'Emballage',v:-92},{label:'Incidents',v:-66},{label:'Structure',v:-320},
-      {label:'Marge',v:982,type:'result'},
+      {label:'CA livré',v:ca,type:'total'},
+      {label:'Coût de service',v:-co},
+      {label:'Marge',v:ca-co,type:'result'},
     ];
-    const W=640,H=250,top=12,botPad=46,plotH=H-top-botPad,max=2600,scale=plotH/max,base=top+plotH;
+    const W=640,H=250,top=12,botPad=46,plotH=H-top-botPad,max=Math.max(ca,Math.abs(ca-co),1)*1.05,scale=plotH/max,base=top+plotH;
     const slot=W/steps.length, bw=Math.min(52,slot-14);
     let run=0; const rects=[];
     steps.forEach((s,i)=>{
@@ -2185,9 +2250,19 @@ class Component extends DCLogic {
       React.createElement('line',{x1:0,y1:base,x2:W,y2:base,stroke:'rgba(34,34,34,.12)',strokeWidth:1})
     );
   }
+  // Un graphe vide et annoncé comme tel, plutôt qu'une courbe inventée.
+  emptyChart(h,msg){ return React.createElement('svg',{viewBox:'0 0 520 '+h,style:{width:'100%',height:h+'px'}},
+    React.createElement('text',{x:260,y:h/2,textAnchor:'middle',fontSize:12,fill:'#888',fontFamily:'var(--font-ui)'},msg)); }
+
+  // Série d'évolution de la marge : servie par l'API (fr_renta_evolution).
+  // Sans série, le graphe le dit — il n'y a pas d'historique reconstitué.
   evolution(){
-    const data=[{w:'S1',v:28},{w:'S2',v:31},{w:'S3',v:26},{w:'S4',v:35},{w:'S5',v:33},{w:'S6',v:38}];
-    const W=520,H=230,top=14,botPad=34,left=30,plotH=H-top-botPad,plotW=W-left-14,minV=10,maxV=45,rng=maxV-minV;
+    const data=(window.BOServer?window.BOServer.table('fr_renta_evolution'):[])
+      .map(r=>({w:r.w||r.label||'',v:+r.v||+r.value||0}));
+    if(data.length<2) return this.emptyChart(230,'Pas encore d\'historique de marge');
+    const vals=data.map(d=>d.v);
+    const W=520,H=230,top=14,botPad=34,left=30,plotH=H-top-botPad,plotW=W-left-14;
+    const minV=Math.min(0,Math.min.apply(null,vals)),maxV=Math.max(1,Math.max.apply(null,vals)),rng=(maxV-minV)||1;
     const xf=i=>left+(plotW*i/(data.length-1)); const yf=v=>top+plotH*(1-(v-minV)/rng);
     const yTarget=yf(30), yAlert=yf(15);
     const pts=data.map((d,i)=>`${xf(i)},${yf(d.v)}`).join(' ');
@@ -2212,17 +2287,42 @@ class Component extends DCLogic {
     for(const cp of cps.map(String)){ if(cur.includes(cp)){ deja++; continue; } const k=this.zfLocalConflict(cp); if(k){ refus.push(cp+' → '+k.name); continue; } cur.push(cp); added++; }
     this.setState(s=>({formVals:{...s.formVals,cp:cur.join(' · ')}}));
     if(label||refus.length) this.printJob((added?'✔ '+(label?label+' : ':'')+added+' CP ajoutés':'')+(refus.length?' · ⚠ refusés : '+refus.slice(0,3).join(' · ')+(refus.length>3?'…':''):'')+(deja?' · '+deja+' déjà présents':'')); }
+  // Boutique + clients géolocalisés : une seule source (/franchisee/geo-clients)
+  // pour les trois écrans à carte. Sans réponse, il n'y a rien à dessiner.
+  geoDataEnsure(){
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(this._geoAData || this._geoADataLoading || !fr.base) return;
+    this._geoADataLoading=true;
+    fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
+      .then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.clients)){ this._geoAData=d; this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{});
+  }
   geoAEnsure(){ if(this.state.screen!=='geoAnalyse') return;
     this.zfGeoEnsure();
-    const fr=(typeof window!=='undefined'&&window.__FR)||{};
-    if(!this._geoAData && !this._geoADataLoading && fr.base){ this._geoADataLoading=true;
-      fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
-        .then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.clients)){ this._geoAData=d; this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{}); }
+    this.geoDataEnsure();
     if(!window.L){ clearTimeout(this._gaT); this._gaT=setTimeout(()=>this.geoAEnsure(),160); return; }
     const el=document.getElementById('map-geo-fr'); if(!el) return;
     if(!el._leaflet_id){ const L=window.L; const m=L.map(el,{zoomControl:true}).setView([50.72,4.45],10);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m); this._geoAMap=m; this._geoAKey=null; }
     this.geoADraw();
+  }
+  // Carte « Livraison du jour » : le magasin, les sites livrés et les chauffeurs
+  // porteurs d'une position. Un chauffeur sans coordonnées n'est pas placé —
+  // on ne devine pas où il se trouve.
+  drawSuiviMap(){ const L=window.L, m=this._suiviMap; if(!L||!m) return;
+    const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
+    const drivers=SRV('fr_live_drivers'), sites=this.geoPoints(), d=this.depot();
+    const key=JSON.stringify([sites.length,drivers.length,!!d]);
+    if(this._suiviKey===key) return; this._suiviKey=key;
+    if(this._suiviLayer) m.removeLayer(this._suiviLayer);
+    const g=L.layerGroup(), bounds=[];
+    if(d){ L.marker([d.lat,d.lng]).addTo(g).bindPopup('<b>'+d.libelle+'</b><br>Dépôt magasin'); bounds.push([d.lat,d.lng]); }
+    sites.forEach(p=>{ L.circleMarker([p.lat,p.lng],{radius:8,color:'#fff',weight:2,fillColor:'#8D1D2C',fillOpacity:.95})
+      .addTo(g).bindPopup('<b>'+p.libelle+'</b><br>'+p.ville); bounds.push([p.lat,p.lng]); });
+    drivers.forEach(dr=>{ if(dr.lat==null||dr.lng==null) return;
+      L.circleMarker([+dr.lat,+dr.lng],{radius:10,color:dr.color||'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1})
+        .addTo(g).bindPopup('<b>'+(dr.nom||'Chauffeur')+'</b>'+(dr.info?'<br>'+dr.info:'')); bounds.push([+dr.lat,+dr.lng]); });
+    g.addTo(m); this._suiviLayer=g;
+    if(bounds.length) m.fitBounds(bounds,{padding:[30,30],maxZoom:13});
   }
   geoAFiltered(){ const D=this._geoAData; if(!D) return {list:[],unloc:0};
     const geo=window.__CPGEO; let unloc=0;
@@ -2321,44 +2421,42 @@ class Component extends DCLogic {
     }
     const L=window.L;
     if(this.state.screen==='suivi'){
+      this.zfGeoEnsure(); this.geoDataEnsure();
       const el=document.getElementById('map-suivi');
       if(el && !el._leaflet_id){
         const m=L.map(el,{zoomControl:true,attributionControl:true}).setView([50.83,4.40],11);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
-        const d=this.depot();
-        L.marker([d.lat,d.lng]).addTo(m).bindPopup("<b>"+d.libelle+"</b><br>Dépôt magasin");
-        const stat={livre:'#2d7a3e',en_cours:'#8D1D2C',attendu:'#c9a24b'};
-        this.points().forEach((p,i)=>{
-          const st=i<3?'livre':(i<6?'en_cours':'attendu');
-          L.circleMarker([p.lat,p.lng],{radius:8,color:'#fff',weight:2,fillColor:stat[st],fillOpacity:.95}).addTo(m).bindPopup("<b>"+p.libelle+"</b><br>"+p.ville);
-        });
-        // 2 drivers
-        L.circleMarker([50.845,4.352],{radius:10,color:'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(m).bindPopup("<b>Marek Kowalski</b><br>Renault Master frigo");
-        L.circleMarker([50.812,4.360],{radius:10,color:'#3B3468',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(m).bindPopup("<b>Julien Dubois</b><br>Iveco Daily");
+        this._suiviMap=m;
       }
+      this.drawSuiviMap();
     }
     if(this.state.screen==='tournees'){
+      this.zfGeoEnsure(); this.geoDataEnsure();
       const el=document.getElementById('map-tournees');
       if(el && !el._leaflet_id){
         const m=L.map(el,{zoomControl:true}).setView([50.84,4.37],12);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
-        this._tourneesMap=m; this.drawRoute();
+        this._tourneesMap=m;
       }
+      this.drawRoute();
     }
   }
   drawRoute(){
     const L=window.L, m=this._tourneesMap; if(!L||!m) return;
     if(this._routeLayer) m.removeLayer(this._routeLayer);
     const g=L.layerGroup(); const d=this.depot(); const sd={}; this.sitesData().forEach(s=>sd[s.id]=s);
-    const seq=(this.state.routeAssign[this.state.selRoute]||[]).map(id=>sd[id]).filter(Boolean);
-    const coords=[[d.lat,d.lng],...seq.map(p=>[p.lat,p.lng]),[d.lat,d.lng]];
-    L.polyline(coords,{color:'#8D1D2C',weight:3,opacity:.7,dashArray:'6 5'}).addTo(g);
-    L.marker([d.lat,d.lng]).addTo(g).bindPopup("<b>"+d.libelle+"</b>");
+    const seq=(this.assign()[this.curRoute()]||[]).map(id=>sd[id]).filter(p=>p&&p.lat!=null);
+    const key=JSON.stringify([this.curRoute(),seq.map(p=>p.id),!!d]);
+    if(this._routeKey===key) return; this._routeKey=key;
+    const coords=[...(d?[[d.lat,d.lng]]:[]),...seq.map(p=>[p.lat,p.lng]),...(d?[[d.lat,d.lng]]:[])];
+    if(coords.length>1) L.polyline(coords,{color:'#8D1D2C',weight:3,opacity:.7,dashArray:'6 5'}).addTo(g);
+    if(d) L.marker([d.lat,d.lng]).addTo(g).bindPopup("<b>"+d.libelle+"</b>");
     seq.forEach((p,i)=>{
       const icon=L.divIcon({className:'',html:`<div style="width:26px;height:26px;border-radius:50%;background:#8D1D2C;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${i+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
       L.marker([p.lat,p.lng],{icon}).addTo(g).bindPopup("<b>"+p.name+"</b><br>"+p.ville);
     });
     g.addTo(m); this._routeLayer=g;
+    if(coords.length) m.fitBounds(coords,{padding:[30,30],maxZoom:13});
   }
   componentDidMount(){ this.ensureMaps(); }
   componentDidUpdate(){ this.ensureMaps(); }
@@ -2393,7 +2491,7 @@ class Component extends DCLogic {
     const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',validations:t.navValidations,zones:'Zones & capacité tournées',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop'};
-    const subs={tdb:'jeudi 17 juillet 2026',prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
+    const subs={tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding'};
 
@@ -2499,16 +2597,16 @@ class Component extends DCLogic {
     const ecart=scanTotal-scanDone;
 
     // TOURNEES — gestion des tournées (delivery sites + offices + ETA)
-    const RA=S.routeAssign, allSites=this.sitesData(), sMap={}; allSites.forEach(s=>sMap[s.id]=s);
+    const RA=this.assign(), allSites=this.sitesData(), sMap={}; allSites.forEach(s=>sMap[s.id]=s);
     const rMeta=this.routesMeta();
     const assignedIds=[].concat(...Object.values(RA));
     const siteTimeOf=(s)=>((S.siteAcc[s.id]!=null?S.siteAcc[s.id]:s.access)+s.offices.reduce((a,o,i)=>a+(S.drop[s.id+'-'+i]!=null?S.drop[s.id+'-'+i]:o.drop),0));
-    const moveInRoute=(rid,from,to)=>{ const arr=[...RA[rid]]; if(to<0||to>=arr.length) return; const [m]=arr.splice(from,1); arr.splice(to,0,m); this.setState({routeAssign:{...RA,[rid]:arr}},()=>this.drawRoute()); };
+    const moveInRoute=(rid,from,to)=>{ const arr=[...(RA[rid]||[])]; if(to<0||to>=arr.length) return; const [m]=arr.splice(from,1); arr.splice(to,0,m); this.setState({routeAssign:{...RA,[rid]:arr}},()=>this.drawRoute()); };
     const routeDrops=(rid)=>RA[rid].reduce((a,id)=>a+(sMap[id]?sMap[id].offices.length:0),0);
-    const removeSite=(rid,id)=>this.setState({routeAssign:{...RA,[rid]:RA[rid].filter(x=>x!==id)}},()=>this.drawRoute());
-    const moveSiteTo=(fromR,id,toR)=>{ const meta=rMeta.find(m=>m.id===toR); if(routeDrops(toR)+sMap[id].offices.length>meta.max){ this.printJob('⚠ '+meta.name+' pleine : '+routeDrops(toR)+'/'+meta.max+' drops. Retirez un site ou augmentez le plafond.'); return; } this.setState({routeAssign:{...RA,[fromR]:RA[fromR].filter(x=>x!==id),[toR]:[...RA[toR],id]}},()=>this.drawRoute()); };
-    const addToRoute=(id)=>{ const rid=S.selRoute, meta=rMeta.find(m=>m.id===rid); if(routeDrops(rid)+sMap[id].offices.length>meta.max){ this.printJob('⚠ '+meta.name+' pleine : '+routeDrops(rid)+'/'+meta.max+' drops.'); return; } this.setState({routeAssign:{...RA,[rid]:[...RA[rid],id]}},()=>this.drawRoute()); };
-    const routesView=rMeta.map(m=>{ const c=this.computeRoute(m.id); const over=c.drops>m.max; const sel=S.selRoute===m.id;
+    const removeSite=(rid,id)=>this.setState({routeAssign:{...RA,[rid]:(RA[rid]||[]).filter(x=>x!==id)}},()=>this.drawRoute());
+    const moveSiteTo=(fromR,id,toR)=>{ const meta=rMeta.find(m=>m.id===toR); if(!meta||!sMap[id]) return; if(routeDrops(toR)+sMap[id].offices.length>meta.max){ this.printJob('⚠ '+meta.name+' pleine : '+routeDrops(toR)+'/'+meta.max+' drops. Retirez un site ou augmentez le plafond.'); return; } this.setState({routeAssign:{...RA,[fromR]:(RA[fromR]||[]).filter(x=>x!==id),[toR]:[...(RA[toR]||[]),id]}},()=>this.drawRoute()); };
+    const addToRoute=(id)=>{ const rid=this.curRoute(), meta=rMeta.find(m=>m.id===rid); if(!meta||!sMap[id]) return; if(routeDrops(rid)+sMap[id].offices.length>meta.max){ this.printJob('⚠ '+meta.name+' pleine : '+routeDrops(rid)+'/'+meta.max+' drops.'); return; } this.setState({routeAssign:{...RA,[rid]:[...(RA[rid]||[]),id]}},()=>this.drawRoute()); };
+    const routesView=rMeta.map(m=>{ const c=this.computeRoute(m.id); const over=c.drops>m.max; const sel=this.curRoute()===m.id;
       const others=rMeta.filter(x=>x.id!==m.id);
       const stops=c.stops.map((st,idx)=>({...st,
         open:!!S.siteOpen[st.id],toggle:()=>this.setState(s=>({siteOpen:{...s.siteOpen,[st.id]:!s.siteOpen[st.id]},selSiteId:st.id})),
@@ -2580,7 +2678,8 @@ class Component extends DCLogic {
       if(!tour) return {state:'Non livrable',bg:'#fbe9eb',c:'var(--color-primary)',reason:'Bureau validé, mais aucune tournée affectée (tourId manquant). État : pending.',deliverable:false};
       return {state:'Livrable',bg:'#eaf5ec',c:'#2d7a3e',reason:'Bureau validé · '+tour+' · avant cut-off livraison 10:00. État : active.',deliverable:true};
     };
-    const sc=clientsData[S.selClient];
+    // Aucun client servi par l'API ⇒ fiche vide, pas de client fictif.
+    const sc=clientsData[S.selClient]||clientsData[0]||{points:[]};
     const scTour=tourByCode[sc.code];
     const scE=eligOf(sc.statut,scTour);
     // Delivery sites + départements rattachés à ce client (via client_id ou raison sociale)
@@ -2600,7 +2699,7 @@ class Component extends DCLogic {
           deptEmpty:depts.length===0 };
       }),
       eligLabel:(scE.deliverable?'✓ ':'✕ ')+scE.state,eligStyle:this.pill(scE.bg,scE.c),eligReason:scE.reason,eligTour:scTour||'Aucune tournée',
-      points:sc.points.map(p=>({libelle:p.libelle,adresse:p.adresse,fenetre:p.fenetre,jours:p.jours,validation:p.validation,tour:scTour||'—',livrLabel:(scE.deliverable?'✓ ':'✕ ')+scE.state,livrStyle:this.pill(scE.bg,scE.c),marge:(p.marge>=0?'+':'−')+this.eur(Math.abs(p.marge)),margeStyle:this.pill(p.marge>=0?'#eaf5ec':'#fbe9eb',p.marge>=0?'#2d7a3e':'var(--color-primary)')}))};
+      points:(sc.points||[]).map(p=>({libelle:p.libelle,adresse:p.adresse,fenetre:p.fenetre,jours:p.jours,validation:p.validation,tour:scTour||'—',livrLabel:(scE.deliverable?'✓ ':'✕ ')+scE.state,livrStyle:this.pill(scE.bg,scE.c),marge:(p.marge>=0?'+':'−')+this.eur(Math.abs(p.marge)),margeStyle:this.pill(p.marge>=0?'#eaf5ec':'#fbe9eb',p.marge>=0?'#2d7a3e':'var(--color-primary)')}))};
 
     // INCIDENTS
     const incData=SRV('fr_incidents');
@@ -2608,12 +2707,13 @@ class Component extends DCLogic {
       statutStyle:this.pill(i.statut==='Résolu'?'#eaf5ec':i.statut==='En cours'?'var(--color-secondary)':'#fbe9eb',i.statut==='Résolu'?'#2d7a3e':i.statut==='En cours'?'var(--color-on-abricot)':'var(--color-primary)'),
       rowStyle:'display:flex;align-items:center;gap:11px;padding:12px 16px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer;'+(idx===S.selInc?'background:var(--color-background-secondary)':''),
       select:()=>this.setState({selInc:idx})}));
-    const si=incData[S.selInc];
+    const si=incData[S.selInc]||incData[0]||{};
     const selInc={...si,statutStyle:this.pill(si.statut==='Résolu'?'#eaf5ec':si.statut==='En cours'?'var(--color-secondary)':'#fbe9eb',si.statut==='Résolu'?'#2d7a3e':si.statut==='En cours'?'var(--color-on-abricot)':'var(--color-primary)')};
 
     // RENTABILITE
-    const CA=2555, couts=1573, marge=CA-couts;
-    const TODAY='2026-07-17';
+    // CA et coûts du périmètre : la somme des points réellement livrés.
+    const CA=pts.reduce((a,p)=>a+(+p.ca||0),0), couts=pts.reduce((a,p)=>a+(+p.couts||0),0), marge=CA-couts;
+    const TODAY=new Date().toISOString().slice(0,10);
     const periodDate=S.periodDate||TODAY;
     const periodDateSet=(e)=>{ const v=e.target.value; this.setState({periodDate:v}); };
     const periodToday=()=>this.setState({periodDate:TODAY});
@@ -2671,47 +2771,70 @@ class Component extends DCLogic {
     let tblCols,tblHead,tblRows;
     const R='text-align:right;',rf='500 12px var(--font-ui)',cf='400 12px var(--font-ui)',ct='var(--color-text)',cm='var(--color-text-muted)';
     const cell=(v,o={})=>({v,font:o.font||cf,color:o.color||ct,align:o.align||''});
+    // Les trois analyses sont calculées sur les vraies tables : fr_rentabilite
+    // (CA / coûts par tournée → site → office) et ws_tours (chauffeur, forfait).
+    // Un axe sans donnée affiche un tableau vide plutôt qu'un exemple.
+    const money=(v)=>this.eur(Math.round(v||0));
+    const pctCell=(ca,co)=>cell(pctTxt(ca,co),{font:'600 12px var(--font-ui)',color:mColor(ca,co),align:R});
+    const toursMeta=this.routesMeta();
     if(A==='tournee'){
       tblCols='1.2fr .8fr .5fr .5fr .8fr';
-      tblHead=[{label:'Tournée',align:''},{label:'Chauffeur',align:''},{label:'km',align:R},{label:'CA',align:R},{label:'Marge %',align:R}];
-      tblRows=[
-        {cells:[cell('BXL-Centre',{font:rf}),cell('Kowalski',{color:cm}),cell('42',{align:R}),cell('1 400 €',{align:R}),cell('52 %',{font:'600 12px var(--font-ui)',color:'#2d7a3e',align:R})]},
-        {cells:[cell('Sud',{font:rf}),cell('Dubois',{color:cm}),cell('68',{align:R}),cell('415 €',{align:R}),cell('0,5 %',{font:'600 12px var(--font-ui)',color:'var(--color-primary)',align:R})]},
-        {cells:[cell('Est',{font:rf}),cell('Peeters',{color:cm}),cell('95',{align:R}),cell('740 €',{align:R}),cell('33 %',{font:'600 12px var(--font-ui)',color:'#2d7a3e',align:R})]},
-      ];
+      tblHead=[{label:'Tournée',align:''},{label:'Chauffeur',align:''},{label:'Sites',align:R},{label:'CA',align:R},{label:'Marge %',align:R}];
+      tblRows=rentaRaw.map(t=>{
+        const ca=(t.sites||[]).reduce((a,x)=>a+(x.offices||[]).reduce((b,o)=>b+(+o.ca||0),0),0);
+        const co=(t.sites||[]).reduce((a,x)=>a+(x.offices||[]).reduce((b,o)=>b+(+o.couts||0),0),0);
+        const meta=toursMeta.find(r=>(r.name||r.nom)===t.nom)||{};
+        return {cells:[cell(t.nom,{font:rf}),cell(meta.driver||'—',{color:cm}),
+          cell(String((t.sites||[]).length),{align:R}),cell(money(ca),{align:R}),pctCell(ca,co)]};
+      });
     } else if(A==='chauffeur'){
       tblCols='1fr .6fr .7fr .7fr .6fr';
-      tblHead=[{label:'Chauffeur',align:''},{label:'Pts/h',align:R},{label:'Coût/pt',align:R},{label:'Incid.',align:R},{label:'ETA',align:R}];
-      tblRows=[
-        {cells:[cell('M. Kowalski',{font:rf}),cell('5,2',{align:R}),cell('28 €',{align:R}),cell('2 %',{align:R,color:'#2d7a3e'}),cell('+4 min',{align:R})]},
-        {cells:[cell('J. Dubois',{font:rf}),cell('3,1',{align:R}),cell('41 €',{align:R}),cell('6 %',{align:R,color:'var(--color-primary)'}),cell('+11 min',{align:R,color:'var(--color-primary)'})]},
-        {cells:[cell('S. Peeters',{font:rf}),cell('4,4',{align:R}),cell('33 €',{align:R}),cell('3 %',{align:R}),cell('+2 min',{align:R,color:'#2d7a3e'})]},
-      ];
+      tblHead=[{label:'Chauffeur',align:''},{label:'Tournée',align:''},{label:'Sites',align:R},{label:'CA',align:R},{label:'Marge %',align:R}];
+      tblRows=toursMeta.map(r=>{
+        const t=rentaRaw.find(x=>x.nom===(r.name||r.nom))||{sites:[]};
+        const ca=(t.sites||[]).reduce((a,x)=>a+(x.offices||[]).reduce((b,o)=>b+(+o.ca||0),0),0);
+        const co=(t.sites||[]).reduce((a,x)=>a+(x.offices||[]).reduce((b,o)=>b+(+o.couts||0),0),0);
+        return {cells:[cell(r.driver||'—',{font:rf}),cell(r.short||r.name||r.nom||'—',{color:cm}),
+          cell(String((t.sites||[]).length),{align:R}),cell(money(ca),{align:R}),pctCell(ca,co)]};
+      });
     } else {
       tblCols='1.2fr .8fr .8fr .8fr';
-      tblHead=[{label:'Client',align:''},{label:'CA an.',align:R},{label:'Coût serv.',align:R},{label:'Marge an.',align:R}];
-      tblRows=[
-        {cells:[cell('Le Cirio SA',{font:rf}),cell('48 200 €',{align:R}),cell('19 400 €',{align:R}),cell('+28 800 €',{font:'600 12px var(--font-ui)',color:'#2d7a3e',align:R})]},
-        {cells:[cell('KBC Group',{font:rf}),cell('31 500 €',{align:R}),cell('33 100 €',{align:R}),cell('−1 600 €',{font:'600 12px var(--font-ui)',color:'var(--color-primary)',align:R})]},
-        {cells:[cell('Événements Sud',{font:rf}),cell('6 400 €',{align:R}),cell('9 900 €',{align:R}),cell('−3 500 €',{font:'600 12px var(--font-ui)',color:'var(--color-primary)',align:R})]},
-      ];
+      tblHead=[{label:'Site',align:''},{label:'CA',align:R},{label:'Coût serv.',align:R},{label:'Marge',align:R}];
+      const flat=[];
+      rentaRaw.forEach(t=>(t.sites||[]).forEach(x=>{
+        const ca=(x.offices||[]).reduce((a,o)=>a+(+o.ca||0),0);
+        const co=(x.offices||[]).reduce((a,o)=>a+(+o.couts||0),0);
+        flat.push({nom:x.nom,ca,co});
+      }));
+      tblRows=flat.sort((a,b)=>(b.ca-b.co)-(a.ca-a.co)).map(x=>{ const m=x.ca-x.co;
+        return {cells:[cell(x.nom,{font:rf}),cell(money(x.ca),{align:R}),cell(money(x.co),{align:R}),
+          cell((m>=0?'+':'−')+money(Math.abs(m)),{font:'600 12px var(--font-ui)',color:m>=0?'#2d7a3e':'var(--color-primary)',align:R})]};
+      });
     }
 
-    // SIMULATEUR
-    const simCandidates=[8,9,5];
-    const simInfo={8:{marge:-78,delta:184,after:196},9:{marge:-15,delta:98,after:110},5:{marge:20,delta:-40,after:-28}};
-    const simPoints=simCandidates.map(id=>{ const p=pts.find(x=>x.id===id); const m=p.ca-p.couts; const on=S.sim===id;
-      return {libelle:p.libelle,marge:(m>=0?'+':'−')+this.eur(Math.abs(m)),margeColor:m>=0?'#2d7a3e':'var(--color-primary)',
-        pick:()=>this.setState({sim:id}),
+    // SIMULATEUR — « et si on retirait ce point ? »
+    // Les candidats sont les points réellement les moins rentables, et l'effet
+    // simulé est leur propre marge : retirer un point retire son CA et ses
+    // coûts. Aucun gain n'est postulé, et sans points il n'y a rien à simuler.
+    const simCand=pts.map(p=>({...p,m:p.ca-p.couts})).sort((a,b)=>a.m-b.m).slice(0,3);
+    const simId=(S.sim!=null&&simCand.some(p=>p.id===S.sim))?S.sim:(simCand.length?simCand[0].id:null);
+    const simPoints=simCand.map(p=>{ const on=simId===p.id;
+      return {libelle:p.libelle,marge:(p.m>=0?'+':'−')+this.eur(Math.abs(p.m)),margeColor:p.m>=0?'#2d7a3e':'var(--color-primary)',
+        pick:()=>this.setState({sim:p.id}),
         style:'display:flex;justify-content:space-between;align-items:center;width:100%;padding:11px 12px;margin-bottom:7px;border-radius:9px;cursor:pointer;font:500 12.5px var(--font-ui);color:var(--color-text);border:1.5px solid '+(on?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(on?'var(--color-background-secondary)':'transparent')};
     });
-    const simInf=simInfo[S.sim]; const simP=pts.find(x=>x.id===S.sim);
-    const simBeforeVal=12, simAfterVal=12+ (simInf.delta/ ( -simInf.marge||1)); // display only
-    const simBefore='0,5 %', simAfter=simInf.after>=0? '+'+this.eur(simInf.after):'−'+this.eur(Math.abs(simInf.after));
-    const simDeltaPos=simInf.delta>=0;
-    const simHint=simInf.delta>=0
-      ? 'Retirer '+simP.libelle+' fait passer la tournée en positif : les km marginaux de ce détour pèsent plus que son CA. Suggestion : refacturer le port ou regrouper sur un autre jour.'
-      : 'Retirer '+simP.libelle+' dégrade la marge : ce point est rentable, le conserver. Le routage recalculé sans lui rallonge les autres segments.';
+    const simP=simCand.find(p=>p.id===simId)||null;
+    const simHas=!!simP;
+    const simDeltaN=simP?-simP.m:0;                 // marge récupérée en le retirant
+    const totMarge=pts.reduce((a,p)=>a+(p.ca-p.couts),0);
+    const simDeltaPos=simDeltaN>=0;
+    const simBefore=simHas?this.eur(totMarge):'—';
+    const simAfterN=totMarge+simDeltaN;
+    const simAfter=simHas?((simAfterN>=0?'+':'−')+this.eur(Math.abs(simAfterN))):'—';
+    const simHint=!simHas?'Aucun point livré à simuler.'
+      :(simDeltaPos
+        ? 'Retirer '+simP.libelle+' remonte la marge de '+this.eur(Math.abs(simDeltaN))+' : ce point coûte plus qu\'il ne rapporte. Refacturer le port ou le regrouper sur un autre jour.'
+        : 'Retirer '+simP.libelle+' coûterait '+this.eur(Math.abs(simDeltaN))+' de marge : ce point est rentable, le conserver.');
 
     // PARAMS
     const setCout=(k)=>(e)=>{ const v=parseFloat(e.target.value); this.setState(s=>({couts:{...s.couts,[k]:isNaN(v)?0:v}})); };
@@ -2723,12 +2846,10 @@ class Component extends DCLogic {
       {label:'β — temps de service',val:(S.beta/100).toFixed(2).replace('.',','),pct:S.beta,onInput:setW('beta')},
       {label:'γ — volume',val:(S.gamma/100).toFixed(2).replace('.',','),pct:S.gamma,onInput:setW('gamma')},
     ];
-    const users=[
-      {init:'TL',nom:'Thomas Legrand',email:'t.legrand@atelier.be',role:'Gérant franchisé'},
-      {init:'AP',nom:'Anna Piotrowska',email:'a.piotrowska@atelier.be',role:'Resp. production'},
-      {init:'YM',nom:'Youssef Merzouk',email:'y.merzouk@atelier.be',role:'Préparateur'},
-      {init:'DR',nom:'Dispatch Réseau',email:'dispatch@atelier.be',role:'Dispatch (consolidé)'},
-    ];
+    // Les comptes du magasin viennent de la table servie par l'API. Vide tant
+    // qu'aucun utilisateur n'est renvoyé : on n'invente pas de collègues.
+    const users=SRV('users').map(u=>({...u,
+      init:u.init||String(u.nom||u.name||'').split(/\s+/).map(w=>w.charAt(0)).join('').slice(0,2).toUpperCase()}));
 
     // VALIDATIONS Office Client
     const pendingRaw=SRV('fr_validations');
@@ -2800,10 +2921,17 @@ class Component extends DCLogic {
 
     // ---- Chaîne logique : tournée → zone primaire → zone secondaire → delivery site → office → département ----
     const deptRowsAll=SRV('b2b_client_company_department');
+    // Zone primaire = celle portée par la tournée (ws_tours) ; zone secondaire =
+    // la zone de livraison qui couvre le code postal du site (ws_delivery_zones),
+    // et à défaut la commune du référentiel postal. Plus aucune table en dur.
+    const zonesAll=SRV('ws_delivery_zones'), toursAll=SRV('ws_tours');
     const zoneChain=(tour,adr)=>{
-      const cp=(String(adr||'').match(/\b(\d{4})\b/)||[])[1]||'';
-      const sec={'1000':'Bruxelles Centre','1050':'Ixelles','1180':'Uccle','1030':'Schaerbeek','1070':'Anderlecht','3000':'Leuven','1410':'Waterloo','1040':'Etterbeek'}[cp]||'—';
-      const prim={'Tournée Centre-ville':'Bruxelles Capitale','Tournée Uccle / Ixelles':'Bruxelles Sud','Tournée Nord (Schaerbeek)':'Bruxelles Nord','Tournée Brabant':'Brabant','Tournée Express midi':'Express','Tournée Brabant flamand':'Brabant'}[tour]||'Réseau';
+      const cp=(String(adr||'').match(/\b([1-9][0-9]{3})\b/)||[])[1]||'';
+      const z=zonesAll.find(z=>this.zfCpsOf(z.cp).indexOf(cp)>=0);
+      const geo=window.__CPGEO;
+      const sec=(z&&(z.nom||z.name))||((geo&&geo.idx&&geo.idx[cp])?geo.idx[cp].city:'')||'—';
+      const t=toursAll.find(t=>(t.name||t.nom)===tour);
+      const prim=(t&&(t.zonePrim||t.zone))||'—';
       return {prim,sec};
     };
     const chipMini='border:none;cursor:pointer;font:500 10px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:4px 8px;color:var(--color-text);white-space:nowrap';
@@ -2897,25 +3025,28 @@ class Component extends DCLogic {
     const sgActive=sgList.filter(x=>x.active).length;
     const toggleSlotGrid=()=>this.setState(s=>({slotGridOpen:!(s.slotGridOpen!==undefined?s.slotGridOpen:true)}));
 
-    const capaDays=['Lun 21','Mar 22','Mer 23','Jeu 24','Ven 25'];
-    const capaData=[
-      {label:'Matin',v:[[9,10],[7,10],[10,10],[5,10],[8,10]]},
-      {label:'Après-midi',v:[[6,8],[8,8],[4,8],[3,8],[7,8]]},
-      {label:'Express midi',v:[[5,6],[6,6],[2,6],[1,6],[4,6]]},
-      {label:'Retrait',v:[[20,60],[35,60],[18,60],[12,60],[40,60]]},
-    ];
+    // Les cinq jours ouvrés à partir d'aujourd'hui — une date réelle, pas une
+    // semaine figée.
+    const capaDays=(function(){ const out=[], d=new Date();
+      while(out.length<5){ if(d.getDay()!==0&&d.getDay()!==6)
+          out.push(d.toLocaleDateString('fr-BE',{weekday:'short'}).replace('.','')+' '+d.getDate());
+        d.setDate(d.getDate()+1); }
+      return out; })();
+    // Remplissage réservé/max : servi par l'API (réservations × créneaux).
+    // Sans données, la grille est vide — aucun taux n'est simulé.
+    const capaData=SRV('fr_capacite').map(r=>({label:r.label||r.creneau||'—',
+      v:Array.isArray(r.v)?r.v:[]}));
     const capaRows=capaData.map(r=>({label:r.label,cells:r.v.map(([res,max])=>{ const pct=res/max; let bg='var(--color-background-secondary)',c='var(--color-text)'; if(pct>=1){bg='#fbe9eb';c='var(--color-primary)';} else if(pct>=0.8){bg='#fff4e5';c='#b26a00';} return {txt:res+'/'+max,style:'text-align:center;border-radius:8px;padding:11px 0;font:600 12px var(--font-ui);background:'+bg+';color:'+c}; })}));
 
     const APRICOT='#E8A15C', COPPER='#8C4A2F';
-    const shopDefs=[
-      {jour:'Lundi',   web:true, am:true,  pm:true },
-      {jour:'Mardi',   web:true, am:true,  pm:true },
-      {jour:'Mercredi',web:true, am:true,  pm:true },
-      {jour:'Jeudi',   web:true, am:true,  pm:true },
-      {jour:'Vendredi',web:true, am:true,  pm:true },
-      {jour:'Samedi',  web:true, am:true,  pm:false},
-      {jour:'Dimanche',web:false,am:false, pm:false},
-    ];
+    // Les sept jours sont la structure du tableau ; les ouvertures viennent de
+    // ws_shop_hours. Sans ligne servie, le jour est fermé partout — c'est un
+    // état vide affiché tel quel, pas un horaire supposé.
+    const shopHoursRows=SRV('ws_shop_hours');
+    const shopHourOf=(j)=>shopHoursRows.find(r=>String(r.jour||r.day||'').toLowerCase()===j.toLowerCase())||{};
+    const shopDefs=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'].map(j=>{
+      const r=shopHourOf(j); return {jour:j,web:!!r.web,am:!!r.am,pm:!!r.pm};
+    });
     const shopCell=(jour,slot,def,fade)=>{
       const k='shop_'+jour+'_'+slot;
       const on=S.flags[k]!==undefined?S.flags[k]:def;
@@ -2964,14 +3095,8 @@ class Component extends DCLogic {
     const fPill=(f)=>'cursor:pointer;'+pill2(ordFilter===f?'var(--color-primary)':'var(--color-background-secondary)',ordFilter===f?'#fff':'var(--color-text-muted)');
     const ordSteps=['En préparation','Prête','Remise/Livrée'];
     const ordStatColor=(s)=>({'En préparation':['#fff4e5','#b26a00'],'Prête':['#eaf5ec','#2d7a3e'],'Remise/Livrée':['var(--color-background-secondary)','var(--color-text-muted)']}[s]);
-    let ordersRaw=[
-      {ref:'#2041',client:'Boucherie Charlier',mode:'Livraison',slot:'Matin 08–12',total:'146,20 €'},
-      {ref:'#2042',client:'Marie Dupuis',mode:'Retrait',slot:'Retrait 14:00',total:'32,50 €'},
-      {ref:'#2043',client:'Hôtel Nord SA',mode:'Livraison',slot:'Matin 08–12',total:'298,00 €'},
-      {ref:'#2044',client:'Café des Arts',mode:'Livraison',slot:'Après-midi 13–17',total:'87,40 €'},
-      {ref:'#2045',client:'Jan Kowalski',mode:'Retrait',slot:'Click & collect',total:'18,90 €'},
-      {ref:'#2046',client:'Traiteur Piotrowski',mode:'Livraison',slot:'Express midi',total:'204,60 €'},
-    ];
+    // Les commandes du jour viennent de la table servie par l'API (ws_orders).
+    let ordersRaw=SRV('fr_orders');
     const ordersList=ordersRaw.filter(o=>ordFilter==='all'||(ordFilter==='deliv'&&o.mode==='Livraison')||(ordFilter==='pickup'&&o.mode==='Retrait')).map(o=>{
       const cur=S.flags['ord_'+o.ref]!==undefined?S.flags['ord_'+o.ref]:0; const st=ordSteps[cur]; const [bg,c]=ordStatColor(st);
       return {...o, modePill:modePill(o.mode), statut:st,
@@ -3048,10 +3173,10 @@ class Component extends DCLogic {
 
     // Demandes de NOUVEAU bureau — une entreprise demande la création d'un compte → Créer (onboarding) ou Rejeter
     const nbHandled=S.nbHandled||{};
-    const newBureauRaw=[
-      {id:'nb1',client:'Restaurant Le Nord',demande:'« Créer un compte entreprise »',info:'HORECA · TVA BE 0699.112.334 · 3 sites potentiels',dup:false},
-      {id:'nb2',client:'Clinique Saint-Luc',demande:'« Ouvrir un bureau B2B livraison »',info:'Corporate · ~120 employés · cafétéria + étages',dup:false},
-    ].filter(r=>!nbHandled[r.id]);
+    // Demandes d'ouverture de bureau : servies par l'API. Vide tant qu'il n'y
+    // en a pas — aucune demande de démonstration.
+    const newBureauRaw=SRV('fr_new_offices').map((r,i)=>({...r,id:r.id!=null?r.id:('nb'+i)}))
+      .filter(r=>!nbHandled[r.id]);
     const nbResolve=(id,msg)=>()=>{ this.setState(s=>({nbHandled:{...s.nbHandled,[id]:true}})); this.printJob(msg); };
     const newBureauRequests=newBureauRaw.map(r=>({...r,
       creer:()=>{ this.setState(s=>({nbHandled:{...s.nbHandled,[r.id]:true}})); this.obOpen(); this.setState(s=>({ob:{...s.ob,raison:r.client||'',contactNom:r.client||''}})); },
@@ -3060,12 +3185,10 @@ class Component extends DCLogic {
     const newBureauEmpty=newBureauRaw.length===0;
 
     // Stats réseau
-    const netStats=[
-      {label:'CA réseau (mois)',value:'428 k€',delta:'▲ +6,4 %',deltaColor:'#2d7a3e'},
-      {label:'Boutiques actives',value:'14',delta:'▲ +1',deltaColor:'#2d7a3e'},
-      {label:'Taux livraison',value:'38 %',delta:'▲ +2,1 pts',deltaColor:'#2d7a3e'},
-      {label:'Panier moyen',value:'54,20 €',delta:'▼ −1,3 %',deltaColor:'var(--color-primary)'},
-    ];
+    // Consolidé réseau : poussé par l'ERP, lecture seule. Rien à afficher tant
+    // que l'ERP n'a rien poussé.
+    const netStats=SRV('fr_net_stats').map(r=>({label:r.label,value:r.value,
+      delta:r.delta||'',deltaColor:r.deltaColor||(String(r.delta||'').indexOf('▼')>=0?'var(--color-primary)':'#2d7a3e')}));
 
     // Emails bureau
     const emailTag=(role)=>pill2(role==='Facturation'?'#eef3fb':'var(--color-background-secondary)',role==='Facturation'?'#2a5a9e':'var(--color-text-muted)');
@@ -3104,15 +3227,17 @@ class Component extends DCLogic {
     const payMethods=SRV('ws_payment_methods').map((m,i)=>{ const w=toggle3('payW_'+i,m.dw),c=toggle3('payC_'+i,m.dc),b=toggle3('payB_'+i,m.db);
       const isDefer=m.nom.indexOf('Virement')===0;
       return {nom:m.nom, help:'Active le paiement « '+m.nom+' » par profil : Webshop (client en ligne), Comptoir (vente en boutique), B2B (comptes bureau). Un profil désactivé masque ce moyen de paiement au checkout correspondant.', webStyle:w.style,webKnob:w.knob,tWeb:w.toggle, cptStyle:c.style,cptKnob:c.knob,tCpt:c.toggle, b2bStyle:b.style,b2bKnob:b.knob,tB2b:b.toggle, isDefer, isStd:!isDefer }; });
-    const deferCli=['Le Cirio SA','Rocco Forte','Hôtel Nord SA','Boucherie Charlier','Traiteur Piotrowski','Café des Arts'];
-    const deferDef=[true,true,false,true,false,false];
+    const deferCli=SRV('fr_clients').map(c=>c.raison).filter(Boolean);
+    // L'autorisation de paiement différé vient de la fiche client (paiement),
+    // pas d'une liste posée à la main.
+    const deferDef=SRV('fr_clients').map(c=>!!(c.paiement&&!/immédiat|comptant/i.test(String(c.paiement))));
     const deferList=deferCli.map((nom,i)=>{ const on=S.flags['defer_'+i]!==undefined?S.flags['defer_'+i]:deferDef[i]; const t=toggle3('defer_'+i,deferDef[i]); return {nom,on,val:on?'1':'0',help:on?('« '+nom+' » AUTORISÉ au paiement différé : peut régler par virement / facturation différée (encours suivi). Désactiver = paiement immédiat exigé à la commande.'):('« '+nom+' » NON autorisé au différé : doit payer immédiatement. Activer pour ouvrir la facturation différée (dans la limite de son encours).'),valColor:on?'#2d7a3e':'var(--color-text-muted)',style:t.style,knob:t.knob,toggle:t.toggle}; });
     const deferCount=deferList.filter(x=>x.on).length, deferTotal=deferList.length;
     const deferBadge=pill2('#eef3fb','#2a5a9e');
 
     // ===== Assistant onboarding bureau =====
     const O=S.ob, obStep=S.obStep;
-    const obTours=['Tournée Centre-ville','Tournée Uccle / Ixelles','Tournée Nord (Schaerbeek)','Tournée Express midi','Tournée Brabant'];
+    const obTours=SRV('ws_tours').map(t=>t.name||t.nom).filter(Boolean);
     const obZc=zoneChain(O.tour,O.adr);
     const obIn='width:100%;padding:11px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface);box-sizing:border-box';
     const obSteps=this.OB_STEPS.map((label,i)=>({label,n:String(i+1),done:i<obStep,active:i===obStep,
@@ -3199,7 +3324,31 @@ class Component extends DCLogic {
         toggle:this.toggleParam(p.cle), onDraft:this.setParamDraft(p.cle), save:this.saveParam(p.cle) };
     });
     const sm=this.srcMeta(screen);
+    // L'identité affichée est celle de la boutique de la portée
+    // (/franchisee/geo-clients). Inconnue ⇒ « — », jamais un nom inventé.
+    const meShop=(this._geoAData&&Array.isArray(this._geoAData.shops))?this._geoAData.shops[0]:null;
+    const meName=(meShop&&(meShop.name||meShop.nom))||'—';
+    const meInit=meName==='—'?'—':meName.replace(/[^A-Za-zÀ-ÿ ]/g,' ').trim().split(/\s+/).map(w=>w.charAt(0)).join('').slice(0,2).toUpperCase();
+    const meSub=[(window.__FR&&window.__FR.shop)?('boutique '+window.__FR.shop):'', 'Console franchisé'].filter(Boolean).join(' · ');
+    // Cut-off du jour : l'heure limite paramétrée (ws_param order.cutoff_default)
+    // confrontée à l'heure courante. Sans paramètre, on n'affiche pas de compte
+    // à rebours inventé.
+    const P=(k,d)=>(window.BOServer?window.BOServer.getParam(k,d):d);
+    const cutRaw=String(P('order.cutoff_default','')||'').trim();
+    const cutM=cutRaw.match(/^(\d{1,2}):(\d{2})/);
+    let kCutLeft='—', kCutLabel='cut-off non paramétré';
+    if(cutM){ const now=new Date(); const mins=(+cutM[1])*60+(+cutM[2])-(now.getHours()*60+now.getMinutes());
+      kCutLeft=mins>0?(Math.floor(mins/60)+' h '+String(mins%60).padStart(2,'0')):'dépassé';
+      kCutLabel='clôture saisie à '+cutRaw; }
+    // Fiche boutique et règles horaires : ws_param + la boutique de la portée.
+    const shopName=meName, shopAddr=(meShop&&(meShop.adr||meShop.address))||'—';
+    const shopOpen=P('shop.open','—')||'—', shopClose=P('shop.close','—')||'—';
+    const shopSlotLen=P('slot.length_min','')?(P('slot.length_min','')+' min'):'—';
+    const shopCutoff=cutRaw||'—';
+    const shopLead=P('order.lead_hours','')?(P('order.lead_hours','')+' h'):'—';
     const profileVals={
+      meName, meInit, meSub, kCutLeft, kCutLabel,
+      shopName, shopAddr, shopOpen, shopClose, shopSlotLen, shopCutoff, shopLead,
       showSource, srcOpen:S.srcOpen&&showSource,
       showHelp, helpIcon, tipStyle,
       srcTable:sm.table, srcOrigin:sm.origin, srcCalc:sm.calc, srcDev:sm.dev,
@@ -3346,7 +3495,7 @@ class Component extends DCLogic {
       scanComplete:complete,scanIncomplete:!complete,bonValide:S.bonValide,bonNonValide:!S.bonValide,
       validerBon:()=>this.setState({bonValide:true}),
       routesView,selR:routesView.find(r=>r.sel)||routesView[0],unassignedSites,modalSite,siteModalOpen:S.siteModal!=null,closeSiteModal:()=>this.setState({siteModal:null}),
-      deleteRoute:()=>this.setState({delRoute:S.selRoute}),
+      deleteRoute:()=>this.setState({delRoute:this.curRoute()}),
       delRouteOpen:S.delRoute!=null,
       delRouteName:(rMeta.find(r=>r.id===S.delRoute)||{}).name||'',
       delRouteHasSites:((RA[S.delRoute]||[]).length>0),
@@ -3398,11 +3547,14 @@ class Component extends DCLogic {
       kpis,classement,nbPerte,rentaTree,perteOpen,pertePoints,perteBadgeStyle,togglePerte,
       periodDate,periodDateSet,periodToday,periodTodayStyle,periodSegs,
       waterfallSvg:this.waterfall(),evoSvg:this.evolution(),
+      rentaToursTxt:rentaRaw.length+' tournée'+(rentaRaw.length>1?'s':''),
+      rentaEvoTxt:(function(n){ return n>1?(n+' derniers points · bande cible 30 % / alerte 15 %'):'aucun historique servi par l\'ERP'; })(SRV('fr_renta_evolution').length),
       setAnalyse:{tournee:()=>this.setState({analyse:'tournee'}),chauffeur:()=>this.setState({analyse:'chauffeur'}),client:()=>this.setState({analyse:'client'})},
       tabStyles:{tournee:tabStyle('tournee'),chauffeur:tabStyle('chauffeur'),client:tabStyle('client')},
       tblCols,tblHead,tblRows,
-      simPoints,simBefore,simAfter,simName:simP.libelle,simDelta:(simDeltaPos?'+':'')+this.eur(simInf.delta),
-      simAfterColor:simInf.after>=0?'#2d7a3e':'var(--color-primary)',simHint,
+      simPoints,simBefore,simAfter,simName:simP?simP.libelle:'—',
+      simDelta:simHas?((simDeltaPos?'+':'−')+this.eur(Math.abs(simDeltaN))):'—',
+      simAfterColor:simAfterN>=0?'#2d7a3e':'var(--color-primary)',simHint,
       coutParams,abg,abgSum,abgColor:(S.alpha+S.beta+S.gamma)===100?'#2d7a3e':'var(--color-primary)',users,
     };
   }

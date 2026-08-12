@@ -15,9 +15,10 @@ index.html
 ```
 
 - `hydrate()` : 1 `fetch` par table vers `<base>/franchisee/<endpoint>`,
-  header `X-Admin-Token`, portée `?shop=<slug|id>`. Repli **par table** sur le
-  seed (réponse non-2xx / non-tableau / vide ⇒ la table garde son seed).
-- Timeout de boot 4 s : l'app démarre toujours, même API morte.
+  header `X-Admin-Token`, portée `?shop=<slug|id>`. **Aucun repli** : réponse
+  non-2xx / non-tableau / absente ⇒ la table est **vide**.
+- Timeout de boot 4 s : l'app démarre toujours, même API morte — elle démarre
+  alors vide, ce qui est l'information juste.
 - Les écritures de l'app (formulaires, onboarding B2B, suppressions —
   `BOServer.save`) restent locales (`localStorage`, clé `ws_bo_store_v8`).
   Au rechargement, la donnée serveur fait foi. **Écritures serveur = prochain
@@ -116,3 +117,54 @@ explications**.
   fermer.
 - Ajouter un écran ⇒ ajouter une ligne dans `searchDefs()` (les libellés
   suivent `titles`/`subs`).
+
+## Seed, maquette et fausses données — supprimés
+
+Le module ne contient plus **aucune** donnée inventée, et plus aucun repli
+dessus. Ce qui a été retiré :
+
+- **`bo_server.js`** : les 45 tables de seed (355 lignes) sont supprimées,
+  `SEED = {}`. `ensure()` ne recompose plus rien, `reset()` vide, et `hydrate()`
+  écrit `[]` pour toute table que l'API ne sert pas — au lieu de garder le seed.
+  La clé de stockage passe à `ws_bo_store_v9` et **les anciennes clés
+  `ws_bo_store*` sont effacées au chargement** : le seed déjà persisté dans le
+  navigateur d'un franchisé ne peut pas remonter.
+- **Les données en dur de l'app** sont recalculées sur les vraies tables :
+  `points()` (sites de livraison réels, géocodés par CP via `/geo/postcodes`,
+  chiffrés par `fr_rentabilite`), `depot()` (la boutique de la portée, servie
+  par `/franchisee/geo-clients`), `sitesData()` (zones par CP, arrêts par
+  département), l'affectation site → tournée (`assign()`, lue sur
+  `tournee_id`/`tour`), les listes déroulantes des formulaires, les trois
+  analyses de rentabilité, le simulateur, la chaîne zone primaire/secondaire,
+  les commandes du jour, le paiement différé, les tournées de l'onboarding,
+  les statistiques réseau, la grille de remplissage, les jours d'ouverture,
+  les demandes de nouveau bureau et les comptes utilisateurs.
+- **L'identité affichée** (pastille et fiche profil) était une personne
+  inventée : c'est désormais la boutique de la portée, ou « — ».
+- **Les dates figées** (« jeudi 17 juillet 2026 », semaine « Lun 21 → Ven 25 »,
+  `TODAY`) sont des dates réelles calculées à l'affichage.
+- **Les deux graphes** de rentabilité : la cascade est construite sur le CA et
+  les coûts réels (le détail par poste n'étant servi par aucune table, le coût
+  de service reste en un bloc plutôt qu'une ventilation supposée) ; la courbe
+  d'évolution vient de `fr_renta_evolution` et affiche « pas encore
+  d'historique » à défaut.
+- **Les valeurs préremplies** qui devenaient des enregistrements à
+  l'enregistrement (franco « 250 € », remise « 10 % », enseigne et adresse du
+  shop, noms de sociétés dans les `placeholder`) sont vides ou remplacées par
+  une consigne de format.
+
+Nouveaux endpoints attendus (tables vides tant qu'ils n'existent pas, sans
+casse) : `fr-orders`, `users`, `fr-capacite`, `fr-new-offices`, `fr-net-stats`,
+`ws-shop-hours`, `fr-renta-evolution`.
+
+Restent en dur, et c'est voulu : l'UI pure (libellés de nav, filtres, titres et
+sous-titres d'écran, textes d'aide) et les exemples de **format** dans les
+`placeholder` (« ex. Lun–Ven », « ex. 1000 · 1020 »).
+
+## Vérifié (Playwright) — après suppression du seed
+
+- **API absente** : les 31 écrans parcourus, aucune erreur JS, tout est vide.
+- **API présente** (fixture de test) : les tables sont hydratées et rendues —
+  rentabilité 820 € de CA, 630 € de coûts, 190 € de marge, soit exactement les
+  chiffres servis ; cut-off calculé sur `order.cutoff_default` ; identité et
+  initiales prises sur la boutique servie.

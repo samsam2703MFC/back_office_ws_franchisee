@@ -26,12 +26,13 @@ No build step. Serve over HTTP (not `file://`).
   `BOServer.hydrate()` executed **before** the runtime boots.
 - **`support.js`** — the Claude Design DC runtime (byte-identical to the
   franchisor's).
-- **`bo_server.js`** — data layer: every domain table lives here as the seed,
-  is persisted to `localStorage`, and is read by the page via
-  `window.BOServer.table(name)`. `hydrate()` fetches the real API
-  (`<origin>/webshop/api/franchisee/*`, header `X-Admin-Token`, scope
-  `?shop=<slug|id>`) into memory **per table with seed fallback** — a missing
-  endpoint/table never breaks the render.
+- **`bo_server.js`** — data layer: **no seed, no fallback**. Every domain table
+  is read by the page via `window.BOServer.table(name)` and filled only by
+  `hydrate()`, which fetches the real API (`<origin>/webshop/api/franchisee/*`,
+  header `X-Admin-Token`, scope `?shop=<slug|id>`) into memory. A table the
+  server does not serve stays **empty**, and the screen shows nothing rather
+  than something invented. Local edits (`BOServer.save`) live in `localStorage`
+  until the server acknowledges them; older stores are purged at load.
 - **`api-config.js`** — same-origin API resolution + admin token shared per
   origin (`localStorage.adminToken`) + shop scope; overrides `?api=`, `?token=`,
   `?shop=`.
