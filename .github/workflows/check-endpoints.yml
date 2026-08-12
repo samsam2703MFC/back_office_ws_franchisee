@@ -55,8 +55,15 @@ jobs:
           # l'id une fois via /franchisee/me, comme le fait le boot de l'app.
           SHOP="${SHOP_ID:-}"
           if [ -z "$SHOP" ]; then
-            ME=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/me" 2>/dev/null)
-            SHOP=$(printf '%s' "$ME" | sed -n 's/.*"shop"[^{]*{[^}]*"id"[[:space:]]*:[[:space:]]*"\{0,1\}\([0-9]\{1,\}\).*/\1/p' | head -1)
+            ME=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/me" 2>/dev/null | tr -d ' \n')
+            # Plusieurs formes possibles selon la version du PHP ; on les essaie
+            # dans l'ordre du plus explicite au plus permissif.
+            SHOP=$(printf '%s' "$ME" | grep -o '"shop":{[^}]*}' | grep -o '"id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
+            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$ME" | grep -o '"shop_id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
+            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$ME" | grep -o '"shop":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
+            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$ME" | grep -o '"id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
+            # Diagnostic sans fuite : on n'imprime que les NOMS de champs.
+            [ -z "$SHOP" ] && echo "  /franchisee/me — champs vus : $(printf '%s' "$ME" | grep -o '"[a-zA-Z_]\{1,\}":' | tr -d '\":' | sort -u | tr '\n' ' ')"
           fi
           if [ -n "$SHOP" ]; then QS="?shop=$SHOP"; echo "Portée    : boutique $SHOP"
           else QS=''; echo "Portée    : AUCUNE — /franchisee/me n'a pas rendu d'id ; les endpoints qui exigent la portée renverront [] à tort"; fi
