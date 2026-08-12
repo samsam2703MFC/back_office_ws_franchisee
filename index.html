@@ -118,6 +118,10 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
 <style>
+  /* Le design system n'expose ni vert ni orange : on les déclare ici, une
+     seule fois, plutôt qu'en dur dans les écrans. Le « mauvais » réutilise la
+     couleur de marque, comme partout ailleurs dans la console. */
+  :root{--st-good:#2d7a3e;--st-good-bg:#eaf5ec;--st-warn:#b26a00;--st-warn-bg:#fff4e5;--st-bad:var(--color-primary);--st-bad-bg:#fbe9eb}
   html,body{height:100%}
   a{color:var(--color-primary);text-decoration:none}
   a:hover{color:#6d1622}
@@ -192,6 +196,8 @@
       <button onClick="{{ nav.rentabilite }}" style="{{ navStyles.rentabilite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/></svg><span>{{ t.navRentabilite }}</span></button>
       <button onClick="{{ nav.geoAnalyse }}" style="{{ navStyles.geoAnalyse }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="10" r="3"/><path d="M12 21c4-4.5 7-8 7-11a7 7 0 1 0-14 0c0 3 3 6.5 7 11z"/></svg><span>Analyse géo</span></button>
       <button onClick="{{ nav.statsReseau }}" style="{{ navStyles.statsReseau }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg><span>Stats réseau</span></button>
+      <div style="margin:14px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">{{ t.navFidelite }}</div>
+      <button onClick="{{ nav.avis }}" style="{{ navStyles.avis }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg><span>{{ t.navAvis }}</span></button>
       <button onClick="{{ toggleParams }}" style="{{ paramsHeadStyle }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="{{ paramsChevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase">Paramétrage</span></button>
       <sc-if value="{{ paramsOpen }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="6">
@@ -1463,6 +1469,94 @@
       </sc-if>
 
       <!-- ===================== STATS RÉSEAU (ERP, LECTURE) ===================== -->
+      <!-- ===================== AVIS CLIENTS ===================== -->
+      <sc-if value="{{ isAvis }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- portée + rafraîchir -->
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+          <span style="display:inline-flex;align-items:center;gap:7px;border-radius:20px;padding:5px 12px;background:var(--color-background-secondary);font:600 11px var(--font-ui);color:var(--color-text-muted)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 9l9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span>{{ avisScopeLabel }}</span><span style="color:var(--color-text)">{{ avisScopeShop }}</span>
+          </span>
+          <button onClick="{{ avisReload }}" class="btn-secondary" style="font-size:12px;margin-left:auto">{{ avisRefreshLabel }}</button>
+        </div>
+
+        <sc-if value="{{ avisLoading }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px;font:400 12.5px var(--font-ui);color:var(--color-text-muted)">{{ avisLoadingLabel }}</div>
+        </sc-if>
+
+        <sc-if value="{{ avisError }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--st-bad-bg);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 18px">
+            <div style="font:600 13px var(--font-ui);color:var(--st-bad);margin-bottom:4px">{{ avisErrMsg }}</div>
+            <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)"><span>{{ avisErrCodeLabel }}</span> <span>{{ avisErrCode }}</span></div>
+          </div>
+        </sc-if>
+
+        <!-- KPI -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px">
+          <sc-for list="{{ avisKpis }}" as="k" hint-placeholder-count="4">
+            <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px">
+              <div class="t-admin-label">{{ k.label }}</div>
+              <div style="font:700 24px/1 var(--font-ui);color:var(--color-text);margin-top:8px">{{ k.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- note moyenne par produit -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
+          <div class="t-section-title" style="font-size:15px;margin-bottom:14px">{{ avisByProductTitle }}</div>
+          <div style="overflow-x:auto">
+            <div style="min-width:420px">
+              <div style="display:grid;grid-template-columns:1.6fr 1.4fr .6fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+                <span class="t-admin-label">{{ avisColProduct }}</span>
+                <span class="t-admin-label">{{ avisColAvg }}</span>
+                <span class="t-admin-label" style="text-align:right">{{ avisColCount }}</span>
+              </div>
+              <sc-for list="{{ avisProducts }}" as="p" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:1.6fr 1.4fr .6fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+                  <span style="font:500 12.5px var(--font-ui);color:var(--color-text);min-width:0">{{ p.name }}</span>
+                  <span style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+                    <span style="{{ p.pill }}">{{ p.avg }}</span>
+                    <span style="display:inline-flex;gap:1px"><sc-for list="{{ p.stars }}" as="s" hint-placeholder-count="5"><span style="{{ s.style }}">{{ s.ch }}</span></sc-for></span>
+                  </span>
+                  <span style="text-align:right;font:600 12.5px var(--font-ui);color:var(--color-text)">{{ p.n }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ avisProductsEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:14px 6px;font:400 12.5px var(--font-ui);color:var(--color-text-muted)">{{ avisEmptyProducts }}</div>
+          </sc-if>
+        </div>
+
+        <!-- derniers avis négatifs -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
+          <div class="t-section-title" style="font-size:15px;margin-bottom:14px">{{ avisRecentNegTitle }}</div>
+          <sc-for list="{{ avisNeg }}" as="r" hint-placeholder-count="3">
+            <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px;margin-bottom:10px">
+              <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-bottom:8px">
+                <span style="font:600 12.5px var(--font-ui);color:var(--color-text)">{{ r.store }}</span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ r.when }}</span>
+              </div>
+              <sc-for list="{{ r.items }}" as="it" hint-placeholder-count="2">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:4px 0">
+                  <span style="font:600 12px var(--font-ui);color:var(--color-text)">{{ it.name }}</span>
+                  <span style="display:inline-flex;gap:1px"><sc-for list="{{ it.stars }}" as="s" hint-placeholder-count="5"><span style="{{ s.style }}">{{ s.ch }}</span></sc-for></span>
+                  <sc-if value="{{ it.hasNote }}" hint-placeholder-val="{{ false }}">
+                    <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">— {{ it.note }}</span>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+          <sc-if value="{{ avisNegEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:6px;font:400 12.5px var(--font-ui);color:var(--color-text-muted)">{{ avisEmptyNeg }}</div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+
       <sc-if value="{{ isStatsReseau }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div style="display:flex;align-items:center;gap:9px;background:#eef3fb;border-radius:10px;padding:11px 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a5a9e" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span style="font:400 11.5px var(--font-ui);color:#2a5a9e">Données consolidées poussées par l'ERP — lecture seule, aucun formulaire à ce niveau.</span></div>
@@ -2707,6 +2801,7 @@ class Component extends DCLogic {
   setParamDraft(cle){ return (e)=>{ const v=e.target.value; this.setState(s=>({paramDrafts:{...s.paramDrafts,[cle]:v}})); }; }
   saveParam(cle){ return ()=>{ if(!window.BOServer) return; const d=this.state.paramDrafts[cle]; if(d!==undefined) window.BOServer.setParam(cle,d); this.setState({_rev:(this.state._rev||0)+1}); this.printJob('✔ Paramètre '+cle+' enregistré'); }; }
   srcMeta(screen){ const M={
+    avis:{table:'ws_reviews (API)',origin:'GET /franchisee/reviews — totaux, moyenne par produit, derniers avis négatifs',calc:'Pastille : rouge < 2,5 · orange < 3,5 · vert au-delà ; étoiles = round(note). Tri par note croissante.',dev:'1 j'},
     tdb:{table:'ws_orders · fr_alertes · fr_live_drivers',origin:'Agrégat commandes du jour groupées par tournée → zone → site → office',calc:'count(orders) filtré sur date=today, regroupé par route_id ; KPI = SUM/COUNT en direct',dev:'2,5 j'},
     prep:{table:'ws_orders (statut=préparation)',origin:'File de préparation dérivée des commandes non clôturées',calc:'Arbre tournée→site→office, colis = SUM(lignes) ; scan met à jour prepared_count',dev:'2 j'},
     tournees:{table:'ws_routes · ws_zones · points',origin:'Constructeur : sites non assignés ↔ tournées, distances Haversine',calc:'ETA = start + Σ(travel_min + drop_min) ; travel_min≈km×2,2',dev:'4 j'},
@@ -2759,6 +2854,8 @@ class Component extends DCLogic {
     {s:'demandesB2B',tab:['b2bTab','rattach'],g:'Exploitation › Demandes B2B',label:'Rattachement bureaux',meta:'demandesB2B',desc:'Demandes du personnel à rattacher à un bureau existant — lier · créer · rejeter',k:'join request salarie employe lier rejeter adhesion'},
     {s:'demandesB2B',tab:['b2bTab','nouveau'],g:'Exploitation › Demandes B2B',label:'Nouveaux bureaux',meta:'demandesB2B',desc:'Demandes de création d\'un nouveau bureau — ouvre l\'onboarding en 7 étapes',k:'onboarding creation nouveau client prospect wizard'},
     {s:'incidents',g:'Exploitation',k:'avoir preuve relivraison litige casse retard reclamation geste commercial'},
+    // ---- Fidélité ----
+    {s:'avis',g:'Fidélité',label:'Avis clients',k:'note avis etoile commentaire satisfaction client produit negatif retour feedback'},
     // ---- Pilotage ----
     {s:'capacite',g:'Pilotage',label:'Capacité · remplissage',k:'surbooking creneaux reserve max calendrier saturation tension'},
     {s:'rentabilite',g:'Pilotage',k:'marge ca chiffre affaires couts kilometres perte deficit point client'},
@@ -3067,6 +3164,30 @@ class Component extends DCLogic {
   toMin(s){ const [h,m]=s.split(':').map(Number); return h*60+m; }
   travelMin(a,b){ const R=6371,toR=x=>x*Math.PI/180; const dLa=toR(b.lat-a.lat),dLo=toR(b.lng-a.lng); const s=Math.sin(dLa/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLo/2)**2; const km=2*R*Math.asin(Math.sqrt(s)); return {min:Math.max(4,Math.round(km*2.2)),km}; }
   routesMeta(){ return (window.BOServer?window.BOServer.table('ws_tours'):[]); }
+
+  // Les points effectivement plaçables sur une carte / dans un calcul d'ETA.
+  geoPoints(){ return this.points().filter(p=>p.lat!=null&&p.lng!=null); }
+
+  // Affectation site → tournée. La base, c'est ce qui est réellement
+  // enregistré sur les sites de livraison (tournee_id, sinon le nom de la
+  // tournée) ; les déplacements faits dans le constructeur la surchargent le
+  // temps de la session. Aucune affectation n'est inventée.
+  assign(){
+    const base={}; const meta=this.routesMeta();
+    meta.forEach(r=>{ base[r.id]=[]; });
+    const byName={}; meta.forEach(r=>{ const n=r.name||r.nom; if(n) byName[n]=r.id; });
+    (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).forEach((r,i)=>{
+      const sid=r.id!=null?r.id:i+1;
+      const rid=(r.tournee_id!=null&&base[r.tournee_id])?r.tournee_id:byName[r.tour];
+      if(rid!==undefined&&base[rid]) base[rid].push(sid);
+    });
+    const ov=this.state.routeAssign||{};
+    Object.keys(ov).forEach(k=>{ base[k]=ov[k]; });
+    return base;
+  }
+  // Tournée sélectionnée : celle choisie, sinon la première tournée réelle.
+  curRoute(){ const m=this.routesMeta(); const sel=this.state.selRoute;
+    if(sel&&m.some(r=>r.id===sel)) return sel; return m.length?m[0].id:null; }
   // Sites du constructeur de tournées : DONNÉES RÉELLES uniquement —
   // dérivés de ws_office_delivery_sites (1 site = 1 bâtiment distinct),
   // bureaux = lignes de liaison partageant la même adresse, géo via __CPGEO.
@@ -3151,6 +3272,48 @@ class Component extends DCLogic {
     return {lat:e?e.lat:50.85, lng:e?e.lng:4.35, geoOk:!!e, libelle:nm+(si&&si.city?(' · '+si.city):'')}; }
 
   T = {
+    // Avis clients — libellés complets, jamais de phrase assemblée par
+    // concaténation : chaque texte affiché est une entrée à part entière.
+    navFidelite:{FR:'Fidélité',NL:'Loyaliteit',EN:'Loyalty',PL:'Lojalność'},
+    navAvis:{FR:'Avis clients',NL:'Klantbeoordelingen',EN:'Customer reviews',PL:'Opinie klientów'},
+    avisSub:{FR:'Notes et commentaires laissés par les clients de la boutique',
+             NL:'Beoordelingen en opmerkingen van de klanten van de winkel',
+             EN:'Ratings and comments left by the store\'s customers',
+             PL:'Oceny i komentarze klientów sklepu'},
+    avisScopeShop:{FR:'Franchisée',NL:'Franchisenemer',EN:'Franchisee',PL:'Franczyzobiorca'},
+    avisRefresh:{FR:'Rafraîchir',NL:'Vernieuwen',EN:'Refresh',PL:'Odśwież'},
+    avisTotal:{FR:'Avis',NL:'Beoordelingen',EN:'Reviews',PL:'Opinie'},
+    avisLiked:{FR:'Aimé',NL:'Positief',EN:'Liked',PL:'Pozytywne'},
+    avisDisliked:{FR:'Pas aimé',NL:'Negatief',EN:'Disliked',PL:'Negatywne'},
+    avisPending:{FR:'En attente',NL:'In afwachting',EN:'Pending',PL:'Oczekujące'},
+    avisByProduct:{FR:'Note moyenne par produit (les moins bien notés d\'abord)',
+                   NL:'Gemiddelde score per product (laagst beoordeeld eerst)',
+                   EN:'Average rating per product (lowest rated first)',
+                   PL:'Średnia ocena produktu (najniżej oceniane najpierw)'},
+    avisColProduct:{FR:'Produit',NL:'Product',EN:'Product',PL:'Produkt'},
+    avisColAvg:{FR:'Note moyenne',NL:'Gemiddelde score',EN:'Average rating',PL:'Średnia ocena'},
+    avisColCount:{FR:'Nb d\'avis',NL:'Aantal beoordelingen',EN:'Reviews',PL:'Liczba opinii'},
+    avisRecentNeg:{FR:'Derniers avis négatifs',NL:'Recentste negatieve beoordelingen',EN:'Latest negative reviews',PL:'Ostatnie negatywne opinie'},
+    avisEmptyProducts:{FR:'Aucune note produit pour l\'instant.',NL:'Nog geen productbeoordelingen.',EN:'No product ratings yet.',PL:'Brak ocen produktów.'},
+    avisEmptyNeg:{FR:'Aucun avis négatif 🎉',NL:'Geen negatieve beoordelingen 🎉',EN:'No negative reviews 🎉',PL:'Brak negatywnych opinii 🎉'},
+    avisLoading:{FR:'Chargement des avis…',NL:'Beoordelingen laden…',EN:'Loading reviews…',PL:'Ładowanie opinii…'},
+    avisErrAuth:{FR:'Accès refusé par le serveur : le jeton admin est absent ou invalide.',
+                 NL:'Toegang geweigerd door de server: het admintoken ontbreekt of is ongeldig.',
+                 EN:'Access refused by the server: the admin token is missing or invalid.',
+                 PL:'Serwer odmówił dostępu: brak lub nieprawidłowy token administratora.'},
+    avisErrMissing:{FR:'Cette route n\'existe pas encore sur le serveur.',
+                    NL:'Deze route bestaat nog niet op de server.',
+                    EN:'This route does not exist on the server yet.',
+                    PL:'Ta trasa jeszcze nie istnieje na serwerze.'},
+    avisErrOther:{FR:'Le serveur n\'a pas pu rendre les avis.',
+                  NL:'De server kon de beoordelingen niet leveren.',
+                  EN:'The server could not return the reviews.',
+                  PL:'Serwer nie mógł zwrócić opinii.'},
+    avisErrCode:{FR:'Code HTTP',NL:'HTTP-code',EN:'HTTP code',PL:'Kod HTTP'},
+    avisNoScope:{FR:'Aucune boutique dans la portée de cette session.',
+                 NL:'Geen winkel in het bereik van deze sessie.',
+                 EN:'No store in this session\'s scope.',
+                 PL:'Brak sklepu w zakresie tej sesji.'},
     navTdb:{FR:'Tableau de bord',NL:'Dashboard',EN:'Dashboard',PL:'Pulpit'},
     navPrep:{FR:'Préparation',NL:'Voorbereiding',EN:'Preparation',PL:'Przygotowanie'},
     navTournees:{FR:'Tournées',NL:'Ritten',EN:'Routes',PL:'Trasy'},
@@ -3572,7 +3735,37 @@ class Component extends DCLogic {
     const fit=(selTour&&focusPts.length)?focusPts:(selPts.length?selPts:allPts);
     if(fit.length) m.fitBounds(fit,{padding:[28,28],maxZoom:12});
   }
+  // ===== Avis clients =====
+  // Route de la console FRANCHISÉ : bornée par le serveur à la boutique de la
+  // session. La portée voyage en ?shop=<id>, comme tous les autres appels du
+  // module, mais c'est le serveur qui tranche — un id passé dans l'URL du
+  // navigateur n'élargit jamais ce que le franchisé voit.
+  //
+  // Pour un essai contre la route réseau, remplacer par '/admin/reviews' et
+  // 'shopId' : elle authentifie avec le même X-Admin-Token, mais elle fait
+  // confiance à l'id envoyé — à ne pas laisser en place côté franchisé.
+  REVIEWS_PATH = '/franchisee/reviews';
+  REVIEWS_SCOPE_PARAM = 'shop';
+
+  reviewsEnsure(force){
+    if(this.state.screen!=='avis' && !force) return;
+    if(this._revLoading) return;
+    if(this._reviews && !force) return;
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base) return;
+    this._revLoading=true; this._revErr=null;
+    const qs=fr.shop?('?'+this.REVIEWS_SCOPE_PARAM+'='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+this.REVIEWS_PATH+qs,{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
+      .then(r=>r.ok?r.json():Promise.reject(r.status))
+      .then(d=>{ this._reviews=(d&&typeof d==='object')?d:null; this._revErr=this._reviews?null:0;
+        this._revLoading=false; this.setState(st=>({_rev:(st._rev||0)+1})); })
+      .catch(code=>{ this._reviews=null; this._revErr=(typeof code==='number')?code:0;
+        this._revLoading=false; this.setState(st=>({_rev:(st._rev||0)+1})); });
+  }
+  reviewsReload(){ this._reviews=null; this._revErr=null; this.reviewsEnsure(true); }
+
   ensureMaps(){
+    this.reviewsEnsure();
     // Le référentiel CP→GPS se charge AVANT la garde Leaflet — la carte des
     // tournées en dépend (sinon tous les sites retombent sur le point défaut).
     if(this.state.screen==='zones'||this.state.screen==='tournees') this.zfGeoEnsure();
@@ -3817,7 +4010,7 @@ class Component extends DCLogic {
     const pts=this.points();
     // nav
     const nav={}, navStyles={};
-    ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B'].forEach(k=>{
+    ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis'].forEach(k=>{
       nav[k]=this.go(k);
       navStyles[k]=this.navStyle(k);
     });
@@ -3849,11 +4042,11 @@ class Component extends DCLogic {
     const paramsChevStyle='flex:none;transition:transform .15s'+(paramsOpen?';transform:rotate(90deg)':'');
     const setLang={}, langStyles={};
     ['FR','NL','EN','PL'].forEach(l=>{ setLang[l]=()=>this.setState({lang:l}); langStyles[l]=this.langStyle(l); });
-    const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams') };
-    const titles={tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
+    const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams'),navAvis:this.tr('navAvis'),navFidelite:this.tr('navFidelite') };
+    const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
-    const subs={tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
+    const subs={avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
@@ -5698,9 +5891,68 @@ class Component extends DCLogic {
       paramRows,
     };
 
+    // ===== Avis clients — tout vient du serveur, rien n'est déduit =====
+    const RV=this._reviews, rvT=(RV&&RV.totals)||{};
+    const rvNum=(v)=>(v==null||v==='')?'—':String(v);
+    const avisKpis=[
+      {label:this.tr('avisTotal'),value:rvNum(rvT.total)},
+      {label:this.tr('avisLiked'),value:rvNum(rvT.liked)},
+      {label:this.tr('avisDisliked'),value:rvNum(rvT.disliked)},
+      {label:this.tr('avisPending'),value:rvNum(rvT.pending)},
+    ];
+    // Cinq étoiles, remplies jusqu'à round(note).
+    const rvStars=(n)=>{ const k=Math.max(0,Math.min(5,Math.round(+n||0)));
+      return [1,2,3,4,5].map(i=>({ch:i<=k?'★':'☆',
+        style:'font:14px/1 var(--font-ui);color:'+(i<=k?'var(--st-warn)':'var(--color-border-secondary)')})); };
+    const rvTone=(v)=>v<2.5?'bad':(v<3.5?'warn':'good');
+    const avisProducts=((RV&&RV.byProduct)||[])
+      .map(r=>({name:r.product_name||'—',v:parseFloat(r.avg_rating)||0,n:r.n}))
+      .sort((a,b)=>a.v-b.v)
+      .map(r=>{ const tone=rvTone(r.v);
+        return {name:r.name, avg:r.v.toFixed(2).replace('.',','), n:rvNum(r.n), stars:rvStars(r.v),
+          pill:'display:inline-flex;align-items:center;justify-content:center;min-width:46px;border-radius:20px;padding:4px 10px;font:700 12px var(--font-ui);background:var(--st-'+tone+'-bg);color:var(--st-'+tone+')'}; });
+    // Date rendue telle que le serveur l'envoie, en AAAA-MM-JJ hh:mm.
+    const rvWhen=(v)=>{ const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+      return m?(m[1]+'-'+m[2]+'-'+m[3]+' '+m[4]+':'+m[5]):String(v||'—'); };
+    const avisNeg=((RV&&RV.recentNegative)||[]).map(r=>({
+      store:r.store||'—', when:rvWhen(r.created_at),
+      items:((r.items)||[]).map(it=>({name:it.product_name||'—', stars:rvStars(it.rating),
+        hasNote:!!(it.note&&String(it.note).trim()), note:it.note||''})) }));
+    const rvErr=this._revErr;
+    const avisErrMsg=(rvErr===401||rvErr===403)?this.tr('avisErrAuth')
+      :(rvErr===404?this.tr('avisErrMissing'):this.tr('avisErrOther'));
+    const avisVals={
+      isAvis:screen==='avis',
+      avisKpis, avisProducts, avisNeg,
+      avisScopeLabel:this.tr('avisScopeShop'),
+      // Nom de la boutique : celui que le serveur renvoie avec les avis, sinon
+      // celui de la portée déjà connue, sinon l'identifiant brut — jamais rien
+      // d'inventé, et jamais une phrase recomposée à partir de morceaux.
+      avisScopeShop:(function(rv,fallback){
+        const sh=(rv&&Array.isArray(rv.shops)&&rv.shops[0])||null;
+        return (sh&&(sh.name||sh.nom))||(fallback&&fallback!=='—'?fallback:'')
+          ||((window.__FR&&window.__FR.shop)?String(window.__FR.shop):'—');
+      })(RV,meName),
+      avisHasScope:!!(window.__FR&&window.__FR.shop),
+      avisNoScope:this.tr('avisNoScope'),
+      avisRefreshLabel:this.tr('avisRefresh'),
+      avisReload:()=>this.reviewsReload(),
+      avisLoading:!!this._revLoading&&!RV,
+      avisLoadingLabel:this.tr('avisLoading'),
+      avisError:rvErr!=null, avisErrMsg, avisErrCodeLabel:this.tr('avisErrCode'),
+      avisErrCode:rvErr?String(rvErr):'—',
+      avisByProductTitle:this.tr('avisByProduct'),
+      avisColProduct:this.tr('avisColProduct'), avisColAvg:this.tr('avisColAvg'), avisColCount:this.tr('avisColCount'),
+      avisRecentNegTitle:this.tr('avisRecentNeg'),
+      avisEmptyProducts:this.tr('avisEmptyProducts'), avisEmptyNeg:this.tr('avisEmptyNeg'),
+      avisProductsEmpty:avisProducts.length===0&&rvErr==null&&!!RV,
+      avisNegEmpty:avisNeg.length===0&&rvErr==null&&!!RV,
+    };
+
     return {
       navGroups,
       ...dsVals,
+      ...avisVals,
       kTdbTours:this.routesMeta().length,
       kTdbColis:tournees.reduce((a,t)=>a+(t.colis||0),0),
       kTdbOrders:tdbRaw.reduce((a,t)=>a+t.zones.reduce((b,z)=>b+z.sites.reduce((c,s)=>c+s.users.reduce((d,u)=>d+(u.cmd||0),0),0),0),0),

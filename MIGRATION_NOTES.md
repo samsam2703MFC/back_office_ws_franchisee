@@ -168,3 +168,33 @@ sous-titres d'écran, textes d'aide) et les exemples de **format** dans les
   rentabilité 820 € de CA, 630 € de coûts, 190 € de marge, soit exactement les
   chiffres servis ; cut-off calculé sur `order.cutoff_default` ; identité et
   initiales prises sur la boutique servie.
+
+## Écran « Avis clients »
+
+Entrée de menu `Avis clients` (icône étoile) dans une section **Fidélité**,
+écran `avis`.
+
+- **Source** : `GET <base>/franchisee/reviews?shop=<id>`, en-tête
+  `X-Admin-Token` comme le reste du module. Le chemin et le nom du paramètre
+  de portée sont deux constantes en tête de classe (`REVIEWS_PATH`,
+  `REVIEWS_SCOPE_PARAM`) : basculer vers `/admin/reviews?shopId=` est un
+  changement d'une ligne.
+- **Portée** : variante FRANCHISÉ — pas de sélecteur de boutique, la portée est
+  toujours celle de la session. C'est le serveur qui doit la faire respecter :
+  le jeton admin de cette installation est **réseau** (`/franchisee/me` rend
+  `shop: null`), donc un endpoint qui se contenterait de lire l'id envoyé
+  laisserait un franchisé lire une autre boutique.
+- **Rendu** : 4 tuiles KPI (total · aimé · pas aimé · en attente), tableau des
+  notes moyennes par produit trié en croissant — pastille rouge < 2,5, orange
+  < 3,5, verte au-delà, plus 5 étoiles remplies à `round(note)` — et une carte
+  par avis négatif (enseigne + date `AAAA-MM-JJ hh:mm`, une ligne par produit).
+- **Pas de repli** : aucune donnée n'est déduite. Erreur serveur ⇒ bandeau qui
+  distingue 401/403 (jeton), 404 (route absente) et le reste, avec le code
+  HTTP. Tables vides ⇒ « Aucune note produit pour l'instant. » /
+  « Aucun avis négatif 🎉 ».
+- **i18n** : 22 clés en FR/NL/EN/PL — les quatre langues de cette console. Le
+  brief mentionnait DE : cette console ne l'expose pas, l'ajouter toucherait
+  toutes les autres chaînes et sort du périmètre d'un écran.
+- **Couleurs** : le design system n'a ni vert ni orange. Les trois états sont
+  déclarés une fois en variables CSS (`--st-good` / `--st-warn` / `--st-bad`)
+  dans le `<style>` du helmet ; les écrans n'écrivent plus d'hexadécimal.
