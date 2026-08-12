@@ -192,9 +192,16 @@ Entrée de menu `Avis clients` (icône étoile) dans une section **Fidélité**,
   distingue 401/403 (jeton), 404 (route absente) et le reste, avec le code
   HTTP. Tables vides ⇒ « Aucune note produit pour l'instant. » /
   « Aucun avis négatif 🎉 ».
-- **i18n** : 22 clés en FR/NL/EN/PL — les quatre langues de cette console. Le
-  brief mentionnait DE : cette console ne l'expose pas, l'ajouter toucherait
-  toutes les autres chaînes et sort du périmètre d'un écran.
+- **i18n** : 22 clés, et l'allemand ajouté partout — la table complète compte
+  38 clés en **FR / NL / EN / DE / PL**. Le sélecteur de langue, qui était
+  calculé (`setLang`, `langStyles`) mais rendu nulle part, est posé en pied de
+  barre latérale : sans lui `state.lang` ne quittait jamais `FR` et aucune
+  traduction n'était atteignable.
+  **Portée réelle de la traduction** : seules les chaînes passant par `tr()`
+  suivent la langue. L'écran Avis est traduit de bout en bout ; le reste de la
+  console garde environ 650 libellés écrits en dur dans le gabarit — le menu
+  « Livraison du jour », par exemple, reste en français en DE. Traduire le
+  module entier est un chantier à part.
 - **Couleurs** : le design system n'a ni vert ni orange. Les trois états sont
   déclarés une fois en variables CSS (`--st-good` / `--st-warn` / `--st-bad`)
   dans le `<style>` du helmet ; les écrans n'écrivent plus d'hexadécimal.

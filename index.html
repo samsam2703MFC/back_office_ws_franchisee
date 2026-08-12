@@ -216,6 +216,13 @@
         <span title="Alertes" style="position:absolute;top:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--color-primary);border:2px solid var(--color-surface)"></span>
       </div>
       <div style="flex:1;min-width:0"></div>
+      <!-- Sélecteur de langue : les traductions existaient mais n'étaient
+           atteignables par personne — state.lang ne quittait jamais FR. -->
+      <div style="display:flex;flex-wrap:wrap;gap:2px;flex:none">
+        <sc-for list="{{ langList }}" as="l" hint-placeholder-count="5">
+          <button onClick="{{ l.pick }}" style="{{ l.style }}">{{ l.code }}</button>
+        </sc-for>
+      </div>
       <sc-if value="{{ showSource }}" hint-placeholder-val="{{ false }}">
         <div style="position:relative;flex:none">
           <button onClick="{{ toggleSrc }}" title="Origine des données" style="width:28px;height:28px;border-radius:8px;background:#eef3fb;border:.5px solid #cfe0f5;cursor:pointer;color:#2a5a9e;display:flex;align-items:center;justify-content:center;flex:none"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg></button>
@@ -3274,62 +3281,62 @@ class Component extends DCLogic {
   T = {
     // Avis clients — libellés complets, jamais de phrase assemblée par
     // concaténation : chaque texte affiché est une entrée à part entière.
-    navFidelite:{FR:'Fidélité',NL:'Loyaliteit',EN:'Loyalty',PL:'Lojalność'},
-    navAvis:{FR:'Avis clients',NL:'Klantbeoordelingen',EN:'Customer reviews',PL:'Opinie klientów'},
+    navFidelite:{FR:'Fidélité',NL:'Loyaliteit',EN:'Loyalty',PL:'Lojalność',DE:'Treue'},
+    navAvis:{FR:'Avis clients',NL:'Klantbeoordelingen',EN:'Customer reviews',PL:'Opinie klientów',DE:'Kundenbewertungen'},
     avisSub:{FR:'Notes et commentaires laissés par les clients de la boutique',
              NL:'Beoordelingen en opmerkingen van de klanten van de winkel',
              EN:'Ratings and comments left by the store\'s customers',
-             PL:'Oceny i komentarze klientów sklepu'},
-    avisScopeShop:{FR:'Franchisée',NL:'Franchisenemer',EN:'Franchisee',PL:'Franczyzobiorca'},
-    avisRefresh:{FR:'Rafraîchir',NL:'Vernieuwen',EN:'Refresh',PL:'Odśwież'},
-    avisTotal:{FR:'Avis',NL:'Beoordelingen',EN:'Reviews',PL:'Opinie'},
-    avisLiked:{FR:'Aimé',NL:'Positief',EN:'Liked',PL:'Pozytywne'},
-    avisDisliked:{FR:'Pas aimé',NL:'Negatief',EN:'Disliked',PL:'Negatywne'},
-    avisPending:{FR:'En attente',NL:'In afwachting',EN:'Pending',PL:'Oczekujące'},
+             PL:'Oceny i komentarze klientów sklepu',DE:'Bewertungen und Kommentare der Kundschaft des Ladens'},
+    avisScopeShop:{FR:'Franchisée',NL:'Franchisenemer',EN:'Franchisee',PL:'Franczyzobiorca',DE:'Franchisenehmerin'},
+    avisRefresh:{FR:'Rafraîchir',NL:'Vernieuwen',EN:'Refresh',PL:'Odśwież',DE:'Aktualisieren'},
+    avisTotal:{FR:'Avis',NL:'Beoordelingen',EN:'Reviews',PL:'Opinie',DE:'Bewertungen'},
+    avisLiked:{FR:'Aimé',NL:'Positief',EN:'Liked',PL:'Pozytywne',DE:'Gefällt'},
+    avisDisliked:{FR:'Pas aimé',NL:'Negatief',EN:'Disliked',PL:'Negatywne',DE:'Gefällt nicht'},
+    avisPending:{FR:'En attente',NL:'In afwachting',EN:'Pending',PL:'Oczekujące',DE:'Ausstehend'},
     avisByProduct:{FR:'Note moyenne par produit (les moins bien notés d\'abord)',
                    NL:'Gemiddelde score per product (laagst beoordeeld eerst)',
                    EN:'Average rating per product (lowest rated first)',
-                   PL:'Średnia ocena produktu (najniżej oceniane najpierw)'},
-    avisColProduct:{FR:'Produit',NL:'Product',EN:'Product',PL:'Produkt'},
-    avisColAvg:{FR:'Note moyenne',NL:'Gemiddelde score',EN:'Average rating',PL:'Średnia ocena'},
-    avisColCount:{FR:'Nb d\'avis',NL:'Aantal beoordelingen',EN:'Reviews',PL:'Liczba opinii'},
-    avisRecentNeg:{FR:'Derniers avis négatifs',NL:'Recentste negatieve beoordelingen',EN:'Latest negative reviews',PL:'Ostatnie negatywne opinie'},
-    avisEmptyProducts:{FR:'Aucune note produit pour l\'instant.',NL:'Nog geen productbeoordelingen.',EN:'No product ratings yet.',PL:'Brak ocen produktów.'},
-    avisEmptyNeg:{FR:'Aucun avis négatif 🎉',NL:'Geen negatieve beoordelingen 🎉',EN:'No negative reviews 🎉',PL:'Brak negatywnych opinii 🎉'},
-    avisLoading:{FR:'Chargement des avis…',NL:'Beoordelingen laden…',EN:'Loading reviews…',PL:'Ładowanie opinii…'},
+                   PL:'Średnia ocena produktu (najniżej oceniane najpierw)',DE:'Durchschnittsnote je Produkt (schlechteste zuerst)'},
+    avisColProduct:{FR:'Produit',NL:'Product',EN:'Product',PL:'Produkt',DE:'Produkt'},
+    avisColAvg:{FR:'Note moyenne',NL:'Gemiddelde score',EN:'Average rating',PL:'Średnia ocena',DE:'Durchschnittsnote'},
+    avisColCount:{FR:'Nb d\'avis',NL:'Aantal beoordelingen',EN:'Reviews',PL:'Liczba opinii',DE:'Anzahl Bewertungen'},
+    avisRecentNeg:{FR:'Derniers avis négatifs',NL:'Recentste negatieve beoordelingen',EN:'Latest negative reviews',PL:'Ostatnie negatywne opinie',DE:'Letzte negative Bewertungen'},
+    avisEmptyProducts:{FR:'Aucune note produit pour l\'instant.',NL:'Nog geen productbeoordelingen.',EN:'No product ratings yet.',PL:'Brak ocen produktów.',DE:'Noch keine Produktbewertungen.'},
+    avisEmptyNeg:{FR:'Aucun avis négatif 🎉',NL:'Geen negatieve beoordelingen 🎉',EN:'No negative reviews 🎉',PL:'Brak negatywnych opinii 🎉',DE:'Keine negativen Bewertungen 🎉'},
+    avisLoading:{FR:'Chargement des avis…',NL:'Beoordelingen laden…',EN:'Loading reviews…',PL:'Ładowanie opinii…',DE:'Bewertungen werden geladen…'},
     avisErrAuth:{FR:'Accès refusé par le serveur : le jeton admin est absent ou invalide.',
                  NL:'Toegang geweigerd door de server: het admintoken ontbreekt of is ongeldig.',
                  EN:'Access refused by the server: the admin token is missing or invalid.',
-                 PL:'Serwer odmówił dostępu: brak lub nieprawidłowy token administratora.'},
+                 PL:'Serwer odmówił dostępu: brak lub nieprawidłowy token administratora.',DE:'Zugriff vom Server verweigert: Das Admin-Token fehlt oder ist ungültig.'},
     avisErrMissing:{FR:'Cette route n\'existe pas encore sur le serveur.',
                     NL:'Deze route bestaat nog niet op de server.',
                     EN:'This route does not exist on the server yet.',
-                    PL:'Ta trasa jeszcze nie istnieje na serwerze.'},
+                    PL:'Ta trasa jeszcze nie istnieje na serwerze.',DE:'Diese Route existiert auf dem Server noch nicht.'},
     avisErrOther:{FR:'Le serveur n\'a pas pu rendre les avis.',
                   NL:'De server kon de beoordelingen niet leveren.',
                   EN:'The server could not return the reviews.',
-                  PL:'Serwer nie mógł zwrócić opinii.'},
-    avisErrCode:{FR:'Code HTTP',NL:'HTTP-code',EN:'HTTP code',PL:'Kod HTTP'},
+                  PL:'Serwer nie mógł zwrócić opinii.',DE:'Der Server konnte die Bewertungen nicht liefern.'},
+    avisErrCode:{FR:'Code HTTP',NL:'HTTP-code',EN:'HTTP code',PL:'Kod HTTP',DE:'HTTP-Code'},
     avisNoScope:{FR:'Aucune boutique dans la portée de cette session.',
                  NL:'Geen winkel in het bereik van deze sessie.',
                  EN:'No store in this session\'s scope.',
-                 PL:'Brak sklepu w zakresie tej sesji.'},
-    navTdb:{FR:'Tableau de bord',NL:'Dashboard',EN:'Dashboard',PL:'Pulpit'},
-    navPrep:{FR:'Préparation',NL:'Voorbereiding',EN:'Preparation',PL:'Przygotowanie'},
-    navTournees:{FR:'Tournées',NL:'Ritten',EN:'Routes',PL:'Trasy'},
-    navSuivi:{FR:'Suivi live',NL:'Live tracking',EN:'Live tracking',PL:'Śledzenie'},
-    navClients:{FR:'Clients & points',NL:'Klanten & punten',EN:'Customers & points',PL:'Klienci i punkty'},
-    navValidations:{FR:'Validations Office',NL:'Office-validaties',EN:'Office approvals',PL:'Zatwierdzenia'},
-    navZones:{FR:'Zones de livraison',NL:'Leverzones',EN:'Delivery zones',PL:'Strefy dostaw'},
-    navIncidents:{FR:'Incidents & litiges',NL:'Incidenten',EN:'Incidents & claims',PL:'Incydenty'},
-    navRentabilite:{FR:'Rentabilité',NL:'Rendabiliteit',EN:'Profitability',PL:'Rentowność'},
-    navParams:{FR:'Coûts & règles',NL:'Kosten & regels',EN:'Costs & rules',PL:'Koszty i reguły'},
-    kMarge:{FR:'Marge brute',NL:'Marge',EN:'Gross margin',PL:'Marża'},
-    kMargePct:{FR:'Marge %',NL:'Marge %',EN:'Margin %',PL:'Marża %'},
-    kCA:{FR:"Chiffre d'affaires",NL:'Omzet',EN:'Revenue',PL:'Przychód'},
-    kCouts:{FR:'Coûts',NL:'Kosten',EN:'Costs',PL:'Koszty'},
-    kColis:{FR:'Coût / colis',NL:'Kosten / pakket',EN:'Cost / parcel',PL:'Koszt / paczka'},
-    kCAkm:{FR:'CA / km',NL:'Omzet / km',EN:'Revenue / km',PL:'Przychód / km'},
+                 PL:'Brak sklepu w zakresie tej sesji.',DE:'Kein Laden im Bereich dieser Sitzung.'},
+    navTdb:{FR:'Tableau de bord',NL:'Dashboard',EN:'Dashboard',PL:'Pulpit',DE:'Übersicht'},
+    navPrep:{FR:'Préparation',NL:'Voorbereiding',EN:'Preparation',PL:'Przygotowanie',DE:'Vorbereitung'},
+    navTournees:{FR:'Tournées',NL:'Ritten',EN:'Routes',PL:'Trasy',DE:'Touren'},
+    navSuivi:{FR:'Suivi live',NL:'Live tracking',EN:'Live tracking',PL:'Śledzenie',DE:'Live-Verfolgung'},
+    navClients:{FR:'Clients & points',NL:'Klanten & punten',EN:'Customers & points',PL:'Klienci i punkty',DE:'Kunden & Punkte'},
+    navValidations:{FR:'Validations Office',NL:'Office-validaties',EN:'Office approvals',PL:'Zatwierdzenia',DE:'Office-Freigaben'},
+    navZones:{FR:'Zones de livraison',NL:'Leverzones',EN:'Delivery zones',PL:'Strefy dostaw',DE:'Liefergebiete'},
+    navIncidents:{FR:'Incidents & litiges',NL:'Incidenten',EN:'Incidents & claims',PL:'Incydenty',DE:'Vorfälle & Reklamationen'},
+    navRentabilite:{FR:'Rentabilité',NL:'Rendabiliteit',EN:'Profitability',PL:'Rentowność',DE:'Rentabilität'},
+    navParams:{FR:'Coûts & règles',NL:'Kosten & regels',EN:'Costs & rules',PL:'Koszty i reguły',DE:'Kosten & Regeln'},
+    kMarge:{FR:'Marge brute',NL:'Marge',EN:'Gross margin',PL:'Marża',DE:'Rohertrag'},
+    kMargePct:{FR:'Marge %',NL:'Marge %',EN:'Margin %',PL:'Marża %',DE:'Marge %'},
+    kCA:{FR:"Chiffre d'affaires",NL:'Omzet',EN:'Revenue',PL:'Przychód',DE:'Umsatz'},
+    kCouts:{FR:'Coûts',NL:'Kosten',EN:'Costs',PL:'Koszty',DE:'Kosten'},
+    kColis:{FR:'Coût / colis',NL:'Kosten / pakket',EN:'Cost / parcel',PL:'Koszt / paczka',DE:'Kosten / Paket'},
+    kCAkm:{FR:'CA / km',NL:'Omzet / km',EN:'Revenue / km',PL:'Przychód / km',DE:'Umsatz / km'},
   };
   tr(k){ const lang=this.state.lang; return (this.T[k]&&this.T[k][lang])||(this.T[k]&&this.T[k].FR)||k; }
 
@@ -4041,7 +4048,8 @@ class Component extends DCLogic {
     const paramsHeadStyle='display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;margin:14px 0 2px;border:none;border-radius:8px;cursor:pointer;text-align:left;background:transparent;color:'+(paramsActive?'var(--color-primary)':'var(--color-text-muted)');
     const paramsChevStyle='flex:none;transition:transform .15s'+(paramsOpen?';transform:rotate(90deg)':'');
     const setLang={}, langStyles={};
-    ['FR','NL','EN','PL'].forEach(l=>{ setLang[l]=()=>this.setState({lang:l}); langStyles[l]=this.langStyle(l); });
+    ['FR','NL','EN','DE','PL'].forEach(l=>{ setLang[l]=()=>this.setState({lang:l}); langStyles[l]=this.langStyle(l); });
+    const langList=['FR','NL','EN','DE','PL'].map(l=>({code:l,pick:setLang[l],style:langStyles[l]}));
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams'),navAvis:this.tr('navAvis'),navFidelite:this.tr('navFidelite') };
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
@@ -6370,7 +6378,7 @@ class Component extends DCLogic {
       tkCopyToken:()=>this.tkCopy(S.tkToken||'','Jeton copié'),
       tkGenerate:()=>this.tkGenerate(),
       tkRevoke:()=>this.tkRevoke(),
-      nav,navStyles,setLang,langStyles,t,
+      nav,navStyles,setLang,langStyles,langList,t,
       pageTitle:titles[screen],pageSub:subs[screen],
       isMulti:true,
       isValidations:screen==='demandesB2B'&&((S.b2bTab||'acces')==='acces'||(S.b2bTab||'')==='nouveau'),
