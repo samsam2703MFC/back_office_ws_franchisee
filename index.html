@@ -3057,9 +3057,11 @@ class Component extends DCLogic {
     const sites=window.BOServer.table('ws_office_delivery_sites');
     sites.push({bureau:o.raison,client_id:code,office,adr:o.adr,cp:obCp,localite:obLocalite,etage:o.etage,tour:o.tour,acc:+o.acc||6});
     window.BOServer.save('ws_office_delivery_sites',sites);
-    if(S.obDepts.length){ const dep=window.BOServer.table('b2b_client_company_department');
-      S.obDepts.forEach(d=>dep.push({client_id:code,company:o.raison,site:o.adr,office,dept:d.dept,effectif:+d.effectif||1,contact:o.contactEmail}));
-      window.BOServer.save('b2b_client_company_department',dep); }
+    /* Départements : ÉCRITS PAR LE SERVEUR (POST onboard-office), rattachés au
+       client réellement créé. Les pousser aussi d'ici les rattacherait à un
+       code local inventé — ce que la table ERP refuse — et chaque création de
+       bureau finissait par un « Écriture refusée (HTTP 409) » au bandeau. Ils
+       reviennent au rafraîchissement qui suit la création. */
     const emails=window.BOServer.table('ws_office_emails');
     if(o.contactEmail) emails.push({bureau:o.raison,addr:o.contactEmail,role:'Principal'});
     S.obStaff.forEach(st=>emails.push({bureau:o.raison,addr:st.email,role:'Livraison'}));
@@ -3471,6 +3473,14 @@ class Component extends DCLogic {
     // par sa propre route. Sans ce cas, le formulaire n'avait AUCUN `tbl` —
     // il n'écrivait donc nulle part tout en annonçant « ✔ Enregistré ».
     if(S.formKey==='shop'){ this.setState({formKey:null,_rev:(S._rev||0)+1}); this.shopWrite(v); return; }
+    /* DÉPARTEMENT : une ligne, une route. L'écriture passait par le
+       remplacement INTÉGRAL de b2b_client_company_department — table ERP
+       rattachée par id_client — que le serveur refuse (409) depuis qu'un
+       DELETE intégral l'a vidée une fois. L'écran demandait donc une écriture
+       impossible à chaque enregistrement, et le bandeau d'erreur affichait ce
+       refus en permanence : plus personne ne l'aurait lu le jour d'une vraie
+       panne. */
+    if(S.formKey==='department'){ this.setState({formKey:null}); this.deptWrite(v, S.formEdit?S.formIndex:null); return; }
     if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl); if(S.formEdit && S.formIndex!=null && rows[S.formIndex]){ rows[S.formIndex]={...rows[S.formIndex],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
     // Choix « garder le siège » (client B2B) : l'adresse encodée devient un
     // LIEU DE LIVRAISON (ws_offices, statut pending) rattaché à la société.
@@ -3538,6 +3548,47 @@ class Component extends DCLogic {
         navigator.clipboard.writeText(S.url).then(()=>dit(true)).catch(e=>dit(false,(e&&e.message)||'refusé par le navigateur'));
       else dit(false,'presse-papiers indisponible dans ce navigateur'); }
     catch(e){ dit(false,(e&&e.message)||'refusé par le navigateur'); } }
+  /* DÉPARTEMENT B2B — écriture d'UNE ligne, par sa route dédiée.
+     Le serveur retrouve le client depuis la raison sociale et borne à la
+     boutique ; il refuse en le disant si la société n'existe pas — un
+     département rattaché à un code inventé n'a aucun sens dans l'ERP.
+     $idx = index de la ligne locale à mettre à jour, null pour une création. */
+  deptWrite(v, idx){ const fr=window.__FR||{};
+    const local=(idx!=null&&window.BOServer)?(window.BOServer.table('b2b_client_company_department')[idx]||null):null;
+    if(!fr.base){ this.printJob('⚠ Département non enregistré — API non configurée'); return; }
+    const corps={ id:(local&&local.id)||undefined, company:v.company||'', dept:v.dept||v.name||'',
+      site:v.site||'', office:v.office||'', contact:v.contact||'', effectif:+v.effectif||1 };
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/b2b-department'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify(corps)})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.printJob('✔ Département « '+corps.dept+' » enregistré pour '+(corps.company||'la société'));
+          this.deptRefresh(); }
+        else this.printJob('⚠ Département non enregistré — '+((j&&j.error)||'refus du serveur')); })
+      .catch(e=>this.printJob('⚠ Département non enregistré — '+((e&&e.message)||'réseau indisponible')));
+  }
+  deptDelete(idx){ const fr=window.__FR||{};
+    const local=window.BOServer?(window.BOServer.table('b2b_client_company_department')[idx]||null):null;
+    if(!local||local.id==null){ this.printJob('⚠ Suppression impossible — cette ligne n’a pas d’identifiant en base'); return; }
+    if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/b2b-department'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify({id:local.id,delete:true})})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.printJob('✔ Département supprimé'); this.deptRefresh(); }
+        else this.printJob('⚠ Suppression refusée — '+((j&&j.error)||'refus du serveur')); })
+      .catch(e=>this.printJob('⚠ Suppression impossible — '+((e&&e.message)||'réseau indisponible')));
+  }
+  // Relire la table après écriture : la ligne locale récupère son id en base,
+  // sans quoi une seconde édition créerait un doublon au lieu de modifier.
+  deptRefresh(){ const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/b2b-departments'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('b2b_client_company_department',a);
+        this.setState(s=>({_rev:(s._rev||0)+1})); })
+      .catch(()=>{});
+  }
   /* L'AFFICHE (PDF) — QR code, URL courte, conditions du bureau. Elle passe par
      fetch et non par un simple lien : l'endpoint exige le jeton admin, qu'une
      navigation directe n'emporte pas — le franchisé recevrait un 401 en guise
@@ -5222,7 +5273,7 @@ class Component extends DCLogic {
           edit:this.editForm('site',r,x.idx),
           addDept:this.openFormWith('department',{company:sc.raison,site:r.adr,office:r.office||r.bureau}),
           depts:depts.map(y=>({dept:y.d.dept,effectif:y.d.effectif,
-            del:this.deleteRow('b2b_client_company_department',y.gi,'ce département'),
+            del:()=>this.deptDelete(y.gi),
             edit:this.editForm('department',y.d,y.gi)})),
           deptEmpty:depts.length===0 };
       }),
@@ -6957,10 +7008,12 @@ class Component extends DCLogic {
           .catch(()=>this.printJob('Réseau indisponible — renvoi non effectué'));
         this.setState({officeClash:null,formKey:null}); },
       officeClashDept:()=>{ const c=S.officeClash; if(!c) return;
-        if(window.BOServer){ const rows=window.BOServer.table('b2b_client_company_department');
-          rows.push({client_id:'VAT:'+String(c.vals.vat||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase(),company:c.existing.name,site:c.vals.address||c.existing.address||'',office:c.existing.name,dept:c.vals.name||'Département',effectif:1,contact:c.vals.email||''});
-          window.BOServer.save('b2b_client_company_department',rows); }
-        this.printJob('✓ Ajouté comme département de « '+c.existing.name+' » (b2b_client_company_department)');
+        // Rattachement à la société EXISTANTE, par son nom : c'est le serveur
+        // qui retrouve le client réel. L'ancien code fabriquait un code
+        // « VAT:BE… » que la table ERP ne peut pas porter.
+        this.deptWrite({company:c.existing.name, dept:(c.vals.name||'Département'),
+          site:(c.vals.address||c.existing.address||''), office:c.existing.name,
+          contact:(c.vals.email||''), effectif:1}, null);
         this.setState({officeClash:null,formKey:null,_rev:(S._rev||0)+1}); },
       openForm:(k)=>this.openForm(k), goDemandes:this.go('demandesB2B'), goParams:this.go('params'),
       addHoraire:this.openForm('horaire'), addFee:this.openForm('fee'), addCoutVersion:this.openForm('coutVersion'),
