@@ -3106,8 +3106,17 @@ class Component extends DCLogic {
       this.printJob(c.tbl==='ws_offices'?'✖ Office retiré — livraison au bureau coupée · le client reste dans le menu Clients':'✖ Supprimé');
     } else this.printJob('✖ Supprimé'); }
   NEW_PERPOINT = 30; NEW_AMPL = 240;
-  tourneeSlots(){ return this.routesMeta().map(t=>({id:t.id,nom:t.name,zone:t.zone,amplitude:t.amplitude||240,decharge:t.decharge||18,trajet:t.trajet||12,used:t.used||0})); }
-  zonesData(){ return (window.BOServer?window.BOServer.table('ws_delivery_zones'):[]).map(z=>({id:z.id,nom:z.name,cp:z.cp||'—',vehicule:z.vehicule||'Standard',franco:z.franco||'—',delai:z.delai||'J+1',service:z.service||15,catchment:z.catchment||''})); }
+  /* Capacité d'une tournée, telle qu'elle est en base. Les 240 minutes
+     d'amplitude, 18 minutes de décharge et 12 minutes de trajet écrites en dur
+     s'affichaient comme des réglages : l'écran Capacité présentait un
+     dimensionnement que personne n'avait paramétré. */
+  tourneeSlots(){ const n=(v)=>(v===''||v==null||isNaN(parseFloat(v)))?null:parseFloat(v);
+    return this.routesMeta().map(t=>({id:t.id,nom:t.name,zone:t.zone,
+      amplitude:n(t.amplitude),decharge:n(t.decharge),trajet:n(t.trajet),used:n(t.used)||0})); }
+  /* Zones de livraison : « Standard », « J+1 » et 15 minutes de service
+     étaient des réglages inventés par la page, indiscernables d'une saisie.
+     Une colonne vide s'affiche « — ». */
+  zonesData(){ return (window.BOServer?window.BOServer.table('ws_delivery_zones'):[]).map(z=>({id:z.id,nom:z.name,cp:z.cp||'—',vehicule:z.vehicule||'—',franco:z.franco||'—',delai:z.delai||'—',service:(z.service===''||z.service==null||isNaN(parseFloat(z.service)))?'—':parseFloat(z.service),catchment:z.catchment||''})); }
   fmtMin(m){ const h=Math.floor(m/60),mm=m%60; return h+' h'+(mm?String(mm).padStart(2,'0'):'00'); }
   hhmm(m){ m=Math.round(m); const h=Math.floor(m/60)%24, mm=(m%60+60)%60; return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'); }
   toMin(s){ const [h,m]=s.split(':').map(Number); return h*60+m; }
@@ -3155,7 +3164,11 @@ class Component extends DCLogic {
         out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,
           ville:e?e.city:(r.office_city||cp||'—'),lat:e?e.lat:null,lng:e?e.lng:null,cp,
           stop:(r.stop!=null?+r.stop:null),
-          zone:(r.tour&&r.tour!=='—')?r.tour:'—',access:parseFloat(r.acc)||10,offices:[],
+          // Temps d'accès : celui de la base, ou RIEN. Les 10 minutes par
+          // défaut entraient dans chaque ETA sans que personne les ait
+          // mesurées, et s'affichaient « 10 min » comme une donnée saisie.
+          zone:(r.tour&&r.tour!=='—')?r.tour:'—',
+          access:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?null:parseFloat(r.acc),offices:[],
           notes:(r.etage&&r.etage!=='—')?('Étage/local : '+r.etage):''});
       }
       const st=out[seen[adr]];
@@ -3166,31 +3179,55 @@ class Component extends DCLogic {
       const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
       if(b&&!st.offices.some(o=>o.name===b)){
         const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
-        st.offices.push({name:b,addr:oAdr||'adresse non renseignée',drop:5});
+        // Temps de dépôt : servi par la base, ou inconnu — pas 5 minutes
+        // décidées par la page et additionnées à chaque arrêt.
+        st.offices.push({name:b,addr:oAdr||'adresse non renseignée',
+          drop:(r.drop===''||r.drop==null||isNaN(parseFloat(r.drop)))?null:parseFloat(r.drop)});
       }
     });
-    out.forEach(st=>{ if(st.lat==null){ st.lat=50.85; st.lng=4.35; st.geoKo=true; } if(!st.offices.length) st.offices=[{name:'— aucun bureau lié —',addr:'',drop:5}]; });
+    // Un site dont le CP n'est pas au référentiel n'est PAS placé au centre de
+    // Bruxelles : il reste sans coordonnées (`geoKo`), les cartes ne le
+    // dessinent pas et les ETA ne le comptent pas. Empilés sur un même point
+    // faux, ces sites donnaient des tracés et des durées crédibles et fausses.
+    out.forEach(st=>{ if(st.lat==null) st.geoKo=true;
+      if(!st.offices.length) st.offices=[{name:'— aucun bureau lié —',addr:'',drop:null}]; });
     return out;
   }
   computeRoute(rid){
     const S=this.state, sites=this.sitesData(), sm={}; sites.forEach(s=>sm[s.id]=s);
     const r=this.routesMeta().find(x=>x.id===rid); const d=this.depot();
     if(!r) return {drops:0,stops:[],warns:[],etaEnd:'—',km:0,amplitude:0};
-    const accOf=id=>S.siteAcc[id]!=null?S.siteAcc[id]:((sm[id]||{}).access||0);
-    const dropOf=(id,i,def)=>S.drop[id+'-'+i]!=null?S.drop[id+'-'+i]:def;
+    // Temps d'accès et de dépôt : la valeur en cours d'édition d'abord, celle
+    // de la base ensuite, RIEN si aucune des deux n'existe. Le `||0` d'avant
+    // faisait passer l'inconnu pour « zéro minute » — l'ETA avançait comme si
+    // l'arrêt était instantané.
+    const accOf=id=>{ const v=S.siteAcc[id]; if(v!=null&&v!=='') return +v;
+      const a=(sm[id]||{}).access; return (a==null)?null:+a; };
+    const dropOf=(id,i,def)=>{ const v=S.drop[id+'-'+i]; if(v!=null&&v!=='') return +v;
+      return (def==null)?null:+def; };
     // `prev` = le point d'où l'on vient. La boutique quand elle est placée,
-    // rien sinon : le premier trajet n'est alors pas comptabilisé, et l'heure
-    // de fin est rendue « — » au lieu d'être avancée d'un trajet imaginaire.
+    // rien sinon : le premier trajet n'est alors pas comptabilisé.
     const depKo=(d.lat==null);
-    const ids=this.assign()[rid]||[]; let t=r.start, prev=depKo?null:{lat:d.lat,lng:d.lng}, drops=0, km=0; const stops=[], warns=[];
+    const ids=this.assign()[rid]||[];
+    /* Une HEURE n'est publiée que si tout ce qui la détermine est connu :
+       position de la boutique, position de chaque site, temps d'accès et temps
+       de dépôt de chaque bureau. Il manque un seul de ces éléments et toutes
+       les heures qui suivent sont fausses — on affiche « — » à la place. Les
+       durées et les distances, elles, restent celles des éléments connus. */
+    const complet=!depKo&&ids.every(id=>{ const s=sm[id]; if(!s) return true;
+      if(s.lat==null) return false;
+      if(accOf(id)==null) return false;
+      return s.offices.every((o,i)=>dropOf(id,i,o.drop)!=null); });
+    const HM=(mn)=>complet?this.hhmm(mn):'—';
+    let t=r.start, prev=depKo?null:{lat:d.lat,lng:d.lng}, drops=0, km=0; const stops=[], warns=[];
     ids.forEach(id=>{ const s=sm[id]; if(!s||s.lat==null) return; const tv=prev?this.travelMin(prev,s):{min:0,km:0}; km+=tv.km; const arrival=t+tv.min; const acc=accOf(id);
-      let ot=arrival+acc; const offs=s.offices.map((o,i)=>{ const dr=dropOf(id,i,o.drop); const eta=ot; ot+=dr; let w=false; if(o.we&&eta>this.toMin(o.we)){ w=true; warns.push(o.name+' livré '+this.hhmm(eta)+' · fenêtre '+o.ws+'–'+o.we); } return {name:o.name,drop:dr,eta:this.hhmm(eta),warn:w}; });
-      const dropSum=s.offices.reduce((a,o,i)=>a+dropOf(id,i,o.drop),0); const siteTotal=acc+dropSum; const departure=arrival+siteTotal;
-      drops+=s.offices.length; stops.push({id,name:s.name,ville:s.ville,zone:s.zone,acc,arrival:this.hhmm(arrival),siteTotal,departure:this.hhmm(departure),travel:tv.min,offices:offs,warn:offs.some(o=>o.warn)});
+      let ot=arrival+(acc||0); const offs=s.offices.map((o,i)=>{ const dr=dropOf(id,i,o.drop); const eta=ot; ot+=(dr||0); let w=false; if(complet&&o.we&&eta>this.toMin(o.we)){ w=true; warns.push(o.name+' livré '+this.hhmm(eta)+' · fenêtre '+o.ws+'–'+o.we); } return {name:o.name,drop:(dr==null?'—':dr),eta:HM(eta),warn:w}; });
+      const dropSum=s.offices.reduce((a,o,i)=>a+(dropOf(id,i,o.drop)||0),0); const siteTotal=(acc||0)+dropSum; const departure=arrival+siteTotal;
+      drops+=s.offices.length; stops.push({id,name:s.name,ville:s.ville,zone:s.zone,acc:(acc==null?'—':acc),arrival:HM(arrival),siteTotal:(complet?siteTotal:null),departure:HM(departure),travel:tv.min,offices:offs,warn:offs.some(o=>o.warn)});
       t=departure; prev=s; });
     let eta=t; if(r.ret&&!depKo&&prev) eta+=this.travelMin(prev,d).min;
-    return {...r,drops,stops,warns,depotKo:depKo,
-      etaEnd:depKo?'—':this.hhmm(eta),km:Math.round(km*10)/10,amplitude:eta-r.start};
+    return {...r,drops,stops,warns,depotKo:depKo,complet,
+      etaEnd:HM(eta),km:Math.round(km*10)/10,amplitude:complet?(eta-r.start):0};
   }
 
   eur(n){ return new Intl.NumberFormat('fr-BE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n); }
@@ -3206,14 +3243,30 @@ class Component extends DCLogic {
       .then(r=>r.ok?r.json():null)
       .then(j=>{ this._rentaPts=(j&&Array.isArray(j.clients))?j.clients.filter(c=>c.type==='office'):[]; this._rentaLoading=false; this.setState(s=>({_rev:(s._rev||0)+1})); })
       .catch(()=>{ this._rentaPts=[]; this._rentaLoading=false; }); }
+  /* Un paramètre de coût, tel qu'il est PARAMÉTRÉ — jamais un ordre de
+     grandeur choisi par la page. 26 €/h de préparation, 0,42 € d'emballage et
+     24 €/h de chargement étaient écrits en dur : toute la rentabilité affichée
+     reposait sur eux, et rien à l'écran ne disait qu'ils étaient supposés. */
+  costParams(){
+    const gp=(k)=>{ const v=window.BOServer?window.BOServer.getParam(k,''):''; const n=parseFloat(v);
+      return (v===''||v==null||isNaN(n))?null:n; };
+    const P={prep:gp('cost_prep'),emb:gp('cost_emb'),charg:gp('cost_charg'),struct:gp('cost_struct')};
+    // Tout ou rien : une cascade de marge à trois composantes sur quatre est
+    // plus trompeuse qu'une cascade absente.
+    return (P.prep==null||P.emb==null||P.charg==null)?null:P;
+  }
   points(){ const rows=this._rentaPts||[]; const geo=(typeof window!=='undefined'&&window.__CPGEO&&window.__CPGEO.idx)||null;
-    const gp=(k,d)=>{ const v=window.BOServer?window.BOServer.getParam(k,d):d; const n=parseFloat(v); return isNaN(n)?d:n; };
-    const P={prep:gp('cost_prep',26),emb:gp('cost_emb',0.42),charg:gp('cost_charg',24)};
+    const P=this.costParams();
     return rows.map((o,i)=>{ const e=geo?geo[String(o.cp||'').trim()]:null;
       const ca=Math.round(+o.ca||0); const colis=Math.max(0,Math.round(+o.n||0));
-      const couts=Math.round(colis*(P.emb+P.prep*10/60+P.charg*4/60));
+      // Coûts : seulement si les paramètres de coût sont RENSEIGNÉS. Sans eux,
+      // `couts` reste null — une marge « CA − 0 » se lisait comme une marge
+      // saine alors qu'aucun coût n'avait été paramétré.
+      const couts=P?Math.round(colis*(P.emb+P.prep*10/60+P.charg*4/60)):null;
       return {id:o.id||('pt'+i),libelle:o.name||'—',ville:o.city||(o.cp||'—'),client:o.name||'—',
-        lat:e?e.lat:50.85,lng:e?e.lng:4.35,ca,couts,colis,kg:0,vol:0,seg:'horeca'}; }); }
+        // Sans CP au référentiel, le point n'a pas de position : il n'est pas
+        // dessiné, plutôt qu'empilé au centre de Bruxelles avec les autres.
+        lat:e?e.lat:null,lng:e?e.lng:null,ca,couts,colis,kg:0,vol:0,seg:'horeca'}; }); }
 
   /* La BOUTIQUE (départ et retour des tournées).
      Sa position vient de son ADRESSE : le serveur géocode address_line + zip
@@ -3356,6 +3409,23 @@ class Component extends DCLogic {
      leurs arrêts, au lieu de partir d'un point inventé. */
   depotCoords(){ const d=this.depot(); return (d.lat!=null&&d.lng!=null)?[[d.lat,d.lng]]:[]; }
 
+  /* Bandeau « sites non placés ». Même raison que pour la boutique : ce qui
+     n'est pas dessiné doit être dit, sinon la carte paraît complète. */
+  sitesBanner(elId, sites){
+    if(typeof document==='undefined') return;
+    const el=document.getElementById(elId); if(!el) return;
+    const id=elId+'-sitewarn'; let b=document.getElementById(id);
+    const ko=(sites||[]).filter(s=>s.lat==null);
+    if(!ko.length){ if(b&&b.parentNode) b.parentNode.removeChild(b); return; }
+    if(!b){ b=document.createElement('div'); b.id=id; b.className='dep-geo-warn';
+      b.style.cssText='position:absolute;z-index:500;bottom:8px;left:50%;transform:translateX(-50%);'
+        +'max-width:92%;padding:6px 11px;border-radius:8px;white-space:normal;text-align:center';
+      try { if(window.getComputedStyle(el).position==='static') el.style.position='relative'; } catch(e){}
+      el.appendChild(b); }
+    b.textContent='⚠ '+ko.length+' site'+(ko.length>1?'s':'')+' sans coordonnées, non affiché'
+      +(ko.length>1?'s':'')+' ni compté'+(ko.length>1?'s':'')+' dans les ETA : '
+      +ko.slice(0,3).map(s=>s.name).join(' · ')+(ko.length>3?' …':'');
+  }
   /* Bandeau « boutique non placée », posé SUR la carte. Sans pin, l'absence ne
      se voit pas : une carte muette se lit comme une carte complète. */
   depotBanner(elId, d){
@@ -3504,9 +3574,13 @@ class Component extends DCLogic {
   // composantes = modèle de coûts sur les paramètres réels (écran Coûts).
   waterfall(){
     const pts=this.points();
-    if(!pts.length) return React.createElement('div',{style:{padding:'34px',textAlign:'center',font:'400 12px var(--font-ui)',color:'var(--color-text-muted)'}},'Pas encore de commandes livrées — la cascade de marge se construira avec les données réelles (ws_orders).');
-    const gp=(k,d)=>{ const v=window.BOServer?window.BOServer.getParam(k,d):d; const n=parseFloat(v); return isNaN(n)?d:n; };
-    const P={prep:gp('cost_prep',26),emb:gp('cost_emb',0.42),charg:gp('cost_charg',24),struct:gp('cost_struct',38)};
+    const vide=(txt)=>React.createElement('div',{style:{padding:'34px',textAlign:'center',font:'400 12px var(--font-ui)',color:'var(--color-text-muted)'}},txt);
+    if(!pts.length) return vide('Pas encore de commandes livrées — la cascade de marge se construira avec les données réelles (ws_orders).');
+    // Sans paramètres de coût saisis, il n'y a pas de cascade : la dessiner
+    // avec des ordres de grandeur écrits en dur revenait à présenter une marge
+    // inventée comme un résultat.
+    const P=this.costParams();
+    if(!P||P.struct==null) return vide('Coûts non paramétrés — renseignez le coût horaire de préparation, l’emballage par colis, le taux de chargement et le coût de structure (écran Rentabilité › Coûts) pour obtenir la cascade de marge.');
     const colis=pts.reduce((a,p)=>a+p.colis,0);
     const caT=pts.reduce((a,p)=>a+p.ca,0);
     const nT=Math.max(1,(window.BOServer?window.BOServer.table('ws_tours'):[]).filter(t=>t.name).length);
@@ -3956,7 +4030,8 @@ class Component extends DCLogic {
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length];
       const isFocus=focus&&norm(focus)===norm(t.name);
       const dim=focus&&!isFocus;
-      const pts=sites.filter(s=>norm(s.zone)===norm(t.name))
+      // Un site sans coordonnées ne peut pas être un point du tracé.
+      const pts=sites.filter(s=>norm(s.zone)===norm(t.name)&&s.lat!=null)
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       if(!pts.length) return;
       // Sans départ connu, le tracé relie ses arrêts — il ne part pas d'un
@@ -3974,8 +4049,11 @@ class Component extends DCLogic {
         L.marker([p.lat,p.lng],{icon}).addTo(g).bindPopup(sitePopup(p,t.name,k+1));
       });
     });
-    sites.filter(s=>!s.zone||s.zone==='—').forEach(p=>
+    sites.filter(s=>(!s.zone||s.zone==='—')&&s.lat!=null).forEach(p=>
       L.circleMarker([p.lat,p.lng],{radius:7,color:'#fff',weight:2,fillColor:'#9a9a9a',fillOpacity:focus?0.3:0.9}).addTo(g).bindPopup(sitePopup(p,null,0)));
+    // Les sites non géolocalisés ne sont pas dessinés : la carte le DIT, au
+    // lieu de les empiler sur un point de repli.
+    this.sitesBanner('map-tournees', sites);
     g.addTo(m); this._routeLayer=g;
     if(focusBounds) m.fitBounds(focusBounds,{padding:[36,36]});
     else if(!this._fitDone){ const all=[...depC,...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
@@ -3994,14 +4072,23 @@ class Component extends DCLogic {
     const depOf={}; (window.BOServer?window.BOServer.table('ws_tour_availability'):[]).forEach(a=>{ if(a.tour&&a.dep) depOf[norm(a.tour)]=a.dep; });
     const sites=this.sitesData(); const out={};
     this.routesMeta().forEach(t=>{ if(!t.name) return; const k=norm(t.name);
-      const pts=sites.filter(s=>norm(s.zone)===k)
+      const pts=sites.filter(s=>norm(s.zone)===k&&s.lat!=null)
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       if(!pts.length) return;
-      const dep=depOf[k]||'08:00'; let cur=this.toMin(dep); let prev=d; const stops={};
-      let nbOff=0;
+      // L'heure de départ vient de ws_tour_availability. Sans elle, la tournée
+      // n'a pas d'ETA : « 08:00 » était une heure choisie par la page, et
+      // toutes les heures d'arrivée en découlaient.
+      const dep=depOf[k]; if(!dep) return;
+      let cur=this.toMin(dep); let prev=d; const stops={};
+      let nbOff=0, manque=false;
       pts.forEach(p=>{ cur+=this.travelMin(prev,p).min; stops[p.id]=this.hhmm(cur);
         const no=p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').length; nbOff+=no;
-        cur+=(p.access||10)+Math.max(0,no-1)*3; prev=p; });
+        // Temps d'accès inconnu : il n'est pas remplacé par 10 minutes. Toutes
+        // les heures suivantes en dépendent, donc la tournée entière perd son
+        // ETA — une heure d'arrivée fausse est pire qu'une heure absente.
+        if(p.access==null){ manque=true; return; }
+        cur+=p.access+Math.max(0,no-1)*3; prev=p; });
+      if(manque) return;
       cur+=this.travelMin(prev,d).min;
       out[k]={dep,fin:this.hhmm(cur),stops,nbSites:pts.length,nbOffices:nbOff};
     });
@@ -4035,7 +4122,7 @@ class Component extends DCLogic {
     }
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length]; const k=norm(t.name);
       const isFocus=focus&&norm(focus)===k; const dim=focus&&!isFocus;
-      const pts=sites.filter(s=>norm(s.zone)===k)
+      const pts=sites.filter(s=>norm(s.zone)===k&&s.lat!=null)
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       if(!pts.length) return;
       const et=etas[k]||{stops:{},dep:'—',fin:'—'};
@@ -4060,6 +4147,7 @@ class Component extends DCLogic {
     (window.BOServer?window.BOServer.table('fr_live_drivers'):[]).forEach(dr=>{
       if(dr.lat&&dr.lng) L.circleMarker([dr.lat,dr.lng],{radius:10,color:'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(g).bindPopup("<b>"+esc(dr.name||dr.nom||'Chauffeur')+"</b><br>"+esc(dr.vehicule||''));
     });
+    this.sitesBanner('map-suivi', sites);
     g.addTo(m); this._suiviLayer=g;
     if(!this._suiviFit){ const all=[...depC,...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
       if(all.length>1){ this._suiviFit=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
@@ -4343,21 +4431,24 @@ class Component extends DCLogic {
     const removeSite=(rid,id)=>this.setState({routeAssign:{...RA,[rid]:(RA[rid]||[]).filter(x=>x!==id)}},()=>this.drawRoute());
     const moveSiteTo=(fromR,id,toR)=>{ const meta=rMeta.find(m=>m.id===toR); if(!meta||!sMap[id]) return; if(routeDrops(toR)+sMap[id].offices.length>meta.max){ this.printJob('⚠ '+meta.name+' pleine : '+routeDrops(toR)+'/'+meta.max+' drops. Retirez un site ou augmentez le plafond.'); return; } this.setState({routeAssign:{...RA,[fromR]:(RA[fromR]||[]).filter(x=>x!==id),[toR]:[...(RA[toR]||[]),id]}},()=>this.drawRoute()); };
     const addToRoute=(id)=>{ const rid=this.curRoute(), meta=rMeta.find(m=>m.id===rid); if(!meta||!sMap[id]) return; if(routeDrops(rid)+sMap[id].offices.length>meta.max){ this.printJob('⚠ '+meta.name+' pleine : '+routeDrops(rid)+'/'+meta.max+' drops.'); return; } this.setState({routeAssign:{...RA,[rid]:[...(RA[rid]||[]),id]}},()=>this.drawRoute()); };
-    const routesView=rMeta.map(m=>{ const c=this.computeRoute(m.id); const over=c.drops>m.max; const sel=this.curRoute()===m.id;
+    // Capacité de la tournée : celle de la base. Absente ⇒ pas de plafond,
+    // donc pas de « surcapacité » annoncée sur une limite que personne n'a fixée.
+    const routesView=rMeta.map(m=>{ const c=this.computeRoute(m.id); const mMax=(m.max==null||m.max===''||isNaN(parseInt(m.max,10)))?null:parseInt(m.max,10);
+      const over=(mMax!=null)&&c.drops>mMax; const sel=this.curRoute()===m.id;
       const others=rMeta.filter(x=>x.id!==m.id);
       const stops=c.stops.map((st,idx)=>({...st,
         open:!!S.siteOpen[st.id],toggle:()=>this.setState(s=>({siteOpen:{...s.siteOpen,[st.id]:!s.siteOpen[st.id]},selSiteId:st.id})),
-        caret:S.siteOpen[st.id]?'▾':'▸',siteTotalTxt:st.siteTotal+' min',
+        caret:S.siteOpen[st.id]?'▾':'▸',siteTotalTxt:(st.siteTotal==null?'—':st.siteTotal+' min'),
         up:()=>moveInRoute(m.id,idx,idx-1),down:()=>moveInRoute(m.id,idx,idx+1),
         upOp:idx===0?'.25':'1',downOp:idx===c.stops.length-1?'.25':'1',
         remove:()=>removeSite(m.id,st.id),gear:()=>this.setState({siteModal:st.id}),
         moves:others.map(o=>({label:o.short,go:()=>moveSiteTo(m.id,st.id,o.id)})),
         rowBg:st.warn?'#fcf6f6':'transparent'}));
-      return {id:m.id,name:m.name,short:m.short,driver:m.driver,start:this.hhmm(m.start),max:m.max,drops:c.drops,etaEnd:c.etaEnd,km:c.km,nbSites:c.stops.length,
+      return {id:m.id,name:m.name,short:m.short,driver:m.driver,start:this.hhmm(m.start),max:(mMax==null?'—':mMax),drops:c.drops,etaEnd:c.etaEnd,km:c.km,nbSites:c.stops.length,
         amplTxt:this.fmtMin(c.amplitude),amplWarn:c.amplitude>480,sel,forfaitTxt:this.eur(m.forfait||0),
         firstDelivery:c.stops.length?c.stops[0].arrival:'—',
         sumStyle:'background:var(--color-surface);border:2px solid '+(sel?'var(--color-primary)':'var(--color-border-tertiary)')+';border-radius:12px;padding:15px 17px;cursor:pointer',
-        dropsColor:(c.drops>m.max?'#4a0a10':(c.drops/m.max>=0.9?'#b3122b':(c.drops/m.max>=0.7?'#d97b29':'var(--color-text)'))),over,
+        dropsColor:(mMax==null?'var(--color-text)':(c.drops>mMax?'#4a0a10':(c.drops/mMax>=0.9?'#b3122b':(c.drops/mMax>=0.7?'#d97b29':'var(--color-text)')))),over,
         warns:c.warns,hasWarn:c.warns.length>0,
         headerStyle:'background:'+(sel?'var(--color-primary)':'var(--color-background-secondary)')+';color:'+(sel?'#fff':'var(--color-text)')+';border-radius:11px 11px 0 0;padding:14px 16px;cursor:pointer',
         etaColor:sel?'#fff':'var(--color-primary)',subColor:sel?'rgba(255,255,255,.8)':'var(--color-text-muted)',
@@ -4409,7 +4500,10 @@ class Component extends DCLogic {
       setTimeout(()=>this.drawRoute(),400);
       this.printJob('✓ Ordre de la tournée « '+tourName+' » mis à jour : '+ordered.map((b,ix)=>(ix+1)+'·'+b.name).join(' → ')); };
     const unassignedSites=tvList.filter(b=>!b.tour).map(b=>{ const armed=armKey===b.key;
-      return {name:b.name,zone:b.adr||'—',nbOffices:b.offices.length,siteTime:(b.acc||10)+' min',
+      // Temps d'accès affiché : celui de la base, ou « — ». « 10 min » se
+      // lisait comme une mesure alors que rien n'était renseigné.
+      return {name:b.name,zone:b.adr||'—',nbOffices:b.offices.length,
+        siteTime:(b.acc==null||b.acc===''||isNaN(parseFloat(b.acc)))?'—':(parseFloat(b.acc)+' min'),
         cardStyle:'border:1.5px '+(armed?'solid var(--color-primary);box-shadow:0 0 0 3px rgba(141,29,44,.08)':'dashed var(--color-border-secondary)')+';border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:12px;min-width:236px;background:'+(armed?'var(--color-background-secondary)':'transparent'),
         addLabel:armed?'⠿ Choisissez une tuile tournée':'+ Ajouter',
         addStyle:armed?'padding:8px 14px;font-size:12px;flex:none;border:none;border-radius:9px;cursor:pointer;background:var(--color-primary);color:#fff;font-weight:600':'',
@@ -4436,7 +4530,9 @@ class Component extends DCLogic {
       const sites=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(t.name))
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       const nbOff=sites.reduce((a,b)=>a+b.offices.length,0);
-      const max=parseInt(t.max,10)||10; const over=nbOff>max;
+      // Capacité max : celle de la tournée en base. Sans elle, il n'y a pas de
+      // surcapacité à annoncer — 10 était un plafond décidé par la page.
+      const maxRaw=parseInt(t.max,10); const max=isNaN(maxRaw)?null:maxRaw; const over=(max!=null)&&nbOff>max;
       const tColors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
       const col=tColors[ti%tColors.length];
       const addable=tvList.filter(b=>!b.tour||tNorm(b.tour)!==tNorm(t.name));
@@ -4453,8 +4549,10 @@ class Component extends DCLogic {
                     :'Réactiver — la tournée redevient proposable',
         toggleOn:tourToggleActive(t),
         drops:String(nbOff),max:String(max),nbSites:String(sites.length),
-        capPill:tvPill(over?'#fbe9eb':(nbOff/max>=0.8?'#fff4e5':'#eaf5ec'),over?'var(--color-primary)':(nbOff/max>=0.8?'#b26a00':'#2d7a3e')),
-        capTxt:nbOff+'/'+max+' bureaux',
+        // Sans capacité en base, il n'y a ni ratio ni alerte : le compteur
+        // affiche « n/— » au lieu de comparer à un plafond supposé.
+        capPill:tvPill(over?'#fbe9eb':((max!=null&&nbOff/max>=0.8)?'#fff4e5':'#eaf5ec'),over?'var(--color-primary)':((max!=null&&nbOff/max>=0.8)?'#b26a00':'#2d7a3e')),
+        capTxt:nbOff+'/'+(max==null?'—':max)+' bureaux',
         overWarn:over,
         tileStyle:'display:flex;flex-direction:column;gap:12px;background:var(--color-surface);border:'+(tvArmOn?'1.5px dashed var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:14px;padding:18px 20px;min-height:190px;cursor:'+(tvArmOn?'copy':'default'),
         dropHere:()=>{ if(!tvArmOn) return; const b=tvBlds[armKey]; if(b) tourSetBld(b,t.name); },
@@ -4780,10 +4878,15 @@ class Component extends DCLogic {
         .map(st=>({id:st.adr,libelle:(st.name&&st.name!=='—')?st.name:st.adr,adr:st.adr+((st.tour&&st.tour!=='—')?(' · '+st.tour):'')})),
     ].map(st=>({...st,onPick:()=>this.setState({valSite:st.id}),
       style:'display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;padding:11px 13px;margin-bottom:8px;border-radius:9px;cursor:pointer;border:1.5px solid '+(S.valSite===st.id?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(S.valSite===st.id?'var(--color-background-secondary)':'transparent')})):[];
-    const tSlots=this.tourneeSlots().map(tt=>({...tt,max:Math.floor(tt.amplitude/(tt.decharge+tt.trajet))}));
+    // Capacité en points = amplitude / (décharge + trajet). Les trois viennent
+    // de la base ; il en manque une et il n'y a PAS de capacité à annoncer.
+    const tSlots=this.tourneeSlots().map(tt=>({...tt,
+      max:(tt.amplitude==null||tt.decharge==null||tt.trajet==null||(tt.decharge+tt.trajet)<=0)
+        ?null:Math.floor(tt.amplitude/(tt.decharge+tt.trajet))}));
+    const slotTxt=(v)=>(v==null?'—':String(v));
     const zones=this.zonesData();
     const valTourneeOpts=[{value:'',label:'— Sélectionner une tournée —'},
-      ...tSlots.map(tt=>{ const full=tt.used>=tt.max; return {value:tt.id,label:tt.nom+' ('+tt.used+'/'+tt.max+')'+(full?' — complète':'')}; }),
+      ...tSlots.map(tt=>{ const full=(tt.max!=null)&&tt.used>=tt.max; return {value:tt.id,label:tt.nom+' ('+tt.used+'/'+slotTxt(tt.max)+')'+(full?' — complète':'')}; }),
       {value:'__new__',label:'＋ Créer une nouvelle tournée'}];
     const zOpt=(ph)=>[{value:'',label:ph},...zones.map(z=>({value:z.id,label:z.nom})),{value:'__new__',label:'＋ Créer une zone'}];
     const valZoneOpts=zOpt('— Zone principale —');
@@ -4791,7 +4894,13 @@ class Component extends DCLogic {
     const isNewT=S.valTournee==='__new__';
     const selT=tSlots.find(tt=>tt.id===S.valTournee);
     let valUsed=0,valMaxSlots=0,valAmpl='',valPerPoint=0,valDecharge=0,valTrajet=0,valFull=false,valHasT=false;
-    if(selT){ valHasT=true; valUsed=selT.used; valMaxSlots=selT.max; valAmpl=this.fmtMin(selT.amplitude); valDecharge=selT.decharge; valTrajet=selT.trajet; valPerPoint=selT.decharge+selT.trajet; valFull=selT.used>=selT.max; }
+    if(selT){ valHasT=true; valUsed=selT.used; valMaxSlots=(selT.max==null?0:selT.max);
+      valAmpl=(selT.amplitude==null?'—':this.fmtMin(selT.amplitude));
+      valDecharge=(selT.decharge==null?'—':selT.decharge); valTrajet=(selT.trajet==null?'—':selT.trajet);
+      valPerPoint=(selT.decharge==null||selT.trajet==null)?'—':(selT.decharge+selT.trajet);
+      // Sans capacité connue, une tournée n'est jamais déclarée « complète » :
+      // on ne bloque pas une affectation sur un plafond que personne n'a fixé.
+      valFull=(selT.max!=null)&&selT.used>=selT.max; }
     else if(isNewT){ valHasT=true; valUsed=0; valMaxSlots=Math.floor(this.NEW_AMPL/this.NEW_PERPOINT); valAmpl=this.fmtMin(this.NEW_AMPL); valDecharge=22; valTrajet=8; valPerPoint=this.NEW_PERPOINT; valFull=false; }
     const valFree=Math.max(0,valMaxSlots-valUsed);
     const isNewZone=S.valZone==='__new__'||S.valZone2==='__new__';
@@ -4908,7 +5017,7 @@ class Component extends DCLogic {
           ];
           if(depts.length>0) items.push({lbl:'Départements',val:depts.length+' départ.',style:chipMini,go:this.go('offices')});
           const sl=tSlots.find(tt=>tt.nom===r.tour);
-          if(sl) items.push({lbl:'Slots utilisés de la tournée',val:sl.used+'/'+sl.max+' slots',style:chipMini+';background:#fbe9eb;color:var(--color-primary)',go:this.go('tournees')});
+          if(sl) items.push({lbl:'Slots utilisés de la tournée',val:sl.used+'/'+slotTxt(sl.max)+' slots',style:chipMini+';background:#fbe9eb;color:var(--color-primary)',go:this.go('tournees')});
           return items.map((it,ix)=>({...it,notLast:ix<items.length-1}));
         })(),
       };
@@ -5073,11 +5182,15 @@ class Component extends DCLogic {
     // Ordre de mise en place : 1· tournées, 2· assignation des SITES aux tournées
     // (déplaçables pour optimiser la charge — les bureaux, eux, se rattachent au
     // site à l'onboarding du bureau). Tuiles tournée = capacité + charge actuelle.
-    const tourAssignTiles=this.tourneeSlots().map(tt=>{ const max=Math.max(1,Math.floor((tt.amplitude||240)/((tt.decharge||18)+(tt.trajet||12))));
+    const tourAssignTiles=this.tourneeSlots().map(tt=>{
+      // Même règle qu'ailleurs : pas de dimensionnement en base, pas de
+      // capacité affichée — 240/18/12 étaient des chiffres de la page.
+      const max=(tt.amplitude==null||tt.decharge==null||tt.trajet==null||(tt.decharge+tt.trajet)<=0)
+        ?null:Math.max(1,Math.floor(tt.amplitude/(tt.decharge+tt.trajet)));
       const sitesOf=siteRowsAll.filter(r=>r.tour===tt.nom);
       const bx=new Set(sitesOf.map(r=>r.bureau||r.office).filter(v=>v&&v!=='—'));
       const canDrop=S.dndSite!=null;
-      return {nom:tt.nom,cap:(tt.used||0)+' / '+max,charge:sitesOf.length+' site(s) · '+bx.size+' bureau(x)',canDrop,
+      return {nom:tt.nom,cap:(tt.used||0)+' / '+(max==null?'—':max),charge:sitesOf.length+' site(s) · '+bx.size+' bureau(x)',canDrop,
         style:'flex:none;text-align:left;border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';background:var(--color-surface);color:var(--color-text);border-radius:10px;padding:8px 14px;cursor:'+(canDrop?'copy':'default'),
         drop:()=>{ const idx=this.state.dndSite; if(idx==null) return; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites');
           // Déplacer le BÂTIMENT : toutes les lignes de la même adresse suivent.

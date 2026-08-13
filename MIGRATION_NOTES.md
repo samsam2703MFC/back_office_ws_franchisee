@@ -92,9 +92,29 @@ L'écran « Livraison du jour » dit pourquoi il n'affiche pas de tournée au li
 d'annoncer « aucune tournée assignée ». La vue initiale des cartes se centre
 sur la boutique quand sa position est connue.
 
-Restent deux replis de même nature, hors périmètre `shops` : les **sites de
-livraison** sans coordonnées (`sitesData`, marqués `geoKo`) et les **points de
-rentabilité** (`rentaPoints`) retombent encore sur `50.85 / 4.35`.
+#### Le même principe, partout ailleurs
+
+La règle vaut pour toute la console, pas seulement pour la boutique : **une
+valeur que le serveur n'a pas servie ne se remplace pas**. Ce qui a été retiré
+au-delà de `shops` —
+
+| valeur | repli retiré | ce qu'il produisait |
+| --- | --- | --- |
+| position d'un **site de livraison** | `50.85 / 4.35` | des sites empilés au centre de Bruxelles, tracés et durées crédibles |
+| position d'un **point de rentabilité** | `50.85 / 4.35` | même chose sur la carte de marge |
+| **temps d'accès** d'un site | `10 min` | 10 minutes dans chaque ETA, affichées « 10 min » comme une mesure |
+| **temps de dépôt** d'un bureau | `5 min` | idem, additionné à chaque arrêt |
+| **heure de départ** d'une tournée | `08:00` | toutes les heures d'arrivée en découlaient |
+| **capacité max** d'une tournée | `10` | une « surcapacité » annoncée sur un plafond que personne n'a fixé |
+| **amplitude / décharge / trajet** | `240 / 18 / 12` | un dimensionnement de tournée jamais paramétré |
+| **coûts** (prép., emballage, chargement, structure) | `26 / 0,42 / 24 / 38` | toute la rentabilité affichée reposait dessus |
+| **véhicule / délai / service** d'une zone | `Standard / J+1 / 15` | des réglages de zone inventés |
+
+Conséquences assumées : une **heure** n'est publiée que si tout ce qui la
+détermine est connu (position boutique, position du site, temps d'accès, temps
+de dépôt, heure de départ) — sinon « — » ; la **cascade de marge** est
+remplacée par l'explication tant que les coûts ne sont pas paramétrés ; un site
+sans coordonnées n'est pas dessiné et un bandeau le compte sur la carte.
 
 **Écriture** — `POST /franchisee/shop-update?shop=<id>`
 
