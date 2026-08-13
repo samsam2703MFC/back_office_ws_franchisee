@@ -2210,6 +2210,9 @@
             <sc-if value="{{ f.isTime }}" hint-placeholder-val="{{ false }}">
               <input type="time" value="{{ f.value }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
             </sc-if>
+            <sc-if value="{{ f.isDate }}" hint-placeholder-val="{{ false }}">
+              <input type="date" value="{{ f.value }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
+            </sc-if>
             <sc-if value="{{ f.isDays }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <sc-for list="{{ f.dayOpts }}" as="d" hint-placeholder-count="7"><button type="button" onClick="{{ d.pick }}" style="{{ d.style }}">{{ d.lbl }}</button></sc-for>
@@ -3215,13 +3218,20 @@ class Component extends DCLogic {
           {k:'carb',label:'Carburant / km (€)',type:'number',ph:'ex. 1.78'},
           {k:'struct',label:'Coût structure / tournée (€)',type:'number',ph:'ex. 38'},
         ]},
-      except:{ title:'Jour exceptionnel boutique', table:'ws_shop_exceptions', tbl:'ws_shop_exceptions', save:'Ajouter la date',
+      /* JOUR EXCEPTIONNEL — les dates se saisissaient en texte « JJ/MM/AAAA »
+         et partaient dans l'overlay : une fermeture s'affichait dans la console
+         et la boutique restait ouverte au checkout. Sélecteurs de date, et un
+         SEUL motif : « Libellé » et « Détail horaire » sortaient tous deux de
+         la colonne `reason` — deux champs pour la même donnée, dont un seul
+         survivait. */
+      except:{ title:'Jour exceptionnel boutique', table:'ws_shop_exceptions', save:'Enregistrer la date',
         fields:[
-          {k:'date',label:'Date de début',type:'text',ph:'JJ/MM/AAAA',section:'Période'},
-          {k:'dateFin',label:'Date de fin (optionnel — plage)',type:'text',ph:'JJ/MM/AAAA · vide = un seul jour',section:'Période'},
-          {k:'label',label:'Libellé',type:'select',options:sel(['Jour férié','Fête nationale','Noël','Réveillon de Noël','Nouvel An','Saint-Sylvestre','Congés annuels','Inventaire','Fermeture technique','Événement réseau']),def:'Jour férié'},
+          {k:'date',label:'Date',type:'date',half:true,section:'Période'},
+          {k:'dateFin',label:'Jusqu’au (facultatif)',type:'date',half:true,
+           info:'Vide = un seul jour. Sinon, une ligne est créée par jour de la plage.'},
           {k:'type',label:'Type',type:'select',options:sel(['Fermé','Horaire spécial']),def:'Fermé'},
-          {k:'detail',label:'Détail horaire',type:'text',ph:'ex. 07:00 – 15:00 · pas de livraison PM'},
+          {k:'motif',label:'Motif',type:'text',ph:'ex. Jour férié · Congés annuels · Inventaire',
+           info:'Il explique la fermeture à qui relit le calendrier plus tard.'},
         ]},
       site:{ title:'Site (building)', table:'ws_office_delivery_sites', tbl:'ws_office_delivery_sites', save:'Créer le site',
         fields:[
@@ -3291,12 +3301,18 @@ class Component extends DCLogic {
           {k:'remise',label:'Remise globale',type:'text',ph:'ex. 8 %',half:true},
           {k:'franco',label:'Franco de port',type:'text',ph:'ex. 250 €',half:true},
         ]},
-      creneau:{ title:'Nouveau créneau', table:'ws_slots', tbl:'ws_slots', save:'Créer le créneau',
+      /* CRÉNEAU — la table ne porte que le libellé et l'ordre d'affichage.
+         « Plage horaire » recopiait le libellé et « Capacité max » était figée
+         à 0 côté serveur : deux champs qu'on pouvait remplir sans que rien ne
+         les enregistre. La capacité a son propre écran (fr_capacity) ; elle
+         est retirée d'ici plutôt que simulée. */
+      creneau:{ title:'Créneau', table:'ws_slots', save:'Enregistrer le créneau',
         fields:[
           {k:'mode',label:'Mode',type:'select',options:sel(['Livraison','Retrait']),def:'Livraison'},
-          {k:'libelle',label:'Libellé',type:'text',ph:'ex. Matin — dépôt avant midi'},
-          {k:'plage',label:'Plage horaire',type:'text',ph:'ex. 08:00 – 12:00'},
-          {k:'cap',label:'Capacité max',type:'number',def:40},
+          {k:'libelle',label:'Libellé',type:'text',ph:'ex. Matin · 08:00 – 12:00',
+           info:'C’est le texte que le client lit au moment de choisir son créneau.'},
+          {k:'ordre',label:'Ordre d’affichage',type:'number',def:0,
+           info:'Du plus petit au plus grand. À égalité, l’ordre alphabétique s’applique.'},
         ]},
       bureauParam:{ title:'Paramètres livraison — bureau', table:'ws_office_delivery_settings', tbl:'ws_office_delivery_settings', save:'Enregistrer',
         fields:[
@@ -3442,6 +3458,11 @@ class Component extends DCLogic {
        ws_bo_store — une table que le checkout ne lit pas. La console affichait
        le cut-off saisi, le webshop appliquait celui de la tournée. */
     if(S.formKey==='bureauParam'){ this.setState({formKey:null}); this.bpWrite(v); return; }
+    // Créneau et jour exceptionnel : une ligne, une route (voir slotWrite/excWrite).
+    if(S.formKey==='creneau'){ this.setState({formKey:null});
+      this.slotWrite({id:(S.formRow&&S.formRow.id)||0,mode:v.mode,libelle:v.libelle,ordre:v.ordre}); return; }
+    if(S.formKey==='except'){ this.setState({formKey:null});
+      this.excWrite({id:(S.formRow&&S.formRow.id)||0,date:v.date,dateFin:v.dateFin,type:v.type,motif:v.motif}); return; }
     // Règle calendrier : une ligne, une route (jours ouverts · heure limite · délai).
     if(S.formKey==='calRule'){ this.setState({formKey:null});
       this.calWrite({id:(S.formRow&&S.formRow.id)||0,mode:v.mode,jours:v.jours||[],cut:v.cut,lead:v.lead}); return; }
@@ -3551,6 +3572,34 @@ class Component extends DCLogic {
       .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('ws_office_emails',a);
         this.setState(s=>({_rev:(s._rev||0)+1})); })
       .catch(()=>{});
+  }
+  /* CRÉNEAU — écriture d'UNE ligne. Un créneau créé dans l'overlay
+     s'affichait dans la console et n'était jamais proposé au client. */
+  slotWrite(v){ this.routeWrite('slot',v,'Créneau',
+    v.delete?'✔ Créneau supprimé':('✔ Créneau enregistré — '+(v.libelle||'')),
+    'ws-slots','ws_slots'); }
+  /* JOUR EXCEPTIONNEL — une ligne, ou une par jour si une plage est donnée. */
+  excWrite(v){ this.routeWrite('shop-exception',v,'Date',
+    v.delete?'✔ Date supprimée':null,'ws-shop-exceptions','ws_shop_exceptions',
+    j=>'✔ '+(j&&j.n>1?(j.n+' dates enregistrées'):'Date enregistrée')); }
+  /* Le motif commun à toutes ces écritures : POST d'UNE ligne sur sa route,
+     message de succès ou motif de refus, puis relecture pour que la liste
+     locale reprenne les ids et les valeurs servies. */
+  routeWrite(route,v,quoi,okMsg,getPath,table,okFn){
+    const fr=window.__FR||{};
+    if(!fr.base){ this.printJob('⚠ '+quoi+' non enregistré — API non configurée'); return; }
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/'+route+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify(v)})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.printJob(okMsg||(okFn?okFn(j):'✔ Enregistré'));
+          const fr2=window.__FR||{}; const qs2=fr2.shop?('?shop='+encodeURIComponent(fr2.shop)):'';
+          fetch(fr2.base+'/franchisee/'+getPath+qs2,{headers:FRH(),credentials:'omit'})
+            .then(r=>r.ok?r.json():null)
+            .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh(table,a);
+              this.setState(s=>({_rev:(s._rev||0)+1})); }).catch(()=>{}); }
+        else this.printJob('⚠ '+quoi+' non enregistré — '+((j&&j.error)||'refus du serveur')); })
+      .catch(e=>this.printJob('⚠ '+quoi+' non enregistré — '+((e&&e.message)||'réseau indisponible')));
   }
   /* RÈGLE CALENDRIER — écriture d'UNE ligne.
      Jours ouverts, heure limite et délai décident si une commande est
@@ -5968,14 +6017,17 @@ class Component extends DCLogic {
     const crenOpen=S.crenOpen||{};
     const parseRange=(s)=>{ const mm=String(s||'').match(/(\d{1,2}:\d{2})\D+(\d{1,2}:\d{2})/); return mm?[mm[1],mm[2]]:null; };
     const creneaux=SRV('ws_slots').map((c,i)=>{
-      const rg=parseRange(c.plage); let subs=[];
+      /* La plage se lit dans le LIBELLÉ : c'est là qu'elle est écrite
+         (« Matin · 08:00 – 12:00 »). Le champ `plage` d'avant recopiait ce
+         même libellé côté serveur — une colonne qui n'existe pas. */
+      const rg=parseRange(c.libelle); let subs=[];
       if(rg){ const a=toMinS(rg[0]),b=toMinS(rg[1]); for(let m=a;m+slotStep<=b && subs.length<48;m+=slotStep){ const key='cren_'+i+'_'+hhmmS(m).replace(':','')+'_'+slotStep; const active=S.flags[key]!==undefined?S.flags[key]:true;
         subs.push({label:hhmmS(m)+' – '+hhmmS(m+slotStep),active,
           style:'display:inline-flex;align-items:center;gap:7px;cursor:pointer;border-radius:9px;padding:7px 11px;font:600 11px var(--font-ui);border:.5px solid '+(active?'rgba(141,29,44,.35)':'var(--color-border-tertiary)')+';background:'+(active?'rgba(141,29,44,.08)':'var(--color-background-secondary)')+';color:'+(active?'var(--color-primary)':'var(--color-text-muted)'),
           dot:'width:6px;height:6px;border-radius:50%;flex:none;background:'+(active?'var(--color-primary)':'var(--color-border-secondary)'),
           toggle:()=>this.setState(s=>({flags:{...s.flags,[key]:!(s.flags[key]!==undefined?s.flags[key]:true)}}))}); } }
       const open=!!crenOpen[i];
-      return {...c,edit:this.editForm('creneau',c,i),del:this.deleteRow('ws_slots',i,'ce créneau'),pill:pill2(c.mode==='Livraison'?'var(--color-background-secondary)':'#eef3fb',c.mode==='Livraison'?'var(--color-primary)':'#2a5a9e'),
+      return {...c,edit:this.editForm('creneau',c,i),del:(()=>this.slotWrite({delete:true,id:c.id})),pill:pill2(c.mode==='Livraison'?'var(--color-background-secondary)':'#eef3fb',c.mode==='Livraison'?'var(--color-primary)':'#2a5a9e'),
         subs, hasSubs:subs.length>0, subActive:subs.filter(x=>x.active).length, subTotal:subs.length, open, caret:open?'▾':'▸',
         toggleOpen:()=>this.setState(s=>({crenOpen:{...s.crenOpen,[i]:!(s.crenOpen&&s.crenOpen[i])}}))};
     });
@@ -6121,7 +6173,7 @@ class Component extends DCLogic {
       this.setState({shopEdit:false,shopDraft:null});
       this.shopWrite(vals); };
 
-    const joursExcept=SRV('ws_shop_exceptions').map((j,i)=>{ const dm=splitDate(j.date); const fermé=j.type==='Fermé'; const bg=fermé?'#fbe9eb':'#fff4e5'; const c=fermé?'var(--color-primary)':'#b26a00'; const hasRange=!!(j.dateFin&&String(j.dateFin).trim()); return {...j,d:dm.d,m:dm.m,hasRange,rangeTxt:hasRange?('du '+j.date+' au '+j.dateFin):'',edit:this.editForm('except',j,i),del:this.deleteRow('ws_shop_exceptions',i),pill:pill2(bg,c)}; });
+    const joursExcept=SRV('ws_shop_exceptions').map((j,i)=>{ const dm=splitDate(j.date); const fermé=j.type==='Fermé'; const bg=fermé?'#fbe9eb':'#fff4e5'; const c=fermé?'var(--color-primary)':'#b26a00'; const hasRange=!!(j.dateFin&&String(j.dateFin).trim()); return {...j,d:dm.d,m:dm.m,hasRange,rangeTxt:hasRange?('du '+j.date+' au '+j.dateFin):'',edit:this.editForm('except',{...j,date:j.vIso||'',dateFin:'',motif:j.vMotif||''},i),del:(()=>this.excWrite({delete:true,id:j.id})),del:this.deleteRow('ws_shop_exceptions',i),pill:pill2(bg,c)}; });
     const addExcept=this.openForm('except');
 
     // ===== modale formulaire générique =====
@@ -6173,6 +6225,9 @@ class Component extends DCLogic {
         // <input type="time"> : le navigateur impose le format et offre son
         // sélecteur. Plus de « 17h » ni de « 5pm » enregistrés puis ignorés.
         isTime:f.type==='time',
+        // <input type="date"> : même raison que time — « JJ/MM/AAAA » saisi
+        // à la main produisait des dates que le serveur ne relisait pas.
+        isDate:f.type==='date',
         /* JOURS : sept pastilles cliquables, valeur = liste ISO (1 = lundi),
            celle que le serveur compare à date('N'). Le champ texte qu'elles
            remplacent (« ex. Lun–Ven ») n'était relu par personne. */
@@ -6185,7 +6240,7 @@ class Component extends DCLogic {
               const n=c.includes(iso)?c.filter(x=>x!==iso):[...c,iso].sort((a,b)=>a-b);
               return {formVals:{...s.formVals,[f.k]:n}}; })};
         }):[],
-        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&f.type!=='days'&&!isToggle&&!f.readonly,
+        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&f.type!=='date'&&f.type!=='days'&&!isToggle&&!f.readonly,
         // Un champ en lecture seule qui RENVOIE vers l'écran où il se modifie.
         hasLien:!!f.lien, lienTxt:'Modifier la fiche du bureau',
         lienGo:f.lien?(()=>{ const S2=this.state, row=S2.formRow||{};
