@@ -206,7 +206,11 @@ jobs:
           # Marqueurs : chacun n'apparaît que si le déploiement porte bien la
           # version correspondante. Absent ⇒ le serveur n'a pas le dernier code ;
           # présent alors que l'écran manque à l'écran ⇒ cache du navigateur.
-          for probe in "Avis clients:écran Avis" "REVIEWS_PATH:appel des avis" "langList:sélecteur de langue" "searchDefs:recherche du menu" "assign():constructeur de tournées"; do
+          for probe in "Avis clients:écran Avis" "REVIEWS_PATH:appel des avis" "langList:sélecteur de langue" \
+                       "searchDefs:recherche du menu" "assign():constructeur de tournées" \
+                       "Onboarding bureau B2B:wizard « nouveau bureau B2B »" \
+                       "obManqueA:validation étape par étape du wizard" \
+                       "office-invite:lien d'invitation sur la fiche bureau"; do
             needle=${probe%%:*}; label=${probe#*:}
             if printf '%s' "$HTML" | grep -qF -- "$needle"; then echo "  présent  $label"
             else echo "  ABSENT   $label"; fi
