@@ -109,15 +109,25 @@
       </sc-for>
       </sc-if>
     </nav>
-    <div style="border-top:.5px solid var(--color-border-tertiary);padding:8px 12px;display:flex;align-items:center;gap:8px">
-      <div style="position:relative;flex:none">
-        <button onClick="{{ openProfile }}" title="Profil · paramètres site" style="width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 11px var(--font-ui);border:none;cursor:pointer">{{ meInit }}</button>
-        <span title="Alertes" style="position:absolute;top:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--color-primary);border:2px solid var(--color-surface)"></span>
+    <div style="border-top:.5px solid var(--color-border-tertiary);padding:8px 12px;display:flex;flex-direction:column;gap:7px">
+      <!-- La boutique de la portée (?shop=<id>) : TOUT l'écran en dépend —
+           adresse de départ, clients, tournées, bureaux, facturation. Elle est
+           donc nommée ET identifiée sur chaque page, et sa rangée est à elle :
+           partagée avec les cinq langues, `flex:1` la réduisait à néant. -->
+      <div style="display:flex;align-items:center;gap:8px" title="{{ meScopeTitle }}">
+        <div style="position:relative;flex:none">
+          <button onClick="{{ openProfile }}" title="Profil · paramètres site" style="width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 11px var(--font-ui);border:none;cursor:pointer">{{ meInit }}</button>
+          <span title="Alertes" style="position:absolute;top:-2px;right:-2px;width:11px;height:11px;border-radius:50%;background:var(--color-primary);border:2px solid var(--color-surface)"></span>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font:600 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ meName }}</div>
+          <div style="{{ meSubStyle }}">{{ meSub }}</div>
+        </div>
       </div>
-      <div style="flex:1;min-width:0"></div>
+      <div style="display:flex;align-items:center;gap:8px">
       <!-- Sélecteur de langue : les traductions existaient mais n'étaient
            atteignables par personne — state.lang ne quittait jamais FR. -->
-      <div style="display:flex;flex-wrap:wrap;gap:2px;flex:none">
+      <div style="display:flex;flex-wrap:wrap;gap:2px;flex:1;min-width:0">
         <sc-for list="{{ langList }}" as="l" hint-placeholder-count="5">
           <button onClick="{{ l.pick }}" style="{{ l.style }}">{{ l.code }}</button>
         </sc-for>
@@ -140,6 +150,7 @@
           </sc-if>
         </div>
       </sc-if>
+      </div>
     </div>
   </aside>
 
@@ -2519,10 +2530,17 @@
     <div onClick="{{ stop }}" style="background:var(--color-surface);border-radius:16px;width:560px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 70px rgba(0,0,0,.32);overflow:hidden">
       <div style="padding:22px 26px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:14px">
         <span style="width:46px;height:46px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px var(--font-ui);flex:none">F</span>
-        <div style="flex:1"><div class="t-page-title" style="font-size:18px">Compte franchisé</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ shopEnseigne }} · console franchisé</div></div>
+        <div style="flex:1"><div class="t-page-title" style="font-size:18px">Compte franchisé</div><div style="{{ meSubStyle }}">{{ shopEnseigne }} · {{ meSub }}</div></div>
         <button onClick="{{ closeProfile }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:24px;line-height:1;padding:0">×</button>
       </div>
       <div style="padding:18px 26px;overflow-y:auto;flex:1">
+        <!-- Portée absente : tous les écrans sont vides, et on dit pourquoi. -->
+        <sc-if value="{{ meNoScope }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--st-bad-bg);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px;margin-bottom:16px">
+            <div style="font:600 12.5px var(--font-ui);color:var(--st-bad);margin-bottom:3px">Aucune boutique en portée</div>
+            <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ meScopeWhy }}</div>
+          </div>
+        </sc-if>
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:12px">
           <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary)">Coordonnées &amp; horaires · ws_shops</div>
           <sc-if value="{{ shopViewing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ shopEnter }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Modifier</button></sc-if>
@@ -3178,7 +3196,18 @@ class Component extends DCLogic {
        inconnu → repli Bruxelles-centre : signalé.
      `precis` sert au libellé de l'alerte, `geoOk` reste le drapeau lu par les
      cartes. */
-  depot(){ const si=(typeof window!=='undefined'&&window.__SHOPINFO)||null;
+  /* Identité de la boutique de la PORTÉE — une seule source, disponible dès
+     le boot : GET /franchisee/me?shop=<id> la résout et la dépose dans
+     window.__SHOPINFO (nom, ville, CP, adresse, position). Tout ce qui nomme
+     la boutique à l'écran passe par ici ; /franchisee/geo-clients ne sert plus
+     que de second choix, car il n'est chargé que sur l'écran Analyse
+     géographique — le nav bar en dépendait et restait donc anonyme partout
+     ailleurs. */
+  shopInfo(){ return (typeof window!=='undefined'&&window.__SHOPINFO)||null; }
+  /* L'id de la portée, tel que la console l'envoie à CHAQUE appel (?shop=). */
+  shopScopeId(){ try { return String(((window.__FR||{}).shop)||''); } catch(e){ return ''; } }
+
+  depot(){ const si=this.shopInfo();
     const nm=(si&&si.name)||(window.BOServer?window.BOServer.getParam('shop.name',''):'')||'Ma boutique';
     const adr=(si&&si.address)||'';
     // Motif d'échec, tel que le serveur l'a diagnostiqué. Une carte qui dit
@@ -3401,15 +3430,9 @@ class Component extends DCLogic {
     for(const cp of cps.map(String)){ if(cur.includes(cp)){ deja++; continue; } const k=this.zfLocalConflict(cp); if(k){ refus.push(cp+' → '+k.name); continue; } cur.push(cp); added++; }
     this.setState(s=>({formVals:{...s.formVals,cp:cur.join(' · ')}}));
     if(label||refus.length) this.printJob((added?'✔ '+(label?label+' : ':'')+added+' CP ajoutés':'')+(refus.length?' · ⚠ refusés : '+refus.slice(0,3).join(' · ')+(refus.length>3?'…':''):'')+(deja?' · '+deja+' déjà présents':'')); }
-  // Boutique + clients géolocalisés : une seule source (/franchisee/geo-clients)
-  // pour les trois écrans à carte. Sans réponse, il n'y a rien à dessiner.
-  geoDataEnsure(){
-    const fr=(typeof window!=='undefined'&&window.__FR)||{};
-    if(this._geoAData || this._geoADataLoading || !fr.base) return;
-    this._geoADataLoading=true;
-    fetch(fr.base+'/franchisee/geo-clients'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:fr.token?{'X-Admin-Token':fr.token}:{},credentials:'omit'})
-      .then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.clients)){ this._geoAData=d; this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{});
-  }
+  // geoDataEnsure() a été retiré : défini, jamais appelé, il dupliquait le
+  // fetch de geoAEnsure(). L'identité de la boutique vient désormais de
+  // shopInfo() (/franchisee/me, au boot) — plus rien n'attend geo-clients.
   geoAEnsure(){ if(this.state.screen!=='geoAnalyse') return;
     this.zfGeoEnsure();
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
@@ -3932,6 +3955,9 @@ class Component extends DCLogic {
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
     if(!fr.base||!fr.token){ this.setState({tkErr:'Réservé à l\u2019administrateur (jeton ERP)'}); return; }
     const shop=parseInt(fr.shop||0,10);
+    // Même garde qu'à la génération : sans portée, la révocation partait avec
+    // shopId:0 et ne révoquait rien — en annonçant l'inverse à l'écran.
+    if(!shop){ this.setState({tkErr:'Boutique inconnue : ouvrez le back-office avec ?shop=<id>'}); return; }
     fetch(fr.base+'/franchisee/device-token',{method:'DELETE',
       headers:{'Content-Type':'application/json','X-Admin-Token':fr.token},
       body:JSON.stringify({shopId:shop})})
@@ -4372,8 +4398,13 @@ class Component extends DCLogic {
 
     // CLIENTS
     const clientsData=SRV('fr_clients');
+    // `points` vient du serveur et peut manquer sur une ligne. Sans garde, le
+    // rendu ENTIER tombait (« Cannot read properties of undefined ») : plus de
+    // nav bar, plus d'écran — la signature de l'incident nº 1. Un client sans
+    // point de livraison en affiche zéro, il n'efface pas la console. Le reste
+    // du fichier garde déjà cette table ainsi (`(sc.points||[])`).
     const clients=clientsData.map((c,i)=>({
-      raison:c.raison,code:c.code,segment:c.seg,nbPoints:c.points.length,
+      raison:c.raison,code:c.code,segment:c.seg,nbPoints:(c.points||[]).length,
       encours:this.eur(c.encours),plafond:this.eur(c.plafond),
       encoursColor:c.encours>c.plafond?'var(--color-primary)':'var(--color-text)',
       statut:c.statut,statutStyle:this.pill(c.statut==='actif'?'#eaf5ec':c.statut==='suspendu'?'#fbe9eb':'var(--color-background-secondary)',c.statut==='actif'?'#2d7a3e':c.statut==='suspendu'?'var(--color-primary)':'var(--color-text-muted)'),
@@ -4950,7 +4981,13 @@ class Component extends DCLogic {
     // Le BO lit ET écrit directement la table lue par le webshop (jours, heures,
     // durée créneau, cut-off, lead). Fini le ws_param parallèle déconnecté.
     const DOW_LBL=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']; // index 0..6 -> ISO 1..7
-    const avaLoaded=(SRV('fr_shop_availability')[0])||{};
+    // La ligne de MA boutique — pas « la première servie ». Si la réponse en
+    // contient plusieurs (portée réseau, ou route qui ignore ?shop=), [0]
+    // faisait éditer les créneaux d'une AUTRE boutique sans rien signaler.
+    const avaScope=this.shopScopeId();
+    const avaRows=SRV('fr_shop_availability');
+    const avaLoaded=(avaRows.find(r=>String(r.shop_id==null?'':r.shop_id)===avaScope)
+      ||(avaRows.length===1?avaRows[0]:null))||{};
     const avaDraft=S.avaDraft||{};
     const ava={...avaLoaded,...avaDraft};
     const avaDirty=!!S.avaDirty;
@@ -4963,7 +5000,9 @@ class Component extends DCLogic {
     const avaCollectDays=[1,2,3,4,5,6,7].map(iso=>avaDayBtn('collect',iso,'#8D1D2C'));
     const avaDeliveryDays=[1,2,3,4,5,6,7].map(iso=>avaDayBtn('delivery',iso,APRICOT));
     const avaSave=()=>{ const fr=window.__FR||{}; if(!fr.base){ this.printJob('API indisponible'); return; }
-      const payload={ shop_id:ava.shop_id,
+      // Sans ligne existante (boutique jamais paramétrée), ava.shop_id est
+      // absent : on envoie l'id de la portée plutôt qu'un corps sans boutique.
+      const payload={ shop_id:(ava.shop_id!=null?ava.shop_id:(avaScope?parseInt(avaScope,10):undefined)),
         collect_enabled:1, delivery_enabled:1,
         collect_open_days:Array.isArray(ava.collect_open_days)?ava.collect_open_days:[],
         delivery_open_days:Array.isArray(ava.delivery_open_days)?ava.delivery_open_days:[],
@@ -4986,7 +5025,14 @@ class Component extends DCLogic {
     // Coordonnées boutique — RÉELLES : paramètres persistés (ws_param via
     // setParam). Plus d'enseigne/adresse de démonstration.
     const gpTxt=(k,d)=>{ const v=window.BOServer?window.BOServer.getParam(k,d):d; return (v===undefined||v===null||v==='')?d:String(v); };
-    const shopDefaults={enseigne:gpTxt('shop.name','—'),adresse:gpTxt('shop.address','—'),open:gpTxt('shop.open','07:00'),close:gpTxt('shop.close','18:30')};
+    // À défaut de paramètre saisi, l'enseigne et l'adresse sont celles que le
+    // serveur donne pour la boutique de la portée (ws_shops via
+    // /franchisee/me) — c'est aussi l'adresse d'où partent les tournées. La
+    // fiche affichait « — » alors que la carte connaissait l'adresse.
+    const shopSI=this.shopInfo();
+    const shopDefaults={enseigne:gpTxt('shop.name',(shopSI&&shopSI.name)||'—'),
+      adresse:gpTxt('shop.address',(shopSI&&shopSI.address)||'—'),
+      open:gpTxt('shop.open','07:00'),close:gpTxt('shop.close','18:30')};
     const shopValOf=(k)=>S.flags['shop_'+k]!==undefined?S.flags['shop_'+k]:shopDefaults[k];
     const shopEditing=!!S.shopEdit;
     const shopDraft0=S.shopDraft||{};
@@ -5794,12 +5840,25 @@ class Component extends DCLogic {
         toggle:this.toggleParam(p.cle), onDraft:this.setParamDraft(p.cle), save:this.saveParam(p.cle) };
     });
     const sm=this.srcMeta(screen);
-    // L'identité affichée est celle de la boutique de la portée
-    // (/franchisee/geo-clients). Inconnue ⇒ « — », jamais un nom inventé.
-    const meShop=(this._geoAData&&Array.isArray(this._geoAData.shops))?this._geoAData.shops[0]:null;
+    // L'identité affichée est celle de la boutique de la portée : /franchisee/me
+    // (résolu au boot, donc disponible sur TOUS les écrans), puis geo-clients
+    // en second choix. Inconnue ⇒ « — », jamais un nom inventé.
+    const meSI=this.shopInfo();
+    const meGeo=(this._geoAData&&Array.isArray(this._geoAData.shops))?this._geoAData.shops[0]:null;
+    const meShop=meSI||meGeo;
     const meName=(meShop&&(meShop.name||meShop.nom))||'—';
     const meInit=meName==='—'?'—':meName.replace(/[^A-Za-zÀ-ÿ ]/g,' ').trim().split(/\s+/).map(w=>w.charAt(0)).join('').slice(0,2).toUpperCase();
-    const meSub=[(window.__FR&&window.__FR.shop)?('boutique '+window.__FR.shop):'', 'Console franchisé'].filter(Boolean).join(' · ');
+    // Toute la console est relative à cet id : il est ÉCRIT, pas supposé.
+    const meScopeId=this.shopScopeId();
+    const meNoScope=!meScopeId;
+    const meSub=meNoScope?'Aucune boutique — console vide':('boutique #'+meScopeId+' · Console franchisé');
+    const meSubStyle='font:400 10px var(--font-ui);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:'+(meNoScope?'var(--color-primary)':'var(--color-text-muted)');
+    // Sans portée, aucun écran ne peut rien montrer : la raison est affichée,
+    // pas devinée. Elle vient du boot (?shop= absent, non numérique, purgé, ou
+    // /franchisee/me en échec).
+    const meScopeWhy=String((typeof window!=='undefined'&&window.__SHOPREASON)||'')
+      ||'Aucune boutique sélectionnée : ouvrez la console avec ?shop=<id> (la liste des id est servie par /shops).';
+    const meScopeTitle=meNoScope?meScopeWhy:(meName+' · boutique #'+meScopeId);
     // Cut-off du jour : l'heure limite paramétrée (ws_param order.cutoff_default)
     // confrontée à l'heure courante. Sans paramètre, on n'affiche pas de compte
     // à rebours inventé.
@@ -5817,7 +5876,8 @@ class Component extends DCLogic {
     const shopCutoff=cutRaw||'—';
     const shopLead=P('order.lead_hours','')?(P('order.lead_hours','')+' h'):'—';
     const profileVals={
-      meName, meInit, meSub, kCutLeft, kCutLabel,
+      meName, meInit, meSub, meSubStyle, meScopeId, meNoScope, meScopeWhy, meScopeTitle,
+      kCutLeft, kCutLabel,
       shopName, shopAddr, shopOpen, shopClose, shopSlotLen, shopCutoff, shopLead,
       showSource, srcOpen:S.srcOpen&&showSource,
       showHelp, helpIcon, tipStyle,

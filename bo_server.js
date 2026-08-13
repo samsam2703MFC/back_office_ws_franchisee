@@ -6,6 +6,15 @@
 // the server acknowledges them.
 (function(){
   var LS = 'ws_bo_store_v9';   // v9 : purge go-live — invalide les caches locaux du seed de démo
+  // Le store local appartient à UNE boutique, et le dit. Sans cette marque,
+  // ouvrir la console sur ?shop=3 affichait les clients, les tournées et les
+  // bureaux de la boutique 2 — ceux que localStorage avait gardés — sous le
+  // nom et l'id de la 3 : hydrate() ne remplace les tables que s'il TOURNE
+  // (jeton présent, API joignable) et le boot ne l'attend que 4 s. Un store
+  // d'une autre portée est donc jeté, jamais affiché. Les éditions locales non
+  // encore acquittées partent avec lui : elles concernent l'autre boutique, et
+  // les garder les aurait poussées dans celle-ci au prochain enregistrement.
+  var LS_SCOPE = 'ws_bo_store_shop';
   // GO-LIVE : plus AUCUNE donnée de démonstration. Les tables partent vides
   // et sont remplies exclusivement par l'API (/franchisee/*). Seules restent
   // les CONFIGS par défaut (params, gabarits d'emails, libellés de coûts).
@@ -85,8 +94,19 @@
     "fr_assortiment": [],
   };
   var DB = null;
-  function read(){ try { var r = localStorage.getItem(LS); if (r) return JSON.parse(r); } catch(e){} return null; }
-  function persist(){ try { localStorage.setItem(LS, JSON.stringify(DB)); } catch(e){} return DB; }
+  function scopeNow(){ try { return String(((typeof window !== 'undefined' && window.__FR) || {}).shop || ''); } catch(e){ return ''; } }
+  function read(){
+    try {
+      // Marque absente = provenance inconnue (store d'avant cette version) :
+      // traitée comme une autre portée dès qu'une boutique est demandée.
+      if ((localStorage.getItem(LS_SCOPE) || '') !== scopeNow()) {
+        localStorage.removeItem(LS); localStorage.removeItem(LS_SCOPE); return null;
+      }
+      var r = localStorage.getItem(LS); if (r) return JSON.parse(r);
+    } catch(e){}
+    return null;
+  }
+  function persist(){ try { localStorage.setItem(LS, JSON.stringify(DB)); localStorage.setItem(LS_SCOPE, scopeNow()); } catch(e){} return DB; }
   function ensure(){ if (DB) return DB; DB = read() || {}; return DB; }
   // Écritures serveur : chaque BOServer.save(table) est poussé vers l'API.
   // Tables à mapping propre → écrites dans les vraies tables ; les autres →
