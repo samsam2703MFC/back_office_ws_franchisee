@@ -324,6 +324,34 @@ jobs:
           fi
           echo
 
+          # ── LIEN MAGIQUE « CRÉER MON COMPTE » ──────────────────────────────
+          # Un bureau reçoit UN lien et le transfère à son personnel. Trois
+          # pièces doivent être en place, et chacune casse le parcours seule :
+          #   • la PAGE d'arrivée, servie à /webshop/inscription (règle de
+          #     réécriture) — sans elle, le lien du mail tombe sur un 404 ;
+          #   • l'endpoint de PRÉ-REMPLISSAGE, qui doit REFUSER un jeton bidon
+          #     avec un motif : accepter un jeton invalide créerait un compte
+          #     rattaché à rien, et un 500 muet ne se diagnostique pas ;
+          #   • la TABLE ws_office_invites (migration 0062) — sans elle, aucun
+          #     lien n'est émis, et la création du bureau le dit sans échouer.
+          echo "== Lien magique « Créer mon compte » =="
+          for U in "http://localhost/webshop/inscription" "http://localhost/webshop/inscription.html"; do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$U" 2>/dev/null)
+            case "$CODE" in
+              200) echo "  OK       page servie ($U)";;
+              404) echo "  ABSENT   $U — HTTP 404";;
+              *)   echo "  ⚠ $U — HTTP $CODE";;
+            esac
+          done
+          INV=$(curl -s --max-time 12 -w '\n%{http_code}' "$BASE/inscription?i=jeton-de-test-invalide" 2>/dev/null)
+          INVC=$(printf '%s' "$INV" | tail -1)
+          if printf '%s' "$INV" | grep -q '"ok":false'; then
+            echo "  OK       jeton invalide refusé avec un motif (HTTP $INVC)"
+          else
+            echo "  ⚠ /inscription : HTTP $INVC sans refus explicite"
+            echo "           ⇒ la page ne pourra pas dire au collaborateur pourquoi son lien ne marche pas"
+          fi
+
           # ── OBJETS DE BASE ────────────────────────────────────────────────
           # Une migration enregistrée ne prouve PAS que son objet est encore là.
           # Les triggers trg_client_office_delivery_ai/_au (0019/0021/0023) sont
@@ -378,7 +406,12 @@ jobs:
               esac
 
               # 2. Colonnes posées par les migrations, vérifiées sur le schéma.
-              for cc in "shops:lat:0060" "shops:lng:0060" "client:preferred_shop_id:—" "shops:geo_source:0060"; do
+              # ws_office_invites.depts : la charge du jeton d'invitation est
+              # refabriquée depuis la ligne quand la console réaffiche le lien.
+              # Colonne absente ⇒ le lien reconstitué diffère de celui envoyé
+              # par e-mail, et le collaborateur tombe sur « lien invalide ».
+              for cc in "shops:lat:0060" "shops:lng:0060" "client:preferred_shop_id:—" "shops:geo_source:0060" \
+                        "ws_office_invites:jti:0062" "ws_office_invites:depts:0062"; do
                 t=${cc%%:*}; rest=${cc#*:}; c=${rest%%:*}; mig=${rest#*:}
                 n=$(dbq "SELECT COUNT(*) FROM information_schema.columns
                           WHERE table_schema = DATABASE() AND table_name = '$t' AND column_name = '$c'")
