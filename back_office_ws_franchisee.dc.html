@@ -3095,6 +3095,11 @@ class Component extends DCLogic {
     // ---- Paramétrage › Clients B2B ----
     {s:'clients',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Bureaux & sites',k:'compte b2b plafond encours remise facturation differee tva segment horeca fiche client'},
     {s:'offices',g:'Paramétrage › Clients B2B',grp:'g_b2b',k:'bureau client statut valide departements effectif'},
+    // Le WIZARD lui-même est une destination : on le cherche par « nouveau
+    // bureau », pas par le nom de l'écran qui l'héberge. `act` l'ouvre.
+    {s:'offices',act:'ob',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Nouveau bureau B2B (onboarding)',
+     desc:'Création complète en 7 étapes : société, contact, site, départements, webshop, personnel',
+     k:'wizard onboarding creation creer nouveau bureau societe raison sociale tournee site departements voucher invitation lien magique'},
     {s:'sites',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Sites de livraison',k:'adresse etage local temps acces quai reception chaine tournee zone'},
     {s:'bureauParams',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Règles par bureau',k:'jours autorises cut-off tournee assignee par bureau'},
     {s:'emailsBureau',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Contacts email',k:'mail role principal facturation livraison destinataire notification'},
@@ -4693,7 +4698,11 @@ class Component extends DCLogic {
     const dsPick=(e)=>()=>{ const st={screen:e.s,dsQuery:'',dsOpen:false,dsIdx:0};
       if(e.tab) st[e.tab[0]]=e.tab[1];
       if(e.grp){ st.paramsOpen=true; st.openGroups={...S.openGroups,[e.grp]:true}; }
-      this.setState(st); };
+      this.setState(st);
+      // Une entrée peut viser une ACTION et pas seulement un écran : chercher
+      // « nouveau bureau » doit ouvrir le wizard, pas déposer sur une liste où
+      // il reste à le trouver.
+      if(e.act==='ob') setTimeout(()=>this.obOpen(),0); };
     const dsResults=dsRanked.map((x,i)=>{ const e=x.e, on=i===dsSel;
       return { path:e.g, title:e.label, desc:dsSnippet(e), go:dsPick(e), hover:()=>this.setState({dsIdx:i}),
         style:'display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;border:none;cursor:pointer;padding:9px 12px;border-radius:9px;background:'+(on?'var(--color-background-secondary)':'transparent'),
