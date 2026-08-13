@@ -885,6 +885,44 @@
             </sc-for>
           </div>
         </div>
+        <!-- LIEN D'INVITATION du bureau — « Créer mon compte ».
+             Un seul lien par bureau, transféré à tout son personnel. Le panneau
+             n'affiche que ce que le serveur renvoie : pas de lien = le MOTIF
+             (jamais émis, révoqué, expiré) et le geste qui le corrige. -->
+        <sc-if value="{{ invOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--color-surface);border:1.5px solid var(--color-primary);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="min-width:0">
+              <div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Lien d'invitation — {{ invName }}</div>
+              <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Le contact du bureau le transfère à son personnel : chaque collaborateur arrive avec son bureau et son site déjà rattachés. Chaque compte créé reste à valider ici.</div>
+            </div>
+            <button onClick="{{ invClose }}" style="flex:none;width:26px;height:26px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-text-muted);font:600 14px/1 var(--font-ui)">×</button>
+          </div>
+          <sc-if value="{{ invHasUrl }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <!-- Le lien s'AFFICHE, il ne s'édite pas : un champ de saisie
+                   invitait à le corriger, et un caractère ajouté produit un
+                   lien qui ne mène nulle part. `user-select:all` le sélectionne
+                   entier au clic, pour qui préfère copier à la main. -->
+              <div title="{{ invUrl }}" style="flex:1;min-width:240px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:400 11.5px var(--font-mono,monospace);background:var(--color-background-secondary);color:var(--color-text);user-select:all;word-break:break-all">{{ invUrl }}</div>
+              <button onClick="{{ invCopy }}" class="btn-primary" style="padding:9px 14px;font-size:12px;flex:none">{{ invCopyLabel }}</button>
+            </div>
+            <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ invMeta }}</div>
+          </sc-if>
+          <!-- sc-if rend quand la valeur est VRAIE : la branche « sinon »
+               demande sa propre valeur (invNoUrl), pas la négation implicite
+               d'un hint — sans quoi le motif ne s'afficherait jamais. -->
+          <sc-if value="{{ invNoUrl }}" hint-placeholder-val="{{ false }}">
+            <div style="font:400 11.5px var(--font-ui);color:#b26a00">{{ invMsg }}</div>
+          </sc-if>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onClick="{{ invIssue }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:9px;padding:8px 13px;font:600 11.5px var(--font-ui);color:var(--color-text);cursor:pointer">{{ invIssueLabel }}</button>
+            <sc-if value="{{ invHasUrl }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ invRevoke }}" style="border:.5px solid var(--color-primary);background:var(--color-surface);border-radius:9px;padding:8px 13px;font:600 11.5px var(--font-ui);color:var(--color-primary);cursor:pointer">Révoquer le lien</button>
+            </sc-if>
+          </div>
+        </div>
+        </sc-if>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div style="display:grid;grid-template-columns:1.6fr 1.2fr .8fr .7fr .7fr .8fr;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)"><span class="t-admin-label">Office</span><span class="t-admin-label">Ville · TVA</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:center">Sites</span><span class="t-admin-label" style="text-align:center">Dépts</span><span class="t-admin-label" style="text-align:right">Actions</span></div>
           <sc-for list="{{ officesList }}" as="o" hint-placeholder-count="4">
@@ -895,6 +933,7 @@
               <span style="text-align:center;font:600 13px var(--font-ui);color:var(--color-text)">{{ o.sitesCount }}</span>
               <span style="text-align:center;font:600 13px var(--font-ui);color:var(--color-primary)">{{ o.deptCount }}</span>
               <div style="display:flex;gap:6px;justify-content:flex-end">
+                <button onClick="{{ o.invite }}" title="Lien d'invitation « Créer mon compte » du personnel de ce bureau" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#2a5a9e;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1L11 5"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1L13 19"/></svg></button>
                 <button onClick="{{ o.gear }}" title="Paramètres du bureau (jours, cut-off, tournée)" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#b26a00;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
                 <button onClick="{{ o.edit }}" title="Éditer" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-text-muted);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
                 <button onClick="{{ o.del }}" title="Supprimer" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
@@ -2831,6 +2870,14 @@ class Component extends DCLogic {
         return await r.json().catch(()=>null);
       }).then(j=>{
         if(j===null) return;
+        /* LIEN D'INVITATION émis avec le bureau. On ne l'imprime pas dans le
+           journal — une URL de 200 caractères n'y est ni lisible ni copiable :
+           on dit où le prendre, et l'écran Bureaux le sert avec sa date de fin,
+           son compteur d'inscriptions et son bouton de révocation.
+           Émission refusée : le motif du serveur est dit tel quel, sinon le
+           franchisé attendrait un e-mail qui ne partira jamais. */
+        if(j.invite_url) this.printJob('✔ Lien d’invitation prêt pour '+(o.raison||'ce bureau')+' — Clients B2B › Offices, icône 🔗 de la ligne, pour le copier et l’envoyer');
+        else if(j.invite_reason) this.printJob('⚠ '+j.invite_reason);
         // Le serveur a créé office + LIGNE CLIENT (double lien) : refetch pour
         // que le nouveau client apparaisse tout de suite dans le menu Clients.
         const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={headers:FRH(),credentials:'omit'};
@@ -3171,6 +3218,54 @@ class Component extends DCLogic {
     // présélectionné — ses données sont injectées dans la fiche client.
     if(S.formKey==='site'&&S.odKeep){ this.setState({odClient:S.odKeep,odKeep:null,odSite:String(v.adr||'')}); }
     this.setState({formKey:null,_rev:(S._rev||0)+1}); this.printJob((S.formEdit?'✔ Ligne mise à jour dans ':'✔ Enregistré dans ')+cfg.table); }
+  /* ── LIEN D'INVITATION « Créer mon compte » d'un bureau ────────────────────
+     Un seul lien par bureau, valable 30 jours, transféré par le contact à tout
+     son personnel. Le panneau ne montre JAMAIS de lien fabriqué ici : il vient
+     du serveur, qui seul sait s'il est encore valable. Sans lien, on affiche le
+     motif reçu (jamais émis / révoqué / expiré) et le geste qui le corrige —
+     un panneau vide obligerait le franchisé à deviner. */
+  invOpen(o){ const id=(o&&o.id!=null)?o.id:null;
+    this.setState({inv:{office:id,name:(o&&o.name)||'',msg:id?'Lecture du lien…':'Ce bureau n’a pas encore d’identifiant en base — enregistrez-le avant d’émettre un lien.',url:''}});
+    if(id!=null) this.invFetch(id,(o&&o.name)||''); }
+  invClose(){ this.setState({inv:null}); }
+  invFetch(id,name){ const fr=window.__FR||{}; if(!fr.base){ this.setState({inv:{office:id,name,url:'',msg:'API non configurée — le lien d’invitation ne peut pas être lu.'}}); return; }
+    const qs=fr.shop?('&shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/office-invite?office='+encodeURIComponent(id)+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ const v=(j&&j.invite)||null;
+        this.setState({inv:{office:id,name,url:v?v.url:'',expiresAt:v?v.expiresAt:'',uses:v?v.uses:0,
+          msg:v?'':((j&&j.error)||'Aucun lien d’invitation pour ce bureau.')}}); })
+      .catch(e=>this.setState({inv:{office:id,name,url:'',msg:'Lien illisible — '+(e&&e.message?e.message:'réseau indisponible')+'.'}})); }
+  invIssue(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    this.setState({inv:{...S,msg:'Émission du lien…'}});
+    fetch(fr.base+'/franchisee/office-invite'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify({office:S.office})})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok&&j.invite){ this.setState({inv:{...S,url:j.invite.url,expiresAt:j.invite.expiresAt,uses:0,msg:'',copied:false}});
+          // Émettre REMPLACE : l'ancien lien est révoqué côté serveur, et ce
+          // qui a déjà été transféré cesse de fonctionner. Le dire ici évite
+          // qu'un franchisé le découvre par un appel du client.
+          this.printJob('✔ Nouveau lien d’invitation émis pour '+(S.name||'ce bureau')+' — l’ancien ne fonctionne plus'); }
+        else this.setState({inv:{...S,msg:(j&&j.error)||'Émission refusée.'}}); })
+      .catch(e=>this.setState({inv:{...S,msg:'Émission impossible — '+(e&&e.message?e.message:'réseau indisponible')+'.'}})); }
+  invRevoke(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/invite-revoke'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify({office:S.office})})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.setState({inv:{...S,url:'',msg:j.message||'Lien révoqué.'}}); this.printJob('✔ '+(j.message||'Lien d’invitation révoqué')); }
+        else this.setState({inv:{...S,msg:(j&&j.error)||'Révocation refusée.'}}); })
+      .catch(e=>this.setState({inv:{...S,msg:'Révocation impossible — '+(e&&e.message?e.message:'réseau indisponible')+'.'}})); }
+  invCopy(){ const S=this.state.inv; if(!S||!S.url) return;
+    const dit=(ok,pourquoi)=>{ this.setState({inv:{...this.state.inv,copied:ok}});
+      this.printJob(ok?'✔ Lien d’invitation copié':('⚠ Copie impossible — '+pourquoi+' ; sélectionnez le lien et copiez-le à la main')); };
+    // Le presse-papiers est refusé hors HTTPS et sans geste utilisateur : on le
+    // DIT au lieu d'échouer en silence, sinon le franchisé colle l'ancien lien.
+    try{ if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(S.url).then(()=>dit(true)).catch(e=>dit(false,(e&&e.message)||'refusé par le navigateur'));
+      else dit(false,'presse-papiers indisponible dans ce navigateur'); }
+    catch(e){ dit(false,(e&&e.message)||'refusé par le navigateur'); } }
   // Reflète en mémoire les tables serveur touchées par le toggle « livraison
   // au bureau » (office créé/validé + pairing site) → l'office apparaît
   // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
@@ -5173,8 +5268,20 @@ class Component extends DCLogic {
         statusStyle:pill2(validated?'#eaf5ec':'#fff4e5',validated?'#2d7a3e':'#b26a00'),
         billLabel:(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui')?'Facturation différée':'Paiement immédiat',
         gear:this.openFormWith('bureauParam',{bureau:o.name}),
+        invite:()=>this.invOpen(o),
         edit:this.editForm('office',o,i), del:this.deleteRow('ws_offices',i,'l\'office « '+o.name+' »') };
     });
+    /* Panneau « lien d'invitation ». Tout y vient de l'état renvoyé par le
+       serveur : une date d'expiration absente disparaît de la phrase au lieu
+       d'afficher une date inventée. */
+    const IV=S.inv||null;
+    const invDate=(x)=>{ if(!x) return ''; const d=new Date(String(x).replace(' ','T'));
+      return isNaN(d)?'':d.toLocaleDateString('fr-BE',{day:'2-digit',month:'2-digit',year:'numeric'}); };
+    const invBouts=[];
+    if(IV&&IV.url){ const dt=invDate(IV.expiresAt); if(dt) invBouts.push('Valable jusqu’au '+dt);
+      const n=Number(IV.uses||0);
+      invBouts.push(n===0?'aucune inscription pour l’instant':(n+' inscription'+(n>1?'s':'')+' déjà faite'+(n>1?'s':'')));
+      invBouts.push('chaque compte créé reste à valider dans Demandes de rattachement bureau'); }
     // Étape 3 du sens de paramétrage : les offices VALIDÉS s'assignent aux
     // sites — cartes visuelles : chips bureaux avec « × » pour retirer,
     // sélecteur « + Ajouter un bureau » par site, dépôt au clic après saisie.
@@ -6536,6 +6643,13 @@ class Component extends DCLogic {
       isFermetures:screen==='horaires'||screen==='tournees',fermetures,addFermeture,
       isSites:screen==='sites',sitesList,tourAssignTiles,
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
+      invOpen:!!IV, invName:IV?IV.name:'', invUrl:IV?(IV.url||''):'',
+      invHasUrl:!!(IV&&IV.url), invNoUrl:!!(IV&&!IV.url),
+      invMsg:IV?(IV.msg||''):'', invMeta:invBouts.join(' · '),
+      invCopyLabel:(IV&&IV.copied)?'Copié':'Copier le lien',
+      invIssueLabel:(IV&&IV.url)?'Émettre un nouveau lien (révoque celui-ci)':'Émettre un lien',
+      invClose:()=>this.invClose(), invCopy:()=>this.invCopy(),
+      invIssue:()=>this.invIssue(), invRevoke:()=>this.invRevoke(),
       offAssignChips,offAssignEmpty,offNoFree,offHasFree,offFreeTitle,offSiteCards,
       // ===== Menu « Clients » — table client via GET /franchisee/b2b-clients =====
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
