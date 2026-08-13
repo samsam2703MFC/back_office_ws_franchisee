@@ -322,3 +322,95 @@ Entrée de menu `Avis clients` (icône étoile) dans une section **Fidélité**,
 - **Couleurs** : le design system n'a ni vert ni orange. Les trois états sont
   déclarés une fois en variables CSS (`--st-good` / `--st-warn` / `--st-bad`)
   dans le `<style>` du helmet ; les écrans n'écrivent plus d'hexadécimal.
+
+## Lien d'invitation du personnel (« magic deep link »)
+
+Le franchisé crée un bureau. Le bureau doit ensuite faire créer un compte à
+chacun de ses collaborateurs. Le lien d'invitation supprime la saisie de
+rattachement — **pas la validation**.
+
+**Le serveur fait tout le travail** : `POST /franchisee/onboard-office` émet le
+lien signé à chaque bureau créé et le renvoie dans `invite_url`, avec
+`invite_expires_at` (date SQL) ou, s'il n'a rien pu émettre, `invite_reason`.
+Il déduit lui-même le domaine e-mail imposé depuis `contactEmail`, sauf
+messagerie grand public. Tout cela vit dans le dépôt **WebShop**
+(`php-api/index.php`, migration `0062_office_invites.sql`).
+
+Côté console, donc :
+
+- **Aucune URL n'est fabriquée ici.** Une URL forgée par le navigateur serait
+  une URL modifiable, et ses paramètres décident de qui facture. On affiche
+  `invite_url` tel quel, dans une fenêtre avec bouton de copie ; sans lui, pas
+  de fenêtre, et le message répète `invite_reason`.
+- **Aucun interrupteur.** Le serveur émet le lien dans tous les cas ; une case
+  à cocher n'éteindrait rien. Le récapitulatif ANNONCE ce qui va se passer.
+- `OB_DOM_PUBLICS` est le **miroir exact** de `$grandPublic` côté serveur. Elle
+  ne décide rien : elle sert à dire, avant validation, si le lien sera restreint
+  à `@domaine` ou **émis sans restriction** — cas d'un contact en `gmail.com`,
+  où n'importe quelle adresse pourra s'en servir. C'est précisément ce qu'il
+  faut annoncer, pas taire.
+
+**La page « Créer mon compte » n'est pas dans ce dépôt.** Elle vit dans WebShop
+(`public/inscription.html`, servie à `<racine>/inscription?i=<jeton>`, appelant
+`GET`/`POST <racine>/api/inscription`) : elle est autonome, sans script ni
+police externes — une page ouverte depuis un e-mail, souvent sur un téléphone
+derrière un filtre d'entreprise, ne peut pas dépendre d'un CDN. Une seconde
+copie ici serait l'incident nº 2 du CLAUDE.md.
+
+Ce qui reste vrai dans les deux dépôts : le compte créé entre en `pending` dans
+`ws_office_join_requests` et n'achète rien avant que le franchisé l'ait validé
+dans « Demandes de rattachement bureau ». Sans cela, quiconque reçoit le lien
+transféré commanderait en paiement différé sur le compte de l'entreprise.
+**Le lien fait gagner la saisie, pas le contrôle.**
+
+## L'assistant est passé sous « Offices »
+
+Il se lançait depuis **Clients B2B › Clients**, par un bouton
+« + Nouveau client B2B ». Or il ne crée pas un client : il crée un **bureau**
+— office, delivery site, départements, contact, conditions, vouchers, lien
+d'invitation. Un client B2B, c'est la **personne** qui travaille dans ce
+bureau, et elle ne se saisit pas ici : elle crée son compte depuis le lien
+d'invitation, puis apparaît dans « Demandes de rattachement bureau ».
+
+- **Offices** porte désormais deux boutons : *+ Onboarder un bureau*
+  (l'assistant complet) et *+ Office seul* (la ligne `ws_offices` nue).
+- **Clients** ne propose plus de créer un bureau : le bouton mène aux
+  demandes de rattachement, par où les personnes arrivent réellement.
+- L'assistant pose la ligne `ws_offices` en local (`refresh`, pas `save` : le
+  serveur la crée déjà via `onboard-office`, un `save` en ferait deux) et
+  atterrit sur Offices — le bureau créé s'y voit tout de suite, en attente.
+
+## Vouchers : autant que nécessaire
+
+L'étape « Webshop & voucher » n'acceptait qu'un bon, et en créait un **même
+quand personne n'en avait demandé** : `BIENVENUE4821` naissait à chaque
+bureau, partait dans le courrier et engageait la boutique sur une remise que
+le franchisé n'avait pas choisie. La valeur par défaut « −10 % sur la première
+commande » est retirée avec lui.
+
+Désormais : une liste (libellé · code · valeur · validité), le code dérivé du
+libellé s'il est laissé vide, et **aucun voucher si aucun n'est ajouté**. Le
+brouillon rempli mais non ajouté est repris à la création plutôt que perdu en
+silence. Le corps posté porte `vouchers[]` (liste complète) et garde
+`voucher{}` = le premier, pour un serveur qui ne lirait que celui-là —
+`null` si la liste est vide.
+
+Côté serveur (dépôt WebShop) : `onboard-office` lit `vouchers[]` et les insère
+tous, `vouchers_created` donne le compte.
+
+## Le courrier de bienvenue est vraiment envoyé
+
+Les deux interrupteurs du récapitulatif — « Envoyer l'e-mail récapitulatif au
+contact » et « Envoyer les demandes d'adhésion » — **n'étaient pas postés**.
+Le serveur n'en savait rien, n'envoyait rien, et le franchisé croyait le bureau
+prévenu : il attendait une commande qui ne pouvait pas venir. Le corps de
+`onboard-office` porte désormais `sendMail` et `sendAdhesion`.
+
+Côté serveur (dépôt WebShop) : `mail_render()` + `send_html_mail()` dans
+`lib.php`, gabarit `php-api/mail/bienvenue-bureau.html`, envoi au contact à la
+création — **sur demande explicite seulement**. La réponse dit ce qui s'est
+passé : `mail_sent`, `mail_to`, `mail_reason`.
+
+La console le répète, courrier et lien **dans un seul message** : deux
+`printJob` successifs ne laissent voir que le second, et l'avertissement sur le
+courrier disparaissait derrière celui du lien.
