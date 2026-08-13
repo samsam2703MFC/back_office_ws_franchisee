@@ -1246,7 +1246,7 @@
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center">
               <div><div class="t-admin-label" style="margin-bottom:6px">Jours autorisés</div><div style="display:flex;gap:5px;flex-wrap:wrap"><sc-for list="{{ b.days }}" as="d" hint-placeholder-count="7"><span style="{{ d.style }}">{{ d.k }}</span></sc-for></div></div>
-              <div style="display:flex;gap:20px"><div><div class="t-admin-label" style="margin-bottom:4px">Cut-off spécifique</div><div style="font:600 13px var(--font-ui);color:var(--color-primary)">{{ b.cut }}</div></div><div><div class="t-admin-label" style="margin-bottom:4px">Drop minutes</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ b.drop }} min</div></div></div>
+              <div style="display:flex;gap:20px"><div><div class="t-admin-label" style="margin-bottom:4px">Cut-off commande</div><div style="font:600 13px var(--font-ui);color:var(--color-primary)">{{ b.cut }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ b.origine }}</div></div><div><div class="t-admin-label" style="margin-bottom:4px">Temps de dépôt</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ b.drop }} min</div></div></div>
             </div>
           </div>
         </sc-for>
@@ -2334,6 +2334,12 @@
             <sc-if value="{{ f.isReadonly }}" hint-placeholder-val="{{ false }}">
               <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" disabled style="{{ f.inputStyle }};background:var(--color-background-secondary);color:var(--color-text-muted);cursor:not-allowed"/>
             </sc-if>
+            <sc-if value="{{ f.hasLien }}" hint-placeholder-val="{{ false }}">
+              <button type="button" onClick="{{ f.lienGo }}" style="margin-top:7px;border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:8px;padding:7px 12px;font:600 11.5px var(--font-ui);cursor:pointer">{{ f.lienTxt }}</button>
+            </sc-if>
+            <sc-if value="{{ f.isTime }}" hint-placeholder-val="{{ false }}">
+              <input type="time" value="{{ f.value }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
+            </sc-if>
             <sc-if value="{{ f.isText }}" hint-placeholder-val="{{ false }}">
               <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
             </sc-if>
@@ -3398,10 +3404,26 @@ class Component extends DCLogic {
         ]},
       bureauParam:{ title:'Paramètres livraison — bureau', table:'ws_office_delivery_settings', tbl:'ws_office_delivery_settings', save:'Enregistrer',
         fields:[
-          {k:'bureau',label:'Bureau',type:'select',options:sel(bureaux),def:bureaux[0]||''},
+          /* Le bureau n'est pas MODIFIABLE ici : ce formulaire règle l'horaire
+             d'un bureau, il ne le renomme pas. Le nom vit sur sa fiche
+             (ws_offices) et sert de repère partout ailleurs — le changer
+             depuis un écran d'horaires, sans voir ses sites ni ses contacts,
+             était le meilleur moyen de casser un rattachement. Le lien
+             ci-dessous ouvre la fiche, où il se modifie vraiment. */
+          {k:'bureau',label:'Bureau',readonly:true,lien:'office',
+           info:'Ce réglage s’applique à ce bureau. Pour le renommer ou changer son adresse, ouvrez sa fiche : « Modifier la fiche du bureau ».'},
           {k:'tour',label:'Tournée assignée',type:'select',options:sel(tours),def:tours[0]||''},
-          {k:'cut',label:'Cut-off spécifique',type:'text',def:'17:00 J-1'},
-          {k:'drop',label:'Drop minutes (temps de dépôt)',type:'number',def:8},
+          /* Cut-off = une HEURE + un nombre de JOURS avant la livraison. Le
+             champ libre « 17:00 J-1 » qu'il remplace mélangeait les deux dans
+             une chaîne que rien ne validait : « 17h », « 5pm » ou « 17:00 J‑1 »
+             avec un tiret insécable s'enregistraient tous, et aucun ne
+             s'appliquait. */
+          {k:'cutHeure',label:'Cut-off — heure limite',type:'time',half:true,
+           info:'Laisser vide = ce bureau suit l’horaire de sa tournée.'},
+          {k:'cutDecal',label:'… combien de jours avant',type:'select',half:true,def:1,
+           options:[{value:0,label:'Le jour même'},{value:1,label:'La veille (J-1)'},{value:2,label:'L’avant-veille (J-2)'},{value:3,label:'3 jours avant (J-3)'}]},
+          {k:'drop',label:'Temps de dépôt (minutes)',type:'number',
+           info:'Durée sur place : accès, badge, étage. Elle entre dans l’heure d’arrivée annoncée aux bureaux suivants de la tournée.'},
         ]},
       dispoProd:{ title:'Exception produit', table:'ws_product_availability', tbl:'ws_product_availability', save:'Créer l\'exception',
         fields:[
@@ -3468,7 +3490,11 @@ class Component extends DCLogic {
       const mm=adr.match(/^(.*?),?\s*(\d{4})\s*(.*)$/);
       if(mm){ v.adr_rue=mm[1].trim(); v.adr_cp=mm[2]; v.adr_ville=(mm[3]||'').trim(); }
       else { v.adr_rue=adr; v.adr_cp=''; v.adr_ville=''; } }
-    this.setState({formKey:key,formVals:v,formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
+    /* La ligne SOURCE est conservée : les champs du formulaire ne portent
+       que ce qui s'édite, or l'écriture a besoin de la clé (officeId) et
+       les liens « ouvrir la fiche » du nom. Les déduire du libellé affiché
+       marchait tant que deux bureaux ne portaient pas le même nom. */
+    this.setState({formKey:key,formVals:v,formRow:(vals||null),formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   closeForm(){ this.setState({formKey:null}); }
   submitForm(){ const S=this.state, cfg=this.formDefs()[S.formKey]; if(!cfg){ return; } const v={...S.formVals};
     // Le champ « Site (building) » d'un office ne doit déclencher l'appariement
@@ -3506,6 +3532,11 @@ class Component extends DCLogic {
     // Même raison pour les contacts e-mail : une ligne, une route (0063).
     if(S.formKey==='email'){ this.setState({formKey:null});
       this.emailWrite({bureau:v.bureau, addr:v.addr, role:v.role||'Principal'}); return; }
+    /* Paramètres livraison d'un bureau : une ligne, une route (0066).
+       Avant, cet écran passait par BOServer.save, donc par l'overlay
+       ws_bo_store — une table que le checkout ne lit pas. La console affichait
+       le cut-off saisi, le webshop appliquait celui de la tournée. */
+    if(S.formKey==='bureauParam'){ this.setState({formKey:null}); this.bpWrite(v); return; }
     if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl); if(S.formEdit && S.formIndex!=null && rows[S.formIndex]){ rows[S.formIndex]={...rows[S.formIndex],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
     // Choix « garder le siège » (client B2B) : l'adresse encodée devient un
     // LIEU DE LIVRAISON (ws_offices, statut pending) rattaché à la société.
@@ -3605,6 +3636,44 @@ class Component extends DCLogic {
     fetch(fr.base+'/franchisee/ws-office-emails'+qs,{headers:FRH(),credentials:'omit'})
       .then(r=>r.ok?r.json():null)
       .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('ws_office_emails',a);
+        this.setState(s=>({_rev:(s._rev||0)+1})); })
+      .catch(()=>{});
+  }
+  /* Ouvrir la FICHE d'un bureau depuis son nom. Sert au lien « Modifier la
+     fiche du bureau » des écrans qui affichent un bureau sans pouvoir le
+     modifier. Bureau introuvable : on le DIT — un clic sans effet laisserait
+     croire à un écran cassé. */
+  openOfficeByName(nom){ const n=String(nom||'').trim().toLowerCase();
+    const rows=window.BOServer?window.BOServer.table('ws_offices'):[];
+    const i=rows.findIndex(o=>String(o.name||'').trim().toLowerCase()===n);
+    if(i<0){ this.printJob('⚠ Fiche introuvable pour « '+nom+' » — ouvrez-la depuis Clients B2B › Offices'); return; }
+    this.editForm('office',rows[i],i)();
+  }
+  /* PARAMÈTRES LIVRAISON D'UN BUREAU — écriture d'UNE ligne (0066).
+     L'heure part en HH:MM et le décalage en NOMBRE de jours. L'ancien champ
+     libre « 17:00 J-1 » mélangeait les deux dans une chaîne que personne ne
+     savait relire : un « 17h » ou un « 5pm » s'enregistrait sans broncher et
+     ne s'appliquait jamais.
+     Heure vide = le bureau REVIENT à l'horaire de sa tournée. */
+  bpWrite(v){ const fr=window.__FR||{};
+    const oid=v.officeId!=null?v.officeId:(this.state.formRow&&this.state.formRow.officeId);
+    if(oid==null){ this.printJob('⚠ Paramètres non enregistrés — bureau inconnu'); return; }
+    if(!fr.base){ this.printJob('⚠ Paramètres non enregistrés — API non configurée'); return; }
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/office-delivery-setting'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify({officeId:oid,cutHeure:v.cutHeure||'',cutDecal:v.cutDecal!=null?v.cutDecal:1,drop:v.drop})})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.printJob(j.herite?'✔ Ce bureau suit de nouveau l’horaire de sa tournée'
+            :('✔ Cut-off enregistré — '+(v.cutHeure||'')+(Number(v.cutDecal)>0?(' J-'+v.cutDecal):' le jour même')));
+          this.bpRefresh(); }
+        else this.printJob('⚠ Paramètres non enregistrés — '+((j&&j.error)||'refus du serveur')); })
+      .catch(e=>this.printJob('⚠ Paramètres non enregistrés — '+((e&&e.message)||'réseau indisponible')));
+  }
+  bpRefresh(){ const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/ws-office-delivery-settings'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('ws_office_delivery_settings',a);
         this.setState(s=>({_rev:(s._rev||0)+1})); })
       .catch(()=>{});
   }
@@ -5896,7 +5965,16 @@ class Component extends DCLogic {
     });
 
     const bpDays=(arr)=>['L','Ma','Me','J','V','S','D'].map((k,i)=>({k,style:dayPill((arr||[]).includes(i))}));
-    const bureauParams=SRV('ws_office_delivery_settings').map((b,i)=>({...b,nom:b.bureau,days:bpDays(b.daysArr),edit:this.editForm('bureauParam',b,i),del:this.deleteRow('ws_office_delivery_settings',i,'ce paramétrage bureau'),pill:pill2('var(--color-background-secondary)','var(--color-text-muted)')}));
+    /* « Supprimer » n'a pas de sens ici : un bureau existe toujours, il a
+       seulement un horaire à lui OU celui de sa tournée. Le geste est donc un
+       RETOUR À LA TOURNÉE — c'est ce que fait le serveur quand l'heure est
+       vide. Supprimer la ligne de l'overlay, comme avant, ne changeait rien
+       en base et la faisait réapparaître au rechargement. */
+    const bureauParams=SRV('ws_office_delivery_settings').map((b,i)=>({...b,nom:b.bureau,days:bpDays(b.daysArr),
+      edit:this.editForm('bureauParam',b,i),
+      del:b.cutHerite?null:(()=>this.bpWrite({officeId:b.officeId,cutHeure:'',cutDecal:1,drop:b.drop})),
+      origine:b.cutHerite?('hérité de « '+(b.tour||'sa tournée')+' »'):'propre à ce bureau',
+      pill:pill2('var(--color-background-secondary)','var(--color-text-muted)')}));
 
     const dispoCats=SRV('fr_dispo_cats').map(c=>{ const on=S.flags['cat_'+c.key]!==undefined?S.flags['cat_'+c.key]:c.def;
       const dk='catDelai_'+c.key, ck='catCut_'+c.key;
@@ -6125,7 +6203,15 @@ class Component extends DCLogic {
       return { label:f.label, ph:f.ph||'', value:val, onInput,
         hasSection:!!f.section&&f.section!==prevSec, sectionLabel:f.section||'',
         isSelect:f.type==='select', isNumber:f.type==='number', isToggle, isReadonly:!!f.readonly&&f.type!=='select'&&f.type!=='toggle',
-        isText:f.type!=='select'&&f.type!=='number'&&!isToggle&&!f.readonly,
+        // <input type="time"> : le navigateur impose le format et offre son
+        // sélecteur. Plus de « 17h » ni de « 5pm » enregistrés puis ignorés.
+        isTime:f.type==='time',
+        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&!isToggle&&!f.readonly,
+        // Un champ en lecture seule qui RENVOIE vers l'écran où il se modifie.
+        hasLien:!!f.lien, lienTxt:'Modifier la fiche du bureau',
+        lienGo:f.lien?(()=>{ const S2=this.state, row=S2.formRow||{};
+          this.setState({formKey:null});
+          setTimeout(()=>this.openOfficeByName(row.bureau||''),60); }):null,
         toggleOpts, hasVies:!!f.vies, viesCheck, viesMsg:S.viesMsg||'',
         viesStyle:'font:500 12px var(--font-ui);color:'+(S.viesOk===true?'#2d7a3e':(S.viesOk===false?'var(--color-primary)':'var(--color-text-muted)')),
         wrapStyle:(f.half?'min-width:0':'grid-column:1/-1;min-width:0'),
