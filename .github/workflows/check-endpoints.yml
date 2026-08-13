@@ -351,6 +351,20 @@ jobs:
             echo "  ⚠ /inscription : HTTP $INVC sans refus explicite"
             echo "           ⇒ la page ne pourra pas dire au collaborateur pourquoi son lien ne marche pas"
           fi
+          # L'affiche et l'e-mail : on ne les DÉCLENCHE pas depuis une sonde en
+          # lecture seule (l'un enverrait un message à un client). On vérifie que
+          # les routes RÉPONDENT — sans bureau, elles doivent refuser en disant
+          # pourquoi. Un 404 ici signifierait que le serveur n'a pas ce code.
+          for R in "office-invite-pdf:l'affiche PDF" "office-invite:le lien de la fiche bureau"; do
+            EP=${R%%:*}; LB=${R#*:}
+            CO=$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "${HDR[@]}" "$BASE/franchisee/$EP" 2>/dev/null)
+            case "$CO" in
+              400|409) echo "  OK       $LB répond ($CO — refus explicite sans bureau)";;
+              404)     echo "  ABSENT   $LB — HTTP 404, le serveur n'a pas ce code";;
+              401|403) echo "  OK       $LB en place (jeton requis)";;
+              *)       echo "  ⚠ $LB — HTTP $CO";;
+            esac
+          done
 
           # ── OBJETS DE BASE ────────────────────────────────────────────────
           # Une migration enregistrée ne prouve PAS que son objet est encore là.

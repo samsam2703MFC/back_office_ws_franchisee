@@ -1045,7 +1045,19 @@
           <sc-if value="{{ invNoUrl }}" hint-placeholder-val="{{ false }}">
             <div style="font:400 11.5px var(--font-ui);color:#b26a00">{{ invMsg }}</div>
           </sc-if>
+          <!-- Deux supports, deux gestes : l'e-mail se clique, l'affiche se
+               scanne ou se recopie. Le lien court est celui qui s'imprime. -->
+          <sc-if value="{{ invHasUrl }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font:600 10px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Pour l'affiche</span>
+              <span title="{{ invShort }}" style="font:400 11.5px var(--font-mono,monospace);color:var(--color-text);background:var(--color-background-secondary);border:.5px solid var(--color-border-secondary);border-radius:7px;padding:5px 9px;user-select:all;word-break:break-all">{{ invShort }}</span>
+            </div>
+          </sc-if>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <sc-if value="{{ invHasUrl }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ invEnvoyer }}" class="btn-primary" style="padding:8px 13px;font-size:11.5px">Envoyer l'e-mail au contact</button>
+              <button onClick="{{ invPdf }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:9px;padding:8px 13px;font:600 11.5px var(--font-ui);color:var(--color-text);cursor:pointer">Affiche PDF (QR code)</button>
+            </sc-if>
             <button onClick="{{ invIssue }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:9px;padding:8px 13px;font:600 11.5px var(--font-ui);color:var(--color-text);cursor:pointer">{{ invIssueLabel }}</button>
             <sc-if value="{{ invHasUrl }}" hint-placeholder-val="{{ true }}">
               <button onClick="{{ invRevoke }}" style="border:.5px solid var(--color-primary);background:var(--color-surface);border-radius:9px;padding:8px 13px;font:600 11.5px var(--font-ui);color:var(--color-primary);cursor:pointer">Révoquer le lien</button>
@@ -2987,7 +2999,10 @@ class Component extends DCLogic {
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           fenetre:obFenetre,jours:obJours,validation:o.validation,
-          departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur}})
+          departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur},
+          // La case « envoyer le récapitulatif » du wizard décide de l'e-mail :
+          // le serveur ne l'envoie que si elle est cochée, et dit s'il a échoué.
+          sendMail:!!o.sendMail})
       }).then(async r=>{
         // Un refus serveur était AVALÉ : `r.ok ? … : null` puis `.catch(()=>{})`.
         // L'écran affichait « ✔ Bureau créé » — issu de l'écriture locale — alors
@@ -3006,8 +3021,12 @@ class Component extends DCLogic {
            son compteur d'inscriptions et son bouton de révocation.
            Émission refusée : le motif du serveur est dit tel quel, sinon le
            franchisé attendrait un e-mail qui ne partira jamais. */
-        if(j.invite_url) this.printJob('✔ Lien d’invitation prêt pour '+(o.raison||'ce bureau')+' — Clients B2B › Offices, icône 🔗 de la ligne, pour le copier et l’envoyer');
+        if(j.invite_url) this.printJob('✔ Lien d’invitation prêt pour '+(o.raison||'ce bureau')+' — Clients B2B › Offices, icône 🔗 de la ligne, pour le copier, l’envoyer ou imprimer l’affiche');
         else if(j.invite_reason) this.printJob('⚠ '+j.invite_reason);
+        // L'e-mail au contact : dire s'il est parti, et sinon POURQUOI. Le
+        // franchisé attendrait sinon un message qui ne partira jamais.
+        if(j.mail_sent) this.printJob('✔ Récapitulatif envoyé à '+(o.contactEmail||'au contact du bureau')+' — affiche PDF jointe');
+        else if(j.mail_reason) this.printJob('⚠ E-mail non envoyé — '+j.mail_reason);
         // Le serveur a créé office + LIGNE CLIENT (double lien) : refetch pour
         // que le nouveau client apparaisse tout de suite dans le menu Clients.
         const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={headers:FRH(),credentials:'omit'};
@@ -3363,7 +3382,8 @@ class Component extends DCLogic {
     fetch(fr.base+'/franchisee/office-invite?office='+encodeURIComponent(id)+qs,{headers:FRH(),credentials:'omit'})
       .then(r=>r.json().catch(()=>null))
       .then(j=>{ const v=(j&&j.invite)||null;
-        this.setState({inv:{office:id,name,url:v?v.url:'',expiresAt:v?v.expiresAt:'',uses:v?v.uses:0,
+        this.setState({inv:{office:id,name,url:v?v.url:'',urlCourt:v?(v.urlCourt||''):'',
+          expiresAt:v?v.expiresAt:'',uses:v?v.uses:0,
           msg:v?'':((j&&j.error)||'Aucun lien d’invitation pour ce bureau.')}}); })
       .catch(e=>this.setState({inv:{office:id,name,url:'',msg:'Lien illisible — '+(e&&e.message?e.message:'réseau indisponible')+'.'}})); }
   invIssue(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
@@ -3372,7 +3392,7 @@ class Component extends DCLogic {
     fetch(fr.base+'/franchisee/office-invite'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
       credentials:'omit',body:JSON.stringify({office:S.office})})
       .then(r=>r.json().catch(()=>null))
-      .then(j=>{ if(j&&j.ok&&j.invite){ this.setState({inv:{...S,url:j.invite.url,expiresAt:j.invite.expiresAt,uses:0,msg:'',copied:false}});
+      .then(j=>{ if(j&&j.ok&&j.invite){ this.setState({inv:{...S,url:j.invite.url,urlCourt:j.invite.urlCourt||'',expiresAt:j.invite.expiresAt,uses:0,msg:'',copied:false}});
           // Émettre REMPLACE : l'ancien lien est révoqué côté serveur, et ce
           // qui a déjà été transféré cesse de fonctionner. Le dire ici évite
           // qu'un franchisé le découvre par un appel du client.
@@ -3396,6 +3416,35 @@ class Component extends DCLogic {
         navigator.clipboard.writeText(S.url).then(()=>dit(true)).catch(e=>dit(false,(e&&e.message)||'refusé par le navigateur'));
       else dit(false,'presse-papiers indisponible dans ce navigateur'); }
     catch(e){ dit(false,(e&&e.message)||'refusé par le navigateur'); } }
+  /* L'AFFICHE (PDF) — QR code, URL courte, conditions du bureau. Elle passe par
+     fetch et non par un simple lien : l'endpoint exige le jeton admin, qu'une
+     navigation directe n'emporte pas — le franchisé recevrait un 401 en guise
+     d'affiche. */
+  invPdf(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('&shop='+encodeURIComponent(fr.shop)):'';
+    this.printJob('Préparation de l’affiche…');
+    fetch(fr.base+'/franchisee/office-invite-pdf?office='+encodeURIComponent(S.office)+qs,{headers:FRH(),credentials:'omit'})
+      .then(async r=>{ if(!r.ok){ const j=await r.json().catch(()=>null); throw new Error((j&&j.error)||('HTTP '+r.status)); }
+        return r.blob(); })
+      .then(bl=>{ const u=URL.createObjectURL(bl); const a=document.createElement('a');
+        a.href=u; a.download='invitation-'+String(S.name||'bureau').replace(/[^A-Za-z0-9]+/g,'-')+'.pdf';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+        this.printJob('✔ Affiche téléchargée — imprimez-la pour la cafétéria'); })
+      .catch(e=>{ this.setState({inv:{...this.state.inv,msg:'Affiche indisponible — '+(e&&e.message?e.message:'réseau')+'.'}});
+        this.printJob('⚠ Affiche non produite — '+(e&&e.message?e.message:'réseau')); }); }
+  /* Envoi (ou renvoi) de l'e-mail au contact du bureau : conditions, bouton
+     « Créer mon compte », affiche en pièce jointe. */
+  invEnvoyer(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    this.setState({inv:{...S,msg:'Envoi en cours…'}});
+    fetch(fr.base+'/franchisee/office-invite-send'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify({office:S.office})})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.setState({inv:{...S,msg:''}});
+          this.printJob('✔ '+(j.message||'E-mail d’invitation envoyé')+(j.warning?(' — '+j.warning):'')); }
+        else { const why=(j&&j.error)||'Envoi refusé.'; this.setState({inv:{...S,msg:why}}); this.printJob('⚠ '+why); } })
+      .catch(e=>{ const why='Envoi impossible — '+(e&&e.message?e.message:'réseau indisponible')+'.';
+        this.setState({inv:{...S,msg:why}}); this.printJob('⚠ '+why); }); }
   // Reflète en mémoire les tables serveur touchées par le toggle « livraison
   // au bureau » (office créé/validé + pairing site) → l'office apparaît
   // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
@@ -6774,12 +6823,14 @@ class Component extends DCLogic {
       isSites:screen==='sites',sitesList,tourAssignTiles,
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
       invOpen:!!IV, invName:IV?IV.name:'', invUrl:IV?(IV.url||''):'',
+      invShort:IV?(IV.urlCourt||''):'',
       invHasUrl:!!(IV&&IV.url), invNoUrl:!!(IV&&!IV.url),
       invMsg:IV?(IV.msg||''):'', invMeta:invBouts.join(' · '),
       invCopyLabel:(IV&&IV.copied)?'Copié':'Copier le lien',
       invIssueLabel:(IV&&IV.url)?'Émettre un nouveau lien (révoque celui-ci)':'Émettre un lien',
       invClose:()=>this.invClose(), invCopy:()=>this.invCopy(),
       invIssue:()=>this.invIssue(), invRevoke:()=>this.invRevoke(),
+      invPdf:()=>this.invPdf(), invEnvoyer:()=>this.invEnvoyer(),
       offAssignChips,offAssignEmpty,offNoFree,offHasFree,offFreeTitle,offSiteCards,
       // ===== Menu « Clients » — table client via GET /franchisee/b2b-clients =====
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
