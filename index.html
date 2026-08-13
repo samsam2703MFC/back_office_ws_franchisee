@@ -3272,15 +3272,49 @@ class Component extends DCLogic {
       return {id:o.id||('pt'+i),libelle:o.name||'—',ville:o.city||(o.cp||'—'),client:o.name||'—',
         lat:e?e.lat:50.85,lng:e?e.lng:4.35,ca,couts,colis,kg:0,vol:0,seg:'horeca'}; }); }
 
-  // La BOUTIQUE (départ des tournées) — position RÉELLE : CP du shop
-  // (/franchisee/me → __SHOPINFO) résolu via le référentiel CP→GPS.
+  /* La BOUTIQUE (départ et retour des tournées).
+     Sa position vient de son ADRESSE : le serveur géocode address_line + zip
+     une fois et la conserve (shops.lat/lng, /franchisee/me → __SHOPINFO). Le
+     seul code postal ne donnait qu'un centroïde de commune — le pin pouvait
+     être à des kilomètres, et tous les tracés comme toutes les ETA en partent.
+     Trois niveaux, jamais confondus :
+       exact   → adresse géocodée (ou saisie à la main) : aucun avertissement ;
+       approx  → centroïde du CP, ici ou côté serveur : signalé ;
+       inconnu → repli Bruxelles-centre : signalé.
+     `precis` sert au libellé de l'alerte, `geoOk` reste le drapeau lu par les
+     cartes. */
   depot(){ const si=(typeof window!=='undefined'&&window.__SHOPINFO)||null;
     const nm=(si&&si.name)||(window.BOServer?window.BOServer.getParam('shop.name',''):'')||'Ma boutique';
+    const adr=(si&&si.address)||'';
+    // 1. Position servie par l'API — la seule qui puisse être exacte.
+    if(si&&si.lat!=null&&si.lng!=null){
+      const exact=(si.geoSource==='address'||si.geoSource==='manual');
+      return {lat:+si.lat, lng:+si.lng, geoOk:exact, precis:exact?'exact':'approx',
+        source:si.geoSource||null, adresse:adr,
+        libelle:nm+(si.city?(' · '+si.city):'')}; }
+    // 2. Repli local par le CP, tant que le serveur n'a pas encore résolu.
     const geo=(typeof window!=='undefined'&&window.__CPGEO&&window.__CPGEO.idx)||null;
     let e=null;
     if(geo&&si){ if(si.cp) e=geo[String(si.cp).trim()]||null;
       if(!e&&si.city&&window.__CPGEO.list){ const cl=String(si.city).toLowerCase(); const hit=window.__CPGEO.list.find(x=>String(x[1]).toLowerCase()===cl); if(hit) e={lat:hit[2],lng:hit[3]}; } }
-    return {lat:e?e.lat:50.85, lng:e?e.lng:4.35, geoOk:!!e, libelle:nm+(si&&si.city?(' · '+si.city):'')}; }
+    return {lat:e?e.lat:50.85, lng:e?e.lng:4.35, geoOk:false, precis:e?'approx':'inconnu',
+      source:e?'zip':null, adresse:adr,
+      libelle:nm+(si&&si.city?(' · '+si.city):'')}; }
+
+  /* Contenu du pin boutique — UNE seule rédaction pour les deux cartes.
+     Elles divergeaient : Tournées avertissait, Livraison du jour se taisait.
+     Deux textes séparés, c'est un des deux qu'on oublie de corriger. */
+  depotInfo(d){
+    const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    const warn=d.precis==='exact' ? null
+      : (d.precis==='approx'
+         ? 'Position approximative — centre du code postal, pas l’adresse'
+         : 'Position inconnue — repli Bruxelles-centre');
+    return {warn, html:'<b>'+esc(d.libelle)+'</b>'
+      +(d.adresse?('<br><span style="color:#666">'+esc(d.adresse)+'</span>'):'')
+      +'<br>Boutique — départ &amp; retour des tournées'
+      +(warn?('<br><span style="color:#b26a00">⚠ '+esc(warn)
+              +' — les tracés et les ETA en partent.<br>Corrigez address_line / zip de la boutique.</span>'):'')}; }
 
   T = {
     // Avis clients — libellés complets, jamais de phrase assemblée par
@@ -3826,7 +3860,11 @@ class Component extends DCLogic {
       +p.offices.map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>';
     // La BOUTIQUE — pin distinctif (départ / retour des tournées).
     const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
-    L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g).bindPopup("<b>"+esc(d.libelle)+"</b><br>Boutique — départ & retour des tournées"+(d.geoOk?"":"<br><span style='color:#b26a00'>CP de la boutique non géolocalisé — position approximative</span>"));
+    const dep=this.depotInfo(d);
+    const shopMk=L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g);
+    shopMk.bindPopup(dep.html);
+    if(dep.warn) shopMk.bindTooltip('⚠ '+dep.warn,
+      {permanent:true,direction:'right',offset:[10,-14],className:'dep-geo-warn'});
     let focusBounds=null;
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length];
       const isFocus=focus&&norm(focus)===norm(t.name);
@@ -3888,16 +3926,15 @@ class Component extends DCLogic {
     const focus=this.state.mapFocusTour||null;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
     const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
-    /* CP de la boutique non géolocalisé : le pin retombe sur le point par défaut
-       (Bruxelles-centre). Ce n'est pas qu'un détail d'affichage — tous les
-       tracés partent et reviennent de ce point, et les ETA en découlent. La
-       carte Tournées le signalait déjà ; ici elle plaçait le pin en silence.
-       L'avertissement est donc VISIBLE sans clic : une carte fausse ne doit
-       jamais avoir l'air juste. */
+    /* Position non exacte : le pin retombe sur le centroïde du CP, voire sur
+       Bruxelles-centre. Ce n'est pas qu'un détail d'affichage — tous les tracés
+       partent et reviennent de ce point, et les ETA en découlent. L'alerte est
+       donc VISIBLE sans clic : une carte fausse ne doit jamais avoir l'air
+       juste. */
+    const dep=this.depotInfo(d);
     const shopMk=L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g);
-    shopMk.bindPopup("<b>"+esc(d.libelle)+"</b><br>Boutique — départ &amp; retour des tournées"
-      +(d.geoOk?"":"<br><span style='color:#b26a00'>CP de la boutique non géolocalisé — position approximative, ainsi que les tracés et les ETA qui en partent</span>"));
-    if(!d.geoOk) shopMk.bindTooltip("⚠ Position approximative — CP de la boutique non géolocalisé",
+    shopMk.bindPopup(dep.html);
+    if(dep.warn) shopMk.bindTooltip('⚠ '+dep.warn,
       {permanent:true,direction:'right',offset:[10,-14],className:'dep-geo-warn'});
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length]; const k=norm(t.name);
       const isFocus=focus&&norm(focus)===k; const dim=focus&&!isFocus;
