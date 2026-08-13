@@ -329,48 +329,36 @@ Le franchisé crée un bureau. Le bureau doit ensuite faire créer un compte à
 chacun de ses collaborateurs. Le lien d'invitation supprime la saisie de
 rattachement — **pas la validation**.
 
-### Ce que la console fait, et ce qu'elle ne fait pas
+**Le serveur fait tout le travail** : `POST /franchisee/onboard-office` émet le
+lien signé à chaque bureau créé et le renvoie dans `invite_url`, avec
+`invite_expires_at` (date SQL) ou, s'il n'a rien pu émettre, `invite_reason`.
+Il déduit lui-même le domaine e-mail imposé depuis `contactEmail`, sauf
+messagerie grand public. Tout cela vit dans le dépôt **WebShop**
+(`php-api/index.php`, migration `0062_office_invites.sql`).
 
-- L'assistant « Onboarding bureau », au récapitulatif, propose **Joindre le
-  lien d'invitation du personnel**. Le corps de `POST /franchisee/onboard-office`
-  porte désormais `invite:{enabled, domain, departements[]}`.
-- `domain` est **déduit de l'e-mail du contact**, jamais saisi. Une adresse
-  grand public (`gmail.com`, `telenet.be`, …) vaut absence de domaine : un lien
-  restreint à `@gmail.com` ne restreint personne. La liste est
-  `OB_DOM_PUBLICS`. Dans ce cas l'interrupteur s'affiche éteint, l'écran dit
-  pourquoi, et `enabled` part à `false`.
-- **La console ne fabrique aucune URL.** Le lien est signé côté serveur ; une
-  URL forgée par le navigateur serait une URL modifiable, et ses paramètres
-  décident de qui facture. La réponse d'`onboard-office` doit contenir
-  `invite_url` (et éventuellement `invite_expire_le`) : la fenêtre « Lien
-  d'invitation du personnel » l'affiche avec un bouton de copie. Sans
-  `invite_url`, pas de fenêtre — un message dit que le serveur n'a rien émis.
+Côté console, donc :
 
-### Page « Créer mon compte » — `inscription.html`
+- **Aucune URL n'est fabriquée ici.** Une URL forgée par le navigateur serait
+  une URL modifiable, et ses paramètres décident de qui facture. On affiche
+  `invite_url` tel quel, dans une fenêtre avec bouton de copie ; sans lui, pas
+  de fenêtre, et le message répète `invite_reason`.
+- **Aucun interrupteur.** Le serveur émet le lien dans tous les cas ; une case
+  à cocher n'éteindrait rien. Le récapitulatif ANNONCE ce qui va se passer.
+- `OB_DOM_PUBLICS` est le **miroir exact** de `$grandPublic` côté serveur. Elle
+  ne décide rien : elle sert à dire, avant validation, si le lien sera restreint
+  à `@domaine` ou **émis sans restriction** — cas d'un contact en `gmail.com`,
+  où n'importe quelle adresse pourra s'en servir. C'est précisément ce qu'il
+  faut annoncer, pas taire.
 
-Servie à côté de la console (`inscription.html` = `inscription.dc.html` + le
-bloc de boot, exactement comme `index.html` / `back_office_ws_franchisee.dc.html` ;
-elle se régénère avec `tools/gen_inscription.py`).
+**La page « Créer mon compte » n'est pas dans ce dépôt.** Elle vit dans WebShop
+(`public/inscription.html`, servie à `<racine>/inscription?i=<jeton>`, appelant
+`GET`/`POST <racine>/api/inscription`) : elle est autonome, sans script ni
+police externes — une page ouverte depuis un e-mail, souvent sur un téléphone
+derrière un filtre d'entreprise, ne peut pas dépendre d'un CDN. Une seconde
+copie ici serait l'incident nº 2 du CLAUDE.md.
 
-Le boot lit `?i=<jeton>` et **ne le décode pas** : il le renvoie au serveur et
-pose `window.__INVITE` avant le runtime — toujours, y compris en échec
-(`{ok:false, motif}`). Une page servie ne peut donc pas retomber sur les
-valeurs de prévisualisation de l'éditeur Claude Design.
-
-À écrire côté serveur (hors de ce dépôt) :
-
-| Route | Rend |
-| --- | --- |
-| `GET <base>/webshop/invite?i=<jeton>` | `{ok, etat:'valide', boutique, raison, site, departements[], domaine, cp, logo, expire_le}` · **410** + `{etat:'expire'\|'revoque'}` pour un lien mort · 404 pour un lien inconnu |
-| `POST <base>/webshop/invite-signup` | corps `{i, prenom, nom, email, tel, cp, dept, mdp}` → crée le compte **et** la demande dans `ws_office_join_requests` (`pending`) · **409** `email_exists` · **410** lien mort |
-| `POST /franchisee/invite-revoke` | met le `jti` en liste noire |
-
-Le formulaire ne poste **aucun** identifiant de bureau, de site ou de
-boutique : ces trois-là sortent du jeton, côté serveur. Ce qui reste
-obligatoire : le compte entre en `pending` et n'achète rien avant que le
-franchisé l'ait validé dans « Demandes de rattachement bureau ». Sans cela,
-quiconque reçoit le lien transféré commanderait en paiement différé sur le
-compte de l'entreprise.
-
-Table `ws_office_invites` : `jti`, `shop_id`, `office_id`, `client_code`,
-`site_id`, `domain`, `expires_at`, `revoked_at`, `created_by`, `uses`.
+Ce qui reste vrai dans les deux dépôts : le compte créé entre en `pending` dans
+`ws_office_join_requests` et n'achète rien avant que le franchisé l'ait validé
+dans « Demandes de rattachement bureau ». Sans cela, quiconque reçoit le lien
+transféré commanderait en paiement différé sur le compte de l'entreprise.
+**Le lien fait gagner la saisie, pas le contrôle.**
