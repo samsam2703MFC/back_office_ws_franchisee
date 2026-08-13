@@ -2526,6 +2526,10 @@
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;align-items:center;gap:12px;padding:12px 15px;border:.5px solid var(--color-border-tertiary);border-radius:10px"><button onClick="{{ obToggleMail }}" style="{{ obMailTrack }}"><span style="{{ obMailKnob }}"></span></button><div style="flex:1"><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Envoyer l'e-mail récapitulatif au contact</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Reprend toutes les informations + voucher de bienvenue</div></div></div>
           <div style="display:flex;align-items:center;gap:12px;padding:12px 15px;border:.5px solid var(--color-border-tertiary);border-radius:10px"><button onClick="{{ obToggleAdh }}" style="{{ obAdhTrack }}"><span style="{{ obAdhKnob }}"></span></button><div style="flex:1"><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Envoyer les demandes d'adhésion au personnel</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Chaque personne crée son compte Office → entre dans le process client avec office/département déjà liés</div></div></div>
+          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 15px;border:.5px solid var(--color-border-tertiary);border-radius:10px"><button onClick="{{ obToggleInvite }}" style="{{ obInvTrack }}"><span style="{{ obInvKnob }}"></span></button><div style="flex:1"><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Joindre le lien d'invitation du personnel</div><div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:2px">Un seul lien pour tout le bureau, à transférer aux collaborateurs : ils arrivent sur le formulaire d'inscription avec <strong>{{ obInvPrelie }}</strong> déjà rattachés, et ne saisissent que leur identité.</div>
+            <sc-if value="{{ obInvDomOk }}" hint-placeholder-val="{{ true }}"><div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:4px">Réservé aux adresses <strong>@{{ obInvDom }}</strong> · le lien est signé par le serveur à la création, et chaque compte reste à valider dans « Demandes de rattachement bureau ».</div></sc-if>
+            <sc-if value="{{ obInvDomKo }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px/1.5 var(--font-ui);color:var(--st-bad);margin-top:4px">{{ obInvKoMsg }}</div></sc-if>
+          </div></div>
         </div>
         </sc-if>
 
@@ -2549,6 +2553,28 @@
           <button onClick="{{ obCreate }}" class="btn-primary" style="font-size:13px;display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><path d="M4 12l5 5L20 6"/></svg>Créer le bureau &amp; envoyer</button>
         </sc-if>
       </div>
+    </div>
+  </div>
+  </sc-if>
+  <!-- LE LIEN D'INVITATION, une fois le bureau créé. S'affiche uniquement si
+       le serveur en a renvoyé un : pas de lien ⇒ pas de fenêtre. -->
+  <sc-if value="{{ obInviteOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ obInviteClose }}" style="position:fixed;inset:0;background:rgba(34,34,34,.5);display:flex;align-items:center;justify-content:center;z-index:2400;padding:24px">
+    <div onClick="{{ stop }}" style="background:var(--color-surface);border-radius:16px;width:560px;max-width:100%;box-shadow:0 24px 70px rgba(0,0,0,.32);overflow:hidden">
+      <div style="padding:20px 26px;border-bottom:.5px solid var(--color-border-tertiary)">
+        <div class="t-page-title" style="font-size:17px">Lien d'invitation du personnel</div>
+        <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:3px">{{ obInviteRaison }} · à transférer aux collaborateurs</div>
+      </div>
+      <div style="padding:18px 26px 4px">
+        <div style="background:var(--color-background-secondary);border-radius:10px;padding:12px 14px;font:400 12px/1.5 var(--font-mono,monospace);color:var(--color-text);word-break:break-all;user-select:all">{{ obInviteUrl }}</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
+          <button onClick="{{ obInviteCopy }}" class="btn-secondary" style="font-size:12px;flex:none">Copier le lien</button>
+          <sc-if value="{{ obInviteExpKnown }}" hint-placeholder-val="{{ true }}"><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Valable jusqu'au {{ obInviteExp }}</span></sc-if>
+        </div>
+        <div style="margin-top:15px;font:400 11.5px/1.6 var(--font-ui);color:var(--color-text-muted)">Le lien ouvre le formulaire d'inscription avec <strong>{{ obInvitePrelie }}</strong> déjà rattachés : le collaborateur ne saisit que son identité et son mot de passe. Seules les adresses <strong>@{{ obInviteDom }}</strong> sont acceptées.</div>
+        <div style="margin-top:12px;padding:11px 13px;border-radius:9px;background:color-mix(in oklab,var(--color-collection-border) 12%,var(--color-surface));border:.5px solid color-mix(in oklab,var(--color-collection-border) 35%,transparent);font:500 11.5px/1.55 var(--font-ui);color:var(--color-text)">Le lien fait gagner la saisie, pas le contrôle : chaque compte créé arrive dans « Demandes de rattachement bureau » et ne commande rien tant que vous ne l'avez pas validé.</div>
+      </div>
+      <div style="padding:16px 26px 20px;display:flex;justify-content:flex-end"><button onClick="{{ obInviteClose }}" class="btn-primary" style="font-size:13px">Fermer</button></div>
     </div>
   </div>
   </sc-if>
@@ -2666,8 +2692,11 @@ class Component extends DCLogic {
       // avait choisis. Ils partent vides et sont saisis à l'étape 3.
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'10', franco:'250 €', drop:8,
-      vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
+      vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true, sendInvite:true },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
+    // Lien d'invitation renvoyé par le serveur après la création du bureau.
+    // null tant qu'aucun lien n'existe : la console n'en fabrique jamais.
+    obInvite: null,
     profileOpen: false, srcOpen: false, paramDrafts: {},
     dsQuery: '', dsOpen: false, dsIdx: 0,
   };
@@ -2679,7 +2708,7 @@ class Component extends DCLogic {
       adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'10', franco:'250 €', drop:8,
-      vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
+      vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true, sendInvite:true },
     obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'' }); this.zfGeoEnsure(); }
   obClose(){ this.setState({obOpen:false}); }
   // Localités du référentiel pour un CP belge (un code peut couvrir plusieurs
@@ -2741,6 +2770,19 @@ class Component extends DCLogic {
     const i=cur.indexOf(j); if(i>=0) cur.splice(i,1); else cur.push(j);
     cur.sort((a,b)=>this.OB_JOURS.indexOf(a)-this.OB_JOURS.indexOf(b));
     return {ob:{...s.ob,jours:cur}}; }); }
+  /* DOMAINE E-MAIL DU LIEN D'INVITATION — déduit de l'e-mail du contact,
+     jamais saisi à la main ni supposé. Le lien n'accepte que les adresses de
+     ce domaine : transféré hors de l'entreprise, il ouvrirait sinon un compte
+     en facturation différée sur le dos du bureau. Vide ⇒ pas de lien.
+     Une adresse GRAND PUBLIC ne restreint personne : un lien limité à
+     @gmail.com est un lien ouvert à la terre entière. Elle vaut donc absence
+     de domaine, et le lien n'est pas émis. */
+  OB_DOM_PUBLICS=['gmail.com','googlemail.com','hotmail.com','hotmail.be','hotmail.fr','outlook.com','outlook.be','outlook.fr','live.com','live.be','live.fr','msn.com','yahoo.com','yahoo.fr','ymail.com','icloud.com','me.com','proton.me','protonmail.com','aol.com','gmx.com','gmx.be','free.fr','orange.fr','wanadoo.fr','laposte.net','skynet.be','telenet.be','voo.be','scarlet.be','belgacom.net','edpnet.be','base.be','mail.com','yandex.com','zoho.com'];
+  obDomaineBrut(o){ const m=String((o&&o.contactEmail)||'').trim().match(/@([^@\s]+\.[^@\s]{2,})$/);
+    return m?m[1].toLowerCase():''; }
+  obDomaine(o){ const d=this.obDomaineBrut(o);
+    return (d&&this.OB_DOM_PUBLICS.indexOf(d)<0)?d:''; }
+  obInviteClose(){ this.setState({obInvite:null}); }
   obAddDept(){ const d=(this.state.obDeptDraft||'').trim(); if(!d) return; const eff=this.state.obDeptEff||'5'; this.setState(s=>({obDepts:[...s.obDepts,{dept:d,effectif:eff}],obDeptDraft:'',obDeptEff:'5'})); }
   obRemoveDept(i){ return ()=>this.setState(s=>({obDepts:s.obDepts.filter((_,j)=>j!==i)})); }
   obAddStaff(){ const n=(this.state.obStaffName||'').trim(), e=(this.state.obStaffEmail||'').trim(); if(!e) return; this.setState(s=>({obStaff:[...s.obStaff,{name:n||e.split('@')[0],email:e}],obStaffName:'',obStaffEmail:''})); }
@@ -2774,6 +2816,12 @@ class Component extends DCLogic {
     if(!String(o.validation||'').trim()){
       this.setState({obStep:2}); this.printJob('⚠ Mode de validation de la livraison requis'); return; }
     const obFenetre=String(o.fenDeb).trim()+'–'+String(o.fenFin).trim();
+    /* LIEN D'INVITATION. Il n'est PAS fabriqué ici : une URL forgée par le
+       navigateur serait une URL modifiable, et ses paramètres décident de qui
+       facture et à quelles conditions. La console demande, le serveur signe,
+       la console affiche ce qui revient — ou dit qu'il n'est rien revenu. */
+    const obDom=this.obDomaine(o);
+    const obApi=!!((window.__FR||{}).base&&(window.__FR||{}).token);
     const obLocalite=o.localite||obLocs[0]||'';
     const clients=window.BOServer.table('fr_clients');
     const num=1000+Math.floor(Math.random()*8999); const code='CL-'+num;
@@ -2802,6 +2850,8 @@ class Component extends DCLogic {
     const parts=[];
     if(o.sendMail&&o.contactEmail) parts.push('e-mail récapitulatif → '+o.contactEmail);
     if(o.sendAdhesion&&S.obStaff.length) parts.push(S.obStaff.length+' demande(s) d\'adhésion');
+    if(o.sendInvite&&!obDom) parts.push('lien d\u2019invitation non émis — l\u2019e-mail du contact ne donne aucun domaine d\u2019entreprise à qui le restreindre');
+    else if(o.sendInvite&&!obApi) parts.push('lien d\u2019invitation impossible hors API');
     parts.push('voucher '+vcode);
     this.setState({obOpen:false,screen:'b2bClients',selClient:newIdx,_rev:(S._rev||0)+1});
     // Le bureau naît NON VALIDÉ : sans cette mention, le franchisé croit avoir
@@ -2818,6 +2868,7 @@ class Component extends DCLogic {
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           fenetre:obFenetre,jours:obJours,validation:o.validation,
+          invite:{enabled:!!o.sendInvite&&!!obDom,domain:obDom,departements:S.obDepts.map(d=>d.dept)},
           departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur}})
       }).then(async r=>{
         // Un refus serveur était AVALÉ : `r.ok ? … : null` puis `.catch(()=>{})`.
@@ -2831,6 +2882,14 @@ class Component extends DCLogic {
         return await r.json().catch(()=>null);
       }).then(j=>{
         if(j===null) return;
+        // Le lien signé revient du serveur, ou il n'existe pas : aucun repli,
+        // aucune URL reconstruite à partir des valeurs qu'on vient d'envoyer.
+        if(o.sendInvite&&obDom){
+          if(j&&j.invite_url) this.setState({obInvite:{url:String(j.invite_url),
+            exp:String(j.invite_expire_le||''),raison:o.raison||office,domain:obDom,
+            prelie:[this.shopField('name',''),office,o.adr||''].filter(Boolean).join(' · ')}});
+          else this.printJob('⚠ Bureau créé, mais aucun lien d\u2019invitation renvoyé par le serveur — le personnel devra passer par le formulaire public');
+        }
         // Le serveur a créé office + LIGNE CLIENT (double lien) : refetch pour
         // que le nouveau client apparaisse tout de suite dans le menu Clients.
         const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={headers:FRH(),credentials:'omit'};
@@ -6241,6 +6300,15 @@ class Component extends DCLogic {
     const obToggle=(k)=>()=>this.setState(s=>({ob:{...s.ob,[k]:!s.ob[k]}}));
     const obTog=(on)=>({track:'position:relative;width:40px;height:22px;border-radius:20px;border:none;cursor:pointer;flex:none;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)'),knob:'position:absolute;top:2px;left:'+(on?'20px':'2px')+';width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s'});
     const obMailTog=obTog(O.sendMail), obAdhTog=obTog(O.sendAdhesion);
+    // Le lien ne peut exister sans domaine d'entreprise : l'interrupteur le
+    // montre éteint plutôt que de promettre un lien qui ne partira pas.
+    const obInvDom=this.obDomaine(O);
+    const obInvDomBrut=this.obDomaineBrut(O);
+    const obInvKoMsg=obInvDomBrut
+      ? ('L\u2019e-mail du contact est une adresse grand public (@'+obInvDomBrut+') : un lien restreint à ce domaine serait ouvert à tout le monde. Aucun lien ne sera émis — invitez le personnel un par un à l\u2019étape « Personnel & adhésion ».')
+      : 'Aucun domaine d\u2019entreprise déductible de l\u2019e-mail du contact : le lien ne pourrait être restreint à personne, il ne sera pas émis.';
+    const obInvTog=obTog(!!O.sendInvite&&!!obInvDom);
+    const obInvPrelie=[this.shopField('name',''),O.office||O.raison||'',O.adr||''].filter(Boolean).join(' · ')||'—';
     const obChip='font:500 10.5px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:5px 9px;color:var(--color-text);white-space:nowrap';
     const obChainView=[
       {lbl:'Tournée',val:O.tour||'—'},{lbl:'Chalandise',val:obZc.prim},{lbl:'Code postal',val:obZc.sec},
@@ -6302,6 +6370,20 @@ class Component extends DCLogic {
       // opacity SEULE : pointer-events:none rendait le bouton totalement inerte,
       // donc impossible d'y accrocher la moindre explication.
       obNextDisabledStyle:obStepValid?'':'opacity:.45;cursor:not-allowed',
+      obToggleInvite:obToggle('sendInvite'),
+      obInvTrack:obInvTog.track, obInvKnob:obInvTog.knob,
+      obInvDom:obInvDom, obInvDomOk:!!obInvDom, obInvDomKo:!obInvDom, obInvPrelie:obInvPrelie,
+      obInvKoMsg:obInvKoMsg,
+      // Fenêtre du lien émis — tout vient de la réponse serveur, rien d'ici.
+      obInviteOpen:!!S.obInvite,
+      obInviteUrl:(S.obInvite&&S.obInvite.url)||'',
+      obInviteExp:(S.obInvite&&S.obInvite.exp)||'',
+      obInviteExpKnown:!!(S.obInvite&&S.obInvite.exp),
+      obInviteRaison:(S.obInvite&&S.obInvite.raison)||'',
+      obInviteDom:(S.obInvite&&S.obInvite.domain)||'',
+      obInvitePrelie:(S.obInvite&&S.obInvite.prelie)||'',
+      obInviteCopy:()=>this.tkCopy((this.state.obInvite&&this.state.obInvite.url)||'','Lien d\u2019invitation copié'),
+      obInviteClose:()=>this.obInviteClose(),
       obIsFirst:obStep===0, obIsLast:obLast, obNotFirst:obStep>0, obNotLast:!obLast,
     };
 
