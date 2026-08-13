@@ -263,6 +263,12 @@ jobs:
           # 1. Coûts (écran Rentabilité). Les quatre sont nécessaires : sans eux
           #    la cascade de marge cède la place à son explication.
           PRM=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/params$QS" 2>/dev/null)
+          # Quelles clés de coût la base porte-t-elle RÉELLEMENT ? L'écran Coûts
+          # et le calcul de marge en ont longtemps employé deux jeux différents
+          # (cost_prep_hourly… d'un côté, cost_prep… de l'autre) : on liste les
+          # NOMS trouvés, sans leurs valeurs, pour aligner le code sur la base.
+          VUS=$(printf '%s' "$PRM" | tr -d ' ' | grep -o '"cle":"cost_[a-z_]*"' | sed 's/.*:"//;s/"$//' | sort -u | tr '\n' ' ')
+          echo "  clés de coût présentes en base : ${VUS:-aucune}"
           MANQ=''
           for K in cost_prep cost_emb cost_charg cost_struct; do
             if printf '%s' "$PRM" | tr -d ' ' | grep -q "\"cle\":\"$K\""; then :; else MANQ="$MANQ $K"; fi
