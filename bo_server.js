@@ -220,11 +220,21 @@
       // réponse API vide ne les écrase pas — ce sont des textes d'interface.
       var CONFIG = { fr_cout_params:1 };
       var failed = [];
+      // Tables dont la route PHP n'existe PAS ENCORE. On continue de l'appeler
+      // — le jour où elle est écrite, l'écran se remplit sans toucher au front
+      // — mais son 404 n'alimente pas le bandeau d'erreur : ce n'est pas une
+      // panne, c'est un chantier connu, et un bandeau permanent finit par ne
+      // plus être lu. Toute AUTRE erreur sur ces tables reste signalée, et un
+      // 404 sur n'importe quelle autre table reste une panne.
+      var ROUTES_A_ECRIRE = { users: 1, fr_renta_evolution: 1 };
       var jobs = Object.keys(MAP).map(function(key){
         var url = fr.base + '/franchisee/' + MAP[key] + qs;
         return fetch(url, { headers: headers, credentials: 'omit' })
           .then(function(r){
-            if (!r.ok) { failed.push(key + ' (HTTP ' + r.status + ')'); DB[key] = []; return null; }
+            if (!r.ok) {
+              if (!(r.status === 404 && ROUTES_A_ECRIRE[key])) failed.push(key + ' (HTTP ' + r.status + ')');
+              DB[key] = []; return null;
+            }
             return r.json().then(function(data){
               // La réponse API fait foi, MÊME VIDE (sauf configs d'écran) :
               // aucune donnée locale/périmée ne se substitue à la base.
