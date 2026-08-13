@@ -910,8 +910,8 @@
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:16px">Versionnés avec date d'effet — modifiables ; un recalcul historique ne réécrit jamais le passé</div>
           <sc-for list="{{ coutParams }}" as="p" hint-placeholder-count="5">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:.5px solid var(--color-border-tertiary)">
-              <div><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ p.label }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">effet {{ p.effet }}</div></div>
-              <div style="display:flex;align-items:center;gap:7px;flex:none"><input type="number" step="{{ p.step }}" value="{{ p.val }}" onInput="{{ p.onInput }}" style="width:92px;text-align:right;font:600 13px var(--font-ui);color:var(--color-text);border:.5px solid var(--color-border-secondary);border-radius:7px;background:var(--color-surface);padding:8px 9px"/><span style="font:500 11px var(--font-ui);color:var(--color-text-muted);width:34px">{{ p.unit }}</span></div>
+              <div><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ p.label }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ p.etat }}</div></div>
+              <div style="display:flex;align-items:center;gap:7px;flex:none"><input type="number" step="{{ p.step }}" value="{{ p.val }}" onInput="{{ p.onInput }}" onChange="{{ p.onSave }}" style="width:92px;text-align:right;font:600 13px var(--font-ui);color:var(--color-text);border:.5px solid var(--color-border-secondary);border-radius:7px;background:var(--color-surface);padding:8px 9px"/><span style="font:500 11px var(--font-ui);color:var(--color-text-muted);width:34px">{{ p.unit }}</span></div>
             </div>
           </sc-for>
           <button onClick="{{ addCoutVersion }}" class="btn-secondary" style="width:100%;margin-top:16px;font-size:12px">+ Nouvelle version (date d'effet)</button>
@@ -2748,7 +2748,20 @@ class Component extends DCLogic {
     // inventés (26 €/h, 0,42 €, 1,78 €/L, 38 €, 24 €/h) faisaient calculer une
     // rentabilité fictive présentée comme réelle — go-live : coût absent = 0
     // affiché comme « non configuré », jamais un chiffre sorti de nulle part.
-    couts: (typeof window!=='undefined'&&window.BOServer)?{prep:+window.BOServer.getParam('cost_prep_hourly',0),emb:+window.BOServer.getParam('cost_packaging_unit',0),carb:+window.BOServer.getParam('cost_fuel_liter',0),struct:+window.BOServer.getParam('cost_structure_tour',0),charg:+window.BOServer.getParam('cost_loading_hourly',0)}:{ prep: 0, emb: 0, carb: 0, struct: 0, charg: 0 },
+    /* Coûts : UN SEUL jeu de clés ws_param, celui que le calcul de marge lit
+       (cost_prep · cost_emb · cost_charg · cost_struct, + cost_carb pour le
+       carburant). L'écran en employait un autre — cost_prep_hourly,
+       cost_packaging_unit… — si bien qu'on pouvait saisir des coûts toute la
+       journée sans que la rentabilité les voie jamais. La sonde a confirmé
+       qu'AUCUN des deux jeux n'existait en base : rien à migrer, il fallait
+       seulement cesser d'en avoir deux.
+       Un coût non paramétré vaut null, pas 0 : « 0 € » est un tarif, pas une
+       absence de tarif. */
+    couts: (function(){ var o={prep:null,emb:null,carb:null,struct:null,charg:null};
+      try { if (typeof window!=='undefined' && window.BOServer) {
+        Object.keys(o).forEach(function(k){ var v=window.BOServer.getParam('cost_'+k,'');
+          var n=parseFloat(v); o[k]=(v===''||v==null||isNaN(n))?null:n; }); } } catch(e){}
+      return o; })(),
     toast: '', printed: {},
     newRoutes: [], newZones: [], deletedRoutes: [], delRoute: null,
     rfOpen: false, rfEditId: null, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, driver:'', vehicule:'', postcodes:[], ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
@@ -2997,9 +3010,9 @@ class Component extends DCLogic {
       coutVersion:{ title:'Nouvelle version de coûts', table:'ws_cost_versions', save:'Publier la version',
         fields:[
           {k:'dateEffet',label:'Date d\'effet',type:'text',ph:'JJ/MM/AAAA'},
-          {k:'prep',label:'Coût préparation / commande (€)',type:'number',def:26},
-          {k:'carb',label:'Carburant / km (€)',type:'number',def:1.78},
-          {k:'struct',label:'Coût structure / tournée (€)',type:'number',def:38},
+          {k:'prep',label:'Coût préparation / commande (€)',type:'number',ph:'ex. 26'},
+          {k:'carb',label:'Carburant / km (€)',type:'number',ph:'ex. 1.78'},
+          {k:'struct',label:'Coût structure / tournée (€)',type:'number',ph:'ex. 38'},
         ]},
       except:{ title:'Jour exceptionnel boutique', table:'ws_shop_exceptions', tbl:'ws_shop_exceptions', save:'Ajouter la date',
         fields:[
@@ -4978,8 +4991,38 @@ class Component extends DCLogic {
       ? 'Retirer '+simP.libelle+' am\u00e9liore la marge : son co\u00fbt de service (mod\u00e8le) d\u00e9passe son CA. Suggestion : refacturer le port ou regrouper sur un autre jour.'
       : 'Retirer '+simP.libelle+' d\u00e9grade la marge : ce point est rentable, le conserver.');
     // PARAMS
-    const setCout=(k)=>(e)=>{ const v=parseFloat(e.target.value); this.setState(s=>({couts:{...s.couts,[k]:isNaN(v)?0:v}})); };
-    const coutParams=SRV('fr_cout_params').map(p=>({...p,val:S.couts[p.key],onInput:setCout(p.key)}));
+    /* Saisie d'un coût : l'état suit la frappe, l'ENREGISTREMENT a lieu à la
+       validation du champ (blur/Entrée) — écrire à chaque touche enverrait un
+       POST par caractère. Avant, rien n'était enregistré du tout : on saisissait
+       un coût, on rechargeait, il avait disparu, et la rentabilité continuait
+       d'annoncer « non paramétrés ». */
+    const setCout=(k)=>(e)=>{ const raw=e.target.value; const v=parseFloat(raw);
+      this.setState(s=>({couts:{...s.couts,[k]:(raw===''||isNaN(v))?null:v}})); };
+    const saveCout=(k)=>(e)=>{ const raw=e.target.value; const v=parseFloat(raw);
+      if(!window.BOServer) return;
+      // Champ vidé ⇒ le paramètre repart vide : on n'invente pas un 0.
+      window.BOServer.setParam('cost_'+k,(raw===''||isNaN(v))?'':String(v));
+      this.printJob((raw===''||isNaN(v))
+        ? ('Coût « '+k+' » effacé (ws_param cost_'+k+')')
+        : ('✔ Coût « '+k+' » enregistré (ws_param cost_'+k+')')); };
+    /* Les LIGNES du formulaire (libellé, unité, pas de saisie) décrivent
+       l'interface, pas la donnée : elles sont définies ici. Elles vivaient dans
+       la table fr_cout_params, que l'API ne sert pas et que le SEED ne charge
+       jamais au démarrage — l'écran n'affichait donc AUCUN champ, et il était
+       impossible de saisir un coût. Les VALEURS, elles, restent en base
+       (ws_param cost_*) et ne sont jamais inventées. */
+    const COUT_LIGNES=[
+      {key:'prep',  label:'Coût horaire préparation',   unit:'€/h', step:'0.5'},
+      {key:'emb',   label:'Coût emballage / colis',     unit:'€',   step:'0.01'},
+      {key:'charg', label:'Taux horaire chargement',    unit:'€/h', step:'0.5'},
+      {key:'struct',label:'Coût structure / tournée',   unit:'€',   step:'1'},
+      {key:'carb',  label:'Coût carburant / litre',     unit:'€/L', step:'0.01'},
+    ];
+    const coutSrv=SRV('fr_cout_params');
+    const coutParams=(coutSrv.length?coutSrv:COUT_LIGNES).map(p=>({...p,
+      val:(S.couts[p.key]==null?'':S.couts[p.key]),
+      etat:(S.couts[p.key]==null?'non paramétré':('clé ws_param cost_'+p.key)),
+      onInput:setCout(p.key), onSave:saveCout(p.key)}));
     const setW=(k)=>(e)=>{ const v=parseInt(e.target.value,10); this.setState({[k]:v}); };
     const abgSum=((S.alpha+S.beta+S.gamma)/100).toFixed(2).replace('.',',');
     const abg=[
