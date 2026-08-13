@@ -139,6 +139,10 @@
   @keyframes pulse{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
   .leaflet-container{font-family:var(--font-ui)}
+  /* Avertissement permanent du pin boutique quand son CP n'est pas géolocalisé. */
+  .dep-geo-warn{background:#fff4e0;border:1px solid #b26a00;color:#8a5200;font:600 11px var(--font-ui);
+    box-shadow:0 1px 4px rgba(0,0,0,.18);white-space:nowrap}
+  .dep-geo-warn::before{border-right-color:#b26a00}
   .drg{transition:transform .08s ease,box-shadow .12s ease}
   .drg:active{cursor:grabbing}
   /* --- Tactile : cibles au doigt --- */
@@ -3481,25 +3485,6 @@ class Component extends DCLogic {
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m); this._geoAMap=m; this._geoAKey=null; }
     this.geoADraw();
   }
-  // Carte « Livraison du jour » : le magasin, les sites livrés et les chauffeurs
-  // porteurs d'une position. Un chauffeur sans coordonnées n'est pas placé —
-  // on ne devine pas où il se trouve.
-  drawSuiviMap(){ const L=window.L, m=this._suiviMap; if(!L||!m) return;
-    const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
-    const drivers=SRV('fr_live_drivers'), sites=this.geoPoints(), d=this.depot();
-    const key=JSON.stringify([sites.length,drivers.length,!!d]);
-    if(this._suiviKey===key) return; this._suiviKey=key;
-    if(this._suiviLayer) m.removeLayer(this._suiviLayer);
-    const g=L.layerGroup(), bounds=[];
-    if(d){ L.marker([d.lat,d.lng]).addTo(g).bindPopup('<b>'+d.libelle+'</b><br>Dépôt magasin'); bounds.push([d.lat,d.lng]); }
-    sites.forEach(p=>{ L.circleMarker([p.lat,p.lng],{radius:8,color:'#fff',weight:2,fillColor:'#8D1D2C',fillOpacity:.95})
-      .addTo(g).bindPopup('<b>'+p.libelle+'</b><br>'+p.ville); bounds.push([p.lat,p.lng]); });
-    drivers.forEach(dr=>{ if(dr.lat==null||dr.lng==null) return;
-      L.circleMarker([+dr.lat,+dr.lng],{radius:10,color:dr.color||'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1})
-        .addTo(g).bindPopup('<b>'+(dr.nom||'Chauffeur')+'</b>'+(dr.info?'<br>'+dr.info:'')); bounds.push([+dr.lat,+dr.lng]); });
-    g.addTo(m); this._suiviLayer=g;
-    if(bounds.length) m.fitBounds(bounds,{padding:[30,30],maxZoom:13});
-  }
   geoAFiltered(){ const D=this._geoAData; if(!D) return {list:[],unloc:0};
     const geo=window.__CPGEO; let unloc=0;
     const list=(D.clients||[]).filter(c=>{ const ok=geo&&c.cp&&geo.idx[String(c.cp).trim()]; if(!ok) unloc++; return !!ok; });
@@ -3903,7 +3888,17 @@ class Component extends DCLogic {
     const focus=this.state.mapFocusTour||null;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
     const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
-    L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g).bindPopup("<b>"+esc(d.libelle)+"</b><br>Boutique — départ &amp; retour des tournées");
+    /* CP de la boutique non géolocalisé : le pin retombe sur le point par défaut
+       (Bruxelles-centre). Ce n'est pas qu'un détail d'affichage — tous les
+       tracés partent et reviennent de ce point, et les ETA en découlent. La
+       carte Tournées le signalait déjà ; ici elle plaçait le pin en silence.
+       L'avertissement est donc VISIBLE sans clic : une carte fausse ne doit
+       jamais avoir l'air juste. */
+    const shopMk=L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g);
+    shopMk.bindPopup("<b>"+esc(d.libelle)+"</b><br>Boutique — départ &amp; retour des tournées"
+      +(d.geoOk?"":"<br><span style='color:#b26a00'>CP de la boutique non géolocalisé — position approximative, ainsi que les tracés et les ETA qui en partent</span>"));
+    if(!d.geoOk) shopMk.bindTooltip("⚠ Position approximative — CP de la boutique non géolocalisé",
+      {permanent:true,direction:'right',offset:[10,-14],className:'dep-geo-warn'});
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length]; const k=norm(t.name);
       const isFocus=focus&&norm(focus)===k; const dim=focus&&!isFocus;
       const pts=sites.filter(s=>norm(s.zone)===k)
