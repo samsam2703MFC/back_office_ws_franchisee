@@ -3100,11 +3100,13 @@ class Component extends DCLogic {
        quand personne n'en avait demandé : « BIENVENUE4821 » naissait à chaque
        bureau, partait dans le courrier, et engageait la boutique sur une
        remise que le franchisé n'avait pas choisie. */
+    /* AUCUNE COPIE LOCALE DU BON ICI. Le serveur crée le vrai bon en même
+       temps que le bureau (INSERT INTO ws_vouchers dans /franchisee/onboard-
+       office), et l'écran Bons relit ws_vouchers. La copie qui était poussée
+       dans ws_vouchers_local partait dans l'overlay ws_bo_store : elle
+       s'affichait à côté du vrai bon jusqu'au rechargement, puis disparaissait
+       — un doublon fantôme, jamais une donnée. */
     const obVchs=this.obVouchersFinaux();
-    if(obVchs.length){ const vouchers=window.BOServer.table('ws_vouchers_local');
-      obVchs.forEach(v=>vouchers.push({code:v.code,valeur:v.valeur,libelle:v.libelle,
-        type:'add_office',validite:v.validite||'onboarding',loc:true}));
-      window.BOServer.save('ws_vouchers_local',vouchers); }
     const newIdx=clients.length-1;
     const parts=[];
     // « → adresse » se lisait comme un envoi fait. Il est seulement DEMANDÉ :
@@ -3217,7 +3219,7 @@ class Component extends DCLogic {
     frais:{table:'ws_delivery_fee_rules',origin:'Form fee — cascade Site→Bureau→Tournée→Boutique · franco',calc:'Première règle applicable dans l\'ordre de priorité ; upsert BOServer.save',dev:'1 j'},
     calendarRules:{table:'ws_calendar_rules',origin:'Form calRule — open days · cut-off · lead time par mode',calc:'Champs mode/days/cut/lead ⇒ upsert BOServer.save(ws_calendar_rules)',dev:'1 j'},
     pricingRules:{table:'ws_pricing_rules_local',origin:'Form pricing — règles locales ✍ vs réseau 👁 (lecture seule)',calc:'loc=true éditable ; upsert BOServer.save(ws_pricing_rules_local)',dev:'1 j'},
-    vouchers:{table:'ws_vouchers_local',origin:'Form voucher — bons locaux + bons marque hérités',calc:'loc=true éditable ; type add_office = onboarding ; upsert BOServer.save',dev:'1 j'},
+    vouchers:{table:'ws_vouchers_local',origin:'ws_vouchers (boutique + marque) via /franchisee/ws-vouchers-local',calc:'Création par POST /franchisee/voucher ; l’onboarding crée le sien côté serveur',dev:'—'},
     remiseWebshop:{table:'ws_param (remise webshop)',origin:'Toggle remise auto webshop',calc:'setParam(remise.webshop_enabled) ; % appliqué au panier B2B',dev:'0,5 j'},
     assortiment:{table:'ws_param (flags assortiment)',origin:'Arbre catégories → produits · actif / verrou marque',calc:'flags[catA_*] / [prodA_*] persistés ; verrou = mandatoire non modifiable',dev:'1,5 j'},
     paiements:{table:'ws_payment_methods',origin:'Moyens de paiement par profil (web/comptoir/bureau)',calc:'Toggles dw/dc/db persistés par ligne ; upsert BOServer.save',dev:'1 j'},
@@ -3467,11 +3469,22 @@ class Component extends DCLogic {
           {k:'drop',label:'Temps de dépôt (minutes)',type:'number',
            info:'Durée sur place : accès, badge, étage. Elle entre dans l’heure d’arrivée annoncée aux bureaux suivants de la tournée.'},
         ]},
-      dispoProd:{ title:'Exception produit', table:'ws_product_availability', tbl:'ws_product_availability', save:'Créer l\'exception',
+      /* DISPONIBILITÉ D'UN PRODUIT DANS CETTE BOUTIQUE.
+         L'écran s'appelait « Exception produit » et écrivait dans l'overlay
+         sous le nom ws_product_availability — une table qui n'existe nulle
+         part : l'exception saisie n'a jamais rien produit. Le vrai levier est
+         ws_product_shops (vendu ici · pas vendu ici · pas livrable).
+         Les quatre exceptions proposées (Sur devis, Saisonnier, Non livrable,
+         Délai spécifique) n'étaient pas stockables : la base n'en sait dire
+         que trois états, et ce sont ceux-ci. La « catégorie parente » a
+         disparu — elle vient du produit, on ne la choisit pas. */
+      dispoProd:{ title:'Disponibilité d’un produit', table:'ws_product_shops', save:'Enregistrer',
         fields:[
-          {k:'produit',label:'Produit',type:'text',ph:'ex. Pièce montée sur commande'},
-          {k:'cat',label:'Catégorie parente',type:'select',options:sel(cats),def:cats[0]||''},
-          {k:'rule',label:'Exception',type:'select',options:sel(['Sur devis','Saisonnier','Non livrable','Délai spécifique']),def:'Sur devis'},
+          {k:'produit',label:'Produit',type:'text',ph:'nom exact au catalogue',
+           info:'Le nom doit correspondre au catalogue réseau : le serveur refuse un produit qu’il ne trouve pas.'},
+          {k:'statut',label:'Dans cette boutique',type:'select',def:'Disponible',
+           options:sel(['Disponible','Désactivé en boutique','Sans livraison']),
+           info:'« Sans livraison » = vendu en boutique, mais jamais livré. Un produit coupé par la marque ne se rouvre pas d’ici.'},
         ]},
       email:{ title:'Nouvel email bureau', table:'ws_office_emails', tbl:'ws_office_emails', save:'Ajouter l\'email',
         fields:[
@@ -3503,19 +3516,24 @@ class Component extends DCLogic {
           {k:'lead',label:'Délai minimum (heures)',type:'number',half:true,def:24,
            info:'Durée minimale entre la commande et la livraison ou le retrait.'},
         ]},
-      pricing:{ title:'Règle de prix locale', table:'ws_pricing_rules', tbl:'ws_pricing_rules_local', save:'Créer la règle',
+      /* RÈGLE DE PRIX LOCALE — les trois champs étaient du texte libre sans
+         rapport avec les colonnes réelles (rule_type, x, y, threshold), et
+         partaient dans l'overlay sous un nom de table qui n'existe pas.
+         Une règle RÉSEAU ne s'édite pas ici : le serveur la refuse. */
+      pricing:{ title:'Règle de prix locale', table:'ws_pricing_rules', save:'Enregistrer la règle',
         fields:[
-          {k:'nom',label:'Libellé',type:'text',ph:'ex. Happy hour −20 %'},
-          {k:'cible',label:'Cible',type:'text',ph:'catégorie / produit'},
-          {k:'effet',label:'Effet',type:'text',ph:'ex. −20 % ou 19,90 €'},
+          {k:'nom',label:'Libellé',type:'text',ph:'ex. 4 parts achetées, la 5e offerte'},
+          {k:'type',label:'Type de règle',type:'select',def:'cross_portion',
+           options:[{value:'cross_portion',label:'X pièces achetées → Y offertes'},{value:'threshold',label:'Seuil de déclenchement'}]},
+          {k:'x',label:'Pièces achetées',type:'number',def:4,half:true},
+          {k:'y',label:'Pièces offertes',type:'number',def:1,half:true},
+          {k:'seuil',label:'Seuil (€) — pour une règle « seuil »',type:'number',ph:'ex. 40'},
         ]},
-      voucher:{ title:'Bon local', table:'ws_vouchers', tbl:'ws_vouchers_local', save:'Créer le bon',
-        fields:[
-          {k:'code',label:'Code',type:'text',ph:'ex. BXL10'},
-          {k:'type',label:'Type',type:'select',options:sel(['Panier','Montant','add_office']),def:'Panier'},
-          {k:'valeur',label:'Valeur / effet',type:'text',ph:'ex. −10 % dès 40 €'},
-          {k:'validite',label:'Validité',type:'text',ph:'ex. jusqu\'au 31/08'},
-        ]},
+      /* Le formulaire « Bon local » a été SUPPRIMÉ. Il n'était plus ouvert par
+         aucun écran, ses quatre champs étaient du texte libre, et il écrivait
+         dans l'overlay ws_vouchers_local — que rien ne lit. Les bons se créent
+         par l'écran Bons, qui poste sur /franchisee/voucher et atteint la
+         vraie table ws_vouchers. */
       // Les valeurs par défaut sont celles de la LIGNE BOUTIQUE servie par
       // /franchisee/me — plus de paramètres ws_param. Les horaires ne sont pas
       // ici : ils sont édités dans « Disponibilité & créneaux »
@@ -3588,6 +3606,14 @@ class Component extends DCLogic {
        ws_bo_store — une table que le checkout ne lit pas. La console affichait
        le cut-off saisi, le webshop appliquait celui de la tournée. */
     if(S.formKey==='bureauParam'){ this.setState({formKey:null}); this.bpWrite(v); return; }
+    // Règle de prix locale et disponibilité produit : une ligne, une route.
+    if(S.formKey==='pricing'){ this.setState({formKey:null});
+      this.routeWrite('pricing-rule',{id:(S.formRow&&S.formRow.id)||0,nom:v.nom,type:v.type,x:v.x,y:v.y,seuil:v.seuil},
+        'Règle',null,'ws-pricing-rules-local','ws_pricing_rules_local',()=>'✔ Règle enregistrée — '+(v.nom||'')); return; }
+    if(S.formKey==='dispoProd'){ this.setState({formKey:null});
+      this.routeWrite('product-availability',{produit:v.produit,statut:v.statut},
+        'Disponibilité',null,'ws-product-availability','ws_product_availability',
+        j=>'✔ '+(v.produit||'')+' — '+((j&&j.statut)||v.statut)); return; }
     // Créneau et jour exceptionnel : une ligne, une route (voir slotWrite/excWrite).
     if(S.formKey==='creneau'){ this.setState({formKey:null});
       this.slotWrite({id:(S.formRow&&S.formRow.id)||0,mode:v.mode,libelle:v.libelle,ordre:v.ordre}); return; }
@@ -6139,7 +6165,14 @@ class Component extends DCLogic {
         trackStyle:'position:relative;width:40px;height:22px;border-radius:20px;border:none;cursor:pointer;transition:background .15s;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)'),
         knobStyle:'position:absolute;top:2px;left:'+(on?'20px':'2px')+';width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)'};
     });
-    const dispoProds=SRV('ws_product_availability').map((p,i)=>{ const rl=p.rule||''; const bg=rl==='Sur devis'?'#fff4e5':(rl==='Non livrable'?'#fbe9eb':(/J\+/.test(rl)?'#eaf5ec':'var(--color-background-secondary)')); const c=rl==='Sur devis'?'#b26a00':(rl==='Non livrable'?'var(--color-primary)':(/J\+/.test(rl)?'#2d7a3e':'var(--color-text-muted)')); return {...p,nom:p.produit,edit:this.editForm('dispoProd',p,i),del:this.deleteRow('ws_product_availability',i),pill:pill2(bg,c)}; });
+    const dispoProds=SRV('ws_product_availability').map((p,i)=>{ const rl=p.rule||''; const bg=rl==='Sur devis'?'#fff4e5':(rl==='Non livrable'?'#fbe9eb':(/J\+/.test(rl)?'#eaf5ec':'var(--color-background-secondary)')); const c=rl==='Sur devis'?'#b26a00':(rl==='Non livrable'?'var(--color-primary)':(/J\+/.test(rl)?'#2d7a3e':'var(--color-text-muted)')); return {...p,nom:p.produit,
+        /* Une coupure décidée par la MARQUE ne se lève pas d'ici : ni bouton
+           Modifier, ni bouton Supprimer, plutôt qu'un geste que le serveur
+           refusera. « Supprimer » vaut ici « redevient disponible ». */
+        edit:p.local?this.editForm('dispoProd',{...p,statut:p.statut},i):null,
+        del:p.local?(()=>this.routeWrite('product-availability',{produit:p.produit,statut:'Disponible'},
+          'Disponibilité','✔ '+(p.produit||'')+' redevient disponible','ws-product-availability','ws_product_availability')):null,
+        pill:pill2(bg,c)}; });
 
     const toMinS=(s)=>{ const p=String(s||'').split(':'); return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0); };
     const hhmmS=(m)=>{ const h=Math.floor(m/60)%24,mm=m%60; return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'); };
@@ -6893,7 +6926,12 @@ class Component extends DCLogic {
 
     // Règles de prix
     const scopePill=(loc)=>loc?pill2('#eaf5ec','#2d7a3e'):pill2('#eef3fb','#2a5a9e');
-    const priceRules=SRV('ws_pricing_rules_local').map((p,i)=>({...p,scope:p.loc?'Locale ✍️':'Réseau 👁️',scopePill:scopePill(p.loc),edit:this.editForm('pricing',p,i),del:this.deleteRow('ws_pricing_rules_local',i,'la règle « '+(p.nom||p.regle||'')+' »')}));
+    /* Une règle RÉSEAU n'est pas modifiable ici : elle appartient à la marque,
+       et la changer depuis une boutique la changerait pour tout le monde. Le
+       serveur refuse ; l'écran cesse donc de proposer le geste. */
+    const priceRules=SRV('ws_pricing_rules_local').map((p,i)=>({...p,scope:p.loc?'Locale ✍️':'Réseau 👁️',scopePill:scopePill(p.loc),
+      edit:p.loc?this.editForm('pricing',{...p,type:p.vType||'cross_portion',x:p.vX||0,y:p.vY||0,seuil:p.vSeuil!==''&&p.vSeuil!=null?p.vSeuil:''},i):null,
+      del:p.loc?(()=>this.routeWrite('pricing-rule',{delete:true,id:p.id},'Règle','✔ Règle supprimée','ws-pricing-rules-local','ws_pricing_rules_local')):null}));
 
     // Bons / codes — MODÈLE ERP UNIFIÉ (fr-vouchers) : mes bons éditables,
     // bons Marque en lecture seule. Création/édition → POST /franchisee/voucher.
