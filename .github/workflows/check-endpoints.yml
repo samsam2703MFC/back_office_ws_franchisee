@@ -447,8 +447,16 @@ jobs:
               # refabriquée depuis la ligne quand la console réaffiche le lien.
               # Colonne absente ⇒ le lien reconstitué diffère de celui envoyé
               # par e-mail, et le collaborateur tombe sur « lien invalide ».
+              # ws_office_emails.role : sans elle, l'écran « Contacts email »
+              # rend un 500 — la 0063 était un no-op sur les bases où la table
+              # existait déjà, héritée d'avant les migrations.
+              # ws_office_delivery_settings.cutoff_offset : sans elle, le
+              # cut-off par bureau n'est pas enregistrable et la console le
+              # refuse en le disant (au lieu de l'écrire dans un overlay que le
+              # checkout ne lit pas).
               for cc in "shops:lat:0060" "shops:lng:0060" "client:preferred_shop_id:—" "shops:geo_source:0060" \
-                        "ws_office_invites:jti:0062" "ws_office_invites:depts:0062"; do
+                        "ws_office_invites:jti:0062" "ws_office_invites:depts:0062" \
+                        "ws_office_emails:role:0065" "ws_office_delivery_settings:cutoff_offset:0066"; do
                 t=${cc%%:*}; rest=${cc#*:}; c=${rest%%:*}; mig=${rest#*:}
                 n=$(dbq "SELECT COUNT(*) FROM information_schema.columns
                           WHERE table_schema = DATABASE() AND table_name = '$t' AND column_name = '$c'")
