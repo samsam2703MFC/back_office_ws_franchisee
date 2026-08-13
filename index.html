@@ -93,8 +93,11 @@
     // moyen de dire pourquoi. C'est ce silence qu'on retire, pas l'échec.
     if (!fr.base) { window.__SHOPREASON = 'API non résolue — aucune base d’appel (mode démo ou page servie hors du webshop).'; return Promise.resolve(); }
     if (!fr.shop) {
-      window.__SHOPREASON = window.__SHOPBADPARAM
-        ? ('?shop=' + window.__SHOPBADPARAM + ' ignoré : la portée boutique est un ID numérique (ex. ?shop=2). La liste des id est servie par /shops.')
+      window.__SHOPREASON = window.__SHOPBADSEP
+        ? ('Adresse mal formée : les paramètres se séparent par « & », pas par un second « ? ». '
+           + 'Ni la boutique ni le jeton n’ont été lus — rouvrez la console avec ?shop=<id>&token=<jeton admin>.')
+        : window.__SHOPBADPARAM
+        ? ('Paramètre ?shop= ignoré (« ' + window.__SHOPBADPARAM + ' ») : la portée boutique est un ID numérique (ex. ?shop=2). La liste des id est servie par /shops.')
         : (window.__SHOPPURGED
            ? ('Boutique mémorisée « ' + window.__SHOPPURGED + ' » écartée : ce n’est pas un id. Rouvrez la console avec ?shop=<id> — la liste est servie par /shops.')
            : 'Aucune boutique sélectionnée : le jeton admin est réseau, la portée doit venir de ?shop=<id> (mémorisée ensuite dans localStorage « franchiseeShop »).');

@@ -39,7 +39,9 @@
   try {
     shop = localStorage.getItem('franchiseeShop') || '';
     if (shop && !isId(shop)) {
-      window.__SHOPPURGED = shop;
+      // Même prudence qu'au paramètre d'URL : la valeur mémorisée a pu être
+      // écrite depuis une adresse mal formée et contenir un jeton.
+      window.__SHOPPURGED = String(shop).replace(/(token|pin|secret|key|pass)[=:][^&\s]*/gi, '$1=***').slice(0, 24);
       shop = '';
       localStorage.removeItem('franchiseeShop');
     }
@@ -60,7 +62,22 @@
       if (isId(qs2)) { shop = qs2; try { localStorage.setItem('franchiseeShop', shop); } catch (e) {} }
       // Un ?shop= non numérique n'est pas deviné : on le signale au lieu de
       // basculer en portée réseau comme si de rien n'était.
-      else window.__SHOPBADPARAM = qs2;
+      //
+      // La valeur est REDIGÉE avant d'être conservée. Vu en production : une
+      // adresse écrite « ?shop=2?/token=<jeton> » — un second « ? » au lieu
+      // d'un « & » — fait entrer le JETON ADMIN dans la valeur de ?shop=, et
+      // ce texte finissait affiché en clair dans le bandeau de la carte. Un
+      // message d'erreur ne doit jamais recopier ce qu'il a reçu.
+      else {
+        var vis = String(qs2).replace(/(token|pin|secret|key|pass)[=:][^&\s]*/gi, '$1=***');
+        if (vis.length > 24) vis = vis.slice(0, 24) + '…';
+        window.__SHOPBADPARAM = vis;
+        // Séparateur fautif : la valeur commence par l'id, puis un caractère
+        // d'URL. Le cas est assez fréquent pour mériter sa propre phrase — et
+        // dans ce cas le jeton n'a pas été lu non plus, donc la console n'a ni
+        // portée ni session.
+        window.__SHOPBADSEP = /^[0-9]+[?\/&]/.test(String(qs2));
+      }
     }
   } catch (e) {}
 
