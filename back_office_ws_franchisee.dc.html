@@ -2924,7 +2924,9 @@ class Component extends DCLogic {
       window.BOServer.save('ws_vouchers_local',vouchers); }
     const newIdx=clients.length-1;
     const parts=[];
-    if(o.sendMail&&o.contactEmail) parts.push('e-mail récapitulatif → '+o.contactEmail);
+    // « → adresse » se lisait comme un envoi fait. Il est seulement DEMANDÉ :
+    // c'est la réponse du serveur qui dira s'il est parti.
+    if(o.sendMail&&o.contactEmail) parts.push('e-mail récapitulatif demandé pour '+o.contactEmail);
     if(o.sendAdhesion&&S.obStaff.length) parts.push(S.obStaff.length+' demande(s) d\'adhésion');
     if(!obApi) parts.push('lien d\u2019invitation impossible hors API');
     parts.push(obVchs.length?(obVchs.length+' voucher(s) : '+obVchs.map(v=>v.code).join(', ')):'aucun voucher');
@@ -2945,6 +2947,11 @@ class Component extends DCLogic {
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           fenetre:obFenetre,jours:obJours,validation:o.validation,
           departements:S.obDepts,staff:S.obStaff,
+          /* LES DEUX INTERRUPTEURS DE L'ÉCRAN. Ils n'étaient pas postés : le
+             serveur n'envoyait rien, et « Envoyer l'e-mail récapitulatif au
+             contact » ne commandait rien du tout. Un franchisé croyait le
+             bureau prévenu et attendait une commande qui ne pouvait pas venir. */
+          sendMail:!!o.sendMail, sendAdhesion:!!o.sendAdhesion,
           // `vouchers` est la liste complète ; `voucher` reste le PREMIER pour
           // les serveurs qui ne lisent encore que celui-là. Rien d'envoyé si
           // la liste est vide — pas de bon fantôme.
@@ -2964,14 +2971,25 @@ class Component extends DCLogic {
         if(j===null) return;
         // Le lien signé revient du serveur, ou il n'existe pas : aucun repli,
         // aucune URL reconstruite à partir des valeurs qu'on vient d'envoyer.
+        /* CE QUE LE SERVEUR A VRAIMENT FAIT — courrier et lien — en UN SEUL
+           message. Deux printJob successifs ne laissent voir que le second :
+           l'avertissement sur le courrier disparaissait derrière celui du
+           lien, et le contact restait sans nouvelle sans que rien ne le dise. */
+        const dits=[];
+        if(o.sendMail){
+          if(j&&j.mail_sent) dits.push('✔ courrier de bienvenue envoyé à '+(j.mail_to||o.contactEmail));
+          else dits.push('⚠ courrier de bienvenue NON envoyé ('
+            +((j&&j.mail_reason)||'le serveur n\u2019a rien dit')+') — prévenez le contact autrement');
+        }
         if(j&&j.invite_url) this.setState({obInvite:{url:String(j.invite_url),
           exp:this.obDateFr(j.invite_expires_at),raison:o.raison||office,domain:obDom,
           prelie:[this.shopField('name',''),office,o.adr||''].filter(Boolean).join(' · ')}});
         // Le serveur dit POURQUOI quand il n'a rien émis (invite_reason) : on
         // le répète tel quel plutôt que de deviner à sa place.
-        else this.printJob('⚠ Bureau créé, sans lien d\u2019invitation — '
+        else dits.push('⚠ aucun lien d\u2019invitation ('
           +((j&&j.invite_reason)||'le serveur n\u2019en a pas renvoyé')
-          +' · le personnel devra s\u2019inscrire par le formulaire public');
+          +') — le personnel devra s\u2019inscrire par le formulaire public');
+        if(dits.length) this.printJob(dits.join(' · '));
         // Le serveur a créé office + LIGNE CLIENT (double lien) : refetch pour
         // que le nouveau client apparaisse tout de suite dans le menu Clients.
         const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2={headers:FRH(),credentials:'omit'};

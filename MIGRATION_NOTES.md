@@ -397,3 +397,20 @@ silence. Le corps posté porte `vouchers[]` (liste complète) et garde
 
 Côté serveur (dépôt WebShop) : `onboard-office` lit `vouchers[]` et les insère
 tous, `vouchers_created` donne le compte.
+
+## Le courrier de bienvenue est vraiment envoyé
+
+Les deux interrupteurs du récapitulatif — « Envoyer l'e-mail récapitulatif au
+contact » et « Envoyer les demandes d'adhésion » — **n'étaient pas postés**.
+Le serveur n'en savait rien, n'envoyait rien, et le franchisé croyait le bureau
+prévenu : il attendait une commande qui ne pouvait pas venir. Le corps de
+`onboard-office` porte désormais `sendMail` et `sendAdhesion`.
+
+Côté serveur (dépôt WebShop) : `mail_render()` + `send_html_mail()` dans
+`lib.php`, gabarit `php-api/mail/bienvenue-bureau.html`, envoi au contact à la
+création — **sur demande explicite seulement**. La réponse dit ce qui s'est
+passé : `mail_sent`, `mail_to`, `mail_reason`.
+
+La console le répète, courrier et lien **dans un seul message** : deux
+`printJob` successifs ne laissent voir que le second, et l'avertissement sur le
+courrier disparaissait derrière celui du lien.
