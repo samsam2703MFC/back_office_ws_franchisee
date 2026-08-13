@@ -105,7 +105,7 @@ progression des offres « X achetés = Y offerts » compte avec ces trois nombre
 
 **Correctif** : exposer `portionUnits` par produit dans `/catalog/products`.
 
-### 1.4 🔴 Contacts e-mail des bureaux : ce qu'on ajoute ne survit pas au rechargement
+### 1.4 ✅ CORRIGÉ (13/08) — Contacts e-mail des bureaux : ce qu'on ajoute ne survit pas au rechargement
 
 - écriture : `index.html:3065-3068` → `BOServer.save('ws_office_emails', …)` ;
 - la table n'est **pas** dans la liste `TYPED` de `bo_server.js:233-238`, donc
@@ -117,9 +117,18 @@ progression des offres « X achetés = Y offerts » compte avec ces trois nombre
 fonctionner, puis disparaît au rechargement suivant. Aucun e-mail ne partira
 jamais vers ces adresses.
 
-**Correctif** : soit une vraie table `ws_office_emails` (+ route d'écriture
-ligne à ligne, comme celle des départements écrite aujourd'hui), soit retirer
-l'écran tant qu'elle n'existe pas.
+**Corrigé** : migration **0063** — une vraie table `ws_office_emails` (bureau,
+adresse, rôle) et `POST /franchisee/office-email` qui écrit UNE ligne, bureau
+résolu par son nom, borné à la boutique. `ws_offices.email` reste la fiche et
+n'est pas recopié : l'API sert l'union des deux, chaque ligne marquée de son
+origine — le contact de la fiche n'a donc pas de croix, il se corrige sur la
+fiche.
+
+Même défaut trouvé un cran plus loin, corrigé avec : le **personnel** saisi à
+l'étape 6 du wizard n'était lu nulle part côté serveur (`staff` arrivait dans le
+corps et n'allait dans aucune table) pendant que le journal annonçait
+« N demande(s) d'adhésion ». Il entre désormais dans la même table avec le rôle
+« Personnel » et reçoit le lien d'invitation quand la case est cochée.
 
 ### 1.5 🟠 Bons : une écriture fantôme subsiste dans le wizard
 
@@ -302,7 +311,8 @@ en-têtes de cache que récemment).
 | P9 | Bureau → site | Un bureau, un site, une tournée | `ws_office_delivery_sites` |
 | P10 | Département : créer / renommer / supprimer | Persistant, **aucun bandeau d'erreur** | `POST /franchisee/b2b-department` |
 | P11 | Département sans société | Refus qui nomme la société manquante | 409 |
-| P12 | Contacts e-mail bureau | ⚠ disparaît au rechargement (cf. **1.4**) | `ws_bo_store` |
+| P12 | Contacts e-mail bureau | ajouter · supprimer · **recharger** : persistant ; le contact de la fiche n'a pas de croix | `ws_office_emails` |
+| P12b | Personnel du wizard | étape 6 + case « adhésion » ⇒ contacts « Personnel » + invitations envoyées | `ws_office_emails`, journal |
 | P13 | Lien d'invitation | Copier · envoyer · affiche PDF · révoquer · ré-émettre | `ws_office_invites` |
 | P14 | Bons | Créer un bon ciblé, le retrouver après rechargement | `ws_vouchers` |
 | P15 | Zones & frais | Cascade site → bureau → tournée → boutique = celle du checkout | `ws_delivery_fee_rules` |
@@ -356,7 +366,7 @@ précisément le flux où le constat **1.1** se manifeste.
 ## 3. Ordre de traitement proposé
 
 1. ~~**1.1** — total affiché ≠ facturé~~ ✅ fait le 13/08.
-2. **1.4** — contacts e-mail qui disparaissent (perte de saisie).
+2. ~~**1.4** — contacts e-mail qui disparaissent~~ ✅ fait le 13/08.
 3. ~~**1.2**~~ ✅ fait ; **1.3** — unités de portion, toujours un global.
 4. **1.6** — minutes inventées dans les ETA.
 5. **1.5 / 1.8** — codes morts (bon local, `scopeOpts`).

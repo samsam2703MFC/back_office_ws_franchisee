@@ -1550,7 +1550,7 @@
         <sc-for list="{{ officeEmails }}" as="b" hint-placeholder-count="4">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 18px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font:600 13.5px var(--font-ui);color:var(--color-text)">{{ b.nom }}</div><button onClick="{{ b.add }}" class="btn-secondary" style="padding:7px 12px;font-size:11.5px;flex:none">+ Email</button></div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ b.emails }}" as="e" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:7px;background:var(--color-background-secondary);border-radius:20px;padding:6px 12px;font:400 12px var(--font-ui);color:var(--color-text)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>{{ e.addr }}<span style="{{ e.tag }}">{{ e.role }}</span></span></sc-for></div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ b.emails }}" as="e" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:7px;background:var(--color-background-secondary);border-radius:20px;padding:6px 12px;font:400 12px var(--font-ui);color:var(--color-text)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>{{ e.addr }}<span style="{{ e.tag }}">{{ e.role }}</span><sc-if value="{{ e.suppressible }}" hint-placeholder-val="{{ true }}"><button onClick="{{ e.del }}" title="Retirer ce contact" style="border:none;background:transparent;color:var(--color-text-muted);cursor:pointer;font:600 13px/1 var(--font-ui);padding:0">×</button></sc-if></span></sc-for></div>
           </div>
         </sc-for>
       </div>
@@ -2932,10 +2932,13 @@ class Component extends DCLogic {
        code local inventé — ce que la table ERP refuse — et chaque création de
        bureau finissait par un « Écriture refusée (HTTP 409) » au bandeau. Ils
        reviennent au rafraîchissement qui suit la création. */
-    const emails=window.BOServer.table('ws_office_emails');
-    if(o.contactEmail) emails.push({bureau:o.raison,addr:o.contactEmail,role:'Principal'});
-    S.obStaff.forEach(st=>emails.push({bureau:o.raison,addr:st.email,role:'Livraison'}));
-    window.BOServer.save('ws_office_emails',emails);
+    /* Contacts e-mail : ÉCRITS PAR LE SERVEUR eux aussi. Le contact principal
+       vit sur la fiche du bureau (ws_offices.email) ; le personnel saisi à
+       l'étape 6 entre dans ws_office_emails avec le rôle « Personnel », et
+       reçoit le lien d'invitation si la case est cochée. Les pousser d'ici les
+       envoyait dans l'overlay ws_bo_store, d'où la liste était RECONSTRUITE au
+       rechargement depuis la seule adresse de la fiche : tout contact ajouté
+       disparaissait, et aucun e-mail ne partait vers lui. */
     /* LES VOUCHERS — zéro, un ou plusieurs. Avant, un voucher était créé même
        quand personne n'en avait demandé : « BIENVENUE4821 » naissait à chaque
        bureau, partait dans le courrier, et engageait la boutique sur une
@@ -3015,6 +3018,10 @@ class Component extends DCLogic {
         else dits.push('⚠ aucun lien d\u2019invitation ('
           +(j.invite_reason||'le serveur n\u2019en a pas renvoyé')
           +') — le personnel devra s\u2019inscrire par le formulaire public');
+        // Le personnel de l'étape 6 : enregistré, invité — ou pourquoi non.
+        if(j.staff_saved) dits.push('✔ '+j.staff_saved+' contact(s) du personnel enregistré(s)'
+          +(j.staff_invited?(' · '+j.staff_invited+' invitation(s) envoyée(s)'):''));
+        if(j.staff_reason) dits.push('⚠ '+j.staff_reason);
         if(dits.length) this.printJob(dits.join(' · '));
         // Le serveur a créé office + LIGNE CLIENT (double lien) : refetch pour
         // que le nouveau client apparaisse tout de suite dans le menu Clients.
@@ -3351,6 +3358,9 @@ class Component extends DCLogic {
        refus en permanence : plus personne ne l'aurait lu le jour d'une vraie
        panne. */
     if(S.formKey==='department'){ this.setState({formKey:null}); this.deptWrite(v, S.formEdit?S.formIndex:null); return; }
+    // Même raison pour les contacts e-mail : une ligne, une route (0063).
+    if(S.formKey==='email'){ this.setState({formKey:null});
+      this.emailWrite({bureau:v.bureau, addr:v.addr, role:v.role||'Principal'}); return; }
     if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl); if(S.formEdit && S.formIndex!=null && rows[S.formIndex]){ rows[S.formIndex]={...rows[S.formIndex],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
     // Choix « garder le siège » (client B2B) : l'adresse encodée devient un
     // LIEU DE LIVRAISON (ws_offices, statut pending) rattaché à la société.
@@ -3418,6 +3428,41 @@ class Component extends DCLogic {
         navigator.clipboard.writeText(S.url).then(()=>dit(true)).catch(e=>dit(false,(e&&e.message)||'refusé par le navigateur'));
       else dit(false,'presse-papiers indisponible dans ce navigateur'); }
     catch(e){ dit(false,(e&&e.message)||'refusé par le navigateur'); } }
+  /* CONTACT E-MAIL D'UN BUREAU — écriture d'UNE ligne, par sa route dédiée.
+     L'écran écrivait dans l'overlay générique et relisait une liste
+     RECONSTRUITE depuis la seule adresse de la fiche du bureau : ce qu'on
+     ajoutait disparaissait au rechargement, et aucun e-mail ne partait vers
+     ces adresses. Elles vivent désormais dans ws_office_emails (migration
+     0063), et la liste sert l'union « fiche + table », chaque ligne marquée de
+     son origine. */
+  emailWrite(v){ const fr=window.__FR||{};
+    if(v.delete && v.source!=='table'){
+      // Le contact de la FICHE ne se supprime pas d'ici : il appartient au
+      // bureau. Le dire plutôt que de faire disparaître une ligne qui
+      // reviendra au rechargement suivant.
+      this.printJob('Ce contact vient de la fiche du bureau — modifiez-le sur sa fiche (Clients B2B › Offices)');
+      return; }
+    if(!fr.base){ this.printJob('⚠ Contact non enregistré — API non configurée'); return; }
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/office-email'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify(v)})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.printJob(v.delete?'✔ Contact supprimé'
+            :('✔ '+(v.addr||'')+' enregistré'+(v.bureau?(' pour « '+v.bureau+' »'):'')+(j.deja?' (déjà présent)':'')));
+          this.emailRefresh(); }
+        else this.printJob('⚠ Contact non enregistré — '+((j&&j.error)||'refus du serveur')); })
+      .catch(e=>this.printJob('⚠ Contact non enregistré — '+((e&&e.message)||'réseau indisponible')));
+  }
+  // Relire après écriture : la ligne locale récupère son id, sans quoi une
+  // suppression viserait la mauvaise.
+  emailRefresh(){ const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/ws-office-emails'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('ws_office_emails',a);
+        this.setState(s=>({_rev:(s._rev||0)+1})); })
+      .catch(()=>{});
+  }
   /* DÉPARTEMENT B2B — écriture d'UNE ligne, par sa route dédiée.
      Le serveur retrouve le client depuis la raison sociale et borne à la
      boutique ; il refuse en le disant si la société n'existe pas — un
@@ -6396,7 +6441,14 @@ class Component extends DCLogic {
     const emailTag=(role)=>pill2(role==='Facturation'?'#eef3fb':'var(--color-background-secondary)',role==='Facturation'?'#2a5a9e':'var(--color-text-muted)');
     const emailRaw=SRV('ws_office_emails');
     const emailGroups={}; const emailOrder=[];
-    emailRaw.forEach((e,i)=>{ if(!emailGroups[e.bureau]){ emailGroups[e.bureau]={nom:e.bureau,emails:[]}; emailOrder.push(e.bureau); } emailGroups[e.bureau].emails.push({...e,tag:emailTag(e.role),del:this.deleteRow('ws_office_emails',i,'l\'email « '+(e.email||e.role||'')+' »')}); });
+    emailRaw.forEach((e)=>{ if(!emailGroups[e.bureau]){ emailGroups[e.bureau]={nom:e.bureau,emails:[]}; emailOrder.push(e.bureau); }
+      // La suppression vise la LIGNE EN BASE (son id), plus un index dans une
+      // copie locale : l'index se décalait dès que la liste changeait d'ordre.
+      emailGroups[e.bureau].emails.push({...e,tag:emailTag(e.role),
+        // Le contact de la FICHE du bureau n'a pas de croix : il ne se retire
+        // pas d'ici, et une croix qui refuse est une croix qui ment.
+        suppressible:e.source==='table',
+        del:()=>this.emailWrite({id:e.id, source:e.source, delete:true})}); });
     const officeEmails=emailOrder.map(b=>({...emailGroups[b],add:this.openForm('email')}));
 
     // Règles calendrier
@@ -6859,14 +6911,14 @@ class Component extends DCLogic {
             return { oeOpen:!!S.oeOpen, oeToggle:()=>this.setState(s=>({oeOpen:!s.oeOpen})), oeCaret:S.oeOpen?'▾':'▸',
               oeCountTxt:'('+oeMine.length+')', oeEmpty:nm!==''&&oeMine.length===0,
               oeList:oeMine.map(x=>({mail:x.e.email||x.e.addr||'—',role:x.e.role||'Principal',tagStyle:roleTag(x.e.role),
-                del:()=>{ if(window.BOServer){ const rows=window.BOServer.table('ws_office_emails'); rows.splice(x.gi,1); window.BOServer.save('ws_office_emails',rows); } this.setState(s=>({_rev:(s._rev||0)+1})); }})),
+                del:()=>this.emailWrite({id:x.e.id, source:x.e.source, delete:true})})),
               oeMail:S.oeMail||'', oeSetMail:(e)=>this.setState({oeMail:e.target.value}),
               oeRole:S.oeRole||'Principal', oeSetRole:(e)=>this.setState({oeRole:e.target.value}),
               oeAdd:()=>{ const nm2=String(this.state.formVals.name||'').trim(); const mail=String(this.state.oeMail||'').trim();
                 if(!nm2){ this.printJob('Encodez d\'abord le nom du bureau'); return; }
                 if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)){ this.printJob('Adresse email invalide'); return; }
-                if(window.BOServer){ const rows=window.BOServer.table('ws_office_emails'); rows.push({bureau:nm2,email:mail,addr:mail,role:this.state.oeRole||'Principal'}); window.BOServer.save('ws_office_emails',rows); }
-                this.setState(s=>({oeMail:'',_rev:(s._rev||0)+1})); this.printJob('✓ Adresse ajoutée pour « '+nm2+' »'); } };
+                this.emailWrite({bureau:nm2, addr:mail, role:this.state.oeRole||'Principal'});
+                this.setState(s=>({oeMail:''})); } };
           })()};
       })(),
       officeClashOpen:!!S.officeClash,
