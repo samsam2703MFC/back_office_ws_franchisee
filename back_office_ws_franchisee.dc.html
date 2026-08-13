@@ -1076,7 +1076,7 @@
                 <div style="width:38px;height:38px;flex:none;border-radius:10px;background:#eaf5ec;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2d7a3e" stroke-width="1.8"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div>
                 <div style="flex:1;min-width:0"><div style="font:600 13.5px var(--font-ui);color:var(--color-text)">{{ s.siteName }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:1px">{{ s.subTitle }}</div></div>
                 <div style="flex:none;display:flex;align-items:center;gap:6px">
-                  <div style="text-align:right;margin-right:2px"><div style="font:700 15px/1 var(--font-ui);color:#2d7a3e">{{ s.acc }}′</div><div style="font:400 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em">accès</div></div>
+                  <div style="text-align:right;margin-right:2px"><div style="font:700 15px/1 var(--font-ui);color:{{ s.accColor }}">{{ s.accTxt }}</div><div style="font:400 9px var(--font-ui);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em">accès</div></div>
                   <button onClick="{{ s.edit }}" title="Éditer le site" style="border:.5px solid var(--color-border-tertiary);background:var(--color-surface);border-radius:7px;cursor:pointer;color:var(--color-text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h3l11-11-3-3L4 17z"/><path d="M14 5l3 3"/></svg></button>
                   <button onClick="{{ s.del }}" title="Supprimer" style="border:.5px solid var(--color-border-tertiary);background:var(--color-surface);border-radius:7px;cursor:pointer;color:var(--color-text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none;font-size:14px">✕</button>
                 </div>
@@ -2742,7 +2742,7 @@ class Component extends DCLogic {
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'10', franco:'250 €', drop:8,
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
-    obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
+    obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'',
     obVouchers: [], obVLibelle:'', obVValidite:'',
     profileOpen: false, srcOpen: false, paramDrafts: {},
     dsQuery: '', dsOpen: false, dsIdx: 0,
@@ -2756,7 +2756,7 @@ class Component extends DCLogic {
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'10', franco:'250 €', drop:8,
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
-    obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
+    obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'',
     obVouchers:[], obVLibelle:'', obVValidite:'' }); this.zfGeoEnsure(); }
   obClose(){ this.setState({obOpen:false}); }
   // Localités du référentiel pour un CP belge (un code peut couvrir plusieurs
@@ -2796,6 +2796,12 @@ class Component extends DCLogic {
         return 'Renseignez la fenêtre de livraison (début et fin) : elle est annoncée au bureau comme un engagement.';
       if(!(Array.isArray(O.jours)&&O.jours.length))
         return 'Choisissez au moins un jour desservi : le bureau doit savoir quels jours il est livré.';
+      /* Le TEMPS D'ACCÈS entre dans chaque heure d'arrivée de la tournée.
+         Écrit « 6 min » par défaut, il ressemblait à une mesure alors que
+         personne ne l'avait faite — et la tournée annonçait des heures fausses
+         plutôt que pas d'heure du tout. */
+      if(O.acc===''||O.acc==null||isNaN(parseFloat(O.acc))||parseFloat(O.acc)<0)
+        return 'Renseignez le temps d’accès au site (en minutes) : il entre dans l’heure d’arrivée annoncée à chaque livraison.';
       if(!(O.validation&&String(O.validation).trim()))
         return 'Choisissez la validation à la livraison : scan QR, signature ou dépôt.';
       return null;
@@ -2834,7 +2840,11 @@ class Component extends DCLogic {
     return m?m[1].toLowerCase():''; }
   obDomaine(o){ const d=this.obDomaineBrut(o);
     return (d&&this.OB_DOM_PUBLICS.indexOf(d)<0)?d:''; }
-  obAddDept(){ const d=(this.state.obDeptDraft||'').trim(); if(!d) return; const eff=this.state.obDeptEff||'5'; this.setState(s=>({obDepts:[...s.obDepts,{dept:d,effectif:eff}],obDeptDraft:'',obDeptEff:'5'})); }
+  obAddDept(){ const d=(this.state.obDeptDraft||'').trim(); if(!d) return;
+    // Effectif : celui qui a été saisi, ou aucun. « 5 » se retrouvait en base
+    // comme un effectif communiqué par le client.
+    const eff=String(this.state.obDeptEff||'').trim();
+    this.setState(s=>({obDepts:[...s.obDepts,{dept:d,effectif:eff===''?null:(parseInt(eff,10)||null)}],obDeptDraft:'',obDeptEff:''})); }
   obRemoveDept(i){ return ()=>this.setState(s=>({obDepts:s.obDepts.filter((_,j)=>j!==i)})); }
   /* AJOUT D'UN VOUCHER. Le code peut être laissé vide : il est alors dérivé
      du libellé et d'un numéro — un identifiant, pas une donnée inventée. Le
@@ -2925,7 +2935,10 @@ class Component extends DCLogic {
        montrer, en attendant le refetch qui remplacera la ligne par la vraie. */
     window.BOServer.refresh('ws_offices',offices);
     const sites=window.BOServer.table('ws_office_delivery_sites');
-    sites.push({bureau:o.raison,client_id:code,office,adr:o.adr,cp:obCp,localite:obLocalite,etage:o.etage,tour:o.tour,acc:+o.acc||6});
+    // Temps d'accès : celui qui a été SAISI (l'étape 2 l'exige), jamais 6 par
+    // défaut — une minute inventée ici ressort en heure d'arrivée là-bas.
+    sites.push({bureau:o.raison,client_id:code,office,adr:o.adr,cp:obCp,localite:obLocalite,etage:o.etage,tour:o.tour,
+      acc:(o.acc===''||o.acc==null||isNaN(parseFloat(o.acc)))?null:parseFloat(o.acc)});
     window.BOServer.save('ws_office_delivery_sites',sites);
     /* Départements : ÉCRITS PAR LE SERVEUR (POST onboard-office), rattachés au
        client réellement créé. Les pousser aussi d'ici les rattacherait à un
@@ -3189,7 +3202,9 @@ class Component extends DCLogic {
           {k:'adr_cp',label:'Code postal',type:'text',ph:'1348',half:true,info:'4 chiffres (BE). C\'est LUI qui positionne le site sur la carte des tournées — la ville se remplit automatiquement s\'il est reconnu.',section:'Adresse du site'},
           {k:'adr_ville',label:'Ville / commune',type:'text',ph:'auto via le CP',half:true},
           {k:'etage',label:'Étage / local',type:'text',ph:'ex. Sous-sol / quai',section:'Site'},
-          {k:'acc',label:'Temps d\'accès au site (min)',type:'number',def:6,section:'Site'},
+          // Pas de valeur pré-remplie : « 6 » validé sans y penser devient une
+          // mesure dans les heures d'arrivée annoncées au client.
+          {k:'acc',label:'Temps d\'accès au site (min)',type:'number',ph:'à mesurer sur place',section:'Site'},
           {k:'contact_name',label:'Personne de contact',type:'text',ph:'nom du contact sur place',section:'Contact'},
           {k:'contact_phone',label:'Téléphone',type:'text',ph:'+32 …',section:'Contact'},
         ]},
@@ -3229,7 +3244,7 @@ class Component extends DCLogic {
           {k:'site',label:'Delivery site',type:'text',ph:'Adresse du site',section:'Rattachement'},
           {k:'office',label:'Office / bâtiment',type:'text',ph:'ex. Siège, Cafétéria HQ',section:'Rattachement'},
           {k:'dept',label:'Département (nom libre)',type:'text',ph:'ex. Marketing, Bureau, Production',info:'Un département est un regroupement rattaché à un BUREAU — rattachement FACULTATIF : le lien se fait via le CLIENT (les personnes qui commandent s\'y rattachent).',section:'Département'},
-          {k:'effectif',label:'Effectif',type:'number',def:5,section:'Département'},
+          {k:'effectif',label:'Effectif',type:'number',ph:'nombre de personnes',section:'Département'},
           {k:'contact',label:'Email du département',type:'text',ph:'dept@exemple.be',section:'Département'},
         ]},
       clientEdit:{ title:'Client B2B (société)', table:'client', tbl:'fr_clients', save:'Enregistrer le client',
@@ -4937,7 +4952,7 @@ class Component extends DCLogic {
     const tvRows=SRV('ws_office_delivery_sites');
     const tvBlds={}; const tvOrder=[];
     tvRows.forEach(r=>{ const key=(r.adr&&r.adr!=='—')?('a:'+tNorm(r.adr)):((r.name&&r.name!=='—')?('n:'+tNorm(r.name)):null); if(!key) return;
-      if(!tvBlds[key]){ tvBlds[key]={key,name:(r.name&&r.name!=='—')?r.name:r.adr,adr:(r.adr&&r.adr!=='—')?r.adr:'',tour:(r.tour&&r.tour!=='—')?r.tour:null,acc:parseFloat(r.acc)||10,stop:(r.stop!=null?+r.stop:null),offices:[]}; tvOrder.push(key); }
+      if(!tvBlds[key]){ tvBlds[key]={key,name:(r.name&&r.name!=='—')?r.name:r.adr,adr:(r.adr&&r.adr!=='—')?r.adr:'',tour:(r.tour&&r.tour!=='—')?r.tour:null,acc:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?null:parseFloat(r.acc),stop:(r.stop!=null?+r.stop:null),offices:[]}; tvOrder.push(key); }
       const b=tvBlds[key]; if(!b.tour&&r.tour&&r.tour!=='—') b.tour=r.tour;
       if(r.stop!=null&&(b.stop==null||+r.stop<b.stop)) b.stop=+r.stop;
       const off=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
@@ -5066,10 +5081,14 @@ class Component extends DCLogic {
     const rForm=S.rf, zForm=S.zf;
     const rfSet=(k)=>(e)=>this.setState(s=>({rf:{...s.rf,[k]:e.target.value}}));
     const rfDays=['L','Ma','Me','J','V','S','D'].map(k=>({k,style:rForm.days[k]?pillActive:pillIdle,toggle:()=>this.setState(s=>({rf:{...s.rf,days:{...s.rf.days,[k]:!s.rf.days[k]}}}))}));
-    const rfCanSubmit=!!(rForm.name.trim()&&rForm.short.trim());
+    /* L'heure de DÉPART commande toutes les heures d'arrivée : sans elle, la
+       page prenait 06:00. Elle est donc exigée — c'est la même règle que côté
+       serveur, où une tournée sans heure de départ ne publie aucune ETA. */
+    const rfCanSubmit=!!(rForm.name.trim()&&rForm.short.trim()&&String(rForm.start||'').trim());
     const RF_RESET={name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}};
-    const rfSubmit=()=>{ if(!rfCanSubmit) return; const p=(rForm.start||'06:00').split(':'); const startMin=(+p[0])*60+(+(p[1]||0)); const editing=S.rfEditId; const newId='rn'+Date.now();
-      const base={name:rForm.name,short:rForm.short||rForm.name.slice(0,8),driver:rForm.driver||'— non assigné',start:startMin,max:parseInt(rForm.max,10)||10,forfait:parseFloat(rForm.forfait)||0,ret:rForm.ret,vehicule:rForm.vehicule||'',days:rForm.days,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')};
+    const rfSubmit=()=>{ if(!rfCanSubmit) return; const p=String(rForm.start).split(':'); const startMin=(+p[0])*60+(+(p[1]||0)); const editing=S.rfEditId; const newId='rn'+Date.now();
+      const base={name:rForm.name,short:rForm.short||rForm.name.slice(0,8),driver:rForm.driver||'— non assigné',start:startMin,max:(String(rForm.max||'').trim()===''?null:parseInt(rForm.max,10)),
+        forfait:(String(rForm.forfait||'').trim()===''?null:parseFloat(rForm.forfait)),ret:rForm.ret,vehicule:rForm.vehicule||'',days:rForm.days,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')};
       if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); const i=editing?rows.findIndex(t=>t.id===editing):-1; if(i>=0){ rows[i]={...rows[i],...base}; } else { rows.push({id:newId,amplitude:this.NEW_AMPL,decharge:22,trajet:8,used:0,...base}); } window.BOServer.save('ws_tours',rows); }
       if(editing){ this.setState(s=>({rfEditId:null,rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
       else { this.setState(s=>({routeAssign:{...s.routeAssign,[newId]:[]},rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
@@ -5087,8 +5106,11 @@ class Component extends DCLogic {
     const zfSet=(k)=>(e)=>this.setState(s=>({zf:{...s.zf,[k]:e.target.value}}));
     const zoneParentOpts=[{value:'',label:'— Aucune —'},...this.zonesData().map(z=>({value:z.id,label:z.nom}))];
     const catchmentOpts=[{value:'',label:'— Sélectionner un territoire marque —'},...SRV('ws_franchisor_catchment').map(c=>({value:c.id,label:c.name}))];
-    const zfCanSubmit=!!zForm.name.trim();
-    const zfSubmit=async()=>{ if(!zfCanSubmit) return; const nz={name:zForm.name,cp:zForm.cp||'—',vehicule:zForm.vehicule,franco:zForm.franco,delai:zForm.delai,service:parseInt(zForm.service,10)||15,catchment:zForm.catchment||'',active:true,sort_order:(window.BOServer?window.BOServer.table('ws_delivery_zones').length+1:1)};
+    // Le temps de service entre dans la capacité de la tournée : 15 min posées
+    // par défaut, c'est une capacité calculée sur une durée que personne n'a
+    // choisie.
+    const zfCanSubmit=!!(zForm.name.trim()&&String(zForm.service||'').trim()&&!isNaN(parseFloat(zForm.service)));
+    const zfSubmit=async()=>{ if(!zfCanSubmit) return; const nz={name:zForm.name,cp:zForm.cp||'—',vehicule:zForm.vehicule,franco:zForm.franco,delai:zForm.delai,service:parseInt(zForm.service,10),catchment:zForm.catchment||'',active:true,sort_order:(window.BOServer?window.BOServer.table('ws_delivery_zones').length+1:1)};
       // Cohérence zoning : chaque CP encodé ne doit être ni dans une zone primaire (chalandise) ni dans une autre zone.
       try { const fr=window.__FR||{};
         if(fr.base&&fr.token&&nz.cp&&nz.cp!=='—'){
@@ -5497,6 +5519,11 @@ class Component extends DCLogic {
         // Le TITRE de la vignette = le NOM du site (l'adresse passe en sous-titre).
         siteName:(r.name&&r.name!=='—')?r.name:((r.office&&r.office!=='—')?r.office:r.adr),
         subTitle:(r.adr||'—')+(r.etage&&r.etage!=='—'?(' · '+r.etage):''),
+        /* Temps d'accès : la mesure, ou « — ». Un apostrophe seul (« ′ ») se
+           lisait comme zéro minute, et un site sans mesure prive la tournée de
+           toutes ses heures d'arrivée — autant que ça se voie. */
+        accTxt:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?'—':(parseFloat(r.acc)+'′'),
+        accColor:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?'var(--color-text-muted)':'#2d7a3e',
         // Rattachement tournée modifiable DIRECTEMENT sur la vignette.
         tourVal:(r.tour&&r.tour!=='—')?r.tour:'',
         tourOpts:[{value:'',label:'— Rattacher une tournée —'},...siteTourNames.map(n=>({value:n,label:n}))],
@@ -5600,7 +5627,11 @@ class Component extends DCLogic {
         }
         else{ const free=rows.findIndex(x=>rk&&bKey(x)===rk&&(!x.bureau||x.bureau==='—')&&(!x.office||x.office==='—'));
           if(free>=0) rows[free]={...rows[free],bureau:off.name,office:off.name,office_client_id:off.id};
-          else rows.push({name:tpl.name,adr:tpl.adr,etage:tpl.etage||'—',acc:tpl.acc||'5',tour:tpl.tour||'—',bureau:off.name,office:off.name,office_client_id:off.id}); }
+          // acc repris du site MODÈLE tel quel : absent chez lui, absent ici.
+          // « 5 » ajoutait une minute d'accès que personne n'avait mesurée.
+          else rows.push({name:tpl.name,adr:tpl.adr,etage:tpl.etage||'—',
+            acc:(tpl.acc===''||tpl.acc==null||isNaN(parseFloat(tpl.acc)))?null:parseFloat(tpl.acc),
+            tour:tpl.tour||'—',bureau:off.name,office:off.name,office_client_id:off.id}); }
         window.BOServer.save('ws_office_delivery_sites',rows);
         const offs=window.BOServer.table('ws_offices'); const oi=offs.findIndex(x=>offKey(x)===String(key));
         if(oi>=0){ const realAdr=(tpl.adr&&tpl.adr!=='—')?tpl.adr:'';
@@ -7414,7 +7445,7 @@ class Component extends DCLogic {
       openRouteForm:()=>this.setState({rfOpen:true,rfEditId:null,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),
       rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false,rfEditId:null}),
       rfTitle:(S.rfEditId?'Modifier la tournée':'Nouvelle tournée'),rfSubmitLabel:(S.rfEditId?'Enregistrer':'Créer la tournée'),
-      editRoute:(()=>{ const byId=(id)=>{ const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:t.max||10,forfait:(t.forfait!=null?t.forfait:45),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); };
+      editRoute:(()=>{ const byId=(id)=>{ const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:(t.max!=null?t.max:''),forfait:(t.forfait!=null?t.forfait:''),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); };
         this._editRouteById=byId; return ()=>byId(this.state.selRoute); })(),
       rfPostcodeOpts,rfPostEmpty,rfPostCount,
       rfSet:{name:rfSet('name'),short:rfSet('short'),start:rfSet('start'),max:rfSet('max'),forfait:rfSet('forfait'),driver:rfSet('driver'),vehicule:rfSet('vehicule')},

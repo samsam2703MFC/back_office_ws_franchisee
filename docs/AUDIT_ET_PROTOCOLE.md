@@ -141,7 +141,7 @@ corps et n'allait dans aucune table) pendant que le journal annonçait
   l'overlay ; il n'est plus atteignable (aucun `openForm('voucher')`), l'écran
   Bons passant par `POST /franchisee/voucher`. **Code mort à supprimer.**
 
-### 1.6 🟠 Des minutes d'exploitation inventées entrent dans les ETA
+### 1.6 ✅ CORRIGÉ (13/08) — Des minutes d'exploitation inventées entrent dans les ETA
 
 | Emplacement | Repli | Ce qu'il fabrique |
 | --- | --- | --- |
@@ -155,9 +155,28 @@ Ces minutes ne sont pas de l'habillage : elles s'additionnent dans les heures
 d'arrivée annoncées au client. Trois valeurs différentes (5, 6, 10) pour la même
 grandeur montrent qu'aucune n'est une décision.
 
-**Correctif** : exiger la saisie (le formulaire refuse), ou laisser vide et
-afficher « — » comme le fait déjà l'écran Tournées pour une tournée sans heure
-de départ.
+**Corrigé** — les deux remèdes, chacun là où il convient :
+
+- **exigé** quand c'est une saisie : temps d'accès (étape 2 du wizard et
+  formulaire Site), heure de départ d'une tournée, temps de service d'une zone.
+  Le formulaire refuse et dit pourquoi ;
+- **absent** quand la donnée n'existe pas : plus aucun `|| 6`, `|| 10`, `|| 5`,
+  `|| 15`, `|| '06:00'` — ni côté console, ni côté API (quatre `?? 6` côté
+  serveur, plus un `(float) NULL` qui rendait `0`, lu comme une mesure).
+  Migration **0064** : la colonne `site_access_minutes` devient nullable, en
+  conservant son type — sans quoi l'absence ne pouvait pas s'écrire.
+
+La vignette d'un site sans mesure affiche « — accès » et non « ′ », qui se
+lisait comme zéro minute. Le moteur d'ETA savait déjà s'arrêter : une tournée
+dont un site n'a pas de temps d'accès ne publie aucune heure.
+
+Traités en même temps, même défaut : la **capacité** (`|| 10`) et le **forfait**
+(`45 €` pré-rempli à l'édition d'une tournée), et l'**effectif** d'un
+département (`|| 5`), qui entrait en base comme un chiffre communiqué par le
+client.
+
+⚠️ **Les lignes déjà écrites ne sont pas touchées** : un 6 enregistré est
+peut-être une vraie mesure. À revoir à la main, site par site.
 
 ### 1.7 🟡 Valeurs de configuration affichées mais absentes de la base
 
@@ -304,7 +323,8 @@ en-têtes de cache que récemment).
 | P2 | Tournée : horaires | Jours, fenêtre, cut-off enregistrés | `ws_tour_availability` |
 | P3 | Tournée sans heure de départ | Aucune ETA inventée, mention explicite | — |
 | P4 | Fermeture ponctuelle | Une seule boutique touchée | `ws_tour_closures` |
-| P5 | Site : créer | Persistant, temps d'accès **exigé** (cf. **1.6**) | `ws_office_delivery_sites` |
+| P5 | Site : créer | Persistant ; le formulaire **refuse** sans temps d'accès | `ws_office_delivery_sites` |
+| P5b | Site sans mesure (ancien) | vignette « — accès » ; la tournée ne publie **aucune** heure d'arrivée | idem |
 | P6 | Site → tournée | Rattachement persistant | idem |
 | P7 | Bureau : onboarding 7 étapes | Bureau `pending`, client créé, départements écrits | `ws_offices`, `client`, `b2b_client_company_department` |
 | P8 | Bureau : validation | Passe livrable | `ws_offices.active` |
@@ -368,7 +388,7 @@ précisément le flux où le constat **1.1** se manifeste.
 1. ~~**1.1** — total affiché ≠ facturé~~ ✅ fait le 13/08.
 2. ~~**1.4** — contacts e-mail qui disparaissent~~ ✅ fait le 13/08.
 3. ~~**1.2**~~ ✅ fait ; **1.3** — unités de portion, toujours un global.
-4. **1.6** — minutes inventées dans les ETA.
+4. ~~**1.6** — minutes inventées dans les ETA~~ ✅ fait le 13/08.
 5. **1.5 / 1.8** — codes morts (bon local, `scopeOpts`).
 6. **1.7 / 1.9** — configuration locale et `[]` ambigus.
 
