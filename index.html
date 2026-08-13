@@ -550,7 +550,7 @@
               </button>
             </sc-for>
           </div>
-          <sc-if value="{{ suiviToursEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée avec des sites assignés — écran Tournées pour en construire une.</div></sc-if>
+          <sc-if value="{{ suiviToursEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ suiviEmptyMsg }}</div></sc-if>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px">
@@ -3305,14 +3305,19 @@ class Component extends DCLogic {
     if(!r) return {drops:0,stops:[],warns:[],etaEnd:'—',km:0,amplitude:0};
     const accOf=id=>S.siteAcc[id]!=null?S.siteAcc[id]:((sm[id]||{}).access||0);
     const dropOf=(id,i,def)=>S.drop[id+'-'+i]!=null?S.drop[id+'-'+i]:def;
-    const ids=this.assign()[rid]||[]; let t=r.start, prev=d?{lat:d.lat,lng:d.lng}:null, drops=0, km=0; const stops=[], warns=[];
+    // `prev` = le point d'où l'on vient. La boutique quand elle est placée,
+    // rien sinon : le premier trajet n'est alors pas comptabilisé, et l'heure
+    // de fin est rendue « — » au lieu d'être avancée d'un trajet imaginaire.
+    const depKo=(d.lat==null);
+    const ids=this.assign()[rid]||[]; let t=r.start, prev=depKo?null:{lat:d.lat,lng:d.lng}, drops=0, km=0; const stops=[], warns=[];
     ids.forEach(id=>{ const s=sm[id]; if(!s||s.lat==null) return; const tv=prev?this.travelMin(prev,s):{min:0,km:0}; km+=tv.km; const arrival=t+tv.min; const acc=accOf(id);
       let ot=arrival+acc; const offs=s.offices.map((o,i)=>{ const dr=dropOf(id,i,o.drop); const eta=ot; ot+=dr; let w=false; if(o.we&&eta>this.toMin(o.we)){ w=true; warns.push(o.name+' livré '+this.hhmm(eta)+' · fenêtre '+o.ws+'–'+o.we); } return {name:o.name,drop:dr,eta:this.hhmm(eta),warn:w}; });
       const dropSum=s.offices.reduce((a,o,i)=>a+dropOf(id,i,o.drop),0); const siteTotal=acc+dropSum; const departure=arrival+siteTotal;
       drops+=s.offices.length; stops.push({id,name:s.name,ville:s.ville,zone:s.zone,acc,arrival:this.hhmm(arrival),siteTotal,departure:this.hhmm(departure),travel:tv.min,offices:offs,warn:offs.some(o=>o.warn)});
       t=departure; prev=s; });
-    let eta=t; if(r.ret&&d&&prev) eta+=this.travelMin(prev,d).min;
-    return {...r,drops,stops,warns,etaEnd:this.hhmm(eta),km:Math.round(km*10)/10,amplitude:eta-r.start};
+    let eta=t; if(r.ret&&!depKo&&prev) eta+=this.travelMin(prev,d).min;
+    return {...r,drops,stops,warns,depotKo:depKo,
+      etaEnd:depKo?'—':this.hhmm(eta),km:Math.round(km*10)/10,amplitude:eta-r.start};
   }
 
   eur(n){ return new Intl.NumberFormat('fr-BE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n); }
@@ -3442,29 +3447,57 @@ class Component extends DCLogic {
       .catch(()=>false);
   }
 
+  /* La BOUTIQUE (départ et retour des tournées) — TOUT vient de l'API, ou de
+     rien. Trois replis ont été retirés : le nom de remplacement « Ma
+     boutique », le centroïde du code postal recalculé ici, et la position par
+     défaut au centre de Bruxelles. Aucun ne se distinguait d'une vraie donnée
+     une fois posé sur la carte : les tracés en partaient, les ETA en
+     découlaient, et seul un clic sur la bulle du pin le révélait.
+
+     Sans position servie par /franchisee/me, il n'y a PAS de position :
+     `lat`/`lng` valent null, aucun pin n'est posé, un bandeau le dit sur la
+     carte, et les ETA qui en dépendent ne sont pas calculées.
+
+     Deux niveaux, décidés par le SERVEUR (`geoSource`) — jamais par la page :
+       exact   → adresse géocodée (ou saisie à la main) : aucun avertissement ;
+       approx  → centroïde du code postal, résolu côté serveur : signalé. */
   depot(){ const si=this.shopInfo();
-    // Le nom vient de atelierbydb_shops (via /franchisee/me). Le repli
-    // ws_param `shop.name` est retiré : c'était la seconde écriture de la même
-    // information, celle qui pouvait contredire la table.
-    const nm=(si&&si.name)||'Ma boutique';
+    const scope=this.shopScopeId();
+    // Faute de nom servi, on ne l'invente pas : reste l'id de la portée, qui
+    // est une donnée, ou l'aveu qu'il n'y en a pas.
+    const nm=(si&&si.name)||(scope?('Boutique #'+scope):'Boutique non identifiée');
     const adr=(si&&si.address)||'';
     // Motif d'échec, tel que le serveur l'a diagnostiqué. Une carte qui dit
     // seulement « inconnue » oblige à chercher entre trois pannes distinctes.
     const why=(si&&si.geoReason)||(typeof window!=='undefined'&&window.__SHOPREASON)||null;
-    // 1. Position servie par l'API — la seule qui puisse être exacte.
+    const libelle=nm+((si&&si.city)?(' · '+si.city):'');
     if(si&&si.lat!=null&&si.lng!=null){
       const exact=(si.geoSource==='address'||si.geoSource==='manual');
       return {lat:+si.lat, lng:+si.lng, geoOk:exact, precis:exact?'exact':'approx',
-        source:si.geoSource||null, adresse:adr, motif:exact?null:why,
-        libelle:nm+(si.city?(' · '+si.city):'')}; }
-    // 2. Repli local par le CP, tant que le serveur n'a pas encore résolu.
-    const geo=(typeof window!=='undefined'&&window.__CPGEO&&window.__CPGEO.idx)||null;
-    let e=null;
-    if(geo&&si){ if(si.cp) e=geo[String(si.cp).trim()]||null;
-      if(!e&&si.city&&window.__CPGEO.list){ const cl=String(si.city).toLowerCase(); const hit=window.__CPGEO.list.find(x=>String(x[1]).toLowerCase()===cl); if(hit) e={lat:hit[2],lng:hit[3]}; } }
-    return {lat:e?e.lat:50.85, lng:e?e.lng:4.35, geoOk:false, precis:e?'approx':'inconnu',
-      source:e?'zip':null, adresse:adr, motif:why,
-      libelle:nm+(si&&si.city?(' · '+si.city):'')}; }
+        source:si.geoSource||null, adresse:adr, motif:exact?null:why, libelle}; }
+    return {lat:null, lng:null, geoOk:false, precis:'inconnu',
+      source:null, adresse:adr, motif:why, libelle}; }
+
+  /* Les coordonnées du départ, sous forme prête à composer : une paire quand
+     l'API en a servi une, RIEN sinon. Les tracés se contentent alors de relier
+     leurs arrêts, au lieu de partir d'un point inventé. */
+  depotCoords(){ const d=this.depot(); return (d.lat!=null&&d.lng!=null)?[[d.lat,d.lng]]:[]; }
+
+  /* Bandeau « boutique non placée », posé SUR la carte. Sans pin, l'absence ne
+     se voit pas : une carte muette se lit comme une carte complète. */
+  depotBanner(elId, d){
+    if(typeof document==='undefined') return;
+    const el=document.getElementById(elId); if(!el) return;
+    const id=elId+'-depwarn'; let b=document.getElementById(id);
+    if(d&&d.lat!=null){ if(b&&b.parentNode) b.parentNode.removeChild(b); return; }
+    if(!b){ b=document.createElement('div'); b.id=id; b.className='dep-geo-warn';
+      b.style.cssText='position:absolute;z-index:500;top:8px;left:50%;transform:translateX(-50%);'
+        +'max-width:92%;padding:7px 12px;border-radius:8px;white-space:normal;text-align:center';
+      try { if(window.getComputedStyle(el).position==='static') el.style.position='relative'; } catch(e){}
+      el.appendChild(b); }
+    b.textContent='⚠ Boutique non placée — ni départ ni retour de tournée, aucune ETA'
+      +((d&&d.motif)?(' · '+d.motif):' · renseignez l\u2019adresse dans Paramètres du shop');
+  }
 
   /* Contenu du pin boutique — UNE seule rédaction pour les deux cartes.
      Elles divergeaient : Tournées avertissait, Livraison du jour se taisait.
@@ -3474,7 +3507,7 @@ class Component extends DCLogic {
     const warn=d.precis==='exact' ? null
       : (d.precis==='approx'
          ? 'Position approximative — centre du code postal, pas l’adresse'
-         : 'Position inconnue — repli Bruxelles-centre');
+         : 'Position inconnue — la boutique n’est pas placée');
     return {warn, html:'<b>'+esc(d.libelle)+'</b>'
       +(d.adresse?('<br><span style="color:#666">'+esc(d.adresse)+'</span>'):'')
       +'<br>Boutique — départ &amp; retour des tournées'
@@ -3974,7 +4007,11 @@ class Component extends DCLogic {
       this.zfGeoEnsure();
       const el=document.getElementById('map-suivi');
       if(el && !el._leaflet_id){
-        const m=L.map(el,{zoomControl:true,attributionControl:true}).setView([50.83,4.40],11);
+        // Vue initiale centrée sur la BOUTIQUE quand l'API en a servi la
+        // position ; sinon la vue par défaut, que fitBounds corrige dès qu'il
+        // y a quelque chose à montrer. Aucun point de donnée n'en dépend.
+        const dc0=this.depotCoords();
+        const m=L.map(el,{zoomControl:true,attributionControl:true}).setView(dc0.length?dc0[0]:[50.83,4.40],dc0.length?12:11);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
         this._suiviMap=m; this._suiviFit=false; this.drawSuiviMap();
       } else if(el && this._suiviMap){
@@ -3996,7 +4033,8 @@ class Component extends DCLogic {
       this.zfGeoEnsure();
       const el=document.getElementById('map-tournees');
       if(el && !el._leaflet_id){
-        const m=L.map(el,{zoomControl:true}).setView([50.84,4.37],12);
+        const dc1=this.depotCoords();
+        const m=L.map(el,{zoomControl:true}).setView(dc1.length?dc1[0]:[50.84,4.37],12);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
         this._tourneesMap=m; this.drawRoute();
       } else if(el && this._tourneesMap){
@@ -4032,11 +4070,15 @@ class Component extends DCLogic {
       +p.offices.map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>';
     // La BOUTIQUE — pin distinctif (départ / retour des tournées).
     const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
-    const dep=this.depotInfo(d);
-    const shopMk=L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g);
-    shopMk.bindPopup(dep.html);
-    if(dep.warn) shopMk.bindTooltip('⚠ '+dep.warn,
-      {permanent:true,direction:'right',offset:[10,-14],className:'dep-geo-warn'});
+    const dep=this.depotInfo(d); const depC=this.depotCoords();
+    // Pas de position servie ⇒ pas de pin, et un bandeau qui le dit.
+    this.depotBanner('map-tournees', d);
+    if(depC.length){
+      const shopMk=L.marker(depC[0],{icon:shopIcon}).addTo(g);
+      shopMk.bindPopup(dep.html);
+      if(dep.warn) shopMk.bindTooltip('⚠ '+dep.warn,
+        {permanent:true,direction:'right',offset:[10,-14],className:'dep-geo-warn'});
+    }
     let focusBounds=null;
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length];
       const isFocus=focus&&norm(focus)===norm(t.name);
@@ -4044,8 +4086,10 @@ class Component extends DCLogic {
       const pts=sites.filter(s=>norm(s.zone)===norm(t.name))
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       if(!pts.length) return;
-      const coords=[[d.lat,d.lng],...pts.map(p=>[p.lat,p.lng])];
-      if(t.ret!==false) coords.push([d.lat,d.lng]);
+      // Sans départ connu, le tracé relie ses arrêts — il ne part pas d'un
+      // point choisi par la page.
+      const coords=[...depC,...pts.map(p=>[p.lat,p.lng])];
+      if(t.ret!==false&&depC.length) coords.push(depC[0]);
       const itin=pts.map((p,k)=>(k+1)+'. '+p.name).join(' → ');
       const line=L.polyline(coords,{color:col,weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}).addTo(g);
       line.bindTooltip('<b>'+esc(t.name)+'</b><br>'+esc(itin),{sticky:true});
@@ -4061,14 +4105,19 @@ class Component extends DCLogic {
       L.circleMarker([p.lat,p.lng],{radius:7,color:'#fff',weight:2,fillColor:'#9a9a9a',fillOpacity:focus?0.3:0.9}).addTo(g).bindPopup(sitePopup(p,null,0)));
     g.addTo(m); this._routeLayer=g;
     if(focusBounds) m.fitBounds(focusBounds,{padding:[36,36]});
-    else if(!this._fitDone){ const all=[[d.lat,d.lng],...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
+    else if(!this._fitDone){ const all=[...depC,...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
       if(all.length>1){ this._fitDone=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
   }
   // ETA PRÉVISIONNELLE par tournée : départ = ws_tour_availability.dep (repli
   // 08:00), puis par arrêt : trajet estimé (distance CP→CP) + temps d'accès
   // du site. Retourne {stops:{siteId:'HH:MM'}, dep, fin, nbSites, nbOffices}.
   tourEtas(){
-    const d=this.depot(); const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+    const d=this.depot();
+    // Le premier trajet part de la BOUTIQUE. Sans sa position, la durée de ce
+    // trajet est inconnue et TOUTES les heures qui suivent le sont aussi :
+    // on ne rend aucune ETA plutôt qu'une suite d'heures fausses.
+    if(d.lat==null) return {};
+    const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
     const depOf={}; (window.BOServer?window.BOServer.table('ws_tour_availability'):[]).forEach(a=>{ if(a.tour&&a.dep) depOf[norm(a.tour)]=a.dep; });
     const sites=this.sitesData(); const out={};
     this.routesMeta().forEach(t=>{ if(!t.name) return; const k=norm(t.name);
@@ -4098,23 +4147,26 @@ class Component extends DCLogic {
     const focus=this.state.mapFocusTour||null;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
     const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
-    /* Position non exacte : le pin retombe sur le centroïde du CP, voire sur
-       Bruxelles-centre. Ce n'est pas qu'un détail d'affichage — tous les tracés
+    /* Position seulement approximative (centroïde du CP, résolu par le
+       SERVEUR) : ce n'est pas qu'un détail d'affichage — tous les tracés
        partent et reviennent de ce point, et les ETA en découlent. L'alerte est
        donc VISIBLE sans clic : une carte fausse ne doit jamais avoir l'air
-       juste. */
-    const dep=this.depotInfo(d);
-    const shopMk=L.marker([d.lat,d.lng],{icon:shopIcon}).addTo(g);
-    shopMk.bindPopup(dep.html);
-    if(dep.warn) shopMk.bindTooltip('⚠ '+dep.warn,
-      {permanent:true,direction:'right',offset:[10,-14],className:'dep-geo-warn'});
+       juste. Position absente : pas de pin du tout, et un bandeau. */
+    const dep=this.depotInfo(d); const depC=this.depotCoords();
+    this.depotBanner('map-suivi', d);
+    if(depC.length){
+      const shopMk=L.marker(depC[0],{icon:shopIcon}).addTo(g);
+      shopMk.bindPopup(dep.html);
+      if(dep.warn) shopMk.bindTooltip('⚠ '+dep.warn,
+        {permanent:true,direction:'right',offset:[10,-14],className:'dep-geo-warn'});
+    }
     tours.forEach((t,i)=>{ if(!t.name) return; const col=colors[i%colors.length]; const k=norm(t.name);
       const isFocus=focus&&norm(focus)===k; const dim=focus&&!isFocus;
       const pts=sites.filter(s=>norm(s.zone)===k)
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       if(!pts.length) return;
       const et=etas[k]||{stops:{},dep:'—',fin:'—'};
-      const coords=[[d.lat,d.lng],...pts.map(p=>[p.lat,p.lng]),[d.lat,d.lng]];
+      const coords=[...depC,...pts.map(p=>[p.lat,p.lng]),...depC];
       const line=L.polyline(coords,{color:col,weight:isFocus?5:3.5,opacity:dim?0.15:0.8}).addTo(g);
       line.bindTooltip('<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin),{sticky:true});
       pts.forEach((p,kk)=>{
@@ -4136,7 +4188,7 @@ class Component extends DCLogic {
       if(dr.lat&&dr.lng) L.circleMarker([dr.lat,dr.lng],{radius:10,color:'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(g).bindPopup("<b>"+esc(dr.name||dr.nom||'Chauffeur')+"</b><br>"+esc(dr.vehicule||''));
     });
     g.addTo(m); this._suiviLayer=g;
-    if(!this._suiviFit){ const all=[[d.lat,d.lng],...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
+    if(!this._suiviFit){ const all=[...depC,...sites.filter(s=>!s.geoKo).map(s=>[s.lat,s.lng])];
       if(all.length>1){ this._suiviFit=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
   }
   componentDidMount(){ this.ensureMaps();
@@ -4641,6 +4693,12 @@ class Component extends DCLogic {
           cardStyle:'text-align:left;border:1.5px solid '+(focused?suiviColors[i%suiviColors.length]:'var(--color-border-tertiary)')+';border-radius:10px;padding:14px 16px;cursor:pointer;background:'+(focused?'var(--color-background-secondary)':'var(--color-surface)')+';min-width:0',
           focus:()=>this.setState(s=>({mapFocusTour:normT(s.mapFocusTour||'')===normT(t.name)?null:t.name}))}; });
     const suiviToursEmpty=suiviTours.length===0;
+    // « Aucune tournée » et « la boutique n'a pas de position » sont deux
+    // pannes différentes : les annoncer avec la même phrase envoyait chercher
+    // au mauvais endroit.
+    const suiviEmptyMsg=(this.depot().lat==null)
+      ? 'Boutique non placée : sans point de départ, aucune ETA ne peut être calculée. Renseignez l\u2019adresse dans Réglages › Paramètres du shop.'
+      : 'Aucune tournée avec des sites assignés — écran Tournées pour en construire une.';
 
     // CLIENTS
     const clientsData=SRV('fr_clients');
@@ -6824,7 +6882,7 @@ class Component extends DCLogic {
       zfCpq:S.zf.cpq||'',
       zoneParentOpts,zfCanSubmit,zfSubmitExtra:zfCanSubmit?'':'opacity:.45;pointer-events:none',zfSubmit,
       publier:this.go('suivi'),publierLabel:'Publier vers la tablette',
-      liveDrivers,liveEta,liveTable,suiviTours,suiviToursEmpty,
+      liveDrivers,liveEta,liveTable,suiviTours,suiviToursEmpty,suiviEmptyMsg,
       selNom:selDrv.nom,selTournee:selDrv.tournee,selVehicule:selDrv.vehicule,selAvancement:selDrv.avancement,selEta:selDrv.eta,selDrift:selDrv.drift,selDriftColor:selDrv.driftColor,selStatut:selDrv.statut,selStatutStyle:selDrv.statutStyle,selColor:selDrv.color,selStops:selDrv.stops,selHasStops:(selDrv.stops||[]).length>0,
       clients,sel,
       incidents,selInc,

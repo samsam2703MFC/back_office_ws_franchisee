@@ -72,6 +72,30 @@ Les **horaires** n'y sont pas : ils appartiennent à `fr_shop_availability`
          "lat":50.83,"lng":4.31,"geoSource":"address","geoReason":null}}
 ```
 
+#### Aucun repli : la position vient de l'API, ou de nulle part
+
+`geoSource` est décidé par le **serveur** : `address` / `manual` (exact) ou
+`zip` (centroïde du code postal — signalé à l'écran). La page ne recalcule
+rien : trois replis ont été retirés parce qu'aucun ne se distinguait d'une
+vraie donnée une fois posé sur la carte —
+
+| repli retiré | ce qu'il produisait |
+| --- | --- |
+| nom « Ma boutique » | une enseigne plausible pour une boutique non résolue |
+| centroïde du CP recalculé dans la page | un pin « exact » à des kilomètres |
+| position par défaut `50.85 / 4.35` | la boutique au centre de Bruxelles, tracés et ETA compris |
+
+Sans `lat`/`lng` servis : **pas de pin**, un bandeau sur la carte portant le
+`geoReason` du serveur, et **aucune ETA** — le premier trajet part de la
+boutique, donc sans elle toutes les heures qui suivent seraient fausses.
+L'écran « Livraison du jour » dit pourquoi il n'affiche pas de tournée au lieu
+d'annoncer « aucune tournée assignée ». La vue initiale des cartes se centre
+sur la boutique quand sa position est connue.
+
+Restent deux replis de même nature, hors périmètre `shops` : les **sites de
+livraison** sans coordonnées (`sitesData`, marqués `geoKo`) et les **points de
+rentabilité** (`rentaPoints`) retombent encore sur `50.85 / 4.35`.
+
 **Écriture** — `POST /franchisee/shop-update?shop=<id>`
 
 ```json
