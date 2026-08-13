@@ -360,6 +360,22 @@ jobs:
           # lecture seule (l'un enverrait un message à un client). On vérifie que
           # les routes RÉPONDENT — sans bureau, elles doivent refuser en disant
           # pourquoi. Un 404 ici signifierait que le serveur n'a pas ce code.
+          # L'affiche est-elle À LA CHARTE ? La page porte <meta name="polices">
+          # listant ce qui a VRAIMENT été embarqué. Sans ce contrôle, une
+          # affiche tombée en Helvetica est indiscernable d'une affiche à la
+          # marque tant que personne ne l'imprime — c'est exactement ce qui est
+          # arrivé : le serveur ne range pas les polices là où le dépôt les met.
+          FONTS=$(curl -s --max-time 12 "$BASE/../fonts/Gotham_Book.otf" -o /dev/null -w '%{http_code}' 2>/dev/null)
+          case "$FONTS" in
+            200) echo "  OK       les polices de la marque sont servies (fonts/Gotham_Book.otf)";;
+            *)   echo "  ⚠ fonts/Gotham_Book.otf — HTTP $FONTS"
+                 echo "           ⇒ l'affiche sortira en Helvetica, hors charte";;
+          esac
+          VANK=$(curl -s --max-time 12 "$BASE/../fonts/GC_Vank.ttf" -o /dev/null -w '%{http_code}' 2>/dev/null)
+          case "$VANK" in
+            200) echo "  OK       la police d'affichage Vank est servie";;
+            *)   echo "  ⚠ fonts/GC_Vank.ttf — HTTP $VANK (titre de l'affiche hors charte)";;
+          esac
           for R in "office-invite-poster:l'affiche HTML (bouton de la console)" \
                    "office-invite-pdf:l'affiche PDF (pièce jointe de l'e-mail)" \
                    "office-invite:le lien de la fiche bureau"; do
