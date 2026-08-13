@@ -291,7 +291,9 @@ en-têtes de cache que récemment).
 | --- | --- | --- | --- | --- |
 | I1 | Lien e-mail | Ouvrir `?i=<jeton>` | Bandeau pré-lié : bureau, site, boutique | `GET /inscription?i=` |
 | I2 | Lien affiche | Ouvrir `?c=inv_…` (ou scanner le QR) | Même page, mêmes valeurs | `GET /inscription?c=` |
-| I3 | QR imprimé | Imprimer le PDF, scanner à 60 cm | Lecture immédiate | — |
+| I3 | QR imprimé | Ouvrir l'affiche, « Imprimer », scanner à 60 cm | Lecture immédiate | — |
+| I3b | Affiche à la charte | Sur la page ouverte : Gotham (pas Helvetica), bandeau bordeaux, logo | `GET /franchisee/office-invite-poster` |
+| I3c | Affiche sur **une** page | Aperçu d'impression d'un bureau aux 12 conditions | 1 page A4, pied en bas | — |
 | I4 | Domaine imposé | Saisir un e-mail hors domaine | Refus (front **et** serveur) | `POST /inscription` → 403 |
 | I5 | Mot de passe | 11 caractères, sans chiffre | Refus motivé | `POST /inscription` → 400 |
 | I6 | Compte créé | Formulaire complet | Compte + demande `pending` | `client`, `ws_office_join_requests` |
@@ -333,7 +335,7 @@ en-têtes de cache que récemment).
 | P11 | Département sans société | Refus qui nomme la société manquante | 409 |
 | P12 | Contacts e-mail bureau | ajouter · supprimer · **recharger** : persistant ; le contact de la fiche n'a pas de croix | `ws_office_emails` |
 | P12b | Personnel du wizard | étape 6 + case « adhésion » ⇒ contacts « Personnel » + invitations envoyées | `ws_office_emails`, journal |
-| P13 | Lien d'invitation | Copier · envoyer · affiche PDF · révoquer · ré-émettre | `ws_office_invites` |
+| P13 | Lien d'invitation | Copier · envoyer · affiche · révoquer · ré-émettre | `ws_office_invites` |
 | P14 | Bons | Créer un bon ciblé, le retrouver après rechargement | `ws_vouchers` |
 | P15 | Zones & frais | Cascade site → bureau → tournée → boutique = celle du checkout | `ws_delivery_fee_rules` |
 | P16 | Assortiment | Retirer un produit ⇒ absent du webshop | `fr_assortiment` |

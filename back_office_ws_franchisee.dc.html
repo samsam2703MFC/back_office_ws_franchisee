@@ -929,7 +929,7 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <sc-if value="{{ invHasUrl }}" hint-placeholder-val="{{ true }}">
               <button onClick="{{ invEnvoyer }}" class="btn-primary" style="padding:8px 13px;font-size:11.5px">Envoyer l'e-mail au contact</button>
-              <button onClick="{{ invPdf }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:9px;padding:8px 13px;font:600 11.5px var(--font-ui);color:var(--color-text);cursor:pointer">Affiche PDF (QR code)</button>
+              <button onClick="{{ invAffiche }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:9px;padding:8px 13px;font:600 11.5px var(--font-ui);color:var(--color-text);cursor:pointer">Affiche (QR code)</button>
             </sc-if>
             <button onClick="{{ invIssue }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:9px;padding:8px 13px;font:600 11.5px var(--font-ui);color:var(--color-text);cursor:pointer">{{ invIssueLabel }}</button>
             <sc-if value="{{ invHasUrl }}" hint-placeholder-val="{{ true }}">
@@ -3519,21 +3519,39 @@ class Component extends DCLogic {
         this.setState(s=>({_rev:(s._rev||0)+1})); })
       .catch(()=>{});
   }
-  /* L'AFFICHE (PDF) — QR code, URL courte, conditions du bureau. Elle passe par
-     fetch et non par un simple lien : l'endpoint exige le jeton admin, qu'une
-     navigation directe n'emporte pas — le franchisé recevrait un 401 en guise
-     d'affiche. */
-  invPdf(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
+  /* L'AFFICHE — QR code, URL courte, conditions du bureau. Elle s'ouvre en HTML
+     dans un onglet, où un bouton « Imprimer » lance la boîte d'impression du
+     navigateur : c'est là que le franchisé imprime, ou choisit « Enregistrer au
+     format PDF ». La page est déjà calibrée A4.
+
+     POURQUOI PLUS DE PDF ICI. Le PDF que ce serveur fabrique à la main ne sait
+     poser que du texte et des images 1 bit : ni Gotham, ni le bordeaux de la
+     marque, ni les filets. En HTML l'affiche porte la vraie charte, et le PDF
+     qui en sort par l'impression aussi. L'endpoint PDF reste — l'e-mail a
+     besoin d'un fichier à JOINDRE, ce qu'une page ne fait pas.
+
+     Le fetch, plutôt qu'un simple lien : l'endpoint exige le jeton admin,
+     qu'une navigation directe n'emporte pas — le franchisé recevrait un 401 en
+     guise d'affiche. L'onglet, lui, est ouvert TOUT DE SUITE au clic : ouvert
+     depuis la réponse du fetch, il serait bloqué comme popup. */
+  invAffiche(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
     const qs=fr.shop?('&shop='+encodeURIComponent(fr.shop)):'';
+    const onglet=window.open('','_blank');
     this.printJob('Préparation de l’affiche…');
-    fetch(fr.base+'/franchisee/office-invite-pdf?office='+encodeURIComponent(S.office)+qs,{headers:FRH(),credentials:'omit'})
+    fetch(fr.base+'/franchisee/office-invite-poster?office='+encodeURIComponent(S.office)+qs,{headers:FRH(),credentials:'omit'})
       .then(async r=>{ if(!r.ok){ const j=await r.json().catch(()=>null); throw new Error((j&&j.error)||('HTTP '+r.status)); }
         return r.blob(); })
-      .then(bl=>{ const u=URL.createObjectURL(bl); const a=document.createElement('a');
-        a.href=u; a.download='invitation-'+String(S.name||'bureau').replace(/[^A-Za-z0-9]+/g,'-')+'.pdf';
-        document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
-        this.printJob('✔ Affiche téléchargée — imprimez-la pour la cafétéria'); })
-      .catch(e=>{ this.setState({inv:{...this.state.inv,msg:'Affiche indisponible — '+(e&&e.message?e.message:'réseau')+'.'}});
+      .then(bl=>{ const u=URL.createObjectURL(new Blob([bl],{type:'text/html'}));
+        if(onglet){ onglet.location=u; setTimeout(()=>URL.revokeObjectURL(u),60000);
+          this.printJob('✔ Affiche ouverte — le bouton « Imprimer » y produit le PDF'); }
+        else { /* Popup bloquée : on ne perd pas l'affiche, on la télécharge. */
+          const a=document.createElement('a'); a.href=u;
+          a.download='affiche-'+String(S.name||'bureau').replace(/[^A-Za-z0-9]+/g,'-')+'.html';
+          document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+          this.setState({inv:{...this.state.inv,msg:'L’onglet a été bloqué par le navigateur — l’affiche a été téléchargée à la place.'}});
+          this.printJob('✔ Affiche téléchargée (onglet bloqué)'); } })
+      .catch(e=>{ if(onglet) onglet.close();
+        this.setState({inv:{...this.state.inv,msg:'Affiche indisponible — '+(e&&e.message?e.message:'réseau')+'.'}});
         this.printJob('⚠ Affiche non produite — '+(e&&e.message?e.message:'réseau')); }); }
   /* Envoi (ou renvoi) de l'e-mail au contact du bureau : conditions, bouton
      « Créer mon compte », affiche en pièce jointe. */
@@ -6990,7 +7008,7 @@ class Component extends DCLogic {
       invIssueLabel:(IV&&IV.url)?'Émettre un nouveau lien (révoque celui-ci)':'Émettre un lien',
       invClose:()=>this.invClose(), invCopy:()=>this.invCopy(),
       invIssue:()=>this.invIssue(), invRevoke:()=>this.invRevoke(),
-      invPdf:()=>this.invPdf(), invEnvoyer:()=>this.invEnvoyer(),
+      invAffiche:()=>this.invAffiche(), invEnvoyer:()=>this.invEnvoyer(),
       offAssignChips,offAssignEmpty,offNoFree,offHasFree,offFreeTitle,offSiteCards,
       // ===== Menu « Clients » — table client via GET /franchisee/b2b-clients =====
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se

@@ -210,7 +210,8 @@ jobs:
                        "searchDefs:recherche du menu" "assign():constructeur de tournées" \
                        "Onboarding bureau B2B:wizard « nouveau bureau B2B »" \
                        "obManqueA:validation étape par étape du wizard" \
-                       "office-invite:lien d'invitation sur la fiche bureau"; do
+                       "office-invite:lien d'invitation sur la fiche bureau" \
+                       "invAffiche:affiche HTML imprimable (remplace le téléchargement PDF)"; do
             needle=${probe%%:*}; label=${probe#*:}
             if printf '%s' "$HTML" | grep -qF -- "$needle"; then echo "  présent  $label"
             else echo "  ABSENT   $label"; fi
@@ -359,7 +360,9 @@ jobs:
           # lecture seule (l'un enverrait un message à un client). On vérifie que
           # les routes RÉPONDENT — sans bureau, elles doivent refuser en disant
           # pourquoi. Un 404 ici signifierait que le serveur n'a pas ce code.
-          for R in "office-invite-pdf:l'affiche PDF" "office-invite:le lien de la fiche bureau"; do
+          for R in "office-invite-poster:l'affiche HTML (bouton de la console)" \
+                   "office-invite-pdf:l'affiche PDF (pièce jointe de l'e-mail)" \
+                   "office-invite:le lien de la fiche bureau"; do
             EP=${R%%:*}; LB=${R#*:}
             CO=$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "${HDR[@]}" "$BASE/franchisee/$EP" 2>/dev/null)
             case "$CO" in
