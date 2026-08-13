@@ -962,8 +962,11 @@
       <sc-if value="{{ isOffices }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
-          <div style="font:400 12px/1.5 var(--font-ui);color:var(--color-text-muted)">Bureaux clients (ws_offices) + config livraison. Un office regroupe un ou plusieurs delivery sites ; seuls les offices <strong>validés</strong> sont livrables.</div>
-          <button onClick="{{ addOffice }}" class="btn-primary" style="padding:9px 16px;font-size:12.5px;white-space:nowrap">+ Nouvel office</button>
+          <div style="font:400 12px/1.5 var(--font-ui);color:var(--color-text-muted)">Bureaux clients (ws_offices) + config livraison. Un office regroupe un ou plusieurs delivery sites ; seuls les offices <strong>validés</strong> sont livrables.<br><strong>Onboarder un bureau</strong> fait le tour complet — société, contact, site &amp; engagement de livraison, départements, conditions webshop, vouchers — puis émet le lien d'invitation que le bureau transfère à son personnel. <strong>Office seul</strong> n'écrit que la ligne ws_offices.</div>
+          <div style="display:flex;gap:8px;flex:none">
+            <button onClick="{{ addOffice }}" class="btn-secondary" style="padding:9px 14px;font-size:12.5px;white-space:nowrap">+ Office seul</button>
+            <button onClick="{{ onboardOffice }}" class="btn-primary" style="padding:9px 16px;font-size:12.5px;white-space:nowrap">+ Onboarder un bureau</button>
+          </div>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
           <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Étape 3 sur 4 · Assigner les bureaux (offices) aux sites — ensuite : étape 4, les clients se rattachent à leur bureau</div>
@@ -1045,7 +1048,7 @@
           <select value="{{ bcOff }}" onChange="{{ bcSetOff }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcOffOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
           <select value="{{ bcDept }}" onChange="{{ bcSetDept }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcDeptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
           <span style="font:600 11px var(--font-ui);color:var(--color-text-muted);flex:none">{{ bcTotalTxt }}</span>
-          <button onClick="{{ addClientB2B }}" class="btn-primary" style="padding:9px 14px;font-size:12px;flex:none">+ Nouveau client B2B</button>
+          <button onClick="{{ goDemandes }}" class="btn-secondary" style="padding:9px 14px;font-size:12px;flex:none" title="Un client B2B est une personne : elle crée son compte depuis le lien d'invitation de son bureau, puis vous la validez.">Demandes de rattachement →</button>
         </div>
         <div style="display:flex;gap:8px;overflow-x:auto">
           <sc-for list="{{ bcCounts }}" as="bk" hint-placeholder-count="4">
@@ -2612,10 +2615,27 @@
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Remise webshop (%)</label><input type="number" value="{{ ob.remiseWeb }}" onInput="{{ obSetRemiseWeb }}" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Franco de port</label><input value="{{ ob.franco }}" onInput="{{ obSetFranco }}" placeholder="ex. 250 €" style="{{ obInStyle }}"/></div>
         </div>
-        <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:6px;margin-bottom:14px">Voucher de bienvenue</div>
-        <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px">
+        <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:6px;margin-bottom:8px">Vouchers</div>
+        <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">Autant que nécessaire — bienvenue, découverte d'une gamme, geste commercial. Chacun devient une carte du courrier envoyé au bureau. Aucun voucher n'est créé si vous n'en ajoutez pas.</div>
+        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:12px">
+          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Libellé</label><input value="{{ obVLibelle }}" onInput="{{ obSetVLibelle }}" placeholder="ex. Voucher de bienvenue" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Code (auto si vide)</label><input value="{{ ob.vCode }}" onInput="{{ obSetVCode }}" placeholder="code du bon" style="{{ obInStyle }}"/></div>
-          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Valeur / effet</label><input value="{{ ob.vValeur }}" onInput="{{ obSetVValeur }}" placeholder="ex. −10 % sur la première commande" style="{{ obInStyle }}"/></div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:end;margin-bottom:16px">
+          <div style="flex:1.6"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Valeur / effet</label><input value="{{ ob.vValeur }}" onInput="{{ obSetVValeur }}" placeholder="ex. −10 % sur la première commande" style="{{ obInStyle }}"/></div>
+          <div style="flex:1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Validité</label><input value="{{ obVValidite }}" onInput="{{ obSetVValidite }}" placeholder="ex. 60 jours" style="{{ obInStyle }}"/></div>
+          <button onClick="{{ obAddVoucher }}" class="btn-primary" style="font-size:13px;flex:none;height:42px">+ Ajouter</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="t-admin-label">Vouchers du bureau</span><span style="font:600 11px var(--font-ui);color:var(--color-text-muted)">{{ obVCount }}</span></div>
+        <sc-if value="{{ obVEmpty }}" hint-placeholder-val="{{ true }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun voucher — le courrier au bureau n'en annoncera aucun.</div></sc-if>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <sc-for list="{{ obVouchers }}" as="v" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:11px;padding:9px 13px;border:.5px solid var(--color-border-tertiary);border-radius:10px">
+              <span style="flex:none;font:700 11.5px var(--font-mono,monospace);letter-spacing:.06em;color:var(--color-primary);background:#fbf1e3;border-radius:7px;padding:6px 10px">{{ v.code }}</span>
+              <div style="flex:1;min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">{{ v.libelle }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ v.valeur }}{{ v.validiteTxt }}</div></div>
+              <button onClick="{{ v.remove }}" style="border:none;background:transparent;cursor:pointer;color:var(--color-text-muted);font-size:16px">✕</button>
+            </div>
+          </sc-for>
         </div>
         </sc-if>
 
@@ -2650,7 +2670,7 @@
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Contact</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ ob.contactNom }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ob.contactEmail }}</div></div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Delivery site</div><div style="font:400 10.5px var(--font-ui);color:var(--color-primary);margin-bottom:3px">{{ obEngagement }}</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ ob.adr }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ob.tour }} · {{ obRecapZone }}</div></div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Office &amp; départements</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ ob.office }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ obRecapDeptTxt }}</div></div>
-          <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Webshop</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">−{{ ob.remiseWeb }} % · franco {{ ob.franco }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Voucher : {{ ob.vValeur }}</div></div>
+          <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Webshop</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">−{{ ob.remiseWeb }} % · franco {{ ob.franco }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ obRecapVouchers }}</div></div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Personnel</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ obRecapStaffTxt }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Demandes d'adhésion</div></div>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
@@ -2822,8 +2842,9 @@ class Component extends DCLogic {
       // avait choisis. Ils partent vides et sont saisis à l'étape 3.
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'10', franco:'250 €', drop:8,
-      vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
+      vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
+    obVouchers: [], obVLibelle:'', obVValidite:'',
     // Lien d'invitation renvoyé par le serveur après la création du bureau.
     // null tant qu'aucun lien n'existe : la console n'en fabrique jamais.
     obInvite: null,
@@ -2838,8 +2859,9 @@ class Component extends DCLogic {
       adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'10', franco:'250 €', drop:8,
-      vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
-    obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'' }); this.zfGeoEnsure(); }
+      vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
+    obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
+    obVouchers:[], obVLibelle:'', obVValidite:'' }); this.zfGeoEnsure(); }
   obClose(){ this.setState({obOpen:false}); }
   // Localités du référentiel pour un CP belge (un code peut couvrir plusieurs
   // localités, ex. 1300 → Limal · Wavre). [] tant que /geo/postcodes n'est pas chargé.
@@ -2923,6 +2945,31 @@ class Component extends DCLogic {
   obInviteClose(){ this.setState({obInvite:null}); }
   obAddDept(){ const d=(this.state.obDeptDraft||'').trim(); if(!d) return; const eff=this.state.obDeptEff||'5'; this.setState(s=>({obDepts:[...s.obDepts,{dept:d,effectif:eff}],obDeptDraft:'',obDeptEff:'5'})); }
   obRemoveDept(i){ return ()=>this.setState(s=>({obDepts:s.obDepts.filter((_,j)=>j!==i)})); }
+  /* AJOUT D'UN VOUCHER. Le code peut être laissé vide : il est alors dérivé
+     du libellé et d'un numéro — un identifiant, pas une donnée inventée. Le
+     libellé, lui, est obligatoire : c'est ce que le bureau lira sur sa carte,
+     et « Voucher » tout court ne dit rien de ce qu'il offre. */
+  obAddVoucher(){ const S=this.state, o=S.ob;
+    const lib=String(S.obVLibelle||'').trim();
+    const val=String(o.vValeur||'').trim();
+    if(!lib){ this.printJob('⚠ Libellé du voucher requis — c’est ce que le bureau lit sur sa carte'); return; }
+    if(!val){ this.printJob('⚠ Valeur du voucher requise — un code sans effet annoncé n’engage rien'); return; }
+    const code=(String(o.vCode||'').trim()||this.obVCodeAuto(lib)).toUpperCase().replace(/\s+/g,'');
+    if(S.obVouchers.some(v=>v.code===code)){ this.printJob('⚠ Le code '+code+' est déjà dans la liste'); return; }
+    this.setState(s=>({obVouchers:[...s.obVouchers,{libelle:lib,code,valeur:val,validite:String(s.obVValidite||'').trim()}],
+      obVLibelle:'', obVValidite:'', ob:{...s.ob,vCode:'',vValeur:''}})); }
+  obVCodeAuto(lib){ const base=String(lib||'VOUCHER').toUpperCase().replace(/[^A-Z0-9]+/g,'').slice(0,10)||'VOUCHER';
+    return base+(1000+Math.floor(Math.random()*8999)); }
+  obRemoveVoucher(i){ return ()=>this.setState(s=>({obVouchers:s.obVouchers.filter((_,j)=>j!==i)})); }
+  /* Les vouchers RETENUS à la création : la liste, plus le brouillon s'il est
+     rempli — un franchisé qui saisit son dernier voucher et clique « Créer »
+     sans repasser par « + Ajouter » ne doit pas le perdre en silence. */
+  obVouchersFinaux(){ const S=this.state, o=S.ob;
+    const out=S.obVouchers.slice();
+    const lib=String(S.obVLibelle||'').trim(), val=String(o.vValeur||'').trim();
+    if(lib&&val){ const code=(String(o.vCode||'').trim()||this.obVCodeAuto(lib)).toUpperCase().replace(/\s+/g,'');
+      if(!out.some(v=>v.code===code)) out.push({libelle:lib,code,valeur:val,validite:String(S.obVValidite||'').trim()}); }
+    return out; }
   obAddStaff(){ const n=(this.state.obStaffName||'').trim(), e=(this.state.obStaffEmail||'').trim(); if(!e) return; this.setState(s=>({obStaff:[...s.obStaff,{name:n||e.split('@')[0],email:e}],obStaffName:'',obStaffEmail:''})); }
   obRemoveStaff(i){ return ()=>this.setState(s=>({obStaff:s.obStaff.filter((_,j)=>j!==i)})); }
   obLoadCsv(){ const raw=this.state.obCsv||''; if(!raw.trim()) return; const rows=raw.split(/[\n;]+/).map(l=>l.trim()).filter(Boolean);
@@ -2972,6 +3019,20 @@ class Component extends DCLogic {
       points:[{libelle:office+' — '+(o.adr||'site'),adresse:o.adr,cp:obCp,localite:obLocalite,
         fenetre:obFenetre,jours:obJours,validation:o.validation,marge:0}]});
     window.BOServer.save('fr_clients',clients);
+    /* LA LIGNE ws_offices. Le serveur crée bien l'office (il renvoie
+       office_id) mais l'écriture locale ne la posait nulle part : après
+       « Créer », l'écran Offices restait vide et le bureau semblait n'exister
+       que dans Clients. Rien d'inventé ici — c'est le même enregistrement,
+       écrit en attendant le rechargement qui fera foi. Statut « pending » :
+       le bureau naît NON validé, la livraison ne s'ouvre qu'après. */
+    const offices=window.BOServer.table('ws_offices');
+    offices.push({name:office,status:'pending',vat:o.tva||'',address:o.adr||'',
+      postal_code:obCp,city:obLocalite||''});
+    /* refresh() et NON save() : c'est /franchisee/onboard-office qui crée
+       l'office côté serveur. Un save() le posterait une seconde fois par
+       /franchisee/save — deux bureaux pour une création. Ici on ne fait que
+       montrer, en attendant le refetch qui remplacera la ligne par la vraie. */
+    window.BOServer.refresh('ws_offices',offices);
     const sites=window.BOServer.table('ws_office_delivery_sites');
     sites.push({bureau:o.raison,client_id:code,office,adr:o.adr,cp:obCp,localite:obLocalite,etage:o.etage,tour:o.tour,acc:+o.acc||6});
     window.BOServer.save('ws_office_delivery_sites',sites);
@@ -2982,17 +3043,23 @@ class Component extends DCLogic {
     if(o.contactEmail) emails.push({bureau:o.raison,addr:o.contactEmail,role:'Principal'});
     S.obStaff.forEach(st=>emails.push({bureau:o.raison,addr:st.email,role:'Livraison'}));
     window.BOServer.save('ws_office_emails',emails);
-    const vouchers=window.BOServer.table('ws_vouchers_local');
-    const vcode=(o.vCode||'BIENVENUE'+num).toUpperCase().replace(/\s+/g,'');
-    vouchers.push({code:vcode,valeur:o.vValeur||'Voucher de bienvenue',type:'add_office',validite:'onboarding',loc:true});
-    window.BOServer.save('ws_vouchers_local',vouchers);
+    /* LES VOUCHERS — zéro, un ou plusieurs. Avant, un voucher était créé même
+       quand personne n'en avait demandé : « BIENVENUE4821 » naissait à chaque
+       bureau, partait dans le courrier, et engageait la boutique sur une
+       remise que le franchisé n'avait pas choisie. */
+    const obVchs=this.obVouchersFinaux();
+    if(obVchs.length){ const vouchers=window.BOServer.table('ws_vouchers_local');
+      obVchs.forEach(v=>vouchers.push({code:v.code,valeur:v.valeur,libelle:v.libelle,
+        type:'add_office',validite:v.validite||'onboarding',loc:true}));
+      window.BOServer.save('ws_vouchers_local',vouchers); }
     const newIdx=clients.length-1;
     const parts=[];
     if(o.sendMail&&o.contactEmail) parts.push('e-mail récapitulatif → '+o.contactEmail);
     if(o.sendAdhesion&&S.obStaff.length) parts.push(S.obStaff.length+' demande(s) d\'adhésion');
     if(!obApi) parts.push('lien d\u2019invitation impossible hors API');
-    parts.push('voucher '+vcode);
-    this.setState({obOpen:false,screen:'b2bClients',selClient:newIdx,_rev:(S._rev||0)+1});
+    parts.push(obVchs.length?(obVchs.length+' voucher(s) : '+obVchs.map(v=>v.code).join(', ')):'aucun voucher');
+    // On atterrit sur OFFICES : c'est un bureau qui vient d'être créé.
+    this.setState({obOpen:false,screen:'offices',selClient:newIdx,_rev:(S._rev||0)+1});
     // Le bureau naît NON VALIDÉ : sans cette mention, le franchisé croit avoir
     // terminé alors que la livraison bureau reste fermée tant qu'il n'a pas
     // valide la fiche.
@@ -3007,7 +3074,12 @@ class Component extends DCLogic {
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           fenetre:obFenetre,jours:obJours,validation:o.validation,
-          departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur}})
+          departements:S.obDepts,staff:S.obStaff,
+          // `vouchers` est la liste complète ; `voucher` reste le PREMIER pour
+          // les serveurs qui ne lisent encore que celui-là. Rien d'envoyé si
+          // la liste est vide — pas de bon fantôme.
+          vouchers:obVchs,
+          voucher:obVchs.length?{code:obVchs[0].code,valeur:obVchs[0].valeur}:null})
       }).then(async r=>{
         // Un refus serveur était AVALÉ : `r.ok ? … : null` puis `.catch(()=>{})`.
         // L'écran affichait « ✔ Bureau créé » — issu de l'écriture locale — alors
@@ -6485,6 +6557,13 @@ class Component extends DCLogic {
       obCpLocDisplay:(this.obLocsOf(O.cp).length===1?this.obLocsOf(O.cp)[0]:(O.localite||'')),
       obSetRemiseWeb:this.obSet('remiseWeb'),obSetFranco:this.obSet('franco'),obSetDrop:this.obSet('drop'),
       obSetVCode:this.obSet('vCode'),obSetVValeur:this.obSet('vValeur'),
+      obVLibelle:S.obVLibelle, obVValidite:S.obVValidite,
+      obSetVLibelle:(e)=>this.setState({obVLibelle:e.target.value}),
+      obSetVValidite:(e)=>this.setState({obVValidite:e.target.value}),
+      obAddVoucher:()=>this.obAddVoucher(),
+      obVouchers:S.obVouchers.map((v,i)=>({...v,
+        validiteTxt:v.validite?(' · '+v.validite):'', remove:this.obRemoveVoucher(i)})),
+      obVEmpty:S.obVouchers.length===0, obVCount:String(S.obVouchers.length),
       // Option vide en tête : sans elle, le <select> affichait la première
       // tournée alors que l'état ne contenait rien (ou un nom inventé), et le
       // bureau partait sans tournée sans que l'écran l'ait jamais montré.
@@ -6505,6 +6584,9 @@ class Component extends DCLogic {
       obMailTrack:obMailTog.track,obMailKnob:obMailTog.knob,obToggleMail:obToggle('sendMail'),
       obAdhTrack:obAdhTog.track,obAdhKnob:obAdhTog.knob,obToggleAdh:obToggle('sendAdhesion'),
       obRecapDeptTxt:S.obDepts.length?S.obDepts.map(d=>d.dept).join(', '):'—',
+      // Le récapitulatif compte ce qui partira vraiment, brouillon compris.
+      obRecapVouchers:(()=>{ const v=this.obVouchersFinaux();
+        return v.length?('Voucher(s) : '+v.map(x=>x.libelle).join(', ')):'Aucun voucher'; })(),
       obRecapStaffTxt:S.obStaff.length?(S.obStaff.length+' adresse(s)'):'aucun',
       obRecapZone:obZc.prim+' › '+obZc.sec,
       obNext:()=>this.obNext(), obPrev:()=>this.obPrev(), obClose:()=>this.obClose(), obCreate:()=>this.obCreate(),
@@ -6749,7 +6831,7 @@ class Component extends DCLogic {
           window.BOServer.save('b2b_client_company_department',rows); }
         this.printJob('✓ Ajouté comme département de « '+c.existing.name+' » (b2b_client_company_department)');
         this.setState({officeClash:null,formKey:null,_rev:(S._rev||0)+1}); },
-      openForm:(k)=>this.openForm(k), addClientB2B:()=>this.obOpen(), goParams:this.go('params'),
+      openForm:(k)=>this.openForm(k), goDemandes:this.go('demandesB2B'), goParams:this.go('params'),
       addHoraire:this.openForm('horaire'), addFee:this.openForm('fee'), addCoutVersion:this.openForm('coutVersion'),
       addSite:this.openForm('site'), addCreneau:this.openForm('creneau'), addBureauParam:this.openForm('bureauParam'), addDispoProd:this.openForm('dispoProd'),
       // Sens de paramétrage : les horaires et fermetures sont des PARAMÈTRES DE
@@ -6758,6 +6840,11 @@ class Component extends DCLogic {
       isFermetures:screen==='horaires'||screen==='tournees',fermetures,addFermeture,
       isSites:screen==='sites',sitesList,tourAssignTiles,
       isOffices:screen==='offices',officesList,addOffice:this.openForm('office'),
+      // L'assistant crée un BUREAU (office + site + départements + contact +
+      // conditions + lien d'invitation). Il se lançait depuis « Clients » —
+      // l'écran des PERSONNES rattachées à ces bureaux : deux objets
+      // différents derrière un même bouton.
+      onboardOffice:()=>this.obOpen(),
       offAssignChips,offAssignEmpty,offNoFree,offHasFree,offFreeTitle,offSiteCards,
       // ===== Menu « Clients » — table client via GET /franchisee/b2b-clients =====
       // PERF : tout ce bloc (clonage de table + badges + droplists) ne se
