@@ -2340,6 +2340,11 @@
             <sc-if value="{{ f.isTime }}" hint-placeholder-val="{{ false }}">
               <input type="time" value="{{ f.value }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
             </sc-if>
+            <sc-if value="{{ f.isDays }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ f.dayOpts }}" as="d" hint-placeholder-count="7"><button type="button" onClick="{{ d.pick }}" style="{{ d.style }}">{{ d.lbl }}</button></sc-for>
+              </div>
+            </sc-if>
             <sc-if value="{{ f.isText }}" hint-placeholder-val="{{ false }}">
               <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
             </sc-if>
@@ -3466,12 +3471,21 @@ class Component extends DCLogic {
           {k:'shop',label:'Stock en shop (comptoir)',type:'number',def:20},
           {k:'min',label:'Stock minimum disponible',type:'number',def:10},
         ]},
-      calRule:{ title:'Règle calendrier', table:'ws_calendar_rules', tbl:'ws_calendar_rules', save:'Créer la règle',
+      /* RÈGLE CALENDRIER — elle décide si une commande est acceptée.
+         Les trois champs étaient du texte libre (« Lun–Ven », « 17:00 J-1 »,
+         « 24 h ») écrit dans l'overlay : inanalysables, et jamais appliqués.
+         « Express midi » a disparu du choix — la table ne connaît que
+         delivery et pickup, ce mode ne pouvait donc rien produire. */
+      calRule:{ title:'Règle calendrier', table:'ws_calendar_rules', save:'Enregistrer la règle',
         fields:[
-          {k:'mode',label:'Mode',type:'select',options:sel(['Livraison','Retrait','Express midi']),def:'Livraison'},
-          {k:'days',label:'Jours ouverts',type:'text',ph:'ex. Lun–Ven'},
-          {k:'cut',label:'Cut-off',type:'text',def:'17:00 J-1'},
-          {k:'lead',label:'Lead time',type:'text',def:'24 h'},
+          {k:'mode',label:'Mode',type:'select',options:sel(['Livraison','Retrait']),def:'Livraison',
+           info:'Une seule règle par mode et par boutique : réenregistrer un mode existant le met à jour.'},
+          {k:'jours',label:'Jours ouverts à la commande',type:'days',
+           info:'Au moins un jour. Sans jour ouvert, plus aucune commande ne passe.'},
+          {k:'cut',label:'Heure limite de commande',type:'time',half:true,def:'17:00',
+           info:'Passé cette heure, la commande bascule au jour suivant.'},
+          {k:'lead',label:'Délai minimum (heures)',type:'number',half:true,def:24,
+           info:'Durée minimale entre la commande et la livraison ou le retrait.'},
         ]},
       pricing:{ title:'Règle de prix locale', table:'ws_pricing_rules', tbl:'ws_pricing_rules_local', save:'Créer la règle',
         fields:[
@@ -3558,6 +3572,9 @@ class Component extends DCLogic {
        ws_bo_store — une table que le checkout ne lit pas. La console affichait
        le cut-off saisi, le webshop appliquait celui de la tournée. */
     if(S.formKey==='bureauParam'){ this.setState({formKey:null}); this.bpWrite(v); return; }
+    // Règle calendrier : une ligne, une route (jours ouverts · heure limite · délai).
+    if(S.formKey==='calRule'){ this.setState({formKey:null});
+      this.calWrite({id:(S.formRow&&S.formRow.id)||0,mode:v.mode,jours:v.jours||[],cut:v.cut,lead:v.lead}); return; }
     // Règle de frais : une ligne, une route. C'est de l'argent (voir feeWrite).
     if(S.formKey==='fee'){ this.setState({formKey:null});
       this.feeWrite({id:(S.formRow&&S.formRow.id)||0,niveau:v.niveau,cible:v.cible,
@@ -3662,6 +3679,30 @@ class Component extends DCLogic {
     fetch(fr.base+'/franchisee/ws-office-emails'+qs,{headers:FRH(),credentials:'omit'})
       .then(r=>r.ok?r.json():null)
       .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('ws_office_emails',a);
+        this.setState(s=>({_rev:(s._rev||0)+1})); })
+      .catch(()=>{});
+  }
+  /* RÈGLE CALENDRIER — écriture d'UNE ligne.
+     Jours ouverts, heure limite et délai décident si une commande est
+     acceptée. Ils passaient par l'overlay : la console montrait le nouveau
+     cut-off, le checkout appliquait l'ancien. */
+  calWrite(v){ const fr=window.__FR||{};
+    if(!fr.base){ this.printJob('⚠ Règle non enregistrée — API non configurée'); return; }
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/calendar-rule'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify(v)})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.printJob(v.delete?'✔ Règle calendrier supprimée'
+            :('✔ Règle enregistrée — '+(v.mode||'')+' · limite '+(v.cut||'')));
+          this.calRefresh(); }
+        else this.printJob('⚠ Règle non enregistrée — '+((j&&j.error)||'refus du serveur')); })
+      .catch(e=>this.printJob('⚠ Règle non enregistrée — '+((e&&e.message)||'réseau indisponible')));
+  }
+  calRefresh(){ const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/ws-calendar-rules'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('ws_calendar_rules',a);
         this.setState(s=>({_rev:(s._rev||0)+1})); })
       .catch(()=>{});
   }
@@ -6016,7 +6057,11 @@ class Component extends DCLogic {
           this.setState(s=>({dndSite:null,_rev:(s._rev||0)+1})); setTimeout(()=>this.bcRefreshOffices(),150); this.printJob('✓ Site déplacé vers la tournée « '+tt.nom+' »'); }};
     });
 
-    const bpDays=(arr)=>['L','Ma','Me','J','V','S','D'].map((k,i)=>({k,style:dayPill((arr||[]).includes(i))}));
+    /* Les jours arrivent en ISO : 1 = lundi … 7 = dimanche, comme date('N')
+       côté serveur, qui est aussi ce que le checkout compare. Comparer à
+       l'INDICE de la pastille (0..6) décalait tout d'un jour : une tournée du
+       lundi s'affichait « Ma ». D'où le +1. */
+    const bpDays=(arr)=>['L','Ma','Me','J','V','S','D'].map((k,i)=>({k,style:dayPill((arr||[]).includes(i+1))}));
     /* « Supprimer » n'a pas de sens ici : un bureau existe toujours, il a
        seulement un horaire à lui OU celui de sa tournée. Le geste est donc un
        RETOUR À LA TOURNÉE — c'est ce que fait le serveur quand l'heure est
@@ -6258,7 +6303,19 @@ class Component extends DCLogic {
         // <input type="time"> : le navigateur impose le format et offre son
         // sélecteur. Plus de « 17h » ni de « 5pm » enregistrés puis ignorés.
         isTime:f.type==='time',
-        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&!isToggle&&!f.readonly,
+        /* JOURS : sept pastilles cliquables, valeur = liste ISO (1 = lundi),
+           celle que le serveur compare à date('N'). Le champ texte qu'elles
+           remplacent (« ex. Lun–Ven ») n'était relu par personne. */
+        isDays:f.type==='days',
+        dayOpts:f.type==='days'?['L','Ma','Me','J','V','S','D'].map((lbl,idx)=>{
+          const iso=idx+1, cur=Array.isArray(val)?val.map(Number):[];
+          const on=cur.includes(iso);
+          return {lbl,style:on?tOn:tOff,
+            pick:()=>this.setState(s=>{ const c=Array.isArray(s.formVals[f.k])?s.formVals[f.k].map(Number):[];
+              const n=c.includes(iso)?c.filter(x=>x!==iso):[...c,iso].sort((a,b)=>a-b);
+              return {formVals:{...s.formVals,[f.k]:n}}; })};
+        }):[],
+        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&f.type!=='days'&&!isToggle&&!f.readonly,
         // Un champ en lecture seule qui RENVOIE vers l'écran où il se modifie.
         hasLien:!!f.lien, lienTxt:'Modifier la fiche du bureau',
         lienGo:f.lien?(()=>{ const S2=this.state, row=S2.formRow||{};
@@ -6769,7 +6826,15 @@ class Component extends DCLogic {
     const officeEmails=emailOrder.map(b=>({...emailGroups[b],add:this.openForm('email')}));
 
     // Règles calendrier
-    const calRules=SRV('ws_calendar_rules').map((c,i)=>({...c,modeShort:c.mode==='Express midi'?'Express':c.mode,edit:this.editForm('calRule',c,i),del:this.deleteRow('ws_calendar_rules',i,'la règle « '+(c.mode||'')+' »'),pill:modePill(c.mode==='Retrait'?'Retrait':'Livraison')}));
+    /* L'édition repart des valeurs BRUTES (jours ISO, heure HH:MM, délai en
+       heures) et non des libellés affichés (« Lun · Mar », « 17:00 J-1 »,
+       « 24 h ») : rouvrir une règle ne la reformate plus. « Supprimer » passe
+       par la route, qui désactive la ligne en base — le retrait d'une ligne
+       d'un blob local revenait au rechargement suivant. */
+    const calRules=SRV('ws_calendar_rules').map((c,i)=>({...c,modeShort:c.mode,
+      edit:this.editForm('calRule',{...c,jours:c.vJours||[],cut:c.vCut||'17:00',lead:c.vLead!=null?c.vLead:24},i),
+      del:(()=>this.calWrite({delete:true,id:c.id})),
+      pill:modePill(c.mode==='Retrait'?'Retrait':'Livraison')}));
 
     // Règles de prix
     const scopePill=(loc)=>loc?pill2('#eaf5ec','#2d7a3e'):pill2('#eef3fb','#2a5a9e');
