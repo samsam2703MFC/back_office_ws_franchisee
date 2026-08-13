@@ -294,16 +294,27 @@ jobs:
 
           # 3. Temps d'accès et de dépôt des sites. Ils entrent dans chaque heure
           #    d'arrivée : il en manque un et la tournée entière perd ses heures.
+          # Le temps d'ACCÈS est sur le site ; le temps de DÉPÔT est par BUREAU,
+          # dans ws_office_delivery_settings. Les chercher au même endroit
+          # revenait à n'en trouver qu'un.
           STJ=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/ws-office-delivery-sites$QS" 2>/dev/null)
           LIG=$(printf '%s' "$STJ" | sed 's/},{/}\n{/g' | grep -c '"adr"' || true)
           ACC=$(printf '%s' "$STJ" | sed 's/},{/}\n{/g' | grep -c '"acc":"\?[0-9]' || true)
-          DRP=$(printf '%s' "$STJ" | sed 's/},{/}\n{/g' | grep -c '"drop":"\?[0-9]' || true)
-          if [ "$LIG" -gt 0 ] && [ "$ACC" -ge "$LIG" ] && [ "$DRP" -ge "$LIG" ]; then
-            echo "  OK       les $LIG site(s) ont un temps d'accès et un temps de dépôt"
+          if [ "$LIG" -gt 0 ] && [ "$ACC" -ge "$LIG" ]; then
+            echo "  OK       les $LIG site(s) ont un temps d'accès"
           else
-            echo "  ⚠ sites : $ACC/$LIG avec temps d'accès · $DRP/$LIG avec temps de dépôt"
+            echo "  ⚠ sites : $ACC/$LIG avec temps d'accès (ws_office_delivery_sites.acc)"
             echo "           ⇒ heures d'arrivée « — » pour les tournées concernées"
-            echo "             (10 min d'accès et 5 min de dépôt étaient supposés auparavant)"
+          fi
+          DSJ=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/ws-office-delivery-settings$QS" 2>/dev/null)
+          DLI=$(printf '%s' "$DSJ" | sed 's/},{/}\n{/g' | grep -c '"bureau"' || true)
+          DRP=$(printf '%s' "$DSJ" | sed 's/},{/}\n{/g' | grep -c '"drop":"\?[0-9]' || true)
+          if [ "$DLI" -gt 0 ] && [ "$DRP" -ge "$DLI" ]; then
+            echo "  OK       les $DLI bureau(x) ont un temps de dépôt"
+          else
+            echo "  ⚠ bureaux : $DRP/$DLI avec temps de dépôt (ws_office_delivery_settings.drop)"
+            echo "           ⇒ heures d'arrivée « — » pour les tournées concernées"
+            echo "             (5 min par bureau étaient supposées auparavant)"
           fi
           echo
 

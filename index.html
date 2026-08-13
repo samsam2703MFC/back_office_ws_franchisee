@@ -3282,6 +3282,15 @@ class Component extends DCLogic {
   sitesData(){
     const rows=(window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]);
     const geo=(typeof window!=='undefined'&&window.__CPGEO)||null;
+    /* Le temps de dépôt est un paramètre PAR BUREAU : il vit dans
+       ws_office_delivery_settings (écran « Paramètres livraison — bureau »),
+       pas sur la ligne du site. Le chercher sur le site revenait à ne jamais
+       le trouver — toutes les heures d'arrivée passaient à « — ». */
+    const dset={}; (window.BOServer?window.BOServer.table('ws_office_delivery_settings'):[])
+      .forEach(b=>{ const k=String(b.bureau||'').trim(); if(k) dset[k]=b; });
+    const dropDe=(nom,ligne)=>{ const c=dset[String(nom||'').trim()];
+      const v=(c&&c.drop!=null&&c.drop!=='')?c.drop:((ligne&&ligne.drop!=null&&ligne.drop!=='')?ligne.drop:null);
+      const n=parseFloat(v); return (v==null||isNaN(n))?null:n; };
     const seen={}; const out=[];
     rows.forEach(r=>{ const adr=(r.adr&&r.adr!=='—')?r.adr:null; if(!adr) return;
       if(seen[adr]===undefined){
@@ -3309,10 +3318,9 @@ class Component extends DCLogic {
       const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
       if(b&&!st.offices.some(o=>o.name===b)){
         const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
-        // Temps de dépôt : servi par la base, ou inconnu — pas 5 minutes
-        // décidées par la page et additionnées à chaque arrêt.
-        st.offices.push({name:b,addr:oAdr||'adresse non renseignée',
-          drop:(r.drop===''||r.drop==null||isNaN(parseFloat(r.drop)))?null:parseFloat(r.drop)});
+        // Temps de dépôt : celui paramétré pour CE bureau, ou inconnu — pas
+        // 5 minutes décidées par la page et additionnées à chaque arrêt.
+        st.offices.push({name:b,addr:oAdr||'adresse non renseignée',drop:dropDe(b,r)});
       }
     });
     // Un site dont le CP n'est pas au référentiel n'est PAS placé au centre de
