@@ -2567,6 +2567,20 @@
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Tournée rattachée</label><select value="{{ ob.tour }}" onChange="{{ obSetTour }}" style="{{ obInStyle }}"><sc-for list="{{ obTourOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Temps d'accès (min)</label><input type="number" value="{{ ob.acc }}" onInput="{{ obSetAcc }}" style="{{ obInStyle }}"/></div>
         </div>
+        <!-- Fenêtre, jours et validation : ce que le bureau recevra comme
+             engagement de livraison. Demandés ici, jamais supposés. -->
+        <div style="margin-top:16px;border-top:.5px solid var(--color-border-tertiary);padding-top:16px">
+          <div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-primary);margin-bottom:10px">Engagement de livraison — annoncé au bureau</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+            <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Fenêtre — début *</label><input type="time" value="{{ ob.fenDeb }}" onChange="{{ obSetFenDeb }}" style="{{ obInStyle }}"/></div>
+            <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Fenêtre — fin *</label><input type="time" value="{{ ob.fenFin }}" onChange="{{ obSetFenFin }}" style="{{ obInStyle }}"/></div>
+            <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Validation à la livraison *</label><select value="{{ ob.validation }}" onChange="{{ obSetValidation }}" style="{{ obInStyle }}"><option value="">— Choisir —</option><sc-for list="{{ obValidationOpts }}" as="v" hint-placeholder-count="3"><option value="{{ v.value }}">{{ v.label }}</option></sc-for></select></div>
+          </div>
+          <div style="margin-top:14px">
+            <label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Jours desservis *</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ obJoursBtns }}" as="j" hint-placeholder-count="7"><button type="button" onClick="{{ j.toggle }}" style="{{ j.style }}">{{ j.lbl }}</button></sc-for></div>
+          </div>
+        </div>
         <div style="margin-top:16px;background:var(--color-background-secondary);border-radius:10px;padding:13px 15px">
           <div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px">Chaîne logique résultante</div>
           <div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 4px"><sc-for list="{{ obChainView }}" as="ch" hint-placeholder-count="5"><span style="{{ ch.style }}" title="{{ ch.lbl }}">{{ ch.val }}</span><span style="color:var(--color-text-muted);font-size:11px">›</span></sc-for><span style="font:500 10.5px var(--font-ui);background:#fbf1e3;color:#b26a00;border-radius:6px;padding:5px 9px">départements →</span></div>
@@ -2634,7 +2648,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Société</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ ob.raison }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ob.seg }} · {{ ob.paiement }}</div></div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Contact</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ ob.contactNom }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ob.contactEmail }}</div></div>
-          <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Delivery site</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ ob.adr }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ob.tour }} · {{ obRecapZone }}</div></div>
+          <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Delivery site</div><div style="font:400 10.5px var(--font-ui);color:var(--color-primary);margin-bottom:3px">{{ obEngagement }}</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ ob.adr }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ob.tour }} · {{ obRecapZone }}</div></div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Office &amp; départements</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ ob.office }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ obRecapDeptTxt }}</div></div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Webshop</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">−{{ ob.remiseWeb }} % · franco {{ ob.franco }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Voucher : {{ ob.vValeur }}</div></div>
           <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px"><div class="t-admin-label" style="margin-bottom:4px">Personnel</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ obRecapStaffTxt }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Demandes d'adhésion</div></div>
@@ -2770,6 +2784,11 @@ class Component extends DCLogic {
     ob: { raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
       adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
+      // Fenêtre de livraison, jours desservis et mode de validation : ils
+      // étaient ÉCRITS EN DUR dans obCreate (08:00–11:00 · L Ma Me J V · QR)
+      // sans jamais être demandés, puis affichés au client comme s'il les
+      // avait choisis. Ils partent vides et sont saisis à l'étape 3.
+      fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'10', franco:'250 €', drop:8,
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'',
@@ -2782,6 +2801,7 @@ class Component extends DCLogic {
     ob:{ raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
       adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
+      fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'10', franco:'250 €', drop:8,
       vCode:'', vValeur:'−10 % sur la première commande', sendMail:true, sendAdhesion:true },
     obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'5', obStaffName:'', obStaffEmail:'', obCsv:'' }); this.zfGeoEnsure(); }
@@ -2796,6 +2816,14 @@ class Component extends DCLogic {
   obNext(){ this.setState(s=>({obStep:Math.min(this.OB_STEPS.length-1,s.obStep+1)})); }
   obPrev(){ this.setState(s=>({obStep:Math.max(0,s.obStep-1)})); }
   obGo(n){ this.setState({obStep:n}); }
+  /* Un jour desservi se coche ou se décoche. La liste est ordonnée comme la
+     semaine, pas comme l'ordre des clics : « L Ma Me J V » se lit, « V L Me »
+     non. */
+  OB_JOURS=['L','Ma','Me','J','V','S','D'];
+  obToggleJour(j){ return ()=>this.setState(s=>{ const cur=Array.isArray(s.ob.jours)?s.ob.jours.slice():[];
+    const i=cur.indexOf(j); if(i>=0) cur.splice(i,1); else cur.push(j);
+    cur.sort((a,b)=>this.OB_JOURS.indexOf(a)-this.OB_JOURS.indexOf(b));
+    return {ob:{...s.ob,jours:cur}}; }); }
   obAddDept(){ const d=(this.state.obDeptDraft||'').trim(); if(!d) return; const eff=this.state.obDeptEff||'5'; this.setState(s=>({obDepts:[...s.obDepts,{dept:d,effectif:eff}],obDeptDraft:'',obDeptEff:'5'})); }
   obRemoveDept(i){ return ()=>this.setState(s=>({obDepts:s.obDepts.filter((_,j)=>j!==i)})); }
   obAddStaff(){ const n=(this.state.obStaffName||'').trim(), e=(this.state.obStaffEmail||'').trim(); if(!e) return; this.setState(s=>({obStaff:[...s.obStaff,{name:n||e.split('@')[0],email:e}],obStaffName:'',obStaffEmail:''})); }
@@ -2817,6 +2845,18 @@ class Component extends DCLogic {
        affichait alors « En attente de validation » sans que personne ne sache
        pourquoi. Un bureau sans tournée n'est pas livrable : on refuse. */
     if(!String(o.tour||'').trim()){ this.setState({obStep:2}); this.printJob('⚠ Tournée rattachée requise — un bureau sans tournée n’est pas livrable'); return; }
+    /* Fenêtre, jours et mode de validation : DEMANDÉS, plus écrits en dur.
+       « 08:00–11:00 · L Ma Me J V · QR » partait dans la fiche client sans que
+       personne les ait choisis, et le bureau les recevait comme un engagement.
+       Ils conditionnent la livraison au même titre que la tournée : on refuse
+       plutôt que de décider à la place du franchisé. */
+    const obJours=(Array.isArray(o.jours)?o.jours:[]).join(' ');
+    if(!String(o.fenDeb||'').trim()||!String(o.fenFin||'').trim()){
+      this.setState({obStep:2}); this.printJob('⚠ Fenêtre de livraison requise — début et fin'); return; }
+    if(!obJours){ this.setState({obStep:2}); this.printJob('⚠ Jours desservis requis — au moins un jour'); return; }
+    if(!String(o.validation||'').trim()){
+      this.setState({obStep:2}); this.printJob('⚠ Mode de validation de la livraison requis'); return; }
+    const obFenetre=String(o.fenDeb).trim()+'–'+String(o.fenFin).trim();
     const obLocalite=o.localite||obLocs[0]||'';
     const clients=window.BOServer.table('fr_clients');
     const num=1000+Math.floor(Math.random()*8999); const code='CL-'+num;
@@ -2824,7 +2864,8 @@ class Component extends DCLogic {
     clients.push({raison:o.raison||'Nouveau bureau',code,seg:o.seg,statut:'actif',tva:o.tva,paiement:o.paiement,
       plafond:+o.plafond||5000,encours:0,franco:o.franco,remise:(o.remiseWeb||'0')+' %',fact:'Mensuel',
       cp:obCp,localite:obLocalite,
-      points:[{libelle:office+' — '+(o.adr||'site'),adresse:o.adr,cp:obCp,localite:obLocalite,fenetre:'08:00–11:00',jours:'L Ma Me J V',validation:'QR',marge:0}]});
+      points:[{libelle:office+' — '+(o.adr||'site'),adresse:o.adr,cp:obCp,localite:obLocalite,
+        fenetre:obFenetre,jours:obJours,validation:o.validation,marge:0}]});
     window.BOServer.save('fr_clients',clients);
     const sites=window.BOServer.table('ws_office_delivery_sites');
     sites.push({bureau:o.raison,client_id:code,office,adr:o.adr,cp:obCp,localite:obLocalite,etage:o.etage,tour:o.tour,acc:+o.acc||6});
@@ -2859,6 +2900,7 @@ class Component extends DCLogic {
         body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,cp:obCp,localite:obLocalite,
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
+          fenetre:obFenetre,jours:obJours,validation:o.validation,
           departements:S.obDepts,staff:S.obStaff,voucher:{code:vcode,valeur:o.vValeur}})
       }).then(async r=>{
         // Un refus serveur était AVALÉ : `r.ok ? … : null` puis `.catch(()=>{})`.
@@ -6293,6 +6335,21 @@ class Component extends DCLogic {
       obSetContactNom:this.obSet('contactNom'),obSetContactEmail:this.obSet('contactEmail'),obSetContactTel:this.obSet('contactTel'),obSetContactRole:this.obSet('contactRole'),
       obSetAdr:this.obSet('adr'),obSetEtage:this.obSet('etage'),obSetTour:this.obSet('tour'),obSetAcc:this.obSet('acc'),obSetOffice:this.obSet('office'),
       obSetCp:(e)=>this.obSetCp(e),obSetLocalite:this.obSet('localite'),
+      // Engagement de livraison — saisi, jamais supposé.
+      obSetFenDeb:this.obSet('fenDeb'), obSetFenFin:this.obSet('fenFin'),
+      obSetValidation:this.obSet('validation'),
+      obValidationOpts:[{value:'QR',label:'Scan QR du destinataire'},
+        {value:'Signature',label:'Signature à la réception'},
+        {value:'Dépôt',label:'Dépôt sans validation'}],
+      obJoursBtns:this.OB_JOURS.map(j=>{ const on=(O.jours||[]).indexOf(j)>=0;
+        return {lbl:j, toggle:this.obToggleJour(j),
+          style:'cursor:pointer;border-radius:8px;padding:7px 0;min-width:44px;text-align:center;font:600 11.5px var(--font-ui);border:1px solid '
+            +(on?'var(--color-primary)':'var(--color-border-secondary)')+';background:'+(on?'var(--color-primary)':'transparent')
+            +';color:'+(on?'#fff':'var(--color-text-muted)')}; }),
+      // Résumé lisible pour le récapitulatif : « — » tant que rien n'est saisi.
+      obEngagement:(function(o){ const j=(o.jours||[]).join(' ');
+        const f=(o.fenDeb&&o.fenFin)?(o.fenDeb+'–'+o.fenFin):'';
+        return [f||'—', j||'—', o.validation||'—'].join(' · '); })(O),
       obCpLocs:this.obLocsOf(O.cp).map(c=>({v:c})),
       obCpLocMulti:this.obLocsOf(O.cp).length>1,
       obCpLocMono:this.obLocsOf(O.cp).length<=1,
