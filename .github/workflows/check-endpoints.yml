@@ -98,6 +98,19 @@ jobs:
               esac
             fi
           fi
+          # Dernier recours : demander au serveur les boutiques qu'il connaît.
+          # /franchisee/geo-clients porte un tableau shops[] avec leurs ids. On
+          # n'imprime que les IDS — le dépôt et ses journaux sont publics.
+          if [ -z "$SHOP" ]; then
+            GC=$(curl -s --max-time 15 "${HDR[@]}" "$BASE/franchisee/geo-clients" 2>/dev/null | tr -d ' \n')
+            IDS=$(printf '%s' "$GC" | grep -o '"shops":\[.*' | grep -o '"id":"\?[0-9]\{1,\}' | grep -o '[0-9]\{1,\}' | sort -un | tr '\n' ' ')
+            if [ -n "$IDS" ]; then
+              echo "  boutiques connues du serveur (ids) : $IDS"
+              SHOP=$(printf '%s' "$IDS" | awk '{print $1}')
+              echo "  aucune portée fournie → sonde avec la première : $SHOP"
+              echo "  (pour en sonder une autre, relancer en saisissant son id dans le champ « shop »)"
+            fi
+          fi
           if [ -n "$SHOP" ]; then QS="?shop=$SHOP"; echo "Portée    : boutique $SHOP"
           else QS=''; echo "Portée    : AUCUNE — /franchisee/me n'a pas rendu d'id ; les endpoints qui exigent la portée renverront [] à tort"; fi
           echo
