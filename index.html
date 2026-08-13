@@ -86,19 +86,34 @@
   // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
   function normalizeShop(){
     var fr = window.__FR || {};
-    if (!fr.base || !fr.shop) return Promise.resolve();
+    // Chaque sortie sans identité LAISSE SA RAISON. Sans ?shop= ni boutique
+    // mémorisée, cet appel ne partait même pas : __SHOPINFO restait vide, les
+    // cartes tombaient sur le repli Bruxelles-centre et l'écran n'avait aucun
+    // moyen de dire pourquoi. C'est ce silence qu'on retire, pas l'échec.
+    if (!fr.base) { window.__SHOPREASON = 'API non résolue — aucune base d’appel (mode démo ou page servie hors du webshop).'; return Promise.resolve(); }
+    if (!fr.shop) { window.__SHOPREASON = 'Aucune boutique sélectionnée : le jeton admin est réseau, la portée doit venir de ?shop=<slug|id> (mémorisée ensuite dans localStorage « franchiseeShop »).'; return Promise.resolve(); }
     // TOUJOURS interroger /me : résout un slug en id ET mémorise l'identité de
-    // la boutique (nom, ville, CP) — window.__SHOPINFO sert à la géolocaliser
-    // sur les cartes (départ des tournées).
+    // la boutique (nom, ville, CP, adresse et position) — window.__SHOPINFO
+    // sert à géolocaliser le départ des tournées.
     return fetch(fr.base + '/franchisee/me?shop=' + encodeURIComponent(fr.shop),
                  { headers: FRH(), credentials: 'omit' })
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(v){ if (v && v.shop && v.shop.id != null) {
-        fr.shop = String(v.shop.id);
-        window.__SHOPINFO = v.shop;
-        try { localStorage.setItem('franchiseeShop', fr.shop); } catch (e) {}
-      } })
-      .catch(function(){});
+      .then(function(r){
+        if (!r.ok) { window.__SHOPREASON = 'GET /franchisee/me a répondu HTTP ' + r.status
+          + (r.status === 401 || r.status === 403 ? ' — jeton admin absent ou refusé.' : '.'); return null; }
+        return r.json();
+      })
+      .then(function(v){
+        if (!v) return;
+        if (v.shop && v.shop.id != null) {
+          fr.shop = String(v.shop.id);
+          window.__SHOPINFO = v.shop;
+          window.__SHOPREASON = v.shop.geoReason || null;
+          try { localStorage.setItem('franchiseeShop', fr.shop); } catch (e) {}
+        } else {
+          window.__SHOPREASON = v.shopReason || ('Boutique « ' + fr.shop + ' » non résolue par le serveur.');
+        }
+      })
+      .catch(function(e){ window.__SHOPREASON = 'GET /franchisee/me injoignable — ' + (e && e.message ? e.message : 'erreur réseau') + '.'; });
   }
   var jobs = [];
   try {
@@ -3286,11 +3301,14 @@ class Component extends DCLogic {
   depot(){ const si=(typeof window!=='undefined'&&window.__SHOPINFO)||null;
     const nm=(si&&si.name)||(window.BOServer?window.BOServer.getParam('shop.name',''):'')||'Ma boutique';
     const adr=(si&&si.address)||'';
+    // Motif d'échec, tel que le serveur l'a diagnostiqué. Une carte qui dit
+    // seulement « inconnue » oblige à chercher entre trois pannes distinctes.
+    const why=(si&&si.geoReason)||(typeof window!=='undefined'&&window.__SHOPREASON)||null;
     // 1. Position servie par l'API — la seule qui puisse être exacte.
     if(si&&si.lat!=null&&si.lng!=null){
       const exact=(si.geoSource==='address'||si.geoSource==='manual');
       return {lat:+si.lat, lng:+si.lng, geoOk:exact, precis:exact?'exact':'approx',
-        source:si.geoSource||null, adresse:adr,
+        source:si.geoSource||null, adresse:adr, motif:exact?null:why,
         libelle:nm+(si.city?(' · '+si.city):'')}; }
     // 2. Repli local par le CP, tant que le serveur n'a pas encore résolu.
     const geo=(typeof window!=='undefined'&&window.__CPGEO&&window.__CPGEO.idx)||null;
@@ -3298,7 +3316,7 @@ class Component extends DCLogic {
     if(geo&&si){ if(si.cp) e=geo[String(si.cp).trim()]||null;
       if(!e&&si.city&&window.__CPGEO.list){ const cl=String(si.city).toLowerCase(); const hit=window.__CPGEO.list.find(x=>String(x[1]).toLowerCase()===cl); if(hit) e={lat:hit[2],lng:hit[3]}; } }
     return {lat:e?e.lat:50.85, lng:e?e.lng:4.35, geoOk:false, precis:e?'approx':'inconnu',
-      source:e?'zip':null, adresse:adr,
+      source:e?'zip':null, adresse:adr, motif:why,
       libelle:nm+(si&&si.city?(' · '+si.city):'')}; }
 
   /* Contenu du pin boutique — UNE seule rédaction pour les deux cartes.
@@ -3314,7 +3332,12 @@ class Component extends DCLogic {
       +(d.adresse?('<br><span style="color:#666">'+esc(d.adresse)+'</span>'):'')
       +'<br>Boutique — départ &amp; retour des tournées'
       +(warn?('<br><span style="color:#b26a00">⚠ '+esc(warn)
-              +' — les tracés et les ETA en partent.<br>Corrigez address_line / zip de la boutique.</span>'):'')}; }
+              +' — les tracés et les ETA en partent.'
+              // Le MOTIF exact, tel que diagnostiqué par le serveur : migration
+              // manquante, adresse vide, géocodeur injoignable… Sans lui, il n'y
+              // a rien à corriger, seulement à supposer.
+              +(d.motif?('<br><b>Cause :</b> '+esc(d.motif)):'<br>Corrigez address_line / zip de la boutique.')
+              +'</span>'):'')}; }
 
   T = {
     // Avis clients — libellés complets, jamais de phrase assemblée par
