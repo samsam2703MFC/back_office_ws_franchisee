@@ -182,22 +182,33 @@ client.
 ⚠️ **Les lignes déjà écrites ne sont pas touchées** : un 6 enregistré est
 peut-être une vraie mesure. À revoir à la main, site par site.
 
-### 1.7 🟡 Valeurs de configuration affichées mais absentes de la base
+### 1.7 ✅ CORRIGÉ (13/08) — Valeurs de configuration affichées mais absentes de la base
 
-Les deux consoles gardent une liste `CONFIG` dont une réponse API vide
-**n'écrase pas** le contenu local :
+Côté franchisé, `CONFIG = { fr_cout_params:1 }` empêchait une réponse API vide
+d'écraser un seed local. Ce seed portait des **dates d'effet inventées**
+(`01/06/2026`…). Elles n'étaient pas affichées, mais c'est précisément la
+donnée fabriquée que la purge go-live devait emporter — et l'exception `CONFIG`
+invitait à en remettre.
 
-- marque : `bo_server.js` — `CONFIG = { params:1, email_templates:1 }`, avec des
-  valeurs locales (`order.cutoff_default: '17:00'`,
-  `brand.support_url: 'https://aide.latelierby.be'`, six gabarits d'e-mail) ;
-- franchisé : `bo_server.js` — `CONFIG = { fr_cout_params:1 }`.
+Le seed est vidé et `CONFIG` neutralisé : les cinq lignes de l'écran (libellé,
+unité, pas de saisie) décrivent l'**interface** et vivent dans `index.html` ;
+les **valeurs** vivent en base (`ws_param cost_*`) et l'écran affiche
+« non paramétré » quand elles manquent.
 
-L'intention est bonne (ce sont des textes d'interface). Le risque est qu'un
-**paramètre métier** s'y glisse : `order.cutoff_default = 17:00` en est déjà un —
-il s'affiche comme s'il était configuré alors qu'il ne l'est peut-être pas.
+**Deux mensonges trouvés sur le même écran, retirés avec :**
 
-**Correctif** : sortir de `params` tout ce qui décide d'un comportement, ou
-marquer visuellement « valeur par défaut, non enregistrée ».
+- le bouton **« + Nouvelle version (date d'effet) »** ouvrait un formulaire
+  visant `ws_cost_versions` — table qu'**aucune route ne sert** — et sans table
+  cible : il n'écrivait **nulle part**. On remplissait cinq champs, on cliquait
+  « Publier la version », rien ne se passait ;
+- le sous-titre et l'infobulle promettaient un historique par date d'effet qui
+  n'existe pas. Ils disent maintenant ce qui se passe réellement : la valeur est
+  enregistrée dans `ws_param` à la saisie, et modifier change les calculs à
+  venir.
+
+**Reste à traiter dans la console marque** (autre session) : son `CONFIG` porte
+`params` et `email_templates`, dont `order.cutoff_default: '17:00'` — un
+paramètre métier affiché comme s'il était configuré.
 
 ### 1.8 🟡 Un reste de démonstration dans la console marque
 

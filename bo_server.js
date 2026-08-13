@@ -80,13 +80,13 @@
     "fr_live_eta": [],
     "fr_live_table": [],
     "fr_renta_kpis": [],
-    "fr_cout_params": [
-      {key:'prep',label:'Coût horaire préparation',effet:'01/06/2026',unit:'€/h',step:'0.5'},
-      {key:'emb',label:'Coût emballage / colis',effet:'01/06/2026',unit:'€',step:'0.01'},
-      {key:'carb',label:'Coût carburant / litre',effet:'01/07/2026',unit:'€/L',step:'0.01'},
-      {key:'struct',label:'Coût structure / tournée',effet:'01/01/2026',unit:'€',step:'1'},
-      {key:'charg',label:'Taux horaire chargement',effet:'01/06/2026',unit:'€/h',step:'0.5'},
-    ],
+    /* VIDE, comme toutes les autres. Les cinq lignes de l'écran (libellé,
+       unité, pas de saisie) décrivent l'INTERFACE et vivent dans index.html ;
+       les VALEURS vivent en base (ws_param cost_*). Ce qui restait ici était un
+       seed portant des dates d'effet inventées (« 01/06/2026 ») — jamais
+       affichées, mais exactement le genre de donnée fabriquée que la purge
+       go-live devait emporter. */
+    "fr_cout_params": [],
     "fr_validations": [],
     "fr_dispo_cats": [],
     "fr_stock_catalog": [],
@@ -238,7 +238,11 @@
         fr_orders:1, fr_net_stats:1, fr_capacity:1, fr_vouchers:1, fr_shop_availability:1 };
       // CONFIGS d'écran (libellés/gabarits, pas des données métier) : une
       // réponse API vide ne les écrase pas — ce sont des textes d'interface.
-      var CONFIG = { fr_cout_params:1 };
+      /* CONFIG protégeait fr_cout_params d'être écrasé par une réponse API
+         vide. La table étant désormais vide des deux côtés, il n'y a plus
+         rien à protéger — et garder une exception vide invite à y remettre
+         un jour une valeur métier, ce que le constat 1.7 reprochait. */
+      var CONFIG = {};
       var failed = [];
       // Tables dont la route PHP n'existe PAS ENCORE. On continue de l'appeler
       // — le jour où elle est écrite, l'écran se remplit sans toucher au front

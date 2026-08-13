@@ -776,15 +776,14 @@
       <sc-if value="{{ isParams }}" hint-placeholder-val="{{ true }}">
       <div style="max-width:840px;margin-bottom:18px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:22px">
-          <div class="t-section-title" style="font-size:16px;margin-bottom:3px;display:inline-flex;align-items:center;gap:6px">Paramètres de coûts <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">Coûts de référence utilisés pour le calcul de rentabilité (coût au km, coût horaire chauffeur, forfaits…). Chaque valeur est versionnée par date d'effet : la modifier crée une nouvelle version et ne réécrit jamais les calculs passés.</span></span></sc-if></div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:16px">Versionnés avec date d'effet — modifiables ; un recalcul historique ne réécrit jamais le passé</div>
+          <div class="t-section-title" style="font-size:16px;margin-bottom:3px;display:inline-flex;align-items:center;gap:6px">Paramètres de coûts <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">Coûts de référence du calcul de rentabilité. Chaque valeur est enregistrée dans ws_param (clé cost_*) dès la saisie. Il n'y a PAS d'historique par date d'effet : modifier une valeur change les calculs à venir.</span></span></sc-if></div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:16px">Enregistrés dans ws_param à la saisie — une valeur non renseignée reste vide, elle n'est jamais supposée</div>
           <sc-for list="{{ coutParams }}" as="p" hint-placeholder-count="5">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:.5px solid var(--color-border-tertiary)">
               <div><div style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ p.label }}</div><div style="font:400 10px var(--font-ui);color:var(--color-text-muted)">{{ p.etat }}</div></div>
               <div style="display:flex;align-items:center;gap:7px;flex:none"><input type="number" step="{{ p.step }}" value="{{ p.val }}" onInput="{{ p.onInput }}" onChange="{{ p.onSave }}" style="width:92px;text-align:right;font:600 13px var(--font-ui);color:var(--color-text);border:.5px solid var(--color-border-secondary);border-radius:7px;background:var(--color-surface);padding:8px 9px"/><span style="font:500 11px var(--font-ui);color:var(--color-text-muted);width:34px">{{ p.unit }}</span></div>
             </div>
           </sc-for>
-          <button onClick="{{ addCoutVersion }}" class="btn-secondary" style="width:100%;margin-top:16px;font-size:12px">+ Nouvelle version (date d'effet)</button>
         </div>
       </div>
       </sc-if>
@@ -3213,13 +3212,12 @@ class Component extends DCLogic {
            info:'Oui = les frais s’appliquent même au-delà du franco.'},
           {k:'paiement',label:'Paiement',type:'select',options:sel(['Selon bureau','Comptant','Différé','Facturé au bureau']),def:'Selon bureau'},
         ]},
-      coutVersion:{ title:'Nouvelle version de coûts', table:'ws_cost_versions', save:'Publier la version',
-        fields:[
-          {k:'dateEffet',label:'Date d\'effet',type:'text',ph:'JJ/MM/AAAA'},
-          {k:'prep',label:'Coût préparation / commande (€)',type:'number',ph:'ex. 26'},
-          {k:'carb',label:'Carburant / km (€)',type:'number',ph:'ex. 1.78'},
-          {k:'struct',label:'Coût structure / tournée (€)',type:'number',ph:'ex. 38'},
-        ]},
+      /* Le formulaire « Nouvelle version de coûts » a été SUPPRIMÉ. Il
+         visait ws_cost_versions — table qu'aucune route ne sert — et n'avait
+         même pas de table cible, donc son bouton « Publier la version »
+         n'écrivait nulle part : on remplissait cinq champs, on cliquait, rien
+         ne se passait. Les coûts s'enregistrent à la saisie dans ws_param. */
+
       /* JOUR EXCEPTIONNEL — les dates se saisissaient en texte « JJ/MM/AAAA »
          et partaient dans l'overlay : une fermeture s'affichait dans la console
          et la boutique restait ouverte au checkout. Sélecteurs de date, et un
@@ -7283,7 +7281,7 @@ class Component extends DCLogic {
           contact:(c.vals.email||''), effectif:1}, null);
         this.setState({officeClash:null,formKey:null,_rev:(S._rev||0)+1}); },
       openForm:(k)=>this.openForm(k), goDemandes:this.go('demandesB2B'), goParams:this.go('params'),
-      addHoraire:this.openForm('horaire'), addFee:this.openForm('fee'), addCoutVersion:this.openForm('coutVersion'),
+      addHoraire:this.openForm('horaire'), addFee:this.openForm('fee'),
       addSite:this.openForm('site'), addCreneau:this.openForm('creneau'), addBureauParam:this.openForm('bureauParam'), addDispoProd:this.openForm('dispoProd'),
       // Sens de paramétrage : les horaires et fermetures sont des PARAMÈTRES DE
       // TOURNÉE → rendus dans l'écran Tournées (l'entrée de menu dédiée disparaît).
