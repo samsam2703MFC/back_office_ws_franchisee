@@ -81,9 +81,10 @@
     // Re-render du bandeau après boot (le runtime peut avoir remplacé le body).
     try { var E = window.BOServer && window.BOServer.loadErrors; if (E && E.length) setTimeout(function(){ window.__BO_RENDER_ERRORS(E); }, 800); } catch(e){}
   }
-  // Portée boutique : TOUJOURS l'ID. Si un slug a été passé (?shop=anderlecht),
-  // on le résout une fois en id via /franchisee/me, on mémorise l'id, et toute
-  // la suite (hydratation, écritures, carte, zone-check) n'utilise que l'id.
+  // Portée boutique : L'ID, et lui seul (?shop=2). Le slug était accepté puis
+  // converti, ce qui faisait exister deux écritures de la même portée selon le
+  // chemin emprunté. Toute la suite — hydratation, écritures, carte, zone-check
+  // — n'utilise que l'id.
   function normalizeShop(){
     var fr = window.__FR || {};
     // Chaque sortie sans identité LAISSE SA RAISON. Sans ?shop= ni boutique
@@ -91,10 +92,16 @@
     // cartes tombaient sur le repli Bruxelles-centre et l'écran n'avait aucun
     // moyen de dire pourquoi. C'est ce silence qu'on retire, pas l'échec.
     if (!fr.base) { window.__SHOPREASON = 'API non résolue — aucune base d’appel (mode démo ou page servie hors du webshop).'; return Promise.resolve(); }
-    if (!fr.shop) { window.__SHOPREASON = 'Aucune boutique sélectionnée : le jeton admin est réseau, la portée doit venir de ?shop=<slug|id> (mémorisée ensuite dans localStorage « franchiseeShop »).'; return Promise.resolve(); }
-    // TOUJOURS interroger /me : résout un slug en id ET mémorise l'identité de
-    // la boutique (nom, ville, CP, adresse et position) — window.__SHOPINFO
-    // sert à géolocaliser le départ des tournées.
+    if (!fr.shop) {
+      window.__SHOPREASON = window.__SHOPBADPARAM
+        ? ('?shop=' + window.__SHOPBADPARAM + ' ignoré : la portée boutique est un ID numérique (ex. ?shop=2). La liste des id est servie par /shops.')
+        : (window.__SHOPPURGED
+           ? ('Boutique mémorisée « ' + window.__SHOPPURGED + ' » écartée : ce n’est pas un id. Rouvrez la console avec ?shop=<id> — la liste est servie par /shops.')
+           : 'Aucune boutique sélectionnée : le jeton admin est réseau, la portée doit venir de ?shop=<id> (mémorisée ensuite dans localStorage « franchiseeShop »).');
+      return Promise.resolve(); }
+    // TOUJOURS interroger /me : confirme l'id ET mémorise l'identité de la
+    // boutique (nom, ville, CP, adresse et position) — window.__SHOPINFO sert
+    // à géolocaliser le départ des tournées.
     return fetch(fr.base + '/franchisee/me?shop=' + encodeURIComponent(fr.shop),
                  { headers: FRH(), credentials: 'omit' })
       .then(function(r){

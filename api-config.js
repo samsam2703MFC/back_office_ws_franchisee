@@ -11,8 +11,9 @@
    • Le jeton admin est partagé par origine (localStorage 'adminToken'),
      donc si l'admin s'est connecté au back-office webshop / franchisor,
      le franchisé le réutilise automatiquement.
-   • Portée boutique (le franchisé est mono-boutique) : ?shop=<slug|id>,
-     mémorisée (localStorage 'franchiseeShop'). Réseau si absente.
+   • Portée boutique (le franchisé est mono-boutique) : ?shop=<id>, un ID
+     NUMÉRIQUE et lui seul, mémorisé (localStorage 'franchiseeShop'). Réseau si
+     absent. La liste des id est servie par /shops (public).
    • Overrides de test :  ?api=<baseUrl>  et  ?token=<adminToken>.
    ===================================================================== */
 (function () {
@@ -28,8 +29,21 @@
   var token = '';
   try { token = localStorage.getItem('adminToken') || ''; } catch (e) {}
 
+  // Portée boutique : UN ID, et rien d'autre. Le slug était accepté puis résolu
+  // en id par /franchisee/me : selon le chemin, la valeur mémorisée était
+  // tantôt « anderlecht », tantôt « 2 », pour désigner la même boutique. Une
+  // valeur mémorisée qui n'est pas un id est donc PURGÉE — la garder ferait
+  // repartir la console en portée réseau à chaque ouverture, sans le dire.
+  var isId = function (v) { return /^[0-9]+$/.test(String(v || '')); };
   var shop = '';
-  try { shop = localStorage.getItem('franchiseeShop') || ''; } catch (e) {}
+  try {
+    shop = localStorage.getItem('franchiseeShop') || '';
+    if (shop && !isId(shop)) {
+      window.__SHOPPURGED = shop;
+      shop = '';
+      localStorage.removeItem('franchiseeShop');
+    }
+  } catch (e) {}
 
   // Overrides explicites par query (tests / première connexion).
   try {
@@ -41,7 +55,13 @@
       try { q.delete('token'); var qs = q.toString();
         history.replaceState({}, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
     }
-    if (q.get('shop'))  { shop  = q.get('shop');  try { localStorage.setItem('franchiseeShop', shop); } catch (e) {} }
+    if (q.get('shop')) {
+      var qs2 = q.get('shop');
+      if (isId(qs2)) { shop = qs2; try { localStorage.setItem('franchiseeShop', shop); } catch (e) {} }
+      // Un ?shop= non numérique n'est pas deviné : on le signale au lieu de
+      // basculer en portée réseau comme si de rien n'était.
+      else window.__SHOPBADPARAM = qs2;
+    }
   } catch (e) {}
 
   window.__FR = { base: base, token: token, shop: shop };
