@@ -1901,15 +1901,19 @@
       <sc-if value="{{ isShopParams }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px;max-width:720px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="t-section-title" style="font-size:15px">Coordonnées & horaires</div><button onClick="{{ editShop }}" class="btn-secondary" style="font-size:12px;flex:none">Modifier</button></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="t-section-title" style="font-size:15px">Coordonnées</div><button onClick="{{ editShop }}" class="btn-secondary" style="font-size:12px;flex:none">Modifier</button></div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:16px">Table <strong>atelierbydb_shops</strong> · boutique de la portée — l'adresse est aussi le départ et le retour des tournées.</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopEnseigne }}</div></div>
             <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopAdresse }}</div></div>
             <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ville</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopVille }}</div></div>
             <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Code postal</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopCp }}</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopOpen }}</div></div>
-            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopClose }}</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 6px"><div class="t-section-title" style="font-size:15px">Horaires · fr_shop_availability</div><button onClick="{{ openDispo }}" class="btn-secondary" style="font-size:12px;flex:none">Modifier</button></div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Source unique lue par le webshop — édités dans « Disponibilité &amp; créneaux », jamais recopiés ici.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Collecte (retrait)</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopHoursCollect }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Livraison bureau</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopHoursDelivery }}</div></div>
           </div>
         </div>
       </div>
@@ -2672,7 +2676,7 @@
           </div>
         </sc-if>
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:12px">
-          <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary)">Coordonnées &amp; horaires · atelierbydb_shops</div>
+          <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary)">Coordonnées · atelierbydb_shops</div>
           <sc-if value="{{ shopViewing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ shopEnter }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Modifier</button></sc-if>
           <sc-if value="{{ shopEditing }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px"><button onClick="{{ shopCancel }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Annuler</button><button onClick="{{ shopSave }}" style="font-size:12px;flex:none;padding:6px 14px;background:var(--color-primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">Enregistrer</button></div></sc-if>
         </div>
@@ -2682,8 +2686,6 @@
           <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopAdresse }}</div></div>
           <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ville</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopVille }}</div></div>
           <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Code postal</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopCp }}</div></div>
-          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopOpen }}</div></div>
-          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopClose }}</div></div>
         </div>
         </sc-if>
         <sc-if value="{{ shopEditing }}" hint-placeholder-val="{{ false }}">
@@ -2692,11 +2694,18 @@
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Adresse</span><input value="{{ shopDraftAdresse }}" onInput="{{ shopSetAdresse }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Ville</span><input value="{{ shopDraftVille }}" onInput="{{ shopSetVille }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Code postal</span><input value="{{ shopDraftCp }}" onInput="{{ shopSetCp }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
-          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Ouverture</span><input value="{{ shopDraftOpen }}" onInput="{{ shopSetOpen }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
-          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Fermeture</span><input value="{{ shopDraftClose }}" onInput="{{ shopSetClose }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
         </div>
-        <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin:-14px 0 20px">Enregistré dans <strong>atelierbydb_shops</strong> — l'adresse sert aussi de point de départ et de retour aux tournées.</div>
+        <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin:-14px 0 20px">Enregistré dans <strong>atelierbydb_shops</strong> — l'adresse sert aussi de point de départ et de retour aux tournées. Les horaires, eux, s'éditent dans « Disponibilité &amp; créneaux ».</div>
         </sc-if>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:6px">
+          <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary)">Horaires · fr_shop_availability</div>
+          <button onClick="{{ openDispo }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Modifier</button>
+        </div>
+        <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">Source unique lue par le webshop pour fabriquer ses créneaux — édités dans « Disponibilité &amp; créneaux », jamais recopiés ici.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
+          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Collecte (retrait)</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopHoursCollect }}</div></div>
+          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Livraison bureau</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopHoursDelivery }}</div></div>
+        </div>
         <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:6px">Paramètres du site · ws_param</div>
         <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">Les paramètres 0/1 sont des interrupteurs · les autres sont éditables avec ✓. <strong>bo_show_source</strong> affiche l'origine des données sur chaque page · <strong>bo_show_help</strong> affiche les « i » d'aide au survol des toggles.</div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -2879,7 +2888,7 @@ class Component extends DCLogic {
     dispoProd:{table:'ws_product_availability',origin:'Form dispoProd — exceptions produit qui écrasent la catégorie',calc:'Champs produit/cat/rule ⇒ upsert BOServer.save(ws_product_availability)',dev:'1 j'},
     creneaux:{table:'ws_slots',origin:'Form creneau — libellés de créneaux par mode',calc:'Champs mode/libelle/plage/cap ⇒ upsert BOServer.save(ws_slots)',dev:'0,5 j'},
     capacite:{table:'ws_slots × dates',origin:'Grille remplissage réservé/max par date × créneau',calc:'Cellule rouge si réservé≥max, orange si tension (>80%)',dev:'1,5 j'},
-    reglesBoutique:{table:'ws_shop_availability',origin:'Disponibilité boutique — SOURCE UNIQUE du webshop (jours/heures · durée créneau · cut-off · lead)',calc:'Lecture + écriture directes ws_shop_availability (GET/POST shop-availability)',dev:'—'},
+    reglesBoutique:{table:'fr_shop_availability',origin:'Disponibilité boutique — SOURCE UNIQUE du webshop et des HORAIRES (jours/heures · durée créneau · cut-off · lead)',calc:'GET fr-shop-availability / POST shop-availability — aucune valeur par défaut n\'est écrite',dev:'—'},
     joursExcept:{table:'ws_shop_exceptions',origin:'Form except — fermetures & horaires spéciaux par date',calc:'Champs date/label/type/detail ⇒ upsert ; fermé=rouge, spécial=orange',dev:'0,5 j'},
     frais:{table:'ws_delivery_fee_rules',origin:'Form fee — cascade Site→Bureau→Tournée→Boutique · franco',calc:'Première règle applicable dans l\'ordre de priorité ; upsert BOServer.save',dev:'1 j'},
     calendarRules:{table:'ws_calendar_rules',origin:'Form calRule — open days · cut-off · lead time par mode',calc:'Champs mode/days/cut/lead ⇒ upsert BOServer.save(ws_calendar_rules)',dev:'1 j'},
@@ -2891,7 +2900,7 @@ class Component extends DCLogic {
     emailsBureau:{table:'ws_office_emails',origin:'Form email — contacts groupés par bureau (rôle)',calc:'Add/del → BOServer.save ; rôle = Principal/Facturation/Livraison',dev:'1 j'},
     stockJour:{table:'ws_product_stock (catalog actif)',origin:'Stock online (webshop) + en shop, produits actifs · filtres badges',calc:'Dispo = online + shop ; sous seuil si dispo<min, tension si <min×1,25',dev:'1,5 j'},
     commandes:{table:'ws_orders',origin:'Commandes du jour · filtres livraison/retrait',calc:'Statut préparation → prête → livrée cliquable ; flags[ord_*] en mémoire',dev:'1,5 j'},
-    shopParams:{table:'atelierbydb_shops',origin:'Ligne de la boutique de la portée, servie par /franchisee/me',calc:'Édition ⇒ POST /franchisee/shop-update, puis relecture de /franchisee/me',dev:'1 j'},
+    shopParams:{table:'atelierbydb_shops (+ horaires : fr_shop_availability, en lecture)',origin:'Ligne de la boutique de la portée, servie par /franchisee/me',calc:'Édition ⇒ POST /franchisee/shop-update, puis relecture de /franchisee/me ; horaires édités dans « Disponibilité & créneaux »',dev:'1 j'},
     statsReseau:{table:'ERP consolidé (lecture seule)',origin:'Stats multi-boutiques poussées par l\'ERP',calc:'Aucun formulaire ; agrégats read-only + exports CSV',dev:'1 j'},
   }; return M[screen]||{table:'ws_param · tables du module',origin:'Données de démonstration servies par la couche BOServer (localStorage)',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
   // ===== Recherche profonde — index de navigation du back-office =====
@@ -3118,16 +3127,15 @@ class Component extends DCLogic {
           {k:'validite',label:'Validité',type:'text',ph:'ex. jusqu\'au 31/08'},
         ]},
       // Les valeurs par défaut sont celles de la LIGNE BOUTIQUE servie par
-      // /franchisee/me — plus de paramètres ws_param, et plus d'horaires
-      // inventés (07:00 / 18:30 s'affichaient comme s'ils venaient de la base).
+      // /franchisee/me — plus de paramètres ws_param. Les horaires ne sont pas
+      // ici : ils sont édités dans « Disponibilité & créneaux »
+      // (fr_shop_availability), le seul endroit que le webshop lit.
       shop:{ title:'Paramètres du shop', table:'atelierbydb_shops', save:'Enregistrer',
         fields:[
           {k:'enseigne',label:'Enseigne',type:'text',def:this.shopField('name','')},
           {k:'adresse',label:'Adresse',type:'text',def:this.shopField('address','')},
           {k:'ville',label:'Ville',type:'text',def:this.shopField('city','')},
           {k:'cp',label:'Code postal',type:'text',def:this.shopField('cp','')},
-          {k:'open',label:'Ouverture',type:'text',ph:'ex. 07:00',def:this.shopField('open','')},
-          {k:'close',label:'Fermeture',type:'text',ph:'ex. 18:30',def:this.shopField('close','')},
         ]},
     };
   }
@@ -3364,8 +3372,11 @@ class Component extends DCLogic {
      écrit, puis relit /franchisee/me pour que la carte, le nav bar et la fiche
      repartent tous de la ligne réellement enregistrée.
 
+     Les horaires ne passent PAS par ici : ils appartiennent à
+     fr_shop_availability (écran « Disponibilité & créneaux »).
+
      Contrat serveur — POST /franchisee/shop-update?shop=<id>
-       corps   {shopId, name, address, city, zip, open, close}
+       corps   {shopId, name, address, city, zip}
        réponse {ok:true} · portée décidée par le serveur, jamais par shopId. ── */
   shopWrite(vals){
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
@@ -3378,7 +3389,7 @@ class Component extends DCLogic {
     const si=this.shopInfo()||{};
     const body={shopId:parseInt(shop,10)};
     [['name','enseigne','name'],['address','adresse','address'],['city','ville','city'],
-     ['zip','cp','cp'],['open','open','open'],['close','close','close']]
+     ['zip','cp','cp']]
       .forEach(([col,k,src])=>{ const v=vals[k];
         if((v===''||v==null)&&si[src]===undefined) return;
         body[col]=(v==null?'':v); });
@@ -3398,6 +3409,21 @@ class Component extends DCLogic {
         return this.shopInfoReload();
       })
       .catch(e=>{ this.printJob('⚠ Réseau indisponible — atelierbydb_shops inchangée ('+((e&&e.message)||e)+')'); return false; });
+  }
+  /* Relecture de la ligne de disponibilité après écriture — l'écran ne montre
+     que ce que la base a accepté. Le brouillon n'est effacé QUE si la relecture
+     aboutit : sinon la saisie serait perdue sans que rien ne soit enregistré. */
+  avaReload(){
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    const shop=this.shopScopeId();
+    if(!fr.base||!shop) return Promise.resolve(false);
+    return fetch(fr.base+'/franchisee/fr-shop-availability?shop='+encodeURIComponent(shop),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(a=>{ if(!Array.isArray(a)) return false;
+        if(window.BOServer) window.BOServer.refresh('fr_shop_availability',a);
+        this.setState(s=>({avaDraft:null,avaDirty:false,_rev:(s._rev||0)+1}));
+        return true; })
+      .catch(()=>false);
   }
   /* Relecture de la ligne boutique après écriture : /franchisee/me est la même
      source qu'au boot. Les signatures de carte sont remises à zéro, sinon le
@@ -4237,7 +4263,7 @@ class Component extends DCLogic {
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
     const subs={avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
-      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — coordonnées · horaires de la boutique',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
+      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
     // ===== Recherche profonde (barre de nav) =====
     // Cherche dans les menus, les sous-menus (onglets) ET les explications :
@@ -5219,35 +5245,79 @@ class Component extends DCLogic {
     const avaField=(k,ph,w)=>({ val:(ava[k]!=null?String(ava[k]):''), set:(e)=>avaSet(k,e.target.value), ph:ph||'', w:w||'88px' });
     const avaCollectDays=[1,2,3,4,5,6,7].map(iso=>avaDayBtn('collect',iso,'#8D1D2C'));
     const avaDeliveryDays=[1,2,3,4,5,6,7].map(iso=>avaDayBtn('delivery',iso,APRICOT));
-    const avaSave=()=>{ const fr=window.__FR||{}; if(!fr.base){ this.printJob('API indisponible'); return; }
-      // Sans ligne existante (boutique jamais paramétrée), ava.shop_id est
-      // absent : on envoie l'id de la portée plutôt qu'un corps sans boutique.
-      const payload={ shop_id:(ava.shop_id!=null?ava.shop_id:(avaScope?parseInt(avaScope,10):undefined)),
-        collect_enabled:1, delivery_enabled:1,
-        collect_open_days:Array.isArray(ava.collect_open_days)?ava.collect_open_days:[],
-        delivery_open_days:Array.isArray(ava.delivery_open_days)?ava.delivery_open_days:[],
-        collect_hours_start:ava.collect_hours_start, collect_hours_end:ava.collect_hours_end,
-        delivery_hours_start:ava.delivery_hours_start, delivery_hours_end:ava.delivery_hours_end,
-        collect_slot_duration_min:parseInt(ava.collect_slot_duration_min,10)||60,
-        delivery_slot_duration_min:parseInt(ava.delivery_slot_duration_min,10)||120,
-        collect_cutoff_hour:parseInt(ava.collect_cutoff_hour,10)||0, collect_cutoff_minute:parseInt(ava.collect_cutoff_minute,10)||0, collect_lead_hours:parseInt(ava.collect_lead_hours,10)||0,
-        delivery_cutoff_hour:parseInt(ava.delivery_cutoff_hour,10)||0, delivery_cutoff_minute:parseInt(ava.delivery_cutoff_minute,10)||0, delivery_lead_hours:parseInt(ava.delivery_lead_hours,10)||0,
-        collect_capacity_per_slot:parseInt(ava.collect_capacity_per_slot,10)||1, delivery_capacity_per_slot:parseInt(ava.delivery_capacity_per_slot,10)||1 };
-      fetch(fr.base+'/franchisee/shop-availability'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(payload)})
-        .then(r=>r.json()).then(j=>{ if(j&&j.ok){ this.printJob('✓ Disponibilité enregistrée — le webshop régénère ses créneaux');
-            // recharge la table -> l'écran reflète la base
-            fetch(fr.base+'/franchisee/fr-shop-availability'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
-              .then(r=>r.ok?r.json():null).then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_shop_availability',a); this.setState({avaDraft:null,avaDirty:false,_rev:(S._rev||0)+1}); } });
-          } else this.printJob((j&&j.error)||'Erreur enregistrement'); })
-        .catch(()=>this.printJob('Réseau indisponible — non enregistré')); };
+    /* Écriture dans fr_shop_availability — la source unique que le webshop lit
+       pour fabriquer ses créneaux. Donc : AUCUNE valeur inventée. Le corps
+       partait avec des chiffres que personne n'avait saisis — une durée de
+       créneau vide devenait 60 min (120 en livraison), une capacité vide
+       devenait 1, un cut-off vide devenait minuit, et collect_enabled /
+       delivery_enabled étaient forcés à 1 alors que l'écran n'a pas
+       d'interrupteur : ouvrir la boutique au webshop en croyant régler des
+       horaires. Règle reprise de la fiche boutique : un champ vide dont la
+       base ne sait rien n'est pas envoyé ; un champ vidé par l'utilisateur
+       l'est, pour effacer la valeur. */
+    const avaSave=()=>{ const fr=window.__FR||{};
+      if(!fr.base){ this.printJob('⚠ API indisponible — fr_shop_availability inchangée'); return; }
+      if(!avaScope){ this.printJob('⚠ Boutique inconnue : ouvrez la console avec ?shop=<id> — rien n\u2019a été enregistré'); return; }
+      const payload={ shop_id:(ava.shop_id!=null?ava.shop_id:parseInt(avaScope,10)) };
+      const inconnu=(k)=>avaLoaded[k]===undefined;
+      const refus=[];
+      const texte=(k)=>{ const v=ava[k];
+        if(v===''||v==null){ if(!inconnu(k)) payload[k]=''; return; }
+        payload[k]=String(v); };
+      const entier=(k,label)=>{ const v=ava[k];
+        if(v===''||v==null){ if(!inconnu(k)) payload[k]=null; return; }
+        const n=parseInt(v,10);
+        // Une saisie illisible est REFUSÉE, pas convertie en 0 : c'est ce que
+        // faisait `||0`, et le webshop se retrouvait avec un cut-off à minuit.
+        if(isNaN(n)){ refus.push(label); return; }
+        payload[k]=n; };
+      const jours=(k)=>{ if(Array.isArray(ava[k])) payload[k]=ava[k]; };
+      ['collect','delivery'].forEach(m=>{
+        const M=m==='collect'?'Collecte':'Livraison';
+        jours(m+'_open_days');
+        texte(m+'_hours_start'); texte(m+'_hours_end');
+        entier(m+'_slot_duration_min', M+' · durée de créneau');
+        entier(m+'_cutoff_hour', M+' · cut-off (heure)');
+        entier(m+'_cutoff_minute', M+' · cut-off (minutes)');
+        entier(m+'_lead_hours', M+' · délai');
+        entier(m+'_capacity_per_slot', M+' · capacité par créneau');
+        // Interrupteurs d'ouverture : repris de la ligne servie, jamais forcés.
+        if(ava[m+'_enabled']!==undefined) payload[m+'_enabled']=ava[m+'_enabled'];
+      });
+      if(refus.length){ this.printJob('⚠ Valeur non numérique — '+refus.join(' · ')+' : rien n\u2019a été enregistré'); return; }
+      fetch(fr.base+'/franchisee/shop-availability?shop='+encodeURIComponent(avaScope),
+        {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(payload)})
+        .then(r=>r.json().then(j=>({ok:r.ok,status:r.status,j}),()=>({ok:r.ok,status:r.status,j:null})))
+        .then(({ok,status,j})=>{
+          if(!ok||(j&&j.ok===false)){
+            this.printJob(status===404
+              ? '⚠ POST /franchisee/shop-availability absent du serveur — fr_shop_availability n\u2019a PAS été modifiée'
+              : ('⚠ Enregistrement refusé (HTTP '+status+((j&&j.error)?(' — '+j.error):'')+') — fr_shop_availability inchangée'));
+            return false;
+          }
+          this.printJob('✔ Disponibilité enregistrée (fr_shop_availability) — le webshop régénère ses créneaux');
+          return this.avaReload();
+        })
+        .catch(e=>this.printJob('⚠ Réseau indisponible — fr_shop_availability inchangée ('+((e&&e.message)||e)+')')); };
 
     // ===== Coordonnées & horaires boutique — édition inline dans la modale Profil =====
     // TOUT vient de atelierbydb_shops, servi par /franchisee/me : c'est la même
     // ligne que celle d'où partent les tournées. Aucun doublon ws_param, et
     // aucune valeur de remplacement — une colonne que l'API ne sert pas encore
     // s'affiche « — » plutôt que de faire passer 07:00 pour un horaire réel.
-    const SHOP_KEYS=[['enseigne','name'],['adresse','address'],['ville','city'],['cp','cp'],['open','open'],['close','close']];
+    // Les HORAIRES n'y figurent pas : ils vivent dans fr_shop_availability,
+    // la source unique que le webshop lit (jours ouverts, heures, durée de
+    // créneau, cut-off, délai). Deux formulaires pour un même horaire, c'est
+    // la contradiction assurée — la fiche les MONTRE, elle ne les édite pas.
+    const SHOP_KEYS=[['enseigne','name'],['adresse','address'],['ville','city'],['cp','cp']];
     const shopValOf=(k)=>{ const col=(SHOP_KEYS.find(x=>x[0]===k)||[])[1]; return this.shopField(col); };
+    // Horaires affichés — lus dans fr_shop_availability, jamais recopiés
+    // ailleurs. « — » tant que la boutique n'est pas paramétrée : c'est
+    // exactement ce que le webshop voit.
+    const shopHoursOf=(m)=>{ const a=avaLoaded[m+'_hours_start'], b=avaLoaded[m+'_hours_end'];
+      return (a&&b)?(String(a)+' – '+String(b)):'—'; };
+    const shopHoursCollect=shopHoursOf('collect'), shopHoursDelivery=shopHoursOf('delivery');
+    const openDispo=()=>this.setState({profileOpen:false,screen:'reglesBoutique',dispoTab:'dispo'});
     const shopEditing=!!S.shopEdit;
     const shopDraft0=S.shopDraft||{};
     // À l'édition, « — » n'est pas une valeur : le champ part vide.
@@ -6102,14 +6172,12 @@ class Component extends DCLogic {
       shopEditing, shopViewing:!shopEditing,
       shopEnseigne:shopValOf('enseigne'), shopAdresse:shopValOf('adresse'),
       shopVille:shopValOf('ville'), shopCp:shopValOf('cp'),
-      shopOpen:shopValOf('open'), shopClose:shopValOf('close'),
+      shopHoursCollect, shopHoursDelivery, openDispo,
       shopDraftEnseigne:shopDraftOf('enseigne'), shopDraftAdresse:shopDraftOf('adresse'),
       shopDraftVille:shopDraftOf('ville'), shopDraftCp:shopDraftOf('cp'),
-      shopDraftOpen:shopDraftOf('open'), shopDraftClose:shopDraftOf('close'),
       shopEnter, shopCancel, shopSave,
       shopSetEnseigne:shopSetK('enseigne'), shopSetAdresse:shopSetK('adresse'),
       shopSetVille:shopSetK('ville'), shopSetCp:shopSetK('cp'),
-      shopSetOpen:shopSetK('open'), shopSetClose:shopSetK('close'),
       closeProfile:()=>this.setState({profileOpen:false}),
       paramRows,
     };

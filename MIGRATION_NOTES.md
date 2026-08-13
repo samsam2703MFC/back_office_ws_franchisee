@@ -54,30 +54,28 @@ index.html
 
 ### La boutique : `atelierbydb_shops`, et rien d'autre
 
-Les infos de la boutique (enseigne, adresse, ville, code postal, horaires
-d'ouverture et de fermeture) vivent dans **`atelierbydb_shops`**. Elles étaient
-tenues en double — la table d'un côté, des paramètres `ws_param` `shop.*` de
-l'autre — et les deux pouvaient se contredire : la fiche affichait l'adresse
-saisie dans `ws_param`, les tournées partaient de celle de la table. Le doublon
-est supprimé ; `ws_param` ne porte plus aucune information de boutique.
+L'**identité** de la boutique (enseigne, adresse, ville, code postal) vit dans
+**`atelierbydb_shops`**. Elle était tenue en double — la table d'un côté, des
+paramètres `ws_param` `shop.*` de l'autre — et les deux pouvaient se
+contredire : la fiche affichait l'adresse saisie dans `ws_param`, les tournées
+partaient de celle de la table. Le doublon est supprimé ; `ws_param` ne porte
+plus aucune information de boutique.
+
+Les **horaires** n'y sont pas : ils appartiennent à `fr_shop_availability`
+(section suivante). La fiche boutique les affiche en lecture et renvoie vers
+« Disponibilité & créneaux » — un horaire, un seul formulaire.
 
 **Lecture** — `GET /franchisee/me?shop=<id>` rend la ligne :
 
 ```json
 {"shop":{"id":2,"name":"…","address":"…","city":"…","cp":"1070",
-         "open":"07:30","close":"19:00",
          "lat":50.83,"lng":4.31,"geoSource":"address","geoReason":null}}
 ```
-
-`open` et `close` sont les colonnes horaires de la table. Tant que l'API ne les
-sert pas, la fiche affiche « — » : aucun horaire n'est inventé (07:00 / 18:30
-étaient affichés comme s'ils venaient de la base).
 
 **Écriture** — `POST /franchisee/shop-update?shop=<id>`
 
 ```json
-{"shopId":2,"name":"…","address":"…","city":"…","zip":"1070",
- "open":"07:30","close":"19:00"}   →   {"ok":true}
+{"shopId":2,"name":"…","address":"…","city":"…","zip":"1070"}   →   {"ok":true}
 ```
 
 Une clé est **omise** quand la colonne n'est pas servie par `/me` **et** que le
@@ -88,6 +86,39 @@ fiche, le nav bar et le pin de départ des tournées repartent de la ligne
 réellement écrite, sans rechargement. Un échec (404 route absente, 401, réseau)
 est **affiché** et rien n'est reflété à l'écran — une valeur visible signifie
 une valeur en base.
+
+### Les horaires : `fr_shop_availability`, et rien d'autre
+
+Jours ouverts, heures de début et de fin, durée de créneau, cut-off, délai et
+capacité vivent dans **`fr_shop_availability`** (`ws_shop_availability`) —
+c'est la source unique que le webshop lit pour fabriquer ses créneaux. Écran
+« Disponibilité & créneaux » ; la fiche boutique les montre sans les éditer.
+
+**Lecture** — `GET /franchisee/fr-shop-availability?shop=<id>`. La console
+retient la ligne dont le `shop_id` est celui de la portée, pas la première
+servie.
+
+**Écriture** — `POST /franchisee/shop-availability?shop=<id>`
+
+```json
+{"shop_id":2,"collect_open_days":[1,2,3,4,5],
+ "collect_hours_start":"07:30","collect_hours_end":"19:00",
+ "collect_slot_duration_min":30,"collect_cutoff_hour":17,"collect_cutoff_minute":0,
+ "collect_lead_hours":2,"collect_capacity_per_slot":12,"collect_enabled":1,
+ "delivery_…": "idem"}   →   {"ok":true}
+```
+
+**Aucune valeur par défaut n'est écrite.** Le corps partait auparavant avec des
+chiffres que personne n'avait saisis : durée de créneau vide ⇒ 60 min (120 en
+livraison), capacité vide ⇒ 1, cut-off vide ⇒ minuit, et
+`collect_enabled`/`delivery_enabled` forcés à `1` alors que l'écran n'a pas
+d'interrupteur — on ouvrait la boutique au webshop en croyant régler des
+horaires. Désormais : une clé vide que la base ne connaît pas n'est pas
+envoyée ; un champ vidé par l'utilisateur l'est (`null` / `""`) pour effacer ;
+une saisie non numérique est **refusée** avec son libellé, jamais convertie en
+`0`. Les interrupteurs sont repris de la ligne servie. Après un succès, la
+console relit `fr-shop-availability` ; le brouillon n'est effacé que si cette
+relecture aboutit.
 
 **Migration `0012_franchisee_config_tables.sql` (repo WebShop)** crée les
 tables manquantes et câble les 3 derniers endpoints : `ws_delivery_fee_rules`
