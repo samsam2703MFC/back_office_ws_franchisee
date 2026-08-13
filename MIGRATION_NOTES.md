@@ -50,7 +50,44 @@ index.html
 | ws_payment_methods | `/franchisee/ws-payment-methods` | `allowed_methods()` par profil (guest/registered/company) — nécessite `?shop` |
 | ws_office_delivery_settings | `/franchisee/ws-office-delivery-settings` | `ws_offices` + `ws_tours` + cut-offs `ws_tour_availability` |
 | params | `/franchisee/params` | `ws_param` |
-| contexte | `/franchisee/me` | boutique de la portée |
+| contexte | `/franchisee/me` | boutique de la portée — **`atelierbydb_shops`** |
+
+### La boutique : `atelierbydb_shops`, et rien d'autre
+
+Les infos de la boutique (enseigne, adresse, ville, code postal, horaires
+d'ouverture et de fermeture) vivent dans **`atelierbydb_shops`**. Elles étaient
+tenues en double — la table d'un côté, des paramètres `ws_param` `shop.*` de
+l'autre — et les deux pouvaient se contredire : la fiche affichait l'adresse
+saisie dans `ws_param`, les tournées partaient de celle de la table. Le doublon
+est supprimé ; `ws_param` ne porte plus aucune information de boutique.
+
+**Lecture** — `GET /franchisee/me?shop=<id>` rend la ligne :
+
+```json
+{"shop":{"id":2,"name":"…","address":"…","city":"…","cp":"1070",
+         "open":"07:30","close":"19:00",
+         "lat":50.83,"lng":4.31,"geoSource":"address","geoReason":null}}
+```
+
+`open` et `close` sont les colonnes horaires de la table. Tant que l'API ne les
+sert pas, la fiche affiche « — » : aucun horaire n'est inventé (07:00 / 18:30
+étaient affichés comme s'ils venaient de la base).
+
+**Écriture** — `POST /franchisee/shop-update?shop=<id>`
+
+```json
+{"shopId":2,"name":"…","address":"…","city":"…","zip":"1070",
+ "open":"07:30","close":"19:00"}   →   {"ok":true}
+```
+
+Une clé est **omise** quand la colonne n'est pas servie par `/me` **et** que le
+champ est laissé vide : la console n'écrase pas d'une chaîne vide ce qu'elle ne
+connaît pas. La portée reste décidée par le serveur — `shopId` est indicatif,
+`?shop=` fait foi. Après un succès, la console relit `/franchisee/me` : la
+fiche, le nav bar et le pin de départ des tournées repartent de la ligne
+réellement écrite, sans rechargement. Un échec (404 route absente, 401, réseau)
+est **affiché** et rien n'est reflété à l'écran — une valeur visible signifie
+une valeur en base.
 
 **Migration `0012_franchisee_config_tables.sql` (repo WebShop)** crée les
 tables manquantes et câble les 3 derniers endpoints : `ws_delivery_fee_rules`
@@ -79,6 +116,11 @@ Sans source serveur (→ seed) : `fr_live_eta` (ETA télémétrie), `fr_renta_kp
   `ws_tour_closures` (remplacement intégral) ; les autres tables sont
   persistées en JSON dans `ws_bo_store` (migration 0014), par boutique, et
   réappliquées par `hydrate()` en overlay (priorité aux éditions utilisateur).
+- Fiche boutique (modale Profil et écran « Paramètres du shop ») →
+  `POST /franchisee/shop-update` : écriture réelle dans `atelierbydb_shops`,
+  suivie d'une relecture de `/franchisee/me`. Avant, le formulaire n'avait
+  aucune table cible : il annonçait « ✔ Enregistré » sans rien écrire, tandis
+  que l'édition inline écrivait dans `ws_param`.
 - Onboarding B2B (wizard) → `POST /franchisee/onboard-office` : création réelle
   `ws_offices` + `ws_office_delivery_sites` + départements (+ voucher si
   `ws_vouchers` est une table de base — c'est une vue ERP en prod, donc différé).

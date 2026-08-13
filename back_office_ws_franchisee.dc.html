@@ -1774,10 +1774,13 @@
       <sc-if value="{{ isShopParams }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px;max-width:720px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div class="t-section-title" style="font-size:15px">Coordonnées & horaires</div><button onClick="{{ editShop }}" class="btn-secondary" style="font-size:12px;flex:none">Modifier</button></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="t-section-title" style="font-size:15px">Coordonnées & horaires</div><button onClick="{{ editShop }}" class="btn-secondary" style="font-size:12px;flex:none">Modifier</button></div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:16px">Table <strong>atelierbydb_shops</strong> · boutique de la portée — l'adresse est aussi le départ et le retour des tournées.</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopEnseigne }}</div></div>
             <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopAdresse }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ville</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopVille }}</div></div>
+            <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Code postal</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopCp }}</div></div>
             <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopOpen }}</div></div>
             <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopClose }}</div></div>
           </div>
@@ -2542,7 +2545,7 @@
           </div>
         </sc-if>
         <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:12px">
-          <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary)">Coordonnées &amp; horaires · ws_shops</div>
+          <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary)">Coordonnées &amp; horaires · atelierbydb_shops</div>
           <sc-if value="{{ shopViewing }}" hint-placeholder-val="{{ true }}"><button onClick="{{ shopEnter }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Modifier</button></sc-if>
           <sc-if value="{{ shopEditing }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px"><button onClick="{{ shopCancel }}" class="btn-secondary" style="font-size:12px;flex:none;padding:6px 12px">Annuler</button><button onClick="{{ shopSave }}" style="font-size:12px;flex:none;padding:6px 14px;background:var(--color-primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">Enregistrer</button></div></sc-if>
         </div>
@@ -2550,6 +2553,8 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
           <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Enseigne</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopEnseigne }}</div></div>
           <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Adresse</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopAdresse }}</div></div>
+          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ville</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopVille }}</div></div>
+          <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Code postal</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopCp }}</div></div>
           <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Ouverture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopOpen }}</div></div>
           <div style="background:var(--color-background-secondary);border-radius:9px;padding:13px"><div class="t-admin-label" style="margin-bottom:4px">Fermeture</div><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ shopClose }}</div></div>
         </div>
@@ -2558,9 +2563,12 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Enseigne</span><input value="{{ shopDraftEnseigne }}" onInput="{{ shopSetEnseigne }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Adresse</span><input value="{{ shopDraftAdresse }}" onInput="{{ shopSetAdresse }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Ville</span><input value="{{ shopDraftVille }}" onInput="{{ shopSetVille }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
+          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Code postal</span><input value="{{ shopDraftCp }}" onInput="{{ shopSetCp }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Ouverture</span><input value="{{ shopDraftOpen }}" onInput="{{ shopSetOpen }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Fermeture</span><input value="{{ shopDraftClose }}" onInput="{{ shopSetClose }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
         </div>
+        <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin:-14px 0 20px">Enregistré dans <strong>atelierbydb_shops</strong> — l'adresse sert aussi de point de départ et de retour aux tournées.</div>
         </sc-if>
         <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:8px;margin-bottom:6px">Paramètres du site · ws_param</div>
         <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">Les paramètres 0/1 sont des interrupteurs · les autres sont éditables avec ✓. <strong>bo_show_source</strong> affiche l'origine des données sur chaque page · <strong>bo_show_help</strong> affiche les « i » d'aide au survol des toggles.</div>
@@ -2756,7 +2764,7 @@ class Component extends DCLogic {
     emailsBureau:{table:'ws_office_emails',origin:'Form email — contacts groupés par bureau (rôle)',calc:'Add/del → BOServer.save ; rôle = Principal/Facturation/Livraison',dev:'1 j'},
     stockJour:{table:'ws_product_stock (catalog actif)',origin:'Stock online (webshop) + en shop, produits actifs · filtres badges',calc:'Dispo = online + shop ; sous seuil si dispo<min, tension si <min×1,25',dev:'1,5 j'},
     commandes:{table:'ws_orders',origin:'Commandes du jour · filtres livraison/retrait',calc:'Statut préparation → prête → livrée cliquable ; flags[ord_*] en mémoire',dev:'1,5 j'},
-    shopParams:{table:'ws_shops',origin:'Form shop — coordonnées · horaires · branding boutique',calc:'Champs enseigne/adresse/… ⇒ BOServer.save(ws_shops)',dev:'1 j'},
+    shopParams:{table:'atelierbydb_shops',origin:'Ligne de la boutique de la portée, servie par /franchisee/me',calc:'Édition ⇒ POST /franchisee/shop-update, puis relecture de /franchisee/me',dev:'1 j'},
     statsReseau:{table:'ERP consolidé (lecture seule)',origin:'Stats multi-boutiques poussées par l\'ERP',calc:'Aucun formulaire ; agrégats read-only + exports CSV',dev:'1 j'},
   }; return M[screen]||{table:'ws_param · tables du module',origin:'Données de démonstration servies par la couche BOServer (localStorage)',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
   // ===== Recherche profonde — index de navigation du back-office =====
@@ -2982,12 +2990,17 @@ class Component extends DCLogic {
           {k:'valeur',label:'Valeur / effet',type:'text',ph:'ex. −10 % dès 40 €'},
           {k:'validite',label:'Validité',type:'text',ph:'ex. jusqu\'au 31/08'},
         ]},
-      shop:{ title:'Paramètres du shop', table:'ws_param', save:'Enregistrer',
+      // Les valeurs par défaut sont celles de la LIGNE BOUTIQUE servie par
+      // /franchisee/me — plus de paramètres ws_param, et plus d'horaires
+      // inventés (07:00 / 18:30 s'affichaient comme s'ils venaient de la base).
+      shop:{ title:'Paramètres du shop', table:'atelierbydb_shops', save:'Enregistrer',
         fields:[
-          {k:'enseigne',label:'Enseigne',type:'text',def:(window.BOServer?String(window.BOServer.getParam('shop.name','')||''):'')},
-          {k:'adresse',label:'Adresse',type:'text',def:(window.BOServer?String(window.BOServer.getParam('shop.address','')||''):'')},
-          {k:'open',label:'Ouverture',type:'text',def:(window.BOServer?String(window.BOServer.getParam('shop.open','07:00')||''):'07:00')},
-          {k:'close',label:'Fermeture',type:'text',def:(window.BOServer?String(window.BOServer.getParam('shop.close','18:30')||''):'18:30')},
+          {k:'enseigne',label:'Enseigne',type:'text',def:this.shopField('name','')},
+          {k:'adresse',label:'Adresse',type:'text',def:this.shopField('address','')},
+          {k:'ville',label:'Ville',type:'text',def:this.shopField('city','')},
+          {k:'cp',label:'Code postal',type:'text',def:this.shopField('cp','')},
+          {k:'open',label:'Ouverture',type:'text',ph:'ex. 07:00',def:this.shopField('open','')},
+          {k:'close',label:'Fermeture',type:'text',ph:'ex. 18:30',def:this.shopField('close','')},
         ]},
     };
   }
@@ -3026,6 +3039,10 @@ class Component extends DCLogic {
       const clash=cp&&norm(v.tva)?(window.BOServer?window.BOServer.table('ws_offices'):[]).find(o=>String(o.postal_code||'').replace(/\D/g,'')===cp&&norm(o.vat)&&norm(o.vat)!==norm(v.tva)&&o.name!==v.raison):null;
       if(clash){ this.setState({officeClash:{existing:clash,vals:{vat:v.tva,name:v.raison,email:'',city:v.ville,postal_code:v.cp,address:v.adresse,tour:clash.tour||'—'}}}); return; }
     }
+    // La boutique n'est pas une table du BO : elle part vers atelierbydb_shops
+    // par sa propre route. Sans ce cas, le formulaire n'avait AUCUN `tbl` —
+    // il n'écrivait donc nulle part tout en annonçant « ✔ Enregistré ».
+    if(S.formKey==='shop'){ this.setState({formKey:null,_rev:(S._rev||0)+1}); this.shopWrite(v); return; }
     if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl); if(S.formEdit && S.formIndex!=null && rows[S.formIndex]){ rows[S.formIndex]={...rows[S.formIndex],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
     // Choix « garder le siège » (client B2B) : l'adresse encodée devient un
     // LIEU DE LIVRAISON (ws_offices, statut pending) rattaché à la société.
@@ -3206,9 +3223,77 @@ class Component extends DCLogic {
   shopInfo(){ return (typeof window!=='undefined'&&window.__SHOPINFO)||null; }
   /* L'id de la portée, tel que la console l'envoie à CHAQUE appel (?shop=). */
   shopScopeId(){ try { return String(((window.__FR||{}).shop)||''); } catch(e){ return ''; } }
+  /* Un champ de la boutique, tel que le serveur le sert. Jamais de valeur de
+     remplacement : une colonne que l'API ne rend pas s'affiche « — ». */
+  shopField(k, dflt){ const si=this.shopInfo(); const v=si?si[k]:null;
+    return (v===undefined||v===null||v==='')?(dflt===undefined?'—':dflt):String(v); }
+
+  /* ── Les infos boutique vivent dans atelierbydb_shops, et nulle part ailleurs.
+     Elles étaient tenues en DOUBLE : la table (servie par /franchisee/me, d'où
+     partent les tournées) et des paramètres ws_param `shop.*` (ce que la fiche
+     éditait). Conséquence : corriger l'adresse dans la fiche ne déplaçait pas
+     le pin de départ, et les deux écrans pouvaient afficher deux adresses
+     différentes pour la même boutique. Une seule table les porte ; la fiche y
+     écrit, puis relit /franchisee/me pour que la carte, le nav bar et la fiche
+     repartent tous de la ligne réellement enregistrée.
+
+     Contrat serveur — POST /franchisee/shop-update?shop=<id>
+       corps   {shopId, name, address, city, zip, open, close}
+       réponse {ok:true} · portée décidée par le serveur, jamais par shopId. ── */
+  shopWrite(vals){
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    const shop=this.shopScopeId();
+    if(!fr.base){ this.printJob('⚠ API indisponible — atelierbydb_shops inchangée'); return Promise.resolve(false); }
+    if(!shop){ this.printJob('⚠ Boutique inconnue : ouvrez la console avec ?shop=<id> — rien n\u2019a été enregistré'); return Promise.resolve(false); }
+    // Une colonne que /franchisee/me ne sert PAS et que l'utilisateur laisse
+    // vide n'est pas envoyée : la console n'en sait rien, elle n'a pas à
+    // l'écraser d'une chaîne vide. Dès qu'un champ est rempli, il part.
+    const si=this.shopInfo()||{};
+    const body={shopId:parseInt(shop,10)};
+    [['name','enseigne','name'],['address','adresse','address'],['city','ville','city'],
+     ['zip','cp','cp'],['open','open','open'],['close','close','close']]
+      .forEach(([col,k,src])=>{ const v=vals[k];
+        if((v===''||v==null)&&si[src]===undefined) return;
+        body[col]=(v==null?'':v); });
+    return fetch(fr.base+'/franchisee/shop-update?shop='+encodeURIComponent(shop),
+      {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(body)})
+      .then(r=>r.json().then(j=>({ok:r.ok,status:r.status,j}),()=>({ok:r.ok,status:r.status,j:null})))
+      .then(({ok,status,j})=>{
+        // Un échec se DIT. Une fiche qui affiche la valeur saisie sans qu'elle
+        // soit en base est le pire des deux mondes : on la croit enregistrée.
+        if(!ok||(j&&j.ok===false)){
+          this.printJob(status===404
+            ? '⚠ POST /franchisee/shop-update absent du serveur — atelierbydb_shops n\u2019a PAS été modifiée'
+            : ('⚠ Enregistrement refusé (HTTP '+status+((j&&j.error)?(' — '+j.error):'')+') — atelierbydb_shops inchangée'));
+          return false;
+        }
+        this.printJob('✔ Boutique enregistrée (atelierbydb_shops)');
+        return this.shopInfoReload();
+      })
+      .catch(e=>{ this.printJob('⚠ Réseau indisponible — atelierbydb_shops inchangée ('+((e&&e.message)||e)+')'); return false; });
+  }
+  /* Relecture de la ligne boutique après écriture : /franchisee/me est la même
+     source qu'au boot. Les signatures de carte sont remises à zéro, sinon le
+     pin de départ garderait l'ancienne adresse jusqu'au rechargement. */
+  shopInfoReload(){
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    const shop=this.shopScopeId();
+    if(!fr.base||!shop) return Promise.resolve(false);
+    return fetch(fr.base+'/franchisee/me?shop='+encodeURIComponent(shop),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(v=>{ if(!(v&&v.shop&&v.shop.id!=null)) return false;
+        window.__SHOPINFO=v.shop; window.__SHOPREASON=v.shop.geoReason||null;
+        this._routeSig=null; this._suiviSig=null; this._zfKey=null;
+        this.setState(s=>({_rev:(s._rev||0)+1}));
+        return true; })
+      .catch(()=>false);
+  }
 
   depot(){ const si=this.shopInfo();
-    const nm=(si&&si.name)||(window.BOServer?window.BOServer.getParam('shop.name',''):'')||'Ma boutique';
+    // Le nom vient de atelierbydb_shops (via /franchisee/me). Le repli
+    // ws_param `shop.name` est retiré : c'était la seconde écriture de la même
+    // information, celle qui pouvait contredire la table.
+    const nm=(si&&si.name)||'Ma boutique';
     const adr=(si&&si.address)||'';
     // Motif d'échec, tel que le serveur l'a diagnostiqué. Une carte qui dit
     // seulement « inconnue » oblige à chercher entre trois pannes distinctes.
@@ -3740,7 +3825,11 @@ class Component extends DCLogic {
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
         this._suiviMap=m; this._suiviFit=false; this.drawSuiviMap();
       } else if(el && this._suiviMap){
-        const sig=JSON.stringify([(window.__CPGEO?1:0),(window.__SHOPINFO?1:0),this.state.mapFocusTour||'',
+        // La POSITION de la boutique entre dans la signature : « __SHOPINFO
+        // est-il là » ne changeait pas quand l'adresse changeait, et le pin de
+        // départ gardait l'ancienne jusqu'au rechargement.
+        const dep=this.depot();
+        const sig=JSON.stringify([(window.__CPGEO?1:0),dep.lat,dep.lng,dep.libelle,this.state.mapFocusTour||'',
           (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
         if(this._suiviSig!==sig){ this._suiviSig=sig; this.drawSuiviMap(); }
       }
@@ -3760,7 +3849,11 @@ class Component extends DCLogic {
       } else if(el && this._tourneesMap){
         // Redessine quand la donnée change (géo chargée, ordre modifié,
         // assignation, focus itinéraire) — signature légère anti-boucle.
-        const sig=JSON.stringify([(window.__CPGEO?1:0),(window.__SHOPINFO?1:0),this.state.mapFocusTour||'',
+        // La POSITION de la boutique entre dans la signature : « __SHOPINFO
+        // est-il là » ne changeait pas quand l'adresse changeait, et le pin de
+        // départ gardait l'ancienne jusqu'au rechargement.
+        const dep=this.depot();
+        const sig=JSON.stringify([(window.__CPGEO?1:0),dep.lat,dep.lng,dep.libelle,this.state.mapFocusTour||'',
           (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
         if(this._routeSig!==sig){ this._routeSig=sig; this.drawRoute(); }
       }
@@ -4017,7 +4110,7 @@ class Component extends DCLogic {
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
     const subs={avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
-      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'ws_shops — coordonnées · horaires · branding',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
+      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — coordonnées · horaires de la boutique',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
     // ===== Recherche profonde (barre de nav) =====
     // Cherche dans les menus, les sous-menus (onglets) ET les explications :
@@ -5022,30 +5115,28 @@ class Component extends DCLogic {
         .catch(()=>this.printJob('Réseau indisponible — non enregistré')); };
 
     // ===== Coordonnées & horaires boutique — édition inline dans la modale Profil =====
-    // Coordonnées boutique — RÉELLES : paramètres persistés (ws_param via
-    // setParam). Plus d'enseigne/adresse de démonstration.
-    const gpTxt=(k,d)=>{ const v=window.BOServer?window.BOServer.getParam(k,d):d; return (v===undefined||v===null||v==='')?d:String(v); };
-    // À défaut de paramètre saisi, l'enseigne et l'adresse sont celles que le
-    // serveur donne pour la boutique de la portée (ws_shops via
-    // /franchisee/me) — c'est aussi l'adresse d'où partent les tournées. La
-    // fiche affichait « — » alors que la carte connaissait l'adresse.
-    const shopSI=this.shopInfo();
-    const shopDefaults={enseigne:gpTxt('shop.name',(shopSI&&shopSI.name)||'—'),
-      adresse:gpTxt('shop.address',(shopSI&&shopSI.address)||'—'),
-      open:gpTxt('shop.open','07:00'),close:gpTxt('shop.close','18:30')};
-    const shopValOf=(k)=>S.flags['shop_'+k]!==undefined?S.flags['shop_'+k]:shopDefaults[k];
+    // TOUT vient de atelierbydb_shops, servi par /franchisee/me : c'est la même
+    // ligne que celle d'où partent les tournées. Aucun doublon ws_param, et
+    // aucune valeur de remplacement — une colonne que l'API ne sert pas encore
+    // s'affiche « — » plutôt que de faire passer 07:00 pour un horaire réel.
+    const SHOP_KEYS=[['enseigne','name'],['adresse','address'],['ville','city'],['cp','cp'],['open','open'],['close','close']];
+    const shopValOf=(k)=>{ const col=(SHOP_KEYS.find(x=>x[0]===k)||[])[1]; return this.shopField(col); };
     const shopEditing=!!S.shopEdit;
     const shopDraft0=S.shopDraft||{};
-    const shopDraftOf=(k)=>shopDraft0[k]!==undefined?shopDraft0[k]:shopValOf(k);
+    // À l'édition, « — » n'est pas une valeur : le champ part vide.
+    const shopEditable=(k)=>{ const v=shopValOf(k); return v==='—'?'':v; };
+    const shopDraftOf=(k)=>shopDraft0[k]!==undefined?shopDraft0[k]:shopEditable(k);
     const shopSetK=(k)=>(e)=>{ const v=e.target.value; this.setState(st=>({shopDraft:{...(st.shopDraft||{}),[k]:v}})); };
-    const shopEnter=()=>this.setState({shopEdit:true,shopDraft:{enseigne:shopValOf('enseigne'),adresse:shopValOf('adresse'),open:shopValOf('open'),close:shopValOf('close')}});
+    const shopEnter=()=>{ const d={}; SHOP_KEYS.forEach(([k])=>{ d[k]=shopEditable(k); }); this.setState({shopEdit:true,shopDraft:d}); };
     const shopCancel=()=>this.setState({shopEdit:false,shopDraft:null});
-    const shopSave=()=>{ const d=this.state.shopDraft||{};
-      const vals={enseigne:d.enseigne!==undefined?d.enseigne:shopValOf('enseigne'),adresse:d.adresse!==undefined?d.adresse:shopValOf('adresse'),open:d.open!==undefined?d.open:shopValOf('open'),close:d.close!==undefined?d.close:shopValOf('close')};
-      // PERSISTANCE RÉELLE : ws_param (save typé params) — plus de flags volatils.
-      if(window.BOServer){ window.BOServer.setParam('shop.name',vals.enseigne); window.BOServer.setParam('shop.address',vals.adresse); window.BOServer.setParam('shop.open',vals.open); window.BOServer.setParam('shop.close',vals.close); }
-      this.setState(st=>({shopEdit:false,shopDraft:null,flags:{...st.flags,shop_enseigne:vals.enseigne,shop_adresse:vals.adresse,shop_open:vals.open,shop_close:vals.close}}));
-      this.printJob('✔ Coordonnées & horaires enregistrés (ws_param)'); };
+    // Écriture RÉELLE dans atelierbydb_shops, puis relecture de /franchisee/me :
+    // la fiche ne montre que ce que la base a accepté. Rien n'est reflété en
+    // mémoire au passage — c'était le mécanisme qui laissait croire à un
+    // enregistrement quand rien n'était parti.
+    const shopSave=()=>{ const d=this.state.shopDraft||{}; const vals={};
+      SHOP_KEYS.forEach(([k])=>{ vals[k]=d[k]!==undefined?d[k]:shopEditable(k); });
+      this.setState({shopEdit:false,shopDraft:null});
+      this.shopWrite(vals); };
 
     const joursExcept=SRV('ws_shop_exceptions').map((j,i)=>{ const dm=splitDate(j.date); const fermé=j.type==='Fermé'; const bg=fermé?'#fbe9eb':'#fff4e5'; const c=fermé?'var(--color-primary)':'#b26a00'; const hasRange=!!(j.dateFin&&String(j.dateFin).trim()); return {...j,d:dm.d,m:dm.m,hasRange,rangeTxt:hasRange?('du '+j.date+' au '+j.dateFin):'',edit:this.editForm('except',j,i),del:this.deleteRow('ws_shop_exceptions',i),pill:pill2(bg,c)}; });
     const addExcept=this.openForm('except');
@@ -5869,16 +5960,12 @@ class Component extends DCLogic {
     if(cutM){ const now=new Date(); const mins=(+cutM[1])*60+(+cutM[2])-(now.getHours()*60+now.getMinutes());
       kCutLeft=mins>0?(Math.floor(mins/60)+' h '+String(mins%60).padStart(2,'0')):'dépassé';
       kCutLabel='clôture saisie à '+cutRaw; }
-    // Fiche boutique et règles horaires : ws_param + la boutique de la portée.
-    const shopName=meName, shopAddr=(meShop&&(meShop.adr||meShop.address))||'—';
-    const shopOpen=P('shop.open','—')||'—', shopClose=P('shop.close','—')||'—';
-    const shopSlotLen=P('slot.length_min','')?(P('slot.length_min','')+' min'):'—';
-    const shopCutoff=cutRaw||'—';
-    const shopLead=P('order.lead_hours','')?(P('order.lead_hours','')+' h'):'—';
+    // shopName/shopAddr/shopOpen/shopClose/shopSlotLen/shopCutoff/shopLead
+    // vivaient ici sans être affichés nulle part, et relisaient ws_param
+    // `shop.*` : c'était la seconde source d'une information qui n'en a qu'une.
     const profileVals={
       meName, meInit, meSub, meSubStyle, meScopeId, meNoScope, meScopeWhy, meScopeTitle,
       kCutLeft, kCutLabel,
-      shopName, shopAddr, shopOpen, shopClose, shopSlotLen, shopCutoff, shopLead,
       showSource, srcOpen:S.srcOpen&&showSource,
       showHelp, helpIcon, tipStyle,
       srcTable:sm.table, srcOrigin:sm.origin, srcCalc:sm.calc, srcDev:sm.dev,
@@ -5886,10 +5973,16 @@ class Component extends DCLogic {
       profileOpen:S.profileOpen, openProfile:()=>this.setState({profileOpen:true,paramDrafts:{}}),
       openShopParams:()=>this.setState({profileOpen:false,screen:'shopParams'}),
       shopEditing, shopViewing:!shopEditing,
-      shopEnseigne:shopValOf('enseigne'), shopAdresse:shopValOf('adresse'), shopOpen:shopValOf('open'), shopClose:shopValOf('close'),
-      shopDraftEnseigne:shopDraftOf('enseigne'), shopDraftAdresse:shopDraftOf('adresse'), shopDraftOpen:shopDraftOf('open'), shopDraftClose:shopDraftOf('close'),
+      shopEnseigne:shopValOf('enseigne'), shopAdresse:shopValOf('adresse'),
+      shopVille:shopValOf('ville'), shopCp:shopValOf('cp'),
+      shopOpen:shopValOf('open'), shopClose:shopValOf('close'),
+      shopDraftEnseigne:shopDraftOf('enseigne'), shopDraftAdresse:shopDraftOf('adresse'),
+      shopDraftVille:shopDraftOf('ville'), shopDraftCp:shopDraftOf('cp'),
+      shopDraftOpen:shopDraftOf('open'), shopDraftClose:shopDraftOf('close'),
       shopEnter, shopCancel, shopSave,
-      shopSetEnseigne:shopSetK('enseigne'), shopSetAdresse:shopSetK('adresse'), shopSetOpen:shopSetK('open'), shopSetClose:shopSetK('close'),
+      shopSetEnseigne:shopSetK('enseigne'), shopSetAdresse:shopSetK('adresse'),
+      shopSetVille:shopSetK('ville'), shopSetCp:shopSetK('cp'),
+      shopSetOpen:shopSetK('open'), shopSetClose:shopSetK('close'),
       closeProfile:()=>this.setState({profileOpen:false}),
       paramRows,
     };
