@@ -215,6 +215,41 @@ jobs:
           curl -sI --max-time 15 "$PAGE" | grep -i '^\(cache-control\|etag\|last-modified\|expires\)' | sed 's/^/    /'
           echo
 
+          # ── POSITION DE LA BOUTIQUE SONDÉE ────────────────────────────────
+          # Le pin de « Livraison du jour » et de « Tournées » se déduit
+          # entièrement de trois champs de /franchisee/me : lat, lng, geoSource.
+          # Tous les tracés partent de ce point et les ETA en découlent, donc
+          # une position approximative n'est pas un détail d'affichage. On dit
+          # ici CE QUE LA CONSOLE AFFICHERA, sans imprimer les coordonnées ni
+          # l'adresse : le dépôt et ses journaux sont publics.
+          if [ -n "$SHOP" ]; then
+            echo "== Position de la boutique $SHOP (ce que le pin affichera) =="
+            MEP=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/me$QS" 2>/dev/null)
+            SRC=$(printf '%s' "$MEP" | grep -o '"geoSource":"[^"]*"' | head -1 | sed 's/.*:"//;s/"$//')
+            HASLL=$(printf '%s' "$MEP" | tr -d ' \n' | grep -c '"lat":[0-9-]')
+            case "$SRC" in
+              address|manual)
+                echo "  OK       position EXACTE (geoSource=$SRC) — pin sur l'adresse, aucun bandeau" ;;
+              zip)
+                echo "  ⚠ APPROX position = centre du code postal (geoSource=zip) — le pin et les"
+                echo "           tracés sont décalés, la console affiche l'avertissement." ;;
+              failed|'')
+                if [ "$HASLL" = "1" ]; then
+                  echo "  ⚠ position présente mais SANS source déclarée — vérifier shops.geo_source"
+                else
+                  echo "  ⚠ AUCUNE position servie — le pin retombe sur Bruxelles-centre."
+                  W=$(printf '%s' "$MEP" | grep -o '"geoReason":"[^"]*"' | head -1 | sed 's/.*:"//;s/"$//')
+                  [ -n "$W" ] && echo "           Cause donnée par le serveur : $W"
+                  echo "           Remède : corriger l'adresse, puis POST /franchisee/shop-geocode."
+                fi ;;
+              *) echo "  geoSource inattendu : $SRC" ;;
+            esac
+            # L'adresse doit être servie : le pin l'affiche sous le nom.
+            if printf '%s' "$MEP" | grep -q '"address":"[^"]'; then echo "  OK       adresse servie au pin"
+            else echo "  ⚠ adresse absente de /franchisee/me — le pin n'affichera que le nom"; fi
+            echo
+          fi
+
           # ── OBJETS DE BASE ────────────────────────────────────────────────
           # Une migration enregistrée ne prouve PAS que son objet est encore là.
           # Les triggers trg_client_office_delivery_ai/_au (0019/0021/0023) sont
