@@ -234,6 +234,61 @@ bugs :
 
 ---
 
+### 1.11 🔴 L'overlay `ws_bo_store` : sept écrans qui affichent autre chose que ce que le webshop applique
+
+**Le mécanisme.** `BOServer.save(table)` poste sur `/franchisee/save`. Ce
+endpoint n'écrit **réellement** que dix tables ; tout le reste tombe dans
+`ws_bo_store`, un blob JSON par table. Au chargement, `bo_server.js` applique
+cet overlay par-dessus les réponses de l'API — **sauf** pour les tables listées
+dans `TYPED`.
+
+D'où trois comportements, dont un seul est correct :
+
+| Écriture typée ? | Dans `TYPED` ? | Résultat |
+| --- | --- | --- |
+| oui | oui | ✅ écrit et relu en base |
+| non | oui | la réponse API écrase l'overlay ⇒ **la saisie disparaît** |
+| non | non | l'overlay écrase l'affichage ⇒ **la console montre la saisie, le webshop applique la vraie table** |
+
+Le troisième cas est le pire : la donnée ne disparaît pas, elle **ment**. C'est
+celui de `ws_office_delivery_settings` (corrigé, 0066) et de sept écrans encore
+ouverts.
+
+**Les sept.** Tous sont écrits dans l'overlay, tous ont une vraie table lue
+ailleurs :
+
+| Écran / table du formulaire | Vraie table lue | Qui l'applique | Gravité |
+| --- | --- | --- | --- |
+| Frais de livraison — `ws_delivery_fee_rules` | idem | **checkout** (devis des frais) | 🔴 argent : le franchisé croit changer un franco, le client paie l'ancien |
+| Créneaux & délais — `ws_calendar_rules` | idem | **checkout** (cut-off, lead time) | 🔴 décide si une commande est acceptée |
+| Créneaux — `ws_slots` | idem | **checkout** (créneaux proposés) | 🟠 |
+| Jours exceptionnels — `ws_shop_exceptions` | idem | **checkout** (fermetures) | 🟠 une fermeture saisie n'est pas appliquée |
+| Disponibilité produit — `ws_product_availability` | dérivée de `ws_products` / `ws_product_shops` | **personne** — la table n'existe pas | 🟠 l'exception n'a jamais d'effet |
+| Cross-selling local — `ws_pricing_rules_local` | `ws_pricing_rules` | webshop | 🟠 |
+| Bons locaux — `ws_vouchers_local` | `ws_vouchers` | webshop | 🟠 (recoupe le constat 1.5) |
+
+**Le remède est connu**, il a servi trois fois aujourd'hui : une route par
+écriture, une ligne à la fois (`office-email`, `b2b-department`,
+`office-delivery-setting`), la portée décidée par le serveur, et un refus
+motivé plutôt qu'un 500 ou un silence. Le remplacement intégral d'une table
+n'est acceptable que pour une config courte et non référencée — il a déjà vidé
+une table ERP.
+
+**Ordre proposé** : `ws_delivery_fee_rules`, puis `ws_calendar_rules` (les deux
+qui touchent l'argent et l'acceptation d'une commande), puis `ws_slots` et
+`ws_shop_exceptions`, puis les trois derniers.
+
+### 1.12 ✅ La console marque n'a pas ce défaut
+
+Vérifié : son `bo_server.js` (108 lignes) n'a **aucun** chemin vers
+`/franchisee/save` ni vers l'overlay serveur. `BOServer.save()` n'y écrit que
+le cache local, en **optimiste**, et la vraie écriture part sur une route
+dédiée (`/franchisor/catchment`, `/franchisor/prospect`, `/franchisor/cross-sell`,
+`/franchisor/bo-role`…), suivie d'une relecture API qui fait foi. C'est le
+motif que la console franchisé rejoint écran par écran.
+
+Rien à porter à la session marque sur ce point.
+
 ## 2. Protocole de test — tous les flux
 
 ### 2.0 Préparation
