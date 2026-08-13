@@ -50,6 +50,34 @@
   // Overrides explicites par query (tests / première connexion).
   try {
     var q = new URLSearchParams(location.search);
+
+    /* ── Séparateur fautif : réparé, pas deviné ──────────────────────────
+       Vu deux fois en production : « ?shop=2?/token=… » au lieu de
+       « ?shop=2&token=… ». Le second « ? » n'est pas un séparateur : TOUT ce
+       qui suit devient la valeur de ?shop=, et la console repart sans portée
+       NI session — écrans vides, cartes sans boutique, et le jeton affiché
+       dans le bandeau tant qu'il n'était pas rédigé.
+
+       Rien n'est inventé ici : l'id et le jeton sont l'un et l'autre écrits
+       dans l'adresse, on se contente de les lire là où ils se trouvent. La
+       réparation ne s'applique qu'à cette forme sans ambiguïté — des chiffres,
+       puis un caractère de séparation d'URL. Un ?shop= non numérique reste
+       refusé, comme avant : c'est le SLUG qu'on ne devine pas, pas une
+       ponctuation mal placée.
+
+       L'adresse de la barre est réécrite au passage (par le retrait du jeton,
+       juste dessous) : un favori enregistré ensuite part d'une URL valide. */
+    var brut = q.get('shop');
+    var rep = brut && String(brut).match(/^([0-9]+)[?&\/]+(.+)$/);
+    if (rep) {
+      q.set('shop', rep[1]);
+      try {
+        var reste = new URLSearchParams(String(rep[2]).replace(/^\/+/, ''));
+        reste.forEach(function (v, k) { if (!q.get(k)) q.set(k, v); });
+      } catch (e) {}
+      window.__SHOPFIXEDSEP = true;
+    }
+
     if (q.get('api'))   base  = q.get('api');
     if (q.get('token')) { token = q.get('token'); try { localStorage.setItem('adminToken', token); } catch (e) {}
       // Le jeton ne doit pas rester dans l'URL (historique navigateur, logs

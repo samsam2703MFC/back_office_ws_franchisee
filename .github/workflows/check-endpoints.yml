@@ -237,7 +237,7 @@ jobs:
                 if [ "$HASLL" = "1" ]; then
                   echo "  ⚠ position présente mais SANS source déclarée — vérifier shops.geo_source"
                 else
-                  echo "  ⚠ AUCUNE position servie — le pin retombe sur Bruxelles-centre."
+                  echo "  ⚠ AUCUNE position servie — aucun pin, et un bandeau sur les cartes."
                   W=$(printf '%s' "$MEP" | grep -o '"geoReason":"[^"]*"' | head -1 | sed 's/.*:"//;s/"$//')
                   [ -n "$W" ] && echo "           Cause donnée par le serveur : $W"
                   echo "           Remède : corriger l'adresse, puis POST /franchisee/shop-geocode."
@@ -249,6 +249,63 @@ jobs:
             else echo "  ⚠ adresse absente de /franchisee/me — le pin n'affichera que le nom"; fi
             echo
           fi
+
+          # ── CE QUI S'AFFICHERA « — » ──────────────────────────────────────
+          # La console n'invente plus aucune valeur : une donnée que le serveur
+          # ne sert pas s'affiche « — », et les calculs qui en dépendent ne sont
+          # pas publiés. C'est volontaire — mais il vaut mieux le savoir AVANT
+          # d'ouvrir l'écran que devant une colonne vide. Cette section dit donc
+          # quelles données manquent, et ce que l'écran fera en conséquence.
+          # Lecture seule, et AUCUNE valeur n'est imprimée : seulement
+          # « renseigné » ou « absent ».
+          echo "== Ce que les écrans afficheront « — » =="
+
+          # 1. Coûts (écran Rentabilité). Les quatre sont nécessaires : sans eux
+          #    la cascade de marge cède la place à son explication.
+          PRM=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/params$QS" 2>/dev/null)
+          MANQ=''
+          for K in cost_prep cost_emb cost_charg cost_struct; do
+            if printf '%s' "$PRM" | tr -d ' ' | grep -q "\"cle\":\"$K\""; then :; else MANQ="$MANQ $K"; fi
+          done
+          if [ -z "$MANQ" ]; then
+            echo "  OK       coûts paramétrés — la cascade de marge se calcule"
+          else
+            echo "  ⚠ coûts ABSENTS de ws_param :$MANQ"
+            echo "           ⇒ écran Rentabilité : « Coûts non paramétrés », pas de cascade"
+            echo "           ⇒ marge par point non calculée (elle valait CA − 0 auparavant)"
+          fi
+
+          # 2. Heure de départ par tournée (ws_tour_availability.dep). Le premier
+          #    trajet part de la boutique à cette heure : sans elle, la tournée
+          #    n'a plus d'ETA du tout.
+          TRJ=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/ws-tours$QS" 2>/dev/null)
+          AVJ=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/ws-tour-availability$QS" 2>/dev/null)
+          NOMS=$(printf '%s' "$TRJ" | sed 's/},{/}\n{/g' | grep -o '"name":"[^"]*"' | sed 's/.*:"//;s/"$//' | sort -u)
+          # Une ligne de disponibilité ne compte que si son `dep` est renseigné.
+          AVEC=$(printf '%s' "$AVJ" | sed 's/},{/}\n{/g' | grep '"dep":"[0-9]' | grep -o '"tour":"[^"]*"' | sed 's/.*:"//;s/"$//' | sort -u)
+          SANS=$(comm -23 <(printf '%s\n' "$NOMS" | grep -v '^$') <(printf '%s\n' "$AVEC" | grep -v '^$') 2>/dev/null)
+          if [ -z "$SANS" ]; then
+            echo "  OK       toutes les tournées ont une heure de départ"
+          else
+            echo "  ⚠ tournées SANS heure de départ (ws_tour_availability.dep) :"
+            printf '%s\n' "$SANS" | sed 's/^/             · /'
+            echo "           ⇒ aucune ETA publiée pour elles (08:00 était supposé auparavant)"
+          fi
+
+          # 3. Temps d'accès et de dépôt des sites. Ils entrent dans chaque heure
+          #    d'arrivée : il en manque un et la tournée entière perd ses heures.
+          STJ=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/ws-office-delivery-sites$QS" 2>/dev/null)
+          LIG=$(printf '%s' "$STJ" | sed 's/},{/}\n{/g' | grep -c '"adr"' || true)
+          ACC=$(printf '%s' "$STJ" | sed 's/},{/}\n{/g' | grep -c '"acc":"\?[0-9]' || true)
+          DRP=$(printf '%s' "$STJ" | sed 's/},{/}\n{/g' | grep -c '"drop":"\?[0-9]' || true)
+          if [ "$LIG" -gt 0 ] && [ "$ACC" -ge "$LIG" ] && [ "$DRP" -ge "$LIG" ]; then
+            echo "  OK       les $LIG site(s) ont un temps d'accès et un temps de dépôt"
+          else
+            echo "  ⚠ sites : $ACC/$LIG avec temps d'accès · $DRP/$LIG avec temps de dépôt"
+            echo "           ⇒ heures d'arrivée « — » pour les tournées concernées"
+            echo "             (10 min d'accès et 5 min de dépôt étaient supposés auparavant)"
+          fi
+          echo
 
           # ── OBJETS DE BASE ────────────────────────────────────────────────
           # Une migration enregistrée ne prouve PAS que son objet est encore là.
