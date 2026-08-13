@@ -2660,14 +2660,20 @@
         </sc-if>
 
       </div>
-      <div style="padding:14px 26px 20px;border-top:.5px solid var(--color-border-tertiary);display:flex;gap:10px;align-items:center">
+      <div style="padding:14px 26px 20px;border-top:.5px solid var(--color-border-tertiary);display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <sc-if value="{{ obBlocked }}" hint-placeholder-val="{{ false }}">
+          <div style="width:100%;display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;padding:9px 12px;border-radius:9px;background:color-mix(in oklab,var(--color-collection-border) 12%,var(--color-surface));border:.5px solid color-mix(in oklab,var(--color-collection-border) 35%,transparent)">
+            <span style="font:700 12px var(--font-ui);color:var(--color-collection-border);flex:none">!</span>
+            <div style="font:500 12px/1.45 var(--font-ui);color:var(--color-text)">{{ obBlockedMsg }}</div>
+          </div>
+        </sc-if>
         <button onClick="{{ obClose }}" class="btn-secondary" style="font-size:13px">Annuler</button>
         <sc-if value="{{ obNotFirst }}" hint-placeholder-val="{{ false }}">
           <button onClick="{{ obPrev }}" class="btn-secondary" style="font-size:13px">← Précédent</button>
         </sc-if>
         <div style="flex:1"></div>
         <sc-if value="{{ obNotLast }}" hint-placeholder-val="{{ true }}">
-          <button onClick="{{ obNext }}" class="btn-primary" style="font-size:13px;{{ obNextDisabledStyle }}">Suivant →</button>
+          <button onClick="{{ obNext }}" class="btn-primary" style="font-size:13px;{{ obNextDisabledStyle }}" title="{{ obBlockedMsg }}">Suivant →</button>
         </sc-if>
         <sc-if value="{{ obIsLast }}" hint-placeholder-val="{{ false }}">
           <button onClick="{{ obCreate }}" class="btn-primary" style="font-size:13px;display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9"><path d="M4 12l5 5L20 6"/></svg>Créer le bureau &amp; envoyer</button>
@@ -2813,9 +2819,50 @@ class Component extends DCLogic {
   obSetCp(e){ const v=e.target.value; const locs=this.obLocsOf(v);
     this.setState(s=>({ob:{...s.ob,cp:v,localite:locs.length===1?locs[0]:(locs.indexOf(s.ob.localite)>=0?s.ob.localite:'')}})); }
   obSet(k){ return (e)=>{ const v=(e&&e.target)?e.target.value:e; this.setState(s=>({ob:{...s.ob,[k]:v}})); }; }
-  obNext(){ this.setState(s=>({obStep:Math.min(this.OB_STEPS.length-1,s.obStep+1)})); }
+  obNext(){ this.setState(s=>(
+    this.obManqueA(s.obStep,s.ob) ? {} : {obStep:Math.min(this.OB_STEPS.length-1,s.obStep+1)})); }
   obPrev(){ this.setState(s=>({obStep:Math.max(0,s.obStep-1)})); }
-  obGo(n){ this.setState({obStep:n}); }
+  /* CE QUI MANQUE à l'étape i — UNE seule définition, lue par le rendu (pour
+     afficher le motif) ET par la navigation (pour ne pas sauter l'étape). Deux
+     copies auraient divergé au premier champ ajouté ; ce dépôt a déjà payé ça. */
+  obManqueA(i,O){ switch(i){
+    case 0: return (O.raison&&O.raison.trim()) ? null
+      : 'Renseignez la raison sociale : c’est le nom sous lequel le bureau sera créé, facturé et retrouvé.';
+    case 1:
+      if(!(O.contactEmail&&O.contactEmail.trim()))
+        return 'Renseignez l’e-mail du contact : c’est lui qui recevra le récapitulatif et l’invitation à créer son compte.';
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(O.contactEmail.trim()))
+        return 'L’e-mail du contact semble incomplet (attendu : nom@domaine.be).';
+      return null;
+    case 2:
+      if(!(O.adr&&O.adr.trim()))
+        return 'Renseignez l’adresse du delivery site : c’est le point où la tournée déposera la commande.';
+      // La tournée conditionne la livraison — obCreate la refuse déjà, autant
+      // le dire à l'étape où elle se choisit plutôt qu'au bout du parcours.
+      if(!(O.tour&&String(O.tour).trim()))
+        return 'Choisissez la tournée rattachée : un bureau sans tournée n’est pas livrable.';
+      /* Engagement de livraison. Ces trois valeurs sont ANNONCÉES au bureau
+         dans son courrier de bienvenue : la fenêtre, les jours et la façon
+         dont la livraison est validée. Elles étaient écrites en dur
+         (08:00–11:00 · L Ma Me J V · QR) sans que personne les choisisse. */
+      if(!(O.fenDeb&&String(O.fenDeb).trim())||!(O.fenFin&&String(O.fenFin).trim()))
+        return 'Renseignez la fenêtre de livraison (début et fin) : elle est annoncée au bureau comme un engagement.';
+      if(!(Array.isArray(O.jours)&&O.jours.length))
+        return 'Choisissez au moins un jour desservi : le bureau doit savoir quels jours il est livré.';
+      if(!(O.validation&&String(O.validation).trim()))
+        return 'Choisissez la validation à la livraison : scan QR, signature ou dépôt.';
+      return null;
+    default: return null; } }
+  /* Les pastilles laissaient sauter à N'IMPORTE QUELLE étape, y compris en
+     avant : on pouvait atteindre le récapitulatif sans raison sociale ni
+     adresse, et « Créer » écrivait alors cinq tables avec des trous. Revenir
+     en arrière reste libre ; aller en avant s'arrête à la première étape
+     incomplète, dont le motif s'affiche aussitôt en pied d'assistant. */
+  obGo(n){ this.setState(s=>{
+    if(n<=s.obStep) return {obStep:n};
+    for(let i=s.obStep;i<n;i++) if(this.obManqueA(i,s.ob)) return {obStep:i};
+    return {obStep:n};
+  }); }
   /* Un jour desservi se coche ou se décoche. La liste est ordonnée comme la
      semaine, pas comme l'ordre des clics : « L Ma Me J V » se lit, « V L Me »
      non. */
@@ -6313,11 +6360,13 @@ class Component extends DCLogic {
       lblStyle:'font:'+(i===obStep?'600':'400')+' 10.5px var(--font-ui);color:'+(i===obStep?'var(--color-text)':'var(--color-text-muted)')+';white-space:nowrap'}));
     const obDeptsView=S.obDepts.map((d,i)=>({dept:d.dept,effectif:String(d.effectif),remove:this.obRemoveDept(i)}));
     const obStaffView=S.obStaff.map((st,i)=>({name:st.name,email:st.email,remove:this.obRemoveStaff(i),init:(st.name||st.email).slice(0,2).toUpperCase()}));
-    const obStepValid=(()=>{ switch(obStep){
-      case 0: return !!(O.raison&&O.raison.trim());
-      case 1: return !!(O.contactEmail&&/@/.test(O.contactEmail));
-      case 2: return !!(O.adr&&O.adr.trim());
-      default: return true; } })();
+    /* CE QUI MANQUE POUR AVANCER — dit, pas seulement empêché.
+       « Suivant » était grisé avec pointer-events:none : le bouton ne réagissait
+       pas et rien n'indiquait quel champ bloquait. Sur une étape à six champs,
+       il faut alors les essayer un par un. Chaque étape gardée nomme désormais
+       son champ obligatoire. */
+    const obManque=this.obManqueA(obStep,O);
+    const obStepValid=!obManque;
     const obLast=obStep===this.OB_STEPS.length-1;
     const obToggle=(k)=>()=>this.setState(s=>({ob:{...s.ob,[k]:!s.ob[k]}}));
     const obTog=(on)=>({track:'position:relative;width:40px;height:22px;border-radius:20px;border:none;cursor:pointer;flex:none;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)'),knob:'position:absolute;top:2px;left:'+(on?'20px':'2px')+';width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s'});
@@ -6379,7 +6428,10 @@ class Component extends DCLogic {
       obRecapStaffTxt:S.obStaff.length?(S.obStaff.length+' adresse(s)'):'aucun',
       obRecapZone:obZc.prim+' › '+obZc.sec,
       obNext:()=>this.obNext(), obPrev:()=>this.obPrev(), obClose:()=>this.obClose(), obCreate:()=>this.obCreate(),
-      obStepValid, obNextDisabledStyle:obStepValid?'':'opacity:.4;pointer-events:none',
+      obStepValid, obBlocked:!!obManque, obBlockedMsg:obManque||'',
+      // opacity SEULE : pointer-events:none rendait le bouton totalement inerte,
+      // donc impossible d'y accrocher la moindre explication.
+      obNextDisabledStyle:obStepValid?'':'opacity:.45;cursor:not-allowed',
       obIsFirst:obStep===0, obIsLast:obLast, obNotFirst:obStep>0, obNotLast:!obLast,
     };
 

@@ -405,7 +405,54 @@ jobs:
                 echo "           Remède : ouvrir la console, ou POST /franchisee/shop-geocode."
               elif [ -n "$GEO" ]; then echo "  OK       toutes les boutiques actives ont une position"; fi
 
-              # 5. Migrations présentes sur le disque mais jamais enregistrées.
+              # 5. RATTACHEMENT DES SITES — le entonnoir que vit le client.
+              #    Le webshop propose au client des POINTS de livraison
+              #    (ws_office_delivery_sites). Lier un point n'active la livraison
+              #    que s'il pointe vers une SOCIÉTÉ (office_client_id) validée ET
+              #    rattachée à une tournée : c'est la chaîne que suit
+              #    user_payload(). Un maillon manquant et le client choisit un
+              #    bureau sans effet, puis se voit refuser la livraison.
+              #    Ces compteurs disent COMBIEN de sites sont dans chaque état,
+              #    donc combien il reste à traiter dans Clients B2B › Sites.
+              SC=""; [ -n "$SHOP" ] && SC=" AND sd.shop_id = $SHOP"
+              TOT=$(dbq "SELECT COUNT(*) FROM ws_office_delivery_sites sd
+                          WHERE sd.active = 1$SC")
+              if [ -z "$TOT" ]; then
+                echo "  —        sites de livraison : table absente ou illisible"
+              elif [ "$TOT" = "0" ]; then
+                echo "  —        aucun site de livraison actif pour cette portée"
+              else
+                ORPH_S=$(dbq "SELECT COUNT(*) FROM ws_office_delivery_sites sd
+                               WHERE sd.active = 1$SC
+                                 AND (sd.office_client_id IS NULL OR sd.office_client_id = 0)")
+                PENDING=$(dbq "SELECT COUNT(*) FROM ws_office_delivery_sites sd
+                                 JOIN ws_offices o ON o.id = sd.office_client_id AND o.active = 1
+                                WHERE sd.active = 1$SC AND o.status <> 'validated'")
+                NOTOUR=$(dbq "SELECT COUNT(*) FROM ws_office_delivery_sites sd
+                                JOIN ws_offices o ON o.id = sd.office_client_id AND o.active = 1
+                               WHERE sd.active = 1$SC AND o.status = 'validated'
+                                 AND (o.tour_id IS NULL OR o.tour_id = 0)")
+                OK_S=$(dbq "SELECT COUNT(*) FROM ws_office_delivery_sites sd
+                              JOIN ws_offices o ON o.id = sd.office_client_id AND o.active = 1
+                             WHERE sd.active = 1$SC AND o.status = 'validated'
+                               AND o.tour_id IS NOT NULL AND o.tour_id > 0")
+                echo "  sites de livraison actifs : $TOT"
+                printf '    %-4s livrables (societe validee + tournee)\n' "${OK_S:-0}"
+                if [ "${ORPH_S:-0}" != "0" ]; then
+                  echo "    ⚠ ${ORPH_S} SANS societe rattachee — le client peut les choisir sans effet."
+                  echo "      Remede : Clients B2B › Sites, rattacher chaque site a sa societe."
+                  dbq "SELECT CONCAT('        · ', sd.name) FROM ws_office_delivery_sites sd
+                        WHERE sd.active = 1$SC
+                          AND (sd.office_client_id IS NULL OR sd.office_client_id = 0)
+                        ORDER BY sd.name LIMIT 15"
+                  [ "${ORPH_S:-0}" -gt 15 ] 2>/dev/null && echo "        … et $((ORPH_S - 15)) autre(s)"
+                  dbko=$((dbko+1))
+                fi
+                [ "${PENDING:-0}" != "0" ] && echo "    ⚠ ${PENDING} sur une societe NON VALIDEE — a valider dans Clients B2B › Bureaux."
+                [ "${NOTOUR:-0}"  != "0" ] && echo "    ⚠ ${NOTOUR} sur une societe SANS TOURNEE — a rattacher dans Tournees."
+              fi
+
+              # 6. Migrations présentes sur le disque mais jamais enregistrées.
               if [ -d "$API_DIR/migrations" ]; then
                 PEND=''
                 for f in "$API_DIR"/migrations/*.sql; do
