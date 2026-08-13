@@ -13,6 +13,15 @@ name: Vérifier les endpoints /franchisee/*
 #   200       → la route répond ; avec un jeton, le rapport indique aussi le
 #               nombre de lignes, donc si la table est vide côté base
 #
+# Il contrôle AUSSI l'état réel de la base — triggers, colonnes de migration, et
+# les deux conséquences qui se voient à l'écran (clients sans boutique, boutiques
+# sans position). Motif : une migration enregistrée ne prouve pas que son objet
+# est encore là. Les triggers trg_client_office_delivery_* figuraient dans
+# ws_schema_migrations tout en ayant disparu de la base — un DROP TABLE emporte
+# les triggers, pas les lignes du journal des migrations — et rien ne le disait.
+# Ce contrôle reste en LECTURE SEULE : information_schema et des COUNT(*).
+# Aucun identifiant de connexion n'est imprimé.
+#
 # Lancement : onglet Actions → ce workflow → « Run workflow ».
 #
 # Secrets :  SSH_HOST · SSH_USER · SSH_PASSWORD  (les mêmes que le déploiement)
@@ -31,7 +40,7 @@ on:
   workflow_dispatch:
     inputs:
       shop:
-        description: "Portée boutique (slug ou id, celui de ?shop=… dans l'URL de la console). Laisser vide pour tenter la détection."
+        description: "Portée boutique — ID NUMÉRIQUE (celui de ?shop=… dans l'URL de la console). Laisser vide pour tenter la détection."
         required: false
         type: string
 
@@ -70,19 +79,22 @@ jobs:
             MEC=$(printf '%s' "$ME" | tr -d ' \n')   # compacté : UNIQUEMENT pour les ids numériques
             # Plusieurs formes possibles selon la version du PHP ; on les essaie
             # dans l'ordre du plus explicite au plus permissif.
-            # 1. shop objet avec id · 2. shop_id · 3. shop chaîne (slug — l'API
-            # accepte ?shop=<slug|id>, comme api-config.js) · 4. id de tête.
+            # 1. shop objet avec id · 2. shop_id · 3. id de tête.
+            # PLUS DE SLUG : l'API n'accepte qu'un id numérique en ?shop=. Une
+            # sonde qui résoudrait encore un slug le verrait refusé et rendrait
+            # un rapport « tout vide » sur une base pourtant saine.
             SHOP=$(printf '%s' "$MEC" | grep -o '"shop":{[^}]*}' | grep -o '"id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
             [ -z "$SHOP" ] && SHOP=$(printf '%s' "$MEC" | grep -o '"shop_id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
-            # Le slug se lit sur le payload BRUT : compacter transformerait
-            # « L Atelier BXL » en « LAtelierBXL » et fabriquerait une portée
-            # qui n'existe pas. Le motif exige un slug d'un seul tenant.
-            [ -z "$SHOP" ] && SHOP=$(printf '%s' "$ME" | grep -o '"shop"[[:space:]]*:[[:space:]]*"[A-Za-z0-9_-]\{1,\}"' | head -1 | sed 's/.*"\([A-Za-z0-9_-]\{1,\}\)"$/\1/')
             [ -z "$SHOP" ] && SHOP=$(printf '%s' "$MEC" | grep -o '"id":"\?[0-9]\+' | grep -o '[0-9]\+' | head -1)
-            # Une valeur avec espaces ou accents ne peut pas partir telle quelle
-            # dans une URL : on préfère le dire que de sonder une portée fausse.
-            if [ -n "$SHOP" ] && printf '%s' "$SHOP" | grep -q '[^A-Za-z0-9_-]'; then
-              echo "  portée « $SHOP » non utilisable en URL — posez la variable SHOP_ID"; SHOP=''
+            # Tout ce qui n'est pas un id est écarté : mieux vaut annoncer
+            # l'absence de portée que sonder une portée que l'API refusera.
+            if [ -n "$SHOP" ] && printf '%s' "$SHOP" | grep -qv '^[0-9]\{1,\}$'; then
+              echo "  portée « $SHOP » n'est pas un id numérique — posez la variable SHOP_ID"; SHOP=''
+            fi
+            # Motif fourni par le serveur quand il refuse la portée (shopReason).
+            if [ -z "$SHOP" ]; then
+              WHY=$(printf '%s' "$ME" | grep -o '"shopReason":"[^"]*"' | head -1 | sed 's/^"shopReason":"//;s/"$//')
+              [ -n "$WHY" ] && echo "  /franchisee/me — motif : $WHY"
             fi
             # Diagnostic sans fuite : NOMS de champs, et TYPE du champ shop —
             # jamais sa valeur (le dépôt et ses journaux sont publics).
@@ -134,7 +146,24 @@ jobs:
           # Appelés directement par les écrans, hors hydratation.
           DIRECT="me geo-clients bo-store zone-check client-orders stock-product-orders stock-threshold-info fr-voucher-targets"
 
-          missing=0
+          # ROUTES DÉCLARÉES NON ÉCRITES. bo_server.js les liste dans
+          # ROUTES_A_ECRIRE pour que leur 404 n'alimente pas le bandeau d'erreur
+          # de la console. Le rapport doit suivre la MÊME règle, et lire la même
+          # source : recopier la liste ici, c'est la voir diverger. Leur 404 est
+          # un chantier connu, pas une anomalie — les compter ferait afficher
+          # « Anomalies : 2 » en permanence, et un compteur toujours rouge cesse
+          # d'être lu. Les clés sont des noms de table (fr_renta_evolution) ;
+          # les routes portent des tirets.
+          ATTENDUS=$(curl -s --max-time 12 "http://localhost/webshop/backoffice_franchisee/bo_server.js" 2>/dev/null \
+            | grep -o 'ROUTES_A_ECRIRE[^;]*' | head -1 | grep -o '[A-Za-z_][A-Za-z0-9_]*[[:space:]]*:[[:space:]]*1' \
+            | sed 's/[[:space:]]*:.*//; s/_/-/g' | tr '\n' ' ')
+          if [ -n "$ATTENDUS" ]; then echo "Chantiers déclarés (404 attendu) : $ATTENDUS"
+          else echo "Chantiers déclarés : liste non lue dans bo_server.js — tout 404 sera compté"; fi
+          echo
+
+          missing=0    # 404 IMPRÉVUS
+          known=0      # 404 sur une route déclarée non écrite
+          dbko=0       # objets de base attendus et absents
           probe() {                      # $1 = URL   $2 = libellé
             out=$(curl -s --max-time 12 "${HDR[@]}" -w '\n%{http_code}' "$1" 2>/dev/null)
             code=$(printf '%s' "$out" | tail -n1)
@@ -148,7 +177,11 @@ jobs:
                   n=$(printf '%s' "$payload" | grep -o '}[[:space:]]*,[[:space:]]*{' | wc -l | tr -d ' ')
                   note="$((n+1)) ligne(s)"
                 else note='objet'; fi ;;
-              404)     note='ROUTE ABSENTE'; missing=$((missing+1)) ;;
+              404)
+                case " $ATTENDUS " in
+                  *" $2 "*) note='chantier déclaré'; known=$((known+1)) ;;
+                  *)        note='ROUTE ABSENTE';    missing=$((missing+1)) ;;
+                esac ;;
               401|403) note='auth requise' ;;
               000)     note='pas de réponse' ;;
               *)       note='—' ;;
@@ -181,8 +214,146 @@ jobs:
           echo "  en-têtes de cache :"
           curl -sI --max-time 15 "$PAGE" | grep -i '^\(cache-control\|etag\|last-modified\|expires\)' | sed 's/^/    /'
           echo
-          echo "Routes absentes : $missing"
-          echo "404 = route à écrire côté PHP · 401/403 = route en place."
+
+          # ── POSITION DE LA BOUTIQUE SONDÉE ────────────────────────────────
+          # Le pin de « Livraison du jour » et de « Tournées » se déduit
+          # entièrement de trois champs de /franchisee/me : lat, lng, geoSource.
+          # Tous les tracés partent de ce point et les ETA en découlent, donc
+          # une position approximative n'est pas un détail d'affichage. On dit
+          # ici CE QUE LA CONSOLE AFFICHERA, sans imprimer les coordonnées ni
+          # l'adresse : le dépôt et ses journaux sont publics.
+          if [ -n "$SHOP" ]; then
+            echo "== Position de la boutique $SHOP (ce que le pin affichera) =="
+            MEP=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/me$QS" 2>/dev/null)
+            SRC=$(printf '%s' "$MEP" | grep -o '"geoSource":"[^"]*"' | head -1 | sed 's/.*:"//;s/"$//')
+            HASLL=$(printf '%s' "$MEP" | tr -d ' \n' | grep -c '"lat":[0-9-]')
+            case "$SRC" in
+              address|manual)
+                echo "  OK       position EXACTE (geoSource=$SRC) — pin sur l'adresse, aucun bandeau" ;;
+              zip)
+                echo "  ⚠ APPROX position = centre du code postal (geoSource=zip) — le pin et les"
+                echo "           tracés sont décalés, la console affiche l'avertissement." ;;
+              failed|'')
+                if [ "$HASLL" = "1" ]; then
+                  echo "  ⚠ position présente mais SANS source déclarée — vérifier shops.geo_source"
+                else
+                  echo "  ⚠ AUCUNE position servie — le pin retombe sur Bruxelles-centre."
+                  W=$(printf '%s' "$MEP" | grep -o '"geoReason":"[^"]*"' | head -1 | sed 's/.*:"//;s/"$//')
+                  [ -n "$W" ] && echo "           Cause donnée par le serveur : $W"
+                  echo "           Remède : corriger l'adresse, puis POST /franchisee/shop-geocode."
+                fi ;;
+              *) echo "  geoSource inattendu : $SRC" ;;
+            esac
+            # L'adresse doit être servie : le pin l'affiche sous le nom.
+            if printf '%s' "$MEP" | grep -q '"address":"[^"]'; then echo "  OK       adresse servie au pin"
+            else echo "  ⚠ adresse absente de /franchisee/me — le pin n'affichera que le nom"; fi
+            echo
+          fi
+
+          # ── OBJETS DE BASE ────────────────────────────────────────────────
+          # Une migration enregistrée ne prouve PAS que son objet est encore là.
+          # Les triggers trg_client_office_delivery_ai/_au (0019/0021/0023) sont
+          # enregistrés comme appliqués et ABSENTS de la base : quelque chose les
+          # a effacés après coup — reconstruction de table, restauration, ou
+          # changement de base. Un DROP TABLE emporte les triggers, pas les
+          # lignes de ws_schema_migrations, et rien ne le signalait.
+          # Ce qui les a effacés effacera les suivants. On regarde donc l'ÉTAT
+          # RÉEL, pas le journal des migrations. Lecture seule : information_schema
+          # et deux COUNT(*). Aucun identifiant n'est imprimé.
+          echo "== Objets de base attendus (lecture seule) =="
+          API_DIR=""
+          for d in "/var/www/html${API_BASE}" /var/www/html/webshop/api /var/www/webshop/api; do
+            [ -f "$d/config.php" ] && { API_DIR="$d"; break; }
+          done
+          if [ -z "$API_DIR" ]; then
+            echo "  config.php introuvable — contrôle base ignoré (les endpoints ci-dessus restent valables)"
+          elif ! command -v mysql >/dev/null 2>&1; then
+            echo "  client mysql absent du serveur — contrôle base ignoré"
+          else
+            # Mêmes identifiants que l'API et que migrate.sh : aucun secret
+            # supplémentaire, et le mot de passe passe par MYSQL_PWD (jamais
+            # sur la ligne de commande, donc invisible dans les processus).
+            eval "$(php -r '
+              $c = require $argv[1]; $d = $c["db"];
+              foreach (["DBH"=>"host","DBP"=>"port","DBN"=>"name","DBU"=>"user","DBW"=>"pass"] as $k=>$kk)
+                printf("%s=%s\n", $k, escapeshellarg((string)$d[$kk]));
+            ' "$API_DIR/config.php" 2>/dev/null)"
+            export MYSQL_PWD="${DBW:-}"
+            dbq() { mysql --host="${DBH:-localhost}" --port="${DBP:-3306}" --user="${DBU:-}" "${DBN:-}" -N -s -e "$1" 2>/dev/null; }
+
+            if [ -z "$(dbq 'SELECT 1')" ]; then
+              echo "  connexion base impossible avec les identifiants de l'API — contrôle ignoré"
+            else
+              # 1. Triggers RÉELLEMENT présents sur `client`.
+              TRG=$(dbq "SELECT TRIGGER_NAME FROM information_schema.triggers
+                          WHERE EVENT_OBJECT_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = 'client'" | tr '\n' ' ')
+              echo "  triggers sur client : ${TRG:-aucun}"
+              # ATTENDU : uniquement celui de la migration 0061. Les triggers
+              # office_delivery ne sont PAS attendus — le PHP crée désormais le
+              # bureau lui-même sur les quatre routes concernées. Les réclamer
+              # ici produirait une alerte permanente, et une alerte permanente
+              # n'est plus lue.
+              case " $TRG " in
+                *" trg_client_preferred_shop_bi "*)
+                  echo "  OK       trg_client_preferred_shop_bi (0061) en place" ;;
+                *)
+                  echo "  ⚠ ABSENT trg_client_preferred_shop_bi — la migration 0061 est enregistrée mais son"
+                  echo "           trigger a disparu : la table client a été reconstruite ou restaurée."
+                  echo "           Remède : rejouer son bloc CREATE TRIGGER (0061 ne se rejouera pas seule)."
+                  dbko=$((dbko+1)) ;;
+              esac
+
+              # 2. Colonnes posées par les migrations, vérifiées sur le schéma.
+              for cc in "shops:lat:0060" "shops:lng:0060" "client:preferred_shop_id:—" "shops:geo_source:0060"; do
+                t=${cc%%:*}; rest=${cc#*:}; c=${rest%%:*}; mig=${rest#*:}
+                n=$(dbq "SELECT COUNT(*) FROM information_schema.columns
+                          WHERE table_schema = DATABASE() AND table_name = '$t' AND column_name = '$c'")
+                if [ "${n:-0}" = "1" ]; then printf '  OK       %s.%s\n' "$t" "$c"
+                else printf '  ⚠ ABSENT %s.%s (migration %s non appliquée sur CETTE base)\n' "$t" "$c" "$mig"
+                     dbko=$((dbko+1)); fi
+              done
+
+              # 3. La conséquence VISIBLE, pas seulement la structure : un client
+              #    sans preferred_shop_id n'apparaît dans aucune console et n'est
+              #    plus modifiable. C'est la sentinelle qui compte.
+              ORPH=$(dbq "SELECT COUNT(*) FROM client
+                           WHERE active = 1 AND preferred_shop_id IS NULL")
+              if [ -z "$ORPH" ]; then echo "  —        clients sans boutique : non mesurable (colonne absente)"
+              elif [ "$ORPH" = "0" ]; then echo "  OK       clients actifs sans boutique : 0"
+              else echo "  ⚠ $ORPH client(s) actif(s) sans preferred_shop_id — invisibles dans toutes les consoles."
+                   echo "           Remède : rejouer le bloc UPDATE de la migration 0061."
+                   dbko=$((dbko+1)); fi
+
+              # 4. Boutiques sans position : les tournées partent de ce point.
+              GEO=$(dbq "SELECT COUNT(*) FROM shops WHERE active = 1 AND (lat IS NULL OR lng IS NULL)")
+              if [ -n "$GEO" ] && [ "$GEO" != "0" ]; then
+                echo "  ⚠ $GEO boutique(s) active(s) sans position — le pin et les tracés retombent sur un repli."
+                echo "           Remède : ouvrir la console, ou POST /franchisee/shop-geocode."
+              elif [ -n "$GEO" ]; then echo "  OK       toutes les boutiques actives ont une position"; fi
+
+              # 5. Migrations présentes sur le disque mais jamais enregistrées.
+              if [ -d "$API_DIR/migrations" ]; then
+                PEND=''
+                for f in "$API_DIR"/migrations/*.sql; do
+                  [ -e "$f" ] || continue
+                  v=$(basename "$f")
+                  [ -z "$(dbq "SELECT 1 FROM ws_schema_migrations WHERE version = '$v' LIMIT 1")" ] && PEND="$PEND $v"
+                done
+                if [ -n "$PEND" ]; then echo "  ⚠ migrations non appliquées :$PEND"; dbko=$((dbko+1))
+                else echo "  OK       toutes les migrations du serveur sont enregistrées"; fi
+              fi
+            fi
+            unset MYSQL_PWD DBW
+          fi
+          echo
+
+          # Un compteur qui inclurait les chantiers déclarés serait toujours
+          # rouge, donc ignoré. Seul l'IMPRÉVU compte comme anomalie.
+          echo "Anomalies : $((missing + dbko))   (routes absentes imprévues : $missing · objets de base manquants : $dbko)"
+          [ "$known" -gt 0 ] && echo "Chantiers déclarés rencontrés : $known — 404 attendu, non compté."
+          echo "401/403 = route en place, jeton requis."
+          echo "⚠ base = objet attendu absent : la migration est enregistrée mais son effet a disparu."
+          exit 0
           PROBE
 
       - name: Interroger les endpoints depuis le serveur
