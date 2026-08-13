@@ -35,7 +35,7 @@ des **restes**, pas un état général.
 
 ## 1. Constats — par gravité
 
-### 1.1 🔴 Le total affiché au client n'est pas celui qui est facturé
+### 1.1 ✅ CORRIGÉ (13/08) — Le total affiché au client n'est pas celui qui est facturé
 
 `webshop-full-bundle.jsx:3601`
 
@@ -61,13 +61,14 @@ L'écart est en faveur du client, ce qui le rend silencieux : personne ne le
 signalera. Et l'affiche d'invitation, elle, **annonce** cette remise
 (« Remise négociée 7 % »).
 
-**Correctif** : afficher le total renvoyé par le serveur
-(`onPlaced({ ...result, total: result.total ?? total })`) et rendre la remise
-boutique visible comme ligne de panier, alimentée par `/shops`
-(`webshop_discount_type` / `webshop_discount_value`, déjà servis —
-`php-api/index.php:344`).
+**Corrigé** (webshop `01125bb`) : une seule addition, `wsTotaux()`, miroir
+littéral de celle du serveur — lue par le panier ET par le tunnel (qui, lui,
+oubliait aussi l'offre croisée : le total remontait au passage au paiement). La
+remise boutique s'affiche comme une ligne, et la confirmation montre le total
+renvoyé par le serveur. `php-api/tests/totaux_test.cjs` fait tourner les deux
+calculs l'un contre l'autre sur 400 paniers tirés au sort : 400/400 au centime.
 
-### 1.2 🔴 La valeur d'un quart offert est une constante, pas un prix
+### 1.2 ✅ CORRIGÉ (13/08) — La valeur d'un quart offert est une constante, pas un prix
 
 `webshop-full-bundle.jsx:426` et `:1289`
 
@@ -83,8 +84,12 @@ valorise les unités offertes au prix réel de la ligne
 **Conséquence** — pour tout produit dont le quart n'est pas à 27 % du prix
 entier, l'économie annoncée au panier diffère de la remise facturée.
 
-**Correctif** : valoriser l'offert avec le prix de portion renvoyé par
-`WSCatalog` (`portions[].price`), déjà présent dans la réponse.
+**Corrigé** (webshop `01125bb`) : `computeCrossPortionOffer()` est devenu le
+miroir du serveur — une entrée par PIÈCE, valorisée au prix réel de la ligne,
+`floor(nb / x) × y` offerts sous réserve du seuil, les moins chers d'abord. Le
+`× 0.27` a disparu du chemin de l'argent. Il subsiste dans `computeOffer()`
+(offres par produit), qui n'est atteint par aucune donnée : l'API ne renvoie
+pas de champ `offer` — code dormant, à supprimer avec 1.5.
 
 ### 1.3 🟠 La conversion portion → unités est un global assumé
 
@@ -350,9 +355,9 @@ précisément le flux où le constat **1.1** se manifeste.
 
 ## 3. Ordre de traitement proposé
 
-1. **1.1** — total affiché ≠ facturé (argent, visible du client).
+1. ~~**1.1** — total affiché ≠ facturé~~ ✅ fait le 13/08.
 2. **1.4** — contacts e-mail qui disparaissent (perte de saisie).
-3. **1.2 / 1.3** — valorisation des portions (aperçu ≠ facture).
+3. ~~**1.2**~~ ✅ fait ; **1.3** — unités de portion, toujours un global.
 4. **1.6** — minutes inventées dans les ETA.
 5. **1.5 / 1.8** — codes morts (bon local, `scopeOpts`).
 6. **1.7 / 1.9** — configuration locale et `[]` ambigus.
