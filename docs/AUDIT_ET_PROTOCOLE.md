@@ -130,16 +130,20 @@ corps et n'allait dans aucune table) pendant que le journal annonçait
 « N demande(s) d'adhésion ». Il entre désormais dans la même table avec le rôle
 « Personnel » et reçoit le lien d'invitation quand la case est cochée.
 
-### 1.5 🟠 Bons : une écriture fantôme subsiste dans le wizard
+### 1.5 ✅ CORRIGÉ (13/08) — Bons : une écriture fantôme subsistait dans le wizard
 
-- `index.html:3074-3077` — le wizard pousse le bon dans `ws_vouchers_local`
-  (overlay), **alors que** le serveur crée déjà le vrai bon
-  (`INSERT INTO ws_vouchers` dans `/franchisee/onboard-office`) ;
-- lecture : `php-api/index.php:5921-5924` — reconstruite depuis `ws_vouchers`.
-  La copie locale est donc un fantôme qui disparaît au rechargement.
-- `index.html:3417` — le formulaire « Bon local » écrit lui aussi dans
-  l'overlay ; il n'est plus atteignable (aucun `openForm('voucher')`), l'écran
-  Bons passant par `POST /franchisee/voucher`. **Code mort à supprimer.**
+Deux restes, supprimés tous les deux :
+
+- le wizard poussait le bon dans `ws_vouchers_local` (overlay) **alors que** le
+  serveur crée déjà le vrai bon (`INSERT INTO ws_vouchers` dans
+  `/franchisee/onboard-office`). La copie s'affichait à côté du vrai jusqu'au
+  rechargement, puis disparaissait — un doublon, jamais une donnée ;
+- le formulaire « Bon local » écrivait lui aussi dans l'overlay, avec quatre
+  champs de texte libre, et n'était plus ouvert par aucun écran. **Supprimé.**
+
+Les bons se créent par l'écran Bons, qui poste sur `/franchisee/voucher` et
+atteint `ws_vouchers`. La fiche de provenance de l'écran, qui décrivait encore
+le formulaire disparu, a été corrigée.
 
 ### 1.6 ✅ CORRIGÉ (13/08) — Des minutes d'exploitation inventées entrent dans les ETA
 
@@ -436,14 +440,28 @@ précisément le flux où le constat **1.1** se manifeste.
 
 ---
 
-## 3. Ordre de traitement proposé
+## 3. Où en est l'audit
 
-1. ~~**1.1** — total affiché ≠ facturé~~ ✅ fait le 13/08.
-2. ~~**1.4** — contacts e-mail qui disparaissent~~ ✅ fait le 13/08.
-3. ~~**1.2**~~ ✅ fait ; **1.3** — unités de portion, toujours un global.
-4. ~~**1.6** — minutes inventées dans les ETA~~ ✅ fait le 13/08.
-5. **1.5 / 1.8** — codes morts (bon local, `scopeOpts`).
-6. **1.7 / 1.9** — configuration locale et `[]` ambigus.
+**Traité le 13/08** — 1.1, 1.2, 1.4, 1.5, 1.6, 1.11 (les sept écrans de
+l'overlay). Chaque correction est éprouvée contre une base réelle, et la sonde
+`check-endpoints` vérifie sur le serveur les structures dont elles dépendent.
 
-Les points **1.1**, **1.2**, **1.3** appartiennent au dépôt `webshop` ; **1.8**
-à la console marque — à porter à la session concernée.
+**Reste ouvert :**
+
+| # | Constat | Dépôt | Pourquoi ce n'est pas fait |
+| --- | --- | --- | --- |
+| 1.3 | `PORTION_UNITS` est un global (`quart:1, demi:2, entier:4`) alors que la règle dépend du produit | `webshop` | Demande d'exposer `portionUnits` par produit dans `/catalog/products` — une décision de modèle, pas un correctif |
+| 1.7 | Valeurs de configuration affichées mais absentes de la base | `webshop` + console | À trancher écran par écran : masquer, ou aller chercher la vraie source |
+| 1.8 | Un reste de démonstration (`scopeOpts`) dans la console marque | `back_office_ws_franchisor` | **Autre session** — à porter, cette session ne modifie pas ce dépôt |
+| 1.9 | Trente routes rendent `[]` quand la table manque | `webshop` | Un `[]` doit dire « table vide » ou « table absente », pas les deux |
+
+**Couverture — ce que l'audit n'a PAS balayé.** Le travail a porté en
+profondeur sur les chemins d'ÉCRITURE de la console franchisé et sur
+l'arithmétique du webshop (1.1, 1.2). N'ont pas été audités au même niveau :
+
+- le **webshop** hors tunnel de commande (catalogue, comptes, avis) ;
+- la **console marque**, vérifiée seulement sur la question de l'overlay
+  (constat 1.12) — pas sur l'exactitude de ses écrans ;
+- l'**exactitude des calculs** en général : un écran correctement câblé peut
+  calculer faux. L'audit dit d'où vient la donnée, pas si le résultat est juste.
+
