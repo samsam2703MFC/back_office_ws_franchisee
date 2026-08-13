@@ -255,6 +255,14 @@
               if (!(r.status === 404 && ROUTES_A_ECRIRE[key])) failed.push(key + ' (HTTP ' + r.status + ')');
               DB[key] = []; return null;
             }
+            /* TABLE ABSENTE ≠ TABLE VIDE. Les deux rendaient `[]`, donc une
+               migration oubliée ressemblait exactement à une base vide, et
+               l'écran ne pouvait pas le dire. Le serveur nomme désormais les
+               tables manquantes dans X-Tables-Absentes ; on le remonte au
+               bandeau d'erreur, seul endroit où quelqu'un le lira. */
+            var abs = r.headers.get('X-Tables-Absentes');
+            if (abs) noteError('chargement', 'Table absente en base : ' + abs +
+              ' (écran « ' + key + ' » vide pour cette raison, pas parce qu’il n’y a rien)');
             return r.json().then(function(data){
               // La réponse API fait foi, MÊME VIDE (sauf configs d'écran) :
               // aucune donnée locale/périmée ne se substitue à la base.
