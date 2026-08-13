@@ -3284,6 +3284,10 @@ class Component extends DCLogic {
     const bureaux=[...new Set(bureauxReal)];
     // Buildings (sites) existants : adresses distinctes de ws_office_delivery_sites.
     const buildings=[...new Set((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(s=>s.adr||s.address).filter(v=>v&&v!=='—'))];
+    /* NOMS des sites — c'est par le nom que le serveur résout une cible de
+       règle de frais (ws_office_delivery_sites.name). L'adresse ne lui sert
+       pas : deux sites peuvent la partager. */
+    const sitesNoms=[...new Set((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(s=>s.name).filter(v=>v&&v!=='—'))];
     const cats=['Pâtisserie fraîche','Boulangerie','Traiteur / plats','Chocolaterie','Glaces & surgelés','Épicerie fine'];
     const sel=(a)=>a.map(x=>({value:x,label:x}));
     const catchmentSel=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]).map(c=>({value:c.name,label:c.name}));
@@ -3304,13 +3308,30 @@ class Component extends DCLogic {
           {k:'type',label:'Motif',type:'select',options:sel(['Férié','Congé','Technique']),def:'Férié'},
           {k:'motif',label:'Détail',type:'text',ph:'motif de la fermeture'},
         ]},
-      fee:{ title:'Nouvelle règle de frais', table:'ws_delivery_fee_rules', tbl:'ws_delivery_fee_rules', save:'Créer la règle',
+      /* RÈGLE DE FRAIS — c'est de l'argent, donc plus un seul champ libre.
+         Les montants étaient saisis en texte (« ex. 150 € ou — ») et partaient
+         dans l'overlay ws_bo_store : la console affichait le nouveau franco
+         pendant que le checkout facturait l'ancien, lu dans la vraie table.
+         Montants en nombres, cible choisie dans une liste, « offert » et
+         « toujours facturé » en bascules — le serveur revalide tout. */
+      fee:{ title:'Règle de frais de livraison', table:'ws_delivery_fee_rules', save:'Enregistrer la règle',
         fields:[
-          {k:'niveau',label:'Niveau (cascade)',type:'select',options:sel(['Site','Bureau','Tournée','Boutique']),def:'Bureau'},
-          {k:'cible',label:'Cible',type:'text',ph:'nom du bureau client'},
-          {k:'franco',label:'Franco de port (seuil)',type:'text',ph:'ex. 150 € ou —'},
-          {k:'montant',label:'Montant des frais',type:'text',ph:'ex. 6,50 €'},
-          {k:'paiement',label:'Paiement',type:'select',options:sel(['Comptant','Différé','Facturé au bureau','Selon bureau']),def:'Selon bureau'},
+          {k:'niveau',label:'Niveau (cascade)',type:'select',options:sel(['Site','Bureau','Tournée','Boutique']),def:'Bureau',
+           info:'La règle la plus précise gagne : Site, puis Bureau, puis Tournée, puis Boutique. C’est l’ordre qu’applique le checkout.'},
+          {k:'cible',label:'Cible',type:'select',options:[{value:'',label:'— choisir —'},
+             ...sitesNoms.map(x=>({value:x,label:'Site · '+x})),
+             ...bureaux.map(x=>({value:x,label:'Bureau · '+x})),
+             ...tours.map(x=>({value:x,label:'Tournée · '+x}))],
+           info:'Inutile au niveau « Boutique » : la règle s’applique alors à toutes les livraisons.'},
+          {k:'offert',label:'Livraison offerte',type:'toggle',def:'Non',
+           options:[{value:'Oui',label:'Oui'},{value:'Non',label:'Non'}]},
+          {k:'montant',label:'Montant des frais (€)',type:'number',ph:'ex. 6.50',half:true},
+          {k:'franco',label:'Franco de port — seuil (€)',type:'number',ph:'0 = pas de franco',half:true,
+           info:'Au-delà de ce montant de commande, la livraison est offerte. 0 = aucun franco.'},
+          {k:'toujours',label:'Frais toujours facturés',type:'toggle',def:'Non',
+           options:[{value:'Oui',label:'Oui'},{value:'Non',label:'Non'}],
+           info:'Oui = les frais s’appliquent même au-delà du franco.'},
+          {k:'paiement',label:'Paiement',type:'select',options:sel(['Selon bureau','Comptant','Différé','Facturé au bureau']),def:'Selon bureau'},
         ]},
       coutVersion:{ title:'Nouvelle version de coûts', table:'ws_cost_versions', save:'Publier la version',
         fields:[
@@ -3537,6 +3558,11 @@ class Component extends DCLogic {
        ws_bo_store — une table que le checkout ne lit pas. La console affichait
        le cut-off saisi, le webshop appliquait celui de la tournée. */
     if(S.formKey==='bureauParam'){ this.setState({formKey:null}); this.bpWrite(v); return; }
+    // Règle de frais : une ligne, une route. C'est de l'argent (voir feeWrite).
+    if(S.formKey==='fee'){ this.setState({formKey:null});
+      this.feeWrite({id:(S.formRow&&S.formRow.id)||0,niveau:v.niveau,cible:v.cible,
+        offert:v.offert==='Oui',toujours:v.toujours==='Oui',montant:v.montant,franco:v.franco,
+        paiement:v.paiement==='Selon bureau'?'':v.paiement}); return; }
     if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl); if(S.formEdit && S.formIndex!=null && rows[S.formIndex]){ rows[S.formIndex]={...rows[S.formIndex],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
     // Choix « garder le siège » (client B2B) : l'adresse encodée devient un
     // LIEU DE LIVRAISON (ws_offices, statut pending) rattaché à la société.
@@ -3636,6 +3662,32 @@ class Component extends DCLogic {
     fetch(fr.base+'/franchisee/ws-office-emails'+qs,{headers:FRH(),credentials:'omit'})
       .then(r=>r.ok?r.json():null)
       .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('ws_office_emails',a);
+        this.setState(s=>({_rev:(s._rev||0)+1})); })
+      .catch(()=>{});
+  }
+  /* RÈGLE DE FRAIS DE LIVRAISON — écriture d'UNE ligne.
+     Avant, cet écran passait par BOServer.save, donc par l'overlay
+     ws_bo_store : la console affichait le franco saisi pendant que le checkout
+     facturait celui de la table. Un écart en euros sur chaque commande, que
+     rien ne pouvait révéler sans comparer un écran et une facture.
+     Le serveur revalide les montants et RÉSOUT la cible dans la boutique. */
+  feeWrite(v){ const fr=window.__FR||{};
+    if(!fr.base){ this.printJob('⚠ Règle non enregistrée — API non configurée'); return; }
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/delivery-fee-rule'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
+      credentials:'omit',body:JSON.stringify(v)})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.printJob(v.delete?'✔ Règle de frais supprimée'
+            :('✔ Règle enregistrée — '+(v.niveau||'')+(v.cible?(' · '+v.cible):'')));
+          this.feeRefresh(); }
+        else this.printJob('⚠ Règle non enregistrée — '+((j&&j.error)||'refus du serveur')); })
+      .catch(e=>this.printJob('⚠ Règle non enregistrée — '+((e&&e.message)||'réseau indisponible')));
+  }
+  feeRefresh(){ const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/ws-delivery-fee-rules'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null)
+      .then(a=>{ if(Array.isArray(a)&&window.BOServer) window.BOServer.refresh('ws_delivery_fee_rules',a);
         this.setState(s=>({_rev:(s._rev||0)+1})); })
       .catch(()=>{});
   }
@@ -6219,7 +6271,7 @@ class Component extends DCLogic {
         options:(f.options||[]), inputStyle:inputBase };
     }):[];
 
-    const feeRules=SRV('ws_delivery_fee_rules').map((r,i)=>{ const bg={Site:'#fbe9eb',Bureau:'#fff4e5','Tournée':'var(--color-background-secondary)',Boutique:'#eef3fb'}[r.niveau]; const c={Site:'var(--color-primary)',Bureau:'#b26a00','Tournée':'var(--color-text-muted)',Boutique:'#2a5a9e'}[r.niveau]; return {...r,rank:String(i+1),edit:this.editForm('fee',r,i),del:this.deleteRow('ws_delivery_fee_rules',i),pill:'display:inline-flex;align-items:center;justify-self:start;width:fit-content;font:600 11px var(--font-ui);border-radius:5px;padding:1px 7px;background:'+bg+';color:'+c}; });
+    const feeRules=SRV('ws_delivery_fee_rules').map((r,i)=>{ const bg={Site:'#fbe9eb',Bureau:'#fff4e5','Tournée':'var(--color-background-secondary)',Boutique:'#eef3fb'}[r.niveau]; const c={Site:'var(--color-primary)',Bureau:'#b26a00','Tournée':'var(--color-text-muted)',Boutique:'#2a5a9e'}[r.niveau]; return {...r,rank:String(i+1),edit:this.editForm('fee',{...r,offert:r.vOffert?'Oui':'Non',toujours:r.vToujours?'Oui':'Non',montant:r.vMontant,franco:r.vFranco,paiement:r.paiement&&r.paiement!=='\u2014'?r.paiement:'Selon bureau'},i),del:(()=>this.feeWrite({delete:true,id:r.id})),pill:'display:inline-flex;align-items:center;justify-self:start;width:fit-content;font:600 11px var(--font-ui);border-radius:5px;padding:1px 7px;background:'+bg+';color:'+c}; });
 
     // ===== nouveaux écrans opérationnels & paramétrage =====
     const modePill=(m)=>pill2(m==='Livraison'?'var(--color-background-secondary)':'#eef3fb',m==='Livraison'?'var(--color-primary)':'#2a5a9e');
