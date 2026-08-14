@@ -3525,7 +3525,11 @@ class Component extends DCLogic {
   // Office : la tournée choisie impose cut-off + jours autorisés (ws_tour_availability).
   officeAutofill(v){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v.tour); if(av){ v.delivery_cutoff=av.cut||''; v.allowed_days=av.jour||''; } return v; }
   openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure(); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
-  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure(); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
+  /* formRow porte AUSSI le contexte ici : les renvois (« Modifier la fiche du
+     bureau ») et les écritures (bpWrite lit officeId) le lisent. Sans lui, un
+     formulaire ouvert par ce chemin gardait le formRow PÉRIMÉ du formulaire
+     précédent — renvoi vers « » et « bureau inconnu » à l'enregistrement. */
+  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure(); this.setState({formKey:key,formVals:v,formRow:(extra||null),formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   editForm(key,vals,idx){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(vals&&vals[f.k]!==undefined&&vals[f.k]!=='')?vals[f.k]:(f.def!==undefined?f.def:''); });
     // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
     if(key==='office'){ v.status='pending'; this.officeAutofill(v); }
@@ -3800,7 +3804,12 @@ class Component extends DCLogic {
      ne s'appliquait jamais.
      Heure vide = le bureau REVIENT à l'horaire de sa tournée. */
   bpWrite(v){ const fr=window.__FR||{};
-    const oid=v.officeId!=null?v.officeId:(this.state.formRow&&this.state.formRow.officeId);
+    let oid=v.officeId!=null?v.officeId:(this.state.formRow&&this.state.formRow.officeId);
+    // Dernier recours : retrouver l'office par son NOM exact — le formulaire
+    // affiche ce nom, autant s'en servir plutôt que d'échouer.
+    if(oid==null){ const nm2=String(v.bureau||'').trim().toLowerCase();
+      const hit=nm2?(window.BOServer?window.BOServer.table('ws_offices'):[]).find(o=>String(o.name||'').trim().toLowerCase()===nm2):null;
+      if(hit&&hit.id!=null) oid=hit.id; }
     if(oid==null){ this.printJob('⚠ Paramètres non enregistrés — bureau inconnu'); return; }
     if(!fr.base){ this.printJob('⚠ Paramètres non enregistrés — API non configurée'); return; }
     const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
@@ -6150,7 +6159,9 @@ class Component extends DCLogic {
         statusLabel:validated?'Validé':'En attente',
         statusStyle:pill2(validated?'#eaf5ec':'#fff4e5',validated?'#2d7a3e':'#b26a00'),
         billLabel:(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui')?'Facturation différée':'Paiement immédiat',
-        gear:this.openFormWith('bureauParam',{bureau:o.name}),
+        // officeId : bpWrite en a besoin pour écrire — sans lui, chaque
+        // enregistrement des règles échouait en « bureau inconnu ».
+        gear:this.openFormWith('bureauParam',{bureau:o.name,officeId:(o.id!=null?o.id:null)}),
         invite:()=>this.invOpen(o),
         edit:this.editForm('office',{...o,...obx},i), del:this.deleteRow('ws_offices',i,'l\'office « '+o.name+' »') };
     });
@@ -6623,8 +6634,11 @@ class Component extends DCLogic {
               if(i2<0){ this.printJob('⚠ Aucune fiche client « '+nm+' » dans fr_clients — elle naît à l’onboarding'); return; }
               this.editForm('clientEdit',{...cls[i2]},i2)();
             } else if(f.lien==='bureauParam'){
-              this.openFormWith('bureauParam',{bureau:nm})();
-            } else this.openOfficeByName(row.bureau||''); },60); }):null,
+              this.openFormWith('bureauParam',{bureau:nm,officeId:(row.id!=null?row.id:(row.officeId!=null?row.officeId:null))})();
+            } else {
+              if(!nm){ this.printJob('⚠ Aucun bureau en contexte — ouvrez la fiche depuis Clients B2B › Offices'); return; }
+              this.openOfficeByName(nm);
+            } },60); }):null,
         toggleOpts, hasVies:!!f.vies, viesCheck, viesMsg:S.viesMsg||'',
         viesStyle:'font:500 12px var(--font-ui);color:'+(S.viesOk===true?'#2d7a3e':(S.viesOk===false?'var(--color-primary)':'var(--color-text-muted)')),
         wrapStyle:(f.half?'min-width:0':'grid-column:1/-1;min-width:0'),
