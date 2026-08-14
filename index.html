@@ -1849,8 +1849,8 @@
         <sc-if value="{{ assortTabAssort }}" hint-placeholder-val="{{ true }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:12px"><div class="t-section-title" style="font-size:15px">Assortiment par boutique</div><button onClick="{{ asrToggleAll }}" style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-text);font:500 12px var(--font-ui);cursor:pointer;padding:8px 15px;flex:none">{{ asrToggleAllLabel }}</button></div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">ws_product_shops — activer/désactiver <strong>catégories</strong> et <strong>produits</strong> · les éléments <strong>marque obligatoire</strong> sont verrouillés · seuls les actifs sont repris dans le Stock du jour · <strong>clic sur une catégorie</strong> = déplier/replier ses produits</div>
-          <div style="display:grid;grid-template-columns:2.4fr 1.2fr .7fr;padding:8px 6px 8px 22px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Catégorie / produit</span><span class="t-admin-label">État</span><span class="t-admin-label" style="text-align:center">Actif</span></div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Déclarez ce que votre boutique <strong>produit</strong>. L’<strong>accès au catalogue</strong> est décidé par la marque, pour tout le réseau : un produit qu’elle retire n’est pas réactivable ici. Les éléments <strong>marque obligatoire</strong> sont verrouillés · seuls les produits fabriqués sont repris dans le Stock du jour · <strong>clic sur une catégorie</strong> = déplier/replier ses produits</div>
+          <div style="display:grid;grid-template-columns:2.4fr 1.2fr .7fr;padding:8px 6px 8px 22px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Catégorie / produit</span><span class="t-admin-label">État</span><span class="t-admin-label" style="text-align:center">Je produis</span></div>
           <sc-for list="{{ assortRows }}" as="a" hint-placeholder-count="8">
             <sc-if value="{{ a.isCat }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;align-items:center;gap:11px;padding:11px 8px;background:var(--color-background-secondary);border-radius:8px;margin-top:8px">
@@ -6794,7 +6794,7 @@ class Component extends DCLogic {
       assortRows.push({isCat:true,isProd:false,label:c.cat,mand:allLocked,mandBadge:pill2('#fbe9eb','var(--color-primary)'),
         caret:catOpen?'▾':'▸',nbProds:c.prods.length+' produit'+(c.prods.length>1?'s':''),
         open:()=>this.setState(s=>({asrOpen:{...(s.asrOpen||{}),[k]:!catOpen}})),
-        help:cAct?('Catégorie « '+c.cat+' » ACTIVE : ses produits sont vendables (ws_product_shops). La désactiver retire tous ses produits non verrouillés de la vente.'):('Catégorie « '+c.cat+' » DÉSACTIVÉE : ses produits sont retirés de la vente. La réactiver les rétablit.'),
+        help:cAct?('Vous PRODUISEZ les articles de « '+c.cat+' ». La bascule dit ce que votre boutique fabrique — pas ce qui est mis en vente : l’accès au catalogue est décidé par la marque, pour tout le réseau.'):('Vous ne produisez AUCUN article de « '+c.cat+' ». Ils restent au catalogue réseau, mais votre boutique ne les propose pas.'),
         swStyle:cs.style,swKnob:cs.knob,
         toggle:allLocked?(()=>{}):(()=>{ const nv=!cAct;
           asrPost({cat:c.cat,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>(x.cat||'Autres')===k,nv); asrReloadStock(); this.printJob((nv?'✓ Catégorie « ':'Catégorie « ')+c.cat+' » '+(nv?'activée':'désactivée')+' — '+(j.n||0)+' produit(s) (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
@@ -6816,7 +6816,7 @@ class Component extends DCLogic {
         assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
           canal:p.canal||'',hasCanal:!!p.canal,
           hasPort:!!erpPortIdx[p.nom],portTitle:erpPortIdx[p.nom]||'',
-          help:p.nonTarife?('Produit « '+p.nom+' » SANS PRIX pour cette boutique (ERP shop_product) : hors vente — invisible au webshop et refusé à la commande. Il redeviendra vendable AUTOMATIQUEMENT dès qu\'un prix sera posé dans l\'ERP.'):(p.locked?('Produit « '+p.nom+' » VERROUILLÉ (marque obligatoire) : toujours proposé.'):(pAct?('Produit « '+p.nom+' » ACTIF (ws_product_shops). Le désactiver le retire de la vente pour cette boutique.'):('Produit « '+p.nom+' » INACTIF pour cette boutique. L\'activer le rend commandable.'))),
+          help:p.nonTarife?('Produit « '+p.nom+' » SANS PRIX pour cette boutique (ERP shop_product) : hors vente — invisible au webshop et refusé à la commande. Il redeviendra vendable AUTOMATIQUEMENT dès qu\'un prix sera posé dans l\'ERP.'):(p.locked?('« '+p.nom+' » est OBLIGATOIRE (marque) : sa production ne peut pas être refusée.'):(pAct?('Vous produisez « '+p.nom+' ». Le décocher déclare que votre boutique ne le fabrique pas — l’accès au catalogue, lui, est décidé par la marque.'):('Vous ne produisez pas « '+p.nom+' ». Il reste au catalogue réseau ; votre boutique ne le propose pas.'))),
           rowStyle:'display:grid;grid-template-columns:2.4fr 1.2fr .7fr;align-items:center;padding:10px 6px 10px 22px;border-bottom:.5px solid var(--color-border-tertiary)'+((pAct&&!p.nonTarife)?'':';opacity:.5'),
           // NON TARIFÉ (aucun prix ERP > 0 pour cette boutique) : le produit est
           // hors vente quoi qu'en dise la bascule — il disparaissait AVANT du
@@ -6832,7 +6832,7 @@ class Component extends DCLogic {
              `enLigne` peut être null (produit hors du périmètre du diagnostic) :
              on retombe alors sur l'ancienne lecture plutôt que d'affirmer. */
           stateTxt:(p.enLigne===false?('Hors vente · '+(p.raison||'motif inconnu'))
-                   :(p.enLigne===true?'En ligne':(p.nonTarife?'Non tarifé · hors vente':(pAct?'Actif · vendable':'Inactif (boutique)')))),
+                   :(p.enLigne===true?'En ligne':(p.nonTarife?'Non tarifé · hors vente':(pAct?'Produit ici':'Non produit ici')))),
           stateColor:(p.enLigne===false?'var(--color-primary)'
                      :(p.enLigne===true?'#2d7a3e':(p.nonTarife?'#b26a00':(pAct?'#2d7a3e':'var(--color-text-muted)')))),
           /* EN VENTE mais INTROUVABLE dans la navigation du site : catégorie
