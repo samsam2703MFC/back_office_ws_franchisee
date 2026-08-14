@@ -3982,13 +3982,35 @@ class Component extends DCLogic {
       // Colis du JOUR PRÉPARÉ (badge de l'écran Préparation) : au cut-off on
       // imprime ce qui part le prochain jour de livraison, pas la veille.
       const jourColis=this.state.prepDay||iso;
+      const jourColisLbl=jourColis===iso?'aujourd’hui'
+        :(()=>{ const dj=new Date(jourColis+'T00:00:00');
+          return isNaN(dj)?jourColis:dj.toLocaleDateString('fr-BE',{weekday:'short',day:'2-digit',month:'2-digit'}); })();
       const ordersColis=T('fr_orders').filter(o=>((o.date||iso)===jourColis)&&o.mode==='Livraison');
-      ordersColis.forEach(o=>{ const n=parseInt(o.pieces,10);
-        if(n>0){ for(let i=1;i<=n;i++) ets.push({o,i,n}); }
-        else ets.push({o,i:null,n:null}); });   // pièces non servies ⇒ une étiquette, sans numérotation supposée
-      out.push('<section class="page"><h1>Étiquettes — colis (delivery · '+esc(jourColis===iso?'aujourd’hui':jourColis)+')</h1><div class="sub">'+esc(dateFR)+'</div>'
-        +(ets.length?('<div class="lab">'+ets.map(e=>'<div class="et"><div class="et-k">COLIS'+(e.i?(' '+e.i+' / '+e.n):'')+'</div><div class="et-t mono">'+esc(e.o.ref||'—')+'</div><div class="et-l">'+esc(e.o.client||'—')+'</div><div class="et-l">'+esc(e.o.creneau||'')+'</div></div>').join('')+'</div>')
-          :vide('Aucune commande delivery aujourd’hui (ws_orders).'))+'</section>'); }
+      /* CHAQUE ÉTIQUETTE PORTE SON PRODUIT. Les lignes servies par fr-orders
+         se déroulent en unités : une ligne « ×2 » fait deux colis du même
+         produit, un menu emporte ses composants (sans prix — l'étiquette est
+         pour la préparation, pas la facturation). Lignes non servies ⇒
+         l'étiquette retombe sur la seule référence, rien d'inventé. */
+      ordersColis.forEach(o=>{
+        const ls=Array.isArray(o.lines)?o.lines:[];
+        if(ls.length){
+          const units=[]; ls.forEach(l=>{ const q=Math.max(1,parseInt(l.qty,10)||1);
+            for(let k=0;k<q;k++) units.push(l); });
+          units.forEach((l,ix)=>ets.push({o,i:ix+1,n:units.length,prod:(l.produit&&String(l.produit).trim())?l.produit:null,
+            comps:(Array.isArray(l.composants)?l.composants:[]).map(c=>c&&c.produit).filter(Boolean)}));
+        } else {
+          const n=parseInt(o.pieces,10);
+          if(n>0){ for(let i=1;i<=n;i++) ets.push({o,i,n,prod:null,comps:[]}); }
+          else ets.push({o,i:null,n:null,prod:null,comps:[]});   // pièces non servies ⇒ une étiquette, sans numérotation supposée
+        }
+      });
+      out.push('<section class="page"><h1>Étiquettes — colis (delivery · '+esc(jourColisLbl)+')</h1><div class="sub">'+esc(dateFR)+'</div>'
+        +(ets.length?('<div class="lab">'+ets.map(e=>'<div class="et"><div class="et-k">COLIS'+(e.i?(' '+e.i+' / '+e.n):'')+'</div>'
+          +(e.prod?('<div class="et-t">'+esc(e.prod)+'</div><div class="et-l mono">'+esc(e.o.ref||'—')+'</div>')
+                  :('<div class="et-t mono">'+esc(e.o.ref||'—')+'</div>'))
+          +(e.comps.length?('<div class="et-c">'+esc(e.comps.map(c=>'· '+c).join('   '))+'</div>'):'')
+          +'<div class="et-l">'+esc(e.o.client||'—')+'</div><div class="et-l">'+esc(e.o.creneau||'')+'</div></div>').join('')+'</div>')
+          :vide('Aucune commande delivery pour ce jour (ws_orders).'))+'</section>'); }
     if(parts.prodProduit){ const jour=this.state.prepDay||iso;
       const lignes=T('fr_prep_lines').filter(r=>String(r.date||iso).slice(0,10)===jour);
       out.push('<section class="page"><h1>Liste de production — par produit</h1><div class="sub">'+esc(jour===iso?dateFR:jour)+'</div>'
@@ -4023,6 +4045,7 @@ class Component extends DCLogic {
       +'.lab{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}'
       +'.et{border:.6px solid #999;border-radius:2mm;padding:3mm;min-height:28mm;page-break-inside:avoid;display:flex;flex-direction:column;gap:1mm}'
       +'.et-k{font-size:8.5px;font-weight:700;letter-spacing:.08em;color:#8D1D2C}.et-t{font-size:13px;font-weight:700}.et-l{font-size:10.5px;color:#444}'
+      +'.et-c{font-size:9.5px;color:#666;line-height:1.45}'
       +'.mono{font-family:ui-monospace,Menlo,Consolas,monospace}'
       +'.qrbox{display:flex;gap:5mm;align-items:center;border:.6px solid #8D1D2C;border-radius:2mm;padding:3mm;margin-top:4mm;page-break-inside:avoid}'
       +'.qrimg{width:30mm;height:30mm;image-rendering:pixelated}.qrtxt{font-size:11px;line-height:1.6}'
