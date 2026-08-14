@@ -3506,6 +3506,22 @@ class Component extends DCLogic {
           {k:'delivery_cutoff',label:'Cut-off commande — hérité de la tournée',readonly:true,ph:'choisissez une tournée',section:'Livraison (ws_office_delivery_settings)'},
           {k:'delivery_notes',label:'Consignes de livraison',type:'text',ph:'ex. Accès quai côté rue',section:'Livraison (ws_office_delivery_settings)'},
           {k:'deferred_billing_enabled',label:'Facturation différée',type:'toggle',options:[{value:'Oui',label:'Oui'},{value:'Non',label:'Non'}],def:'Oui',info:'Oui = le bureau commande sur compte et la boutique facture en fin de mois (deferral, table client).',section:'Facturation'},
+          /* TOUS LES CHAMPS DE L'ONBOARDING, RETROUVABLES ICI. Ceux qui vivent
+             dans d'autres tables s'affichent en LECTURE avec leur source, et
+             un renvoi ouvre le formulaire qui les écrit vraiment — les éditer
+             d'ici doublerait les chemins d'écriture (c'est l'incident « deux
+             écrans qui divergent »). Valeur absente ⇒ « — », jamais un défaut. */
+          {k:'ob_seg',label:'Segment',readonly:true,ph:'—',half:true,section:'Société & conditions (onboarding — fr_clients)'},
+          {k:'ob_paiement',label:'Conditions de paiement',readonly:true,ph:'—',half:true},
+          {k:'ob_plafond',label:'Plafond d\'encours (€)',readonly:true,ph:'—',half:true},
+          {k:'ob_remise',label:'Remise webshop',readonly:true,ph:'—',half:true},
+          {k:'ob_franco',label:'Franco de port',readonly:true,ph:'—',half:true},
+          {k:'ob_lien_client',label:'Modifier ces conditions',readonly:true,ph:'fiche client (société)',lien:'clientEdit',lienTxt:'Ouvrir la fiche client — segment · paiement · plafond · remise · franco'},
+          {k:'ob_fenetre',label:'Fenêtre de livraison',readonly:true,ph:'—',half:true,section:'Engagement de livraison (onboarding — point client)'},
+          {k:'ob_jours',label:'Jours desservis',readonly:true,ph:'—',half:true},
+          {k:'ob_validation',label:'Validation à la livraison',readonly:true,ph:'—',half:true},
+          {k:'ob_lien_param',label:'Régler la livraison',readonly:true,ph:'règles par bureau',lien:'bureauParam',lienTxt:'Jours autorisés · cut-off · tournée (ws_office_delivery_settings)'},
+          {k:'ob_depts',label:'Départements rattachés',readonly:true,ph:'aucun département encodé (b2b_client_company_department)',section:'Départements (onboarding)'},
         ]},
       department:{ title:'Département du site', table:'b2b_client_company_department', tbl:'b2b_client_company_department', save:'Enregistrer le département',
         fields:[
@@ -3527,6 +3543,9 @@ class Component extends DCLogic {
           {k:'paiement',label:'Conditions de paiement',type:'text',def:'30 j fin de mois',half:true},
           {k:'remise',label:'Remise globale',type:'text',ph:'ex. 8 %',half:true},
           {k:'franco',label:'Franco de port',type:'text',ph:'ex. 250 €',half:true},
+          // Saisi à l'onboarding (étape Société) mais éditable nulle part
+          // ensuite : le plafond d'encours retrouve un formulaire.
+          {k:'plafond',label:'Plafond d\'encours (€)',type:'number',ph:'5000',half:true},
         ]},
       /* CRÉNEAU — la table ne porte que le libellé et l'ordre d'affichage.
          « Plage horaire » recopiait le libellé et « Capacité max » était figée
@@ -3656,6 +3675,11 @@ class Component extends DCLogic {
     // de l'utilisateur — le marqueur site_touch protège des round-trips périmés
     // qui ressuscitaient des sites supprimés.
     if(S.formKey==='office') v.site_touch=1;
+    // Les champs « onboarding » de la fiche bureau (ob_*) sont des LECTURES
+    // résolues d'autres tables (fr_clients, point client, départements) : ils
+    // ne repartent jamais dans ws_offices — les y fusionner écrirait des
+    // colonnes fantômes dans la table et l'overlay.
+    if(S.formKey==='office') Object.keys(v).forEach(k=>{ if(k.indexOf('ob_')===0) delete v[k]; });
     // Site : adresse STRUCTURÉE recomposée en `adr` — « Rue n°, CP Ville ».
     // Rue + CP (4 chiffres) obligatoires : le CP positionne le site sur la carte.
     if(S.formKey==='site'){
@@ -6237,15 +6261,27 @@ class Component extends DCLogic {
     const officesList=SRV('ws_offices').map((o,i)=>{
       const oSites=SRV('ws_office_delivery_sites').filter(s=>(s.office_client_id===o.id)||(s.office===o.name)||(s.bureau===o.name));
       const cid=(oSites[0]||{}).client_id;
-      const depts=cid?deptRowsAll.filter(d=>(d.id_client===cid)||(d.client_id===cid)):[];
+      const depts=deptRowsAll.filter(d=>(cid!=null&&((d.id_client===cid)||(d.client_id===cid)))||d.office===o.name||d.company===o.name);
       const validated=o.status==='validated';
+      /* CHAMPS D'ONBOARDING RÉSOLUS pour la fiche bureau — lus dans les tables
+         où l'assistant les a écrits (fr_clients par raison sociale, son point
+         de livraison, les départements). Absents ⇒ '' : la fiche montre « — ». */
+      const obCli=SRV('fr_clients').find(c=>c&&c.raison===o.name)||null;
+      const obPt=(obCli&&Array.isArray(obCli.points)&&obCli.points.length)?obCli.points[0]:null;
+      const obx={
+        ob_seg:obCli&&obCli.seg?obCli.seg:'', ob_paiement:obCli&&obCli.paiement?obCli.paiement:'',
+        ob_plafond:(obCli&&obCli.plafond!=null&&obCli.plafond!=='')?String(obCli.plafond):'',
+        ob_remise:obCli&&obCli.remise?obCli.remise:'', ob_franco:obCli&&obCli.franco?obCli.franco:'',
+        ob_fenetre:obPt&&obPt.fenetre?obPt.fenetre:'', ob_jours:obPt&&obPt.jours?obPt.jours:'',
+        ob_validation:obPt&&obPt.validation?obPt.validation:'',
+        ob_depts:depts.map(d=>d.dept||d.departement||d.name).filter(Boolean).join(', ')};
       return {...o, sitesCount:String(oSites.length), deptCount:String(depts.length),
         statusLabel:validated?'Validé':'En attente',
         statusStyle:pill2(validated?'#eaf5ec':'#fff4e5',validated?'#2d7a3e':'#b26a00'),
         billLabel:(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui')?'Facturation différée':'Paiement immédiat',
         gear:this.openFormWith('bureauParam',{bureau:o.name}),
         invite:()=>this.invOpen(o),
-        edit:this.editForm('office',o,i), del:this.deleteRow('ws_offices',i,'l\'office « '+o.name+' »') };
+        edit:this.editForm('office',{...o,...obx},i), del:this.deleteRow('ws_offices',i,'l\'office « '+o.name+' »') };
     });
     /* Panneau « lien d'invitation ». Tout y vient de l'état renvoyé par le
        serveur : une date d'expiration absente disparaît de la phrase au lieu
@@ -6703,10 +6739,21 @@ class Component extends DCLogic {
         }):[],
         isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&f.type!=='date'&&f.type!=='days'&&!isToggle&&!f.readonly,
         // Un champ en lecture seule qui RENVOIE vers l'écran où il se modifie.
-        hasLien:!!f.lien, lienTxt:'Modifier la fiche du bureau',
+        // La cible dépend du champ : fiche bureau (défaut), fiche client de la
+        // société, ou règles de livraison du bureau.
+        hasLien:!!f.lien, lienTxt:f.lienTxt||'Modifier la fiche du bureau',
         lienGo:f.lien?(()=>{ const S2=this.state, row=S2.formRow||{};
           this.setState({formKey:null});
-          setTimeout(()=>this.openOfficeByName(row.bureau||''),60); }):null,
+          setTimeout(()=>{
+            const nm=row.name||row.bureau||'';
+            if(f.lien==='clientEdit'){
+              const cls=window.BOServer?window.BOServer.table('fr_clients'):[];
+              const i2=cls.findIndex(c=>c&&c.raison===nm);
+              if(i2<0){ this.printJob('⚠ Aucune fiche client « '+nm+' » dans fr_clients — elle naît à l’onboarding'); return; }
+              this.editForm('clientEdit',{...cls[i2]},i2)();
+            } else if(f.lien==='bureauParam'){
+              this.openFormWith('bureauParam',{bureau:nm})();
+            } else this.openOfficeByName(row.bureau||''); },60); }):null,
         toggleOpts, hasVies:!!f.vies, viesCheck, viesMsg:S.viesMsg||'',
         viesStyle:'font:500 12px var(--font-ui);color:'+(S.viesOk===true?'#2d7a3e':(S.viesOk===false?'var(--color-primary)':'var(--color-text-muted)')),
         wrapStyle:(f.half?'min-width:0':'grid-column:1/-1;min-width:0'),
