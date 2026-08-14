@@ -63,6 +63,24 @@ jobs:
                   AND action IN ('product.update','category.update','subcategory.update','catalogue.restauration')
                 ORDER BY id LIMIT 400"
           echo ""
+          # LA VIGIE (trigger posé le 14/08 à 14h41) : chaque changement de
+          # ws_products.active, quel que soit le chemin, avec CURRENT_USER().
+          # Compté par minute et par auteur — une rafale de 80 lignes en une
+          # minute EST la signature du canal fantôme, et son auteur est dedans.
+          echo "== Vigie db.active.vigie — volume par minute et par auteur =="
+          dbq "SELECT CONCAT('  ', DATE_FORMAT(created_at, '%H:%i'), '  ',
+                      LPAD(COUNT(*),4,' '), ' changement(s)  ',
+                      SUM(JSON_EXTRACT(payload,'\\$.apres')=0), ' extinction(s)  par ',
+                      IFNULL(JSON_UNQUOTE(JSON_EXTRACT(payload,'\\$.par')),'?'))
+                 FROM bo_audit
+                WHERE action='db.active.vigie' AND created_at >= '$DEPUIS'
+                GROUP BY DATE_FORMAT(created_at, '%H:%i'), JSON_UNQUOTE(JSON_EXTRACT(payload,'\\$.par'))
+                ORDER BY MIN(id) LIMIT 60"
+          echo "  (détail des 30 dernières :)"
+          dbq "SELECT CONCAT('    ', created_at, '  #', entity_id, '  ', IFNULL(payload,''))
+                 FROM bo_audit WHERE action='db.active.vigie' AND created_at >= '$DEPUIS'
+                ORDER BY id DESC LIMIT 30"
+          echo ""
           echo "== Les catégories touchées, et leur poids =="
           dbq "SELECT CONCAT('  #', c.id, '  ', c.label, '  — ', COUNT(p.id), ' produit(s), dont ', SUM(p.active=1), ' actif(s)')
                  FROM ws_categories c LEFT JOIN ws_products p ON p.cat_id = c.id
