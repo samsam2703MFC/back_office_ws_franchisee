@@ -173,6 +173,34 @@
     // en mémoire une donnée déjà écrite côté serveur (ex. office créé par le
     // toggle « livraison au bureau » — GET refetché puis injecté ici).
     refresh: function(n, rows){ ensure(); if (Array.isArray(rows)) DB[n] = JSON.parse(JSON.stringify(rows)); return persist(); },
+    // RE-HYDRATATION CIBLÉE du catalogue : la console doit être le reflet du
+    // BO marque sans rechargement de page — l'incident du 14/08 s'est vu en
+    // comparant deux écrans dont l'un lisait des données du matin. On ne
+    // re-télécharge que les tables du catalogue (assortiment, stock, dispo),
+    // pas les cinquante routes du boot. Rend true si un contenu a CHANGÉ,
+    // pour que l'appelant ne re-rende pas l'écran pour rien.
+    rehydrateCatalogue: function(){
+      var fr = (typeof window !== 'undefined' && window.__FR) || {};
+      if (!fr.base || !frHasAuth(fr)) return Promise.resolve(false);
+      ensure();
+      var qs = fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : '';
+      var headers = frAuth(fr);
+      var CIBLES = { fr_assortiment:'fr-assortiment', fr_stock_catalog:'fr-stock-catalog', fr_dispo_cats:'fr-dispo-cats' };
+      var changed = false;
+      var jobs = Object.keys(CIBLES).map(function(key){
+        return fetch(fr.base + '/franchisee/' + CIBLES[key] + qs, { headers: headers, credentials: 'omit' })
+          .then(function(r){ if (!r.ok) return null; return r.json(); })
+          .then(function(data){
+            if (!Array.isArray(data)) return;
+            if (JSON.stringify(DB[key]) !== JSON.stringify(data)) { DB[key] = data; changed = true; }
+          })
+          // Panne réseau PASSAGÈRE : on garde les données affichées et on
+          // retentera au tick suivant — le bandeau d'erreur reste réservé au
+          // chargement initial, sinon il sonnerait à chaque micro-coupure.
+          .catch(function(){});
+      });
+      return Promise.all(jobs).then(function(){ return changed; });
+    },
     reset: function(){ DB = JSON.parse(JSON.stringify(SEED)); return persist(); },
     // Erreurs de chargement/écriture accumulées (bandeau index.html).
     loadErrors: ERRORS,

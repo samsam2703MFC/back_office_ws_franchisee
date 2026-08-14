@@ -5012,6 +5012,18 @@ class Component extends DCLogic {
     // (visibilitychange), refresh immédiat.
     this._ordTimer=setInterval(()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); },60000);
     document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); });
+    // Auto-refresh du CATALOGUE : toutes les 30 s tant que l'onglet est
+    // visible, et immédiatement au retour sur l'onglet. La marque décide de
+    // l'assortiment depuis SA console : cet écran doit la refléter sans
+    // rechargement de page — l'incident du 14/08 s'est vu en comparant deux
+    // écrans dont l'un lisait des données du matin. rehydrateCatalogue ne
+    // re-télécharge que les tables du catalogue et ne rend true que si le
+    // contenu a changé : pas de re-rendu pour rien.
+    const catRefresh=()=>{ if(document.visibilityState!=='visible') return;
+      if(window.BOServer&&window.BOServer.rehydrateCatalogue)
+        window.BOServer.rehydrateCatalogue().then(ch=>{ if(ch) this.setState({}); }); };
+    this._catTimer=setInterval(catRefresh,30000);
+    document.addEventListener('visibilitychange',catRefresh);
   }
   componentDidUpdate(){ this.ensureMaps(); }
 
