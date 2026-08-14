@@ -378,6 +378,49 @@ jobs:
           fi
           echo
 
+          # ── CATALOGUE : le back-office et la boutique disent-ils pareil ? ──
+          # Deux questions posées à répétition, sans écran pour y répondre :
+          # « pourquoi ce produit actif chez moi n'est-il pas en ligne ? » et
+          # « pourquoi ces produits n'ont-ils pas de catégorie ? ». L'assortiment
+          # sert un verdict PAR PRODUIT (enLigne, raison) et un avertissement de
+          # navigation ; on les compte ici.
+          # Comptage par grep sur des libellés CONNUS : pas d'analyseur JSON, donc
+          # pas de heredoc imbriqué — celui-ci cassait le bloc YAML du workflow.
+          echo "== Catalogue : back-office vs boutique =="
+          ASR=$(curl -s --max-time 20 "${HDR[@]}" "$BASE/franchisee/fr-assortiment$QS" 2>/dev/null | tr -d '\n')
+          if [ -z "$ASR" ] || [ "${ASR#[}" = "$ASR" ]; then
+            echo "  (assortiment non lisible — jeton absent, ou route en erreur)"
+          else
+            cnt() { printf '%s' "$ASR" | grep -o "$1" | wc -l | tr -d ' '; }
+            TOT=$(cnt '"nom":')
+            ENL=$(cnt '"enLigne":true')
+            OFF=$(cnt '"enLigne":false')
+            echo "  produits au catalogue reseau : $TOT"
+            echo "    $ENL en ligne sur la boutique · $OFF hors ligne"
+            [ "$OFF" != "0" ] && {
+              echo "  pourquoi ils ne sont PAS en ligne :"
+              for M in "Brouillon" "Retiré du catalogue réseau par la marque" \
+                       "Non produit par cette boutique" "Non éligible à la livraison au bureau" \
+                       "Hors saison" "Sans prix dans l"; do
+                N=$(printf '%s' "$ASR" | grep -o "$M" | wc -l | tr -d ' ')
+                [ "$N" != "0" ] && printf '    %-4s %s\n' "$N" "$M"
+              done
+            }
+            NAVO=$(cnt 'Catégorie inconnue')
+            NAVD=$(cnt 'Catégorie désactivée')
+            if [ "$NAVO" != "0" ] || [ "$NAVD" != "0" ]; then
+              echo "  EN VENTE mais INTROUVABLES dans la navigation du site :"
+              [ "$NAVO" != "0" ] && printf '    %-4s categorie inconnue (cat_id vide ou orphelin)\n' "$NAVO"
+              [ "$NAVD" != "0" ] && printf '    %-4s categorie desactivee cote marque\n' "$NAVD"
+              echo "           ⇒ ces produits s'affichent sous « Tout » et nulle part ailleurs."
+              echo "           Remede : reactiver leur categorie, OU corriger leur rattachement."
+              dbko=$((dbko+1))
+            else
+              echo "  OK       aucun produit en vente sans categorie joignable"
+            fi
+          fi
+          echo
+
           echo "== Lien magique « Créer mon compte » =="
           for U in "http://localhost/webshop/inscription" "http://localhost/webshop/inscription.html"; do
             CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$U" 2>/dev/null)
