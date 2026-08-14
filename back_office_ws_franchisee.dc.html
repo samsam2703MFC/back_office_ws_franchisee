@@ -2377,10 +2377,14 @@
           <sc-if value="{{ odtHasLines }}" hint-placeholder-val="{{ false }}">
             <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden">
               <sc-for list="{{ odtLines }}" as="ln" hint-placeholder-count="3">
-                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 13px;border-bottom:.5px solid var(--color-border-tertiary)">
+                <!-- Colonnes FIXES (produit 1fr · qté 56px · prix 90px) : en
+                     flex space-between, la quantité flottait au gré de la
+                     longueur du nom — les lignes ne s'alignaient pas
+                     verticalement d'une rangée à l'autre. -->
+                <div style="display:grid;grid-template-columns:1fr 56px 90px;align-items:center;gap:10px;padding:9px 13px;border-bottom:.5px solid var(--color-border-tertiary)">
                   <span style="font:500 12.5px var(--font-ui);color:var(--color-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ln.produit }}</span>
-                  <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);flex:none">{{ ln.qte }}</span>
-                  <span style="font:600 12px var(--font-ui);color:var(--color-text);flex:none">{{ ln.prix }}</span>
+                  <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);text-align:right">{{ ln.qte }}</span>
+                  <span style="font:600 12px var(--font-ui);color:var(--color-text);text-align:right">{{ ln.prix }}</span>
                 </div>
               </sc-for>
             </div>
@@ -2389,7 +2393,9 @@
             <div style="font:400 11.5px/1.55 var(--font-ui);color:var(--color-text-muted);border:.5px dashed var(--color-border-secondary);border-radius:10px;padding:11px 13px">/franchisee/fr-orders ne joint pas encore les lignes (ws_order_lines) à la commande — rien n'est affiché plutôt qu'un détail supposé. La vue agrégée « À produire » (écran Préparation) montre les produits du jour.</div>
           </sc-if>
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;border-top:.5px solid var(--color-border-tertiary);padding-top:12px">
+        <!-- padding-right:13px = le retrait des prix dans la liste au-dessus :
+             le montant du total tombe dans la même colonne que les prix. -->
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:.5px solid var(--color-border-tertiary);padding-top:12px;padding-right:13px">
           <span class="t-admin-label">Total</span>
           <span style="font:700 15px var(--font-ui);color:var(--color-text)">{{ odtTotal }}</span>
         </div>
