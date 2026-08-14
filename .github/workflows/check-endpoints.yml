@@ -429,12 +429,29 @@ jobs:
             echo "    $ENL en ligne sur la boutique · $OFF hors ligne"
             [ "$OFF" != "0" ] && {
               echo "  pourquoi ils ne sont PAS en ligne :"
-              for M in "Brouillon" "Retiré du catalogue réseau par la marque" \
-                       "Non produit par cette boutique" "Non éligible à la livraison au bureau" \
-                       "Hors saison" "Sans prix dans l"; do
+              # LA LISTE DES MOTIFS SUIT CELLE DE L'API — et si elle décroche, on
+              # le dit. Elle a décroché : le motif tarifaire s'appelait « Sans
+              # prix dans l'ERP », il s'appelle « Prix non fixé » depuis que
+              # ws_products est la seule table du webshop. La sonde cherchait
+              # l'ancien texte et aurait rapporté VERT à tort — le contraire de
+              # son travail. Deux autres motifs n'existent plus du tout
+              # (« retiré du réseau », « non produit par cette boutique »).
+              CONNUS=0
+              for M in "Brouillon" "Non éligible à la livraison au bureau" \
+                       "Non vendu sur le webshop" "Hors saison" "Prix non fixé"; do
                 N=$(printf '%s' "$ASR" | grep -o "$M" | wc -l | tr -d ' ')
-                [ "$N" != "0" ] && printf '    %-4s %s\n' "$N" "$M"
+                [ "$N" != "0" ] && { printf '    %-4s %s\n' "$N" "$M"; CONNUS=$((CONNUS+N)); }
               done
+              # Un motif que la sonde ne connaît pas est un motif qu'elle ne
+              # compte pas : le total doit retomber sur le nombre de produits
+              # hors ligne, sinon la liste ci-dessus est incomplète et tout ce
+              # qui s'appuie dessus est faux.
+              if [ "${OFF:-0}" != "$CONNUS" ]; then
+                echo "  ⛔ $OFF produit(s) hors ligne mais $CONNUS motif(s) reconnu(s) :"
+                echo "     l'API rend un motif que cette sonde ne connaît pas. Mettre la"
+                echo "     liste à jour — sans quoi les contrôles suivants sont faux."
+                dbko=$((dbko+1))
+              fi
             }
             # L'INVARIANT : TOUT CE QUE LE BO FRANCHISE LISTE DOIT ETRE EN
             # LIGNE. C'est la regle metier posee par l'exploitant, et sans
@@ -446,11 +463,11 @@ jobs:
             # reseau » appartiennent a la marque, « hors saison » est une date.
             # Reste ce qui n'est la decision de personne — un prix absent de
             # l'ERP — et c'est exactement l'ecart a faire disparaitre.
-            SANSPRIX=$(printf '%s' "$ASR" | grep -o 'Sans prix dans l' | wc -l | tr -d ' ')
+            SANSPRIX=$(printf '%s' "$ASR" | grep -o 'Prix non fixé' | wc -l | tr -d ' ')
             if [ "${SANSPRIX:-0}" != "0" ]; then
               echo "  ⛔ $SANSPRIX produit(s) a l'assortiment du franchise mais PAS en ligne,"
-              echo "     faute de prix ERP pour cette boutique — ce n'est la decision de"
-              echo "     personne. Remede : poser leur prix dans l'ERP (shop_product)."
+              echo "     faute de prix (ws_products.price <= 0) — ce n'est la decision de"
+              echo "     personne. Remede : poser le prix du produit."
               dbko=$((dbko+1))
             else
               echo "  OK       tout ce que le BO franchise liste est en ligne sur le webshop"
