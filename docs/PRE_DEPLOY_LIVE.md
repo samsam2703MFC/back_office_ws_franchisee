@@ -83,7 +83,7 @@ la vraie base et le vrai serveur.
 | I6 | QR imprimé | Imprimer, scanner à 60 cm | Lecture immédiate, mène au formulaire |
 | I7 | E-mail | Envoyer au contact | Reçu, bouton cliquable, PDF joint lisible |
 | I8 | Révocation | Révoquer puis rouvrir le lien | Refus **motivé** (410), pas une page blanche |
-| I9 | Domaine imposé | E-mail hors domaine | Refus côté front **et** serveur |
+| I9 | Toute adresse acceptée | E-mail d'un autre domaine que le contact | Inscription acceptée, compte `pending` — l'exigence de domaine est retirée (un 403 « domaine » = reliquat php-api à retirer) |
 | I10 | Portée | Demander l'affiche d'un bureau d'une autre boutique | Refus (404) |
 
 ---

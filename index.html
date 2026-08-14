@@ -383,10 +383,10 @@
             <span style="font:600 10px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Période</span>
             <sc-for list="{{ ordRangeChips }}" as="rc" hint-placeholder-count="3"><button onClick="{{ rc.set }}" style="{{ rc.style }};border:none">{{ rc.label }}</button></sc-for>
           </div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Cliquer sur le statut pour le faire avancer · écrit dans ws_orders</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Cliquer sur le statut pour le faire avancer (écrit dans ws_orders) · cliquer sur la ligne pour le détail de la commande</div>
           <div style="display:grid;grid-template-columns:.75fr 1.25fr .6fr .75fr .7fr .85fr .7fr 1fr .6fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Source</span><span class="t-admin-label">Mode</span><span class="t-admin-label">Date</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Paiement</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Total</span></div>
           <sc-for list="{{ ordersList }}" as="o" hint-placeholder-count="6">
-            <div style="display:grid;grid-template-columns:.75fr 1.25fr .6fr .75fr .7fr .85fr .7fr 1fr .6fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+            <div onClick="{{ o.open }}" title="Détail de la commande" style="display:grid;grid-template-columns:.75fr 1.25fr .6fr .75fr .7fr .85fr .7fr 1fr .6fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer">
               <span style="font:600 12px var(--font-mono,monospace);color:var(--color-text-muted)">{{ o.ref }}</span>
               <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ o.client }}">{{ o.client }}</span>
               <div style="min-width:0"><span style="{{ o.srcPill }};max-width:100%">{{ o.srcTxt }}</span></div>
@@ -407,6 +407,23 @@
       <!-- ===================== PRÉPARATION ===================== -->
       <sc-if value="{{ isPrep }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:18px">
+        <!-- RUN D'IMPRESSION DU CUT-OFF (delivery). Le navigateur n'imprime ni
+             n'ouvre d'onglet sans clic (popup bloquée — même contrainte que
+             l'affiche du lien) : au passage du cut-off le panneau S'ARME et le
+             toast le signale ; le run part alors d'un seul clic — un document,
+             une feuille A4 par tournée (tournée → sites → bureau →
+             départements → clients) puis toutes les étiquettes. -->
+        <div style="background:var(--color-surface);border:1.5px solid {{ runBorder }};border-radius:12px;padding:16px 20px">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <div class="t-section-title" style="font-size:15px">Run d'impression — cut-off delivery</div>
+              <div style="font:400 11.5px/1.55 var(--font-ui);color:var(--color-text-muted);margin-top:4px">{{ runEtat }}</div>
+            </div>
+            <span style="{{ runPill }}">{{ runPillTxt }}</span>
+            <button onClick="{{ runGo }}" class="btn-primary" style="font-size:12.5px;display:flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7"><path d="M6 9V3h12v6M6 18h12v3H6zM6 14h12v4H6z"/></svg>Lancer le run (1 document)</button>
+          </div>
+          <div style="font:400 11px/1.6 var(--font-ui);color:var(--color-text-muted);margin-top:8px">Feuille A4 par tournée (tournée → sites → bureau → départements → clients) · toutes les étiquettes (delivery sites, clients, colis) · {{ runCounts }}</div>
+        </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px 20px">
           <div class="t-admin-label" style="margin-bottom:10px">Jour de préparation</div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
@@ -2466,6 +2483,50 @@
   </div>
   </sc-if>
 
+  <!-- ============ MODALE : DÉTAIL D'UNE COMMANDE (clic sur une ligne) ============ -->
+  <sc-if value="{{ odtOpen }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ odtClose }}" style="position:fixed;inset:0;background:rgba(34,34,34,.55);display:flex;align-items:center;justify-content:center;z-index:2400;padding:24px">
+    <div onClick="{{ stop }}" style="background:var(--color-surface);border-radius:14px;width:560px;max-width:100%;max-height:88vh;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;display:flex;flex-direction:column">
+      <div style="padding:18px 24px 14px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:12px">
+        <div style="min-width:0;flex:1">
+          <div class="t-page-title" style="font-size:16px">Commande {{ odtRef }}</div>
+          <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:3px">{{ odtClient }}</div>
+        </div>
+        <span style="{{ odtStatutPill }};flex:none">{{ odtStatutTxt }}</span>
+        <button onClick="{{ odtClose }}" style="flex:none;width:26px;height:26px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-text-muted);font:600 14px/1 var(--font-ui)">×</button>
+      </div>
+      <div style="padding:16px 24px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <sc-for list="{{ odtFields }}" as="fd" hint-placeholder-count="6">
+            <div style="border:.5px solid var(--color-border-tertiary);border-radius:9px;padding:9px 12px;min-width:0"><div class="t-admin-label" style="margin-bottom:3px">{{ fd.lbl }}</div><div style="font:500 12.5px var(--font-ui);color:var(--color-text);word-break:break-word">{{ fd.val }}</div></div>
+          </sc-for>
+        </div>
+        <div>
+          <div class="t-admin-label" style="margin-bottom:7px">Lignes de la commande</div>
+          <sc-if value="{{ odtHasLines }}" hint-placeholder-val="{{ false }}">
+            <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden">
+              <sc-for list="{{ odtLines }}" as="ln" hint-placeholder-count="3">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 13px;border-bottom:.5px solid var(--color-border-tertiary)">
+                  <span style="font:500 12.5px var(--font-ui);color:var(--color-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ln.produit }}</span>
+                  <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);flex:none">{{ ln.qte }}</span>
+                  <span style="font:600 12px var(--font-ui);color:var(--color-text);flex:none">{{ ln.prix }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ odtNoLines }}" hint-placeholder-val="{{ false }}">
+            <div style="font:400 11.5px/1.55 var(--font-ui);color:var(--color-text-muted);border:.5px dashed var(--color-border-secondary);border-radius:10px;padding:11px 13px">/franchisee/fr-orders ne joint pas encore les lignes (ws_order_lines) à la commande — rien n'est affiché plutôt qu'un détail supposé. La vue agrégée « À produire » (écran Préparation) montre les produits du jour.</div>
+          </sc-if>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:.5px solid var(--color-border-tertiary);padding-top:12px">
+          <span class="t-admin-label">Total</span>
+          <span style="font:700 15px var(--font-ui);color:var(--color-text)">{{ odtTotal }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
   <!-- ===================== FICHE CLIENT COMPLÈTE ===================== -->
   <sc-if value="{{ bcFicheOpen }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;inset:0;background:rgba(34,34,34,.5);display:flex;align-items:center;justify-content:center;z-index:2300;padding:24px">
@@ -2739,8 +2800,7 @@
           <div style="display:flex;align-items:center;gap:12px;padding:12px 15px;border:.5px solid var(--color-border-tertiary);border-radius:10px"><button onClick="{{ obToggleMail }}" style="{{ obMailTrack }}"><span style="{{ obMailKnob }}"></span></button><div style="flex:1"><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Envoyer l'e-mail récapitulatif au contact</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Reprend toutes les informations + voucher de bienvenue</div></div></div>
           <div style="display:flex;align-items:center;gap:12px;padding:12px 15px;border:.5px solid var(--color-border-tertiary);border-radius:10px"><button onClick="{{ obToggleAdh }}" style="{{ obAdhTrack }}"><span style="{{ obAdhKnob }}"></span></button><div style="flex:1"><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Envoyer les demandes d'adhésion au personnel</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Chaque personne crée son compte Office → entre dans le process client avec office/département déjà liés</div></div></div>
           <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 15px;border:.5px solid var(--color-border-tertiary);border-radius:10px"><span style="width:26px;height:26px;flex:none;border-radius:8px;background:#eaf5ec;display:flex;align-items:center;justify-content:center;font:700 12px var(--font-ui);color:#2d7a3e">↗</span><div style="flex:1"><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">Un lien d'invitation du personnel sera émis</div><div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:2px">Un seul lien pour tout le bureau, à transférer aux collaborateurs : ils arrivent sur le formulaire d'inscription avec <strong>{{ obInvPrelie }}</strong> déjà rattachés, et ne saisissent que leur identité. Il s'affichera ici, copiable, dès le bureau créé.</div>
-            <sc-if value="{{ obInvDomOk }}" hint-placeholder-val="{{ true }}"><div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:4px">Réservé aux adresses <strong>@{{ obInvDom }}</strong> · chaque compte créé reste à valider dans « Demandes de rattachement bureau ».</div></sc-if>
-            <sc-if value="{{ obInvDomKo }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px/1.5 var(--font-ui);color:var(--st-bad);margin-top:4px">{{ obInvKoMsg }}</div></sc-if>
+            <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:4px">Chaque compte créé reste à valider dans « Demandes de rattachement bureau ».</div>
           </div></div>
         </div>
         </sc-if>
@@ -2965,22 +3025,15 @@ class Component extends DCLogic {
     const i=cur.indexOf(j); if(i>=0) cur.splice(i,1); else cur.push(j);
     cur.sort((a,b)=>this.OB_JOURS.indexOf(a)-this.OB_JOURS.indexOf(b));
     return {ob:{...s.ob,jours:cur}}; }); }
-  /* DOMAINE E-MAIL DU LIEN D'INVITATION — déduit de l'e-mail du contact,
-     jamais saisi à la main ni supposé. Le lien n'accepte que les adresses de
-     ce domaine : transféré hors de l'entreprise, il ouvrirait sinon un compte
-     en facturation différée sur le dos du bureau. Vide ⇒ pas de lien.
-     Une adresse GRAND PUBLIC ne restreint personne : un lien limité à
-     @gmail.com est un lien ouvert à la terre entière. Elle vaut donc absence
-     de domaine, et le lien n'est pas émis. */
-  /* MIROIR EXACT de $grandPublic dans php-api/index.php (dépôt WebShop) :
-     c'est le SERVEUR qui décide d'imposer un domaine ou non. Cette liste ne
-     sert qu'à annoncer sa décision au franchisé avant qu'il valide — une
-     liste plus longue ici ferait annoncer l'inverse de ce qui se passe. */
-  OB_DOM_PUBLICS=['gmail.com','hotmail.com','hotmail.be','outlook.com','outlook.be','live.be','live.com','yahoo.com','yahoo.fr','icloud.com','proximus.be','skynet.be','telenet.be','voo.be'];
-  obDomaineBrut(o){ const m=String((o&&o.contactEmail)||'').trim().match(/@([^@\s]+\.[^@\s]{2,})$/);
-    return m?m[1].toLowerCase():''; }
-  obDomaine(o){ const d=this.obDomaineBrut(o);
-    return (d&&this.OB_DOM_PUBLICS.indexOf(d)<0)?d:''; }
+  /* PLUS AUCUNE EXIGENCE DE DOMAINE SUR LE LIEN D'INVITATION. La console
+     déduisait un domaine de l'e-mail du contact et réclamait « une adresse
+     d'entreprise » quand il n'y en avait pas : un bureau dont le contact vit
+     en @gmail.com se faisait sermonner à chaque création, sans autre effet.
+     Le garde-fou réel est ailleurs et il reste : chaque compte créé par le
+     lien naît « pending » et n'entre qu'une fois validé dans « Demandes de
+     rattachement bureau ». Si le serveur (php-api, dépôt WebShop) impose
+     encore un domaine au POST /inscription, c'est là que ça se retire —
+     ré-annoncer une restriction ici ne l'éteindrait pas. */
   obAddDept(){ const d=(this.state.obDeptDraft||'').trim(); if(!d) return;
     // Effectif : celui qui a été saisi, ou aucun. « 5 » se retrouvait en base
     // comme un effectif communiqué par le client.
@@ -3049,7 +3102,6 @@ class Component extends DCLogic {
        la console affiche ce qui revient — ou dit qu'il n'est rien revenu.
        Elle ne le DEMANDE pas non plus : /franchisee/onboard-office en émet un
        à chaque bureau créé. Un interrupteur ici n'éteindrait rien. */
-    const obDom=this.obDomaine(o);
     const obApi=!!((window.__FR||{}).base&&(window.__FR||{}).token);
     const obLocalite=o.localite||obLocs[0]||'';
     const clients=window.BOServer.table('fr_clients');
@@ -3914,6 +3966,122 @@ class Component extends DCLogic {
         else { const why=(j&&j.error)||'Envoi refusé.'; this.setState({inv:{...S,msg:why}}); this.printJob('⚠ '+why); } })
       .catch(e=>{ const why='Envoi impossible — '+(e&&e.message?e.message:'réseau indisponible')+'.';
         this.setState({inv:{...S,msg:why}}); this.printJob('⚠ '+why); }); }
+  /* ── RUN D'IMPRESSION DU CUT-OFF (delivery) ────────────────────────────────
+     Le cut-off est CELUI DE LA CONFIG (order.cutoff_default, ws_param) —
+     aucune heure supposée : pas de paramètre, pas de compte à rebours, et le
+     panneau le dit. Les cut-offs par tournée/site servis (ws_tour_availability,
+     fr_tdb_tree) figurent sur les feuilles, à titre d'information. */
+  cutoffCfg(){ const raw=String(window.BOServer?window.BOServer.getParam('order.cutoff_default',''):'').trim();
+    const m=raw.match(/^(\d{1,2}):(\d{2})$/); return {raw, ok:!!m, min:m?(+m[1]*60+ +m[2]):null}; }
+  /* AU CUT-OFF, LA CONSOLE PRÉVIENT — elle ne peut pas plus. Un navigateur
+     n'ouvre pas d'onglet et ne lance pas d'impression sans geste de
+     l'utilisateur (popup bloquée — la même contrainte que l'affiche du lien
+     d'invitation). Le passage du cut-off arme donc le panneau de l'écran
+     Préparation et le signale une fois par jour ; le run part d'UN clic. */
+  cutoffPing(){ const c=this.cutoffCfg(); if(!c.ok) return;
+    const d=new Date(); const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    if(d.getHours()*60+d.getMinutes()<c.min||this._cutPing===iso) return;
+    this._cutPing=iso;
+    const n=(window.BOServer?window.BOServer.table('fr_orders'):[])
+      .filter(o=>((o.date||iso)===iso)&&o.mode==='Livraison').length;
+    // Rien à livrer = rien à imprimer : pas de toast pour un run vide.
+    if(n) this.printJob('⏰ Cut-off delivery ('+c.raw+') passé — '+n+' commande(s) : lancez le run d’impression (écran Préparation)'); }
+  /* LE DOCUMENT DU RUN — fabriqué ici depuis les TABLES SERVIES, jamais depuis
+     un gabarit pré-rempli : une feuille A4 par tournée (tournée → sites →
+     bureau → départements → clients du jour, fr_tdb_tree), puis les étiquettes
+     (delivery sites, clients/bureaux, colis des commandes delivery du jour).
+     Une section sans données LE DIT au lieu de se remplir d'exemples. Pas de
+     QR ici : le seul QR signé vient du serveur (affiche du lien d'invitation) ;
+     l'étiquette colis porte la référence en clair. */
+  cutoffDocHtml(parts){
+    const T=(n)=>window.BOServer?window.BOServer.table(n):[];
+    const esc=(v)=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const d=new Date();
+    const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const dateFR=d.toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const cut=this.cutoffCfg();
+    const tree=T('fr_tdb_tree'), avail=T('ws_tour_availability');
+    const deptRows=T('b2b_client_company_department'), dSites=T('ws_office_delivery_sites');
+    // Départements d'un bureau : les DEUX chemins que la console emploie déjà
+    // (nom du bureau sur la ligne département, ou client_id via ses sites).
+    const deptsOf=(office)=>{ if(!office) return [];
+      const cid=((dSites.filter(s=>(s.office===office)||(s.bureau===office))[0])||{}).client_id;
+      const seen={}, out=[];
+      deptRows.filter(x=>x.office===office||x.company===office||(cid!=null&&((x.id_client===cid)||(x.client_id===cid))))
+        .forEach(x=>{ const nm=x.dept||x.departement||''; if(nm&&!seen[nm]){ seen[nm]=1;
+          out.push(nm+((x.effectif!=null&&x.effectif!=='')?(' ('+x.effectif+')'):'')); } });
+      return out; };
+    const flatSites=[]; tree.forEach(t=>(t.zones||[]).forEach(z=>(z.sites||[]).forEach(s=>flatSites.push({t:t.nom,z:z.nom,s}))));
+    const ordersDeliv=T('fr_orders').filter(o=>((o.date||iso)===iso)&&o.mode==='Livraison');
+    const vide=(txt)=>'<div class="vide">'+esc(txt)+'</div>';
+    const out=[];
+    if(parts.tournees){
+      if(!tree.length) out.push('<section class="page"><h1>Feuilles de tournée</h1><div class="sub">'+esc(dateFR)+'</div>'+vide('Aucune commande delivery aujourd’hui (fr_tdb_tree vide) — aucune feuille de tournée à imprimer.')+'</section>');
+      tree.forEach(t=>{ const av=avail.find(a=>a.tour===t.nom); let nCmd=0,nPcs=0,corps='';
+        (t.zones||[]).forEach(z=>{ corps+='<div class="zone">Zone — '+esc(z.nom||'—')+'</div>';
+          (z.sites||[]).forEach(s=>{ const us=s.users||[]; nCmd+=us.length;
+            const dep=deptsOf(s.office);
+            corps+='<div class="site"><div class="site-h"><strong>'+esc(s.libelle||'—')+'</strong> · '+esc(s.ville||'—')+(s.cutoff?(' · cut-off '+esc(s.cutoff)):'')+'</div>'
+              +'<div class="bur">Bureau : <strong>'+esc(s.office||'—')+'</strong> · Départements : '
+              +(dep.length?esc(dep.join(', ')):'non renseignés (b2b_client_company_department)')+'</div>'
+              +(us.length?('<table><thead><tr><th>Client</th><th class="num">Pièces</th></tr></thead><tbody>'
+                +us.map(u=>{ nPcs+=(parseInt(u.cmd,10)||0);
+                  return '<tr><td>'+esc(u.nom||'—')+'</td><td class="num">'+((u.cmd!=null&&u.cmd!=='')?esc(u.cmd):'—')+'</td></tr>'; }).join('')
+                +'</tbody></table>'):vide('Aucun client servi sur ce site aujourd’hui.'))+'</div>'; }); });
+        out.push('<section class="page"><h1>Tournée '+esc(t.nom||'—')+'</h1>'
+          +'<div class="sub">'+esc(dateFR)+((t.chauffeur&&t.chauffeur!=='—')?(' · chauffeur : '+esc(t.chauffeur)):'')
+          +((av&&av.cut)?(' · cut-off tournée : '+esc(av.cut)):(cut.ok?(' · cut-off boutique : '+esc(cut.raw)):''))+'</div>'
+          +corps+'<div class="tot">'+nCmd+' commande(s) · '+(nPcs||'—')+' pièce(s)</div></section>'); }); }
+    if(parts.etqSites) out.push('<section class="page"><h1>Étiquettes — delivery sites</h1><div class="sub">'+esc(dateFR)+'</div>'
+      +(flatSites.length?('<div class="lab">'+flatSites.map(f=>'<div class="et"><div class="et-k">DELIVERY SITE</div><div class="et-t">'+esc(f.s.libelle||'—')+'</div><div class="et-l">'+esc(f.s.ville||'—')+'</div><div class="et-l">Tournée '+esc(f.t||'—')+(f.s.cutoff?(' · cut-off '+esc(f.s.cutoff)):'')+'</div><div class="et-l">'+((f.s.users||[]).length)+' commande(s)</div></div>').join('')+'</div>')
+        :vide('Aucun delivery site servi aujourd’hui (fr_tdb_tree vide).'))+'</section>');
+    if(parts.etqClients) out.push('<section class="page"><h1>Étiquettes — clients (bureaux)</h1><div class="sub">'+esc(dateFR)+'</div>'
+      +(flatSites.length?('<div class="lab">'+flatSites.map(f=>'<div class="et"><div class="et-k">CLIENT · BUREAU</div><div class="et-t">'+esc(f.s.office||'—')+'</div><div class="et-l">'+esc(f.s.libelle||'—')+' · '+esc(f.s.ville||'—')+'</div><div class="et-l">Tournée '+esc(f.t||'—')+'</div></div>').join('')+'</div>')
+        :vide('Aucun bureau servi aujourd’hui (fr_tdb_tree vide).'))+'</section>');
+    if(parts.etqColis){ const ets=[];
+      ordersDeliv.forEach(o=>{ const n=parseInt(o.pieces,10);
+        if(n>0){ for(let i=1;i<=n;i++) ets.push({o,i,n}); }
+        else ets.push({o,i:null,n:null}); });   // pièces non servies ⇒ une étiquette, sans numérotation supposée
+      out.push('<section class="page"><h1>Étiquettes — colis (delivery)</h1><div class="sub">'+esc(dateFR)+'</div>'
+        +(ets.length?('<div class="lab">'+ets.map(e=>'<div class="et"><div class="et-k">COLIS'+(e.i?(' '+e.i+' / '+e.n):'')+'</div><div class="et-t mono">'+esc(e.o.ref||'—')+'</div><div class="et-l">'+esc(e.o.client||'—')+'</div><div class="et-l">'+esc(e.o.creneau||'')+'</div></div>').join('')+'</div>')
+          :vide('Aucune commande delivery aujourd’hui (ws_orders).'))+'</section>'); }
+    if(parts.prodProduit){ const jour=this.state.prepDay||iso;
+      const lignes=T('fr_prep_lines').filter(r=>String(r.date||iso).slice(0,10)===jour);
+      out.push('<section class="page"><h1>Liste de production — par produit</h1><div class="sub">'+esc(jour===iso?dateFR:jour)+'</div>'
+        +(lignes.length?('<table><thead><tr><th>Catégorie</th><th>Produit</th><th class="num">Qté</th><th>Créneau</th><th>Tournée</th></tr></thead><tbody>'
+          +lignes.map(r=>'<tr><td>'+esc(r.cat||'—')+'</td><td>'+esc(r.produit||'—')+'</td><td class="num">'+((r.qty!=null&&r.qty!=='')?esc(r.qty):'—')+'</td><td>'+esc(r.creneau||'—')+'</td><td>'+esc(r.tournee||'—')+'</td></tr>').join('')+'</tbody></table>')
+          :vide('Rien à produire pour ce jour (ws_order_lines).'))+'</section>'); }
+    return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Run d’impression — '+esc(dateFR)+'</title><style>'
+      +'@page{size:A4;margin:12mm}*{box-sizing:border-box}body{margin:0;font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#222}'
+      +'.bar{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}'
+      +'.bar button{border:none;background:#8D1D2C;color:#fff;border-radius:8px;padding:9px 16px;font:600 13px inherit;cursor:pointer}'
+      +'@media print{.no-print{display:none}}'
+      +'.page{page-break-after:always;padding:6mm 8mm}h1{font-size:17px;margin:0 0 1mm}.sub{color:#666;font-size:11px;margin-bottom:4mm}'
+      +'.zone{font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#8D1D2C;margin:4mm 0 1.5mm}'
+      +'.site{border:.6px solid #bbb;border-radius:2mm;padding:3mm;margin:0 0 3mm;page-break-inside:avoid}.site-h{font-size:12.5px;margin-bottom:1mm}'
+      +'.bur{font-size:11px;color:#444;margin-bottom:1.5mm}'
+      +'table{width:100%;border-collapse:collapse}th,td{border:.5px solid #ccc;padding:1.6mm 2.2mm;text-align:left;font-size:11px}'
+      +'th{background:#f4f1ec;font-size:9px;text-transform:uppercase;letter-spacing:.05em}.num{text-align:right}'
+      +'.tot{margin-top:3mm;font-weight:700;font-size:12px;text-align:right}'
+      +'.vide{border:.6px dashed #aaa;border-radius:2mm;color:#666;padding:4mm;margin:2mm 0;font-size:11px}'
+      +'.lab{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}'
+      +'.et{border:.6px solid #999;border-radius:2mm;padding:3mm;min-height:28mm;page-break-inside:avoid;display:flex;flex-direction:column;gap:1mm}'
+      +'.et-k{font-size:8.5px;font-weight:700;letter-spacing:.08em;color:#8D1D2C}.et-t{font-size:13px;font-weight:700}.et-l{font-size:10.5px;color:#444}'
+      +'.mono{font-family:ui-monospace,Menlo,Consolas,monospace}'
+      +'</style></head><body><div class="no-print bar"><strong>Run d’impression — '+esc(dateFR)+'</strong><button onclick="window.print()">Imprimer</button></div>'
+      +out.join('')+'</body></html>'; }
+  /* OUVERTURE — même contrainte que l'affiche : l'onglet s'ouvre AU CLIC
+     (après coup il serait bloqué comme popup), le contenu y est posé ensuite.
+     Onglet bloqué malgré tout ⇒ téléchargement, et on le dit. */
+  runCutoff(parts){ const html=this.cutoffDocHtml(parts||{});
+    const onglet=window.open('','_blank');
+    const u=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+    if(onglet){ onglet.location=u; setTimeout(()=>URL.revokeObjectURL(u),60000);
+      this.printJob('🖨 Document ouvert — le bouton « Imprimer » de l’onglet lance l’impression (papier ou PDF)'); }
+    else { const a=document.createElement('a'); a.href=u;
+      a.download='run-impression-'+new Date().toISOString().slice(0,10)+'.html';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+      this.printJob('🖨 Onglet bloqué par le navigateur — document téléchargé à la place'); } }
   // Reflète en mémoire les tables serveur touchées par le toggle « livraison
   // au bureau » (office créé/validé + pairing site) → l'office apparaît
   // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
@@ -5010,7 +5178,11 @@ class Component extends DCLogic {
     // visible et qu'un écran « commandes » est affiché — une nouvelle commande
     // webshop apparaît sans recharger la page. Au retour sur l'onglet
     // (visibilitychange), refresh immédiat.
-    this._ordTimer=setInterval(()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); },60000);
+    this._ordTimer=setInterval(()=>{ if(document.visibilityState!=='visible') return;
+      // Le passage du cut-off se signale quel que soit l'écran affiché : un
+      // calcul local (param + tables en mémoire), aucun fetch supplémentaire.
+      this.cutoffPing();
+      if(this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); },60000);
     document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&this.ORD_SCREENS[this.state.screen]) this.ordersRefresh(); });
     // Auto-refresh du CATALOGUE : toutes les 30 s tant que l'onglet est
     // visible, et immédiatement au retour sur l'onglet. La marque décide de
@@ -6502,9 +6674,50 @@ class Component extends DCLogic {
           // Statut terminal : plus de flèche, plus de curseur « cliquable » —
           // un bouton qui ne fait rien laisse croire à une panne.
           statutStyle:'border:none;'+(ordNextOf(o)?'cursor:pointer;':'cursor:default;')+pill2(bg,c),
-          advance:()=>ordAdvance(o) };
+          // stopPropagation SEULEMENT quand le statut avance encore : le clic
+          // sur un statut terminal (inerte) retombe sur la ligne et ouvre le
+          // détail, au lieu de ne rien faire du tout.
+          advance:(e)=>{ if(ordNextOf(o)&&e&&e.stopPropagation) e.stopPropagation(); ordAdvance(o); },
+          open:()=>this.setState({ordDetail:o.ref}) };
       });
     const ordersEmpty=ordersList.length===0;
+    /* DÉTAIL D'UNE COMMANDE — la ligne cliquée ouvre une modale. L'état garde
+       la RÉFÉRENCE, pas l'objet : le rafraîchissement (60 s) remplace les
+       lignes servies, et la modale doit montrer l'état d'après, pas une copie
+       figée au moment du clic. Réf disparue (commande sortie de la période
+       servie) ⇒ la modale se ferme d'elle-même au rendu suivant. */
+    const odtRow=(S.ordDetail!=null)?ordersRaw.find(x=>x.ref===S.ordDetail):null;
+    const odtOpen=!!odtRow;
+    const [odtBg,odtC]=odtRow?ordStatColor(odtRow.statut):['var(--color-background-secondary)','var(--color-text-muted)'];
+    /* Champs AFFICHÉS = champs SERVIS. La grille nomme ceux que la liste
+       connaît ; tout autre champ scalaire servi par /franchisee/fr-orders
+       apparaît sous son nom de clé — la modale montre ce que le serveur sert,
+       elle ne trie pas à sa place. Absent ⇒ « — », jamais une valeur supposée. */
+    const odtFields=[];
+    if(odtRow){
+      const jl3=odtRow.date?(odtRow.date===todayIso?(odtRow.date.slice(8,10)+'/'+odtRow.date.slice(5,7)):jourLbl(odtRow.date)):'';
+      odtFields.push({lbl:'Client',val:odtRow.client||'—'});
+      odtFields.push({lbl:'Source',val:odtRow.source||'—'});
+      odtFields.push({lbl:'Mode',val:odtRow.mode||'—'});
+      odtFields.push({lbl:'Date',val:jl3||'—'});
+      odtFields.push({lbl:'Créneau',val:odtRow.creneau||'—'});
+      odtFields.push({lbl:'Paiement',val:odtRow.paye||'—'});
+      odtFields.push({lbl:'Pièces',val:String(odtRow.pieces!=null?odtRow.pieces:'—')});
+      const odtSeen={ref:1,client:1,source:1,mode:1,date:1,creneau:1,paye:1,pieces:1,statut:1,montant:1,lines:1,items:1,lignes:1,produits:1};
+      Object.keys(odtRow).forEach(k=>{ const v=odtRow[k];
+        if(odtSeen[k]||v==null||typeof v==='object'||String(v).trim()==='') return;
+        odtFields.push({lbl:k,val:String(v)}); });
+    }
+    /* Lignes de la commande : rendues si le serveur les JOINT à la commande
+       (lines / items / lignes / produits), avec les valeurs qu'il emploie.
+       /franchisee/fr-orders ne les joint pas aujourd'hui : l'état vide le dit
+       et renvoie vers la vue agrégée « À produire » — rien d'inventé ici. */
+    const odtLinesRaw=odtRow?[odtRow.lines,odtRow.items,odtRow.lignes,odtRow.produits].find(Array.isArray):null;
+    const odtLines=(odtLinesRaw||[]).map(l=>{
+      if(l==null||typeof l!=='object') return {produit:String(l),qte:'',prix:''};
+      const q=[l.qty,l.qte,l.quantity].find(v=>v!=null), px=[l.prix,l.price,l.montant,l.total].find(v=>v!=null);
+      return {produit:String([l.produit,l.product,l.libelle,l.label,l.nom,l.name].find(v=>v!=null&&String(v).trim()!=='')||'—'),
+        qte:q!=null?('× '+q):'', prix:px!=null?String(px):''}; });
     // Préparation : badges par JOUR (Aujourd'hui, puis jours suivants ayant des
     // commandes) — le clic affiche les commandes correspondantes.
     const prepDaysSeen={}; const prepDays=[];
@@ -6529,6 +6742,17 @@ class Component extends DCLogic {
       .map(r=>({cat:r.cat||'—',produit:r.produit||'—',qty:String(r.qty!=null?r.qty:'—'),
                 creneau:r.creneau||'—',tournee:r.tournee||'—'}));
     const prepProdEmpty=prepProdLines.length===0;
+    /* RUN DE CUT-OFF — l'heure est celle d'order.cutoff_default (ws_param).
+       Pas d'heure configurée ⇒ pas de compte à rebours inventé : le panneau le
+       dit et le run reste lançable à la main. Le re-rendu périodique (timer
+       60 s de componentDidMount) fait vivre l'état sans autre mécanique. */
+    const runCfg=this.cutoffCfg();
+    const runNowMin=d0.getHours()*60+d0.getMinutes();
+    const runArmed=!!(runCfg.ok&&runNowMin>=runCfg.min);
+    const runDelivToday=ordersRaw.filter(o=>((o.date||todayIso)===todayIso)&&o.mode==='Livraison').length;
+    const runTours=SRV('fr_tdb_tree').length;
+    const runReste=(runCfg.ok&&!runArmed)?(runCfg.min-runNowMin):null;
+    const runResteTxt=runReste!=null?(runReste>=60?(Math.floor(runReste/60)+' h '+String(runReste%60).padStart(2,'0')):(runReste+' min')):'';
 
     // ===== Catalogue partagé : catégories → produits (Assortiment + Stock) =====
     const CATALOG=SRV('fr_stock_catalog');
@@ -7109,16 +7333,6 @@ class Component extends DCLogic {
     const obToggle=(k)=>()=>this.setState(s=>({ob:{...s.ob,[k]:!s.ob[k]}}));
     const obTog=(on)=>({track:'position:relative;width:40px;height:22px;border-radius:20px;border:none;cursor:pointer;flex:none;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)'),knob:'position:absolute;top:2px;left:'+(on?'20px':'2px')+';width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s'});
     const obMailTog=obTog(O.sendMail), obAdhTog=obTog(O.sendAdhesion);
-    /* Ce que le serveur fera du domaine, annoncé AVANT la validation. Le lien
-       part dans tous les cas ; c'est sa RESTRICTION qui dépend de l'adresse du
-       contact. Une messagerie grand public ne restreint personne : le dire est
-       le seul moyen que le franchisé sache que le lien, une fois transféré
-       hors de l'entreprise, ouvrira quand même le formulaire. */
-    const obInvDom=this.obDomaine(O);
-    const obInvDomBrut=this.obDomaineBrut(O);
-    const obInvKoMsg=obInvDomBrut
-      ? ('L\u2019e-mail du contact est une adresse grand public (@'+obInvDomBrut+') : le lien sera émis SANS restriction de domaine — n\u2019importe quelle adresse pourra s\u2019en servir. Chaque compte reste à valider, mais donnez plutôt une adresse d\u2019entreprise comme contact.')
-      : 'Aucun domaine ne se déduit de l\u2019e-mail du contact : le lien sera émis SANS restriction — n\u2019importe quelle adresse pourra s\u2019en servir.';
     const obInvPrelie=[this.shopField('name',''),O.office||O.raison||'',O.adr||''].filter(Boolean).join(' · ')||'—';
     const obChip='font:500 10.5px var(--font-ui);background:var(--color-background-secondary);border-radius:6px;padding:5px 9px;color:var(--color-text);white-space:nowrap';
     const obChainView=[
@@ -7191,8 +7405,7 @@ class Component extends DCLogic {
       // opacity SEULE : pointer-events:none rendait le bouton totalement inerte,
       // donc impossible d'y accrocher la moindre explication.
       obNextDisabledStyle:obStepValid?'':'opacity:.45;cursor:not-allowed',
-      obInvDom:obInvDom, obInvDomOk:!!obInvDom, obInvDomKo:!obInvDom, obInvPrelie:obInvPrelie,
-      obInvKoMsg:obInvKoMsg,
+      obInvPrelie:obInvPrelie,
       obIsFirst:obStep===0, obIsLast:obLast, obNotFirst:obStep>0, obNotLast:!obLast,
     };
 
@@ -7687,6 +7900,12 @@ class Component extends DCLogic {
       isJoursExcept:screen==='reglesBoutique'&&(S.dispoTab||'dispo')==='except',joursExcept,addExcept,
       isFrais:screen==='frais'||screen==='params',feeRules,
       isCommandes:screen==='commandes',ordersList,ordersEmpty,ordFilterAll:fPill('all'),ordFilterDeliv:fPill('deliv'),ordFilterPickup:fPill('pickup'),
+      odtOpen, odtRef:odtRow?odtRow.ref:'', odtClient:odtRow?(odtRow.client||'—'):'',
+      odtStatutTxt:odtRow?(ordStatFR[odtRow.statut]||odtRow.statut||'—'):'',
+      odtStatutPill:pill2(odtBg,odtC),
+      odtTotal:odtRow?(odtRow.montant!=null&&String(odtRow.montant).trim()!==''?String(odtRow.montant):'—'):'',
+      odtFields, odtLines, odtHasLines:odtLines.length>0, odtNoLines:odtOpen&&!odtLines.length,
+      odtClose:()=>this.setState({ordDetail:null}),
       ordSetAll:ordSetFilter('all'),ordSetDeliv:ordSetFilter('deliv'),ordSetPickup:ordSetFilter('pickup'),
       ordTitleDate:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'}),
       tdbViewTree:tdbView==='tree',tdbViewList:tdbView==='list'||tdbView==='collect',
@@ -7867,16 +8086,27 @@ class Component extends DCLogic {
       
       tdbTree,prepTree,tdbToggleAll,tdbToggleAllLabel,
       toast:S.toast,toastShow:!!S.toast,
-      // Impressions — compteurs RÉELS (offices actifs, colis du jour, points, tournées).
-      prints:(()=>{ const nOff=SRV('ws_offices').length, nPts=SRV('fr_prep_points').length,
-        nTours=SRV('ws_tours').filter(t=>t.name).length;
-        return {
-          etqClients:()=>this.printJob('🖨 Étiquettes clients envoyées à l\'imprimante ('+nOff+' office'+(nOff>1?'s':'')+')'),
-          etqColis:()=>this.printJob('🖨 Étiquettes colis QR/Code128 — '+scanTotal+' colis'),
-          etqSite:()=>this.printJob('🖨 Étiquettes delivery site — '+nPts+' point'+(nPts>1?'s':'')),
-          prodProduit:()=>this.printJob('🖨 Liste de production par produit (cat / produit / heure de sortie)'),
-          prodTournee:()=>this.printJob('🖨 Liste de production par tournée — '+nTours+' tournée'+(nTours>1?'s':'')),
-        }; })(),
+      /* Impressions — RÉELLES désormais : chaque bouton ouvre le document
+         correspondant (généré depuis les tables servies) dans un onglet où
+         « Imprimer » lance la boîte du navigateur. Les anciens boutons
+         disaient « envoyées à l'imprimante » sans rien produire : un
+         franchisé attendait des étiquettes qui ne pouvaient pas sortir. */
+      prints:{
+        etqClients:()=>this.runCutoff({etqClients:1}),
+        etqColis:()=>this.runCutoff({etqColis:1}),
+        etqSite:()=>this.runCutoff({etqSites:1}),
+        prodProduit:()=>this.runCutoff({prodProduit:1}),
+        prodTournee:()=>this.runCutoff({tournees:1}),
+      },
+      // Panneau « run de cut-off » (écran Préparation).
+      runEtat:runCfg.ok?(runArmed?('Cut-off '+runCfg.raw+' passé — lancez l’impression du run delivery.')
+          :('Cut-off à '+runCfg.raw+' (dans '+runResteTxt+') — le panneau s’arme au passage ; lancement anticipé possible.'))
+        :'Aucun cut-off configuré (order.cutoff_default) — lancement manuel du run.',
+      runPillTxt:runCfg.ok?(runArmed?'Armé — à imprimer':'Avant cut-off'):'Manuel',
+      runPill:pill2(runArmed?'#fbe9eb':'var(--color-background-secondary)',runArmed?'var(--color-primary)':'var(--color-text-muted)')+';padding:6px 12px',
+      runBorder:runArmed?'var(--color-primary)':'var(--color-border-tertiary)',
+      runCounts:runTours+' tournée(s) · '+runDelivToday+' commande(s) delivery aujourd’hui',
+      runGo:()=>this.runCutoff({tournees:1,etqSites:1,etqClients:1,etqColis:1}),
       prepPoints,scanTotal,scanDone,scanPct:(scanTotal>0?Math.round(scanDone/scanTotal*100):0)+'%',
       scanOne:()=>this.setState(s=>({scan:Math.min(scanTotal,s.scan+1)})),scanReset:()=>this.setState({scan:0,bonValide:false}),
       ecartTxt:ecart===0?'aucun':('−'+ecart),ecartColor:ecart===0?'#2d7a3e':'var(--color-primary)',

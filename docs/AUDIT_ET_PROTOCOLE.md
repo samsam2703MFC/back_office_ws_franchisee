@@ -360,7 +360,7 @@ en-têtes de cache que récemment).
 | I3 | QR imprimé | Ouvrir l'affiche, « Imprimer », scanner à 60 cm | Lecture immédiate | — |
 | I3b | Affiche à la charte | Sur la page ouverte : Gotham (pas Helvetica), bandeau bordeaux, logo | `GET /franchisee/office-invite-poster` |
 | I3c | Affiche sur **une** page | Aperçu d'impression d'un bureau aux 12 conditions | 1 page A4, pied en bas | — |
-| I4 | Domaine imposé | Saisir un e-mail hors domaine | Refus (front **et** serveur) | `POST /inscription` → 403 |
+| I4 | Toute adresse acceptée | Saisir un e-mail d'un autre domaine que le contact | Inscription acceptée, compte `pending` à valider en console — plus aucun refus lié au domaine (exigence retirée le 14/08/2026 ; si un 403 « domaine » sort encore, c'est un reliquat php-api à retirer) | `POST /inscription` → 200 · `ws_office_join_requests` |
 | I5 | Mot de passe | 11 caractères, sans chiffre | Refus motivé | `POST /inscription` → 400 |
 | I6 | Compte créé | Formulaire complet | Compte + demande `pending` | `client`, `ws_office_join_requests` |
 | I7 | Non rattaché | Se connecter aussitôt | Click & collect ouvert, livraison bureau fermée **avec motif** | `client.office_id` NULL |
