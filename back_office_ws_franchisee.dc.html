@@ -1727,7 +1727,6 @@
                 <button onClick="{{ a.toggle }}" style="{{ a.swStyle }}"><span style="{{ a.swKnob }}"></span></button>
                 <div onClick="{{ a.open }}" style="flex:1;display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0"><span style="width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-text-muted);flex:none">{{ a.caret }}</span><span style="font:600 12px var(--font-ui);text-transform:uppercase;letter-spacing:.05em;color:var(--color-text)">{{ a.label }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);flex:none">{{ a.nbProds }}</span></div>
                 <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if>
-                <sc-if value="{{ a.mand }}" hint-placeholder-val="{{ false }}"><span style="{{ a.mandBadge }}">Marque obligatoire</span></sc-if>
               </div>
             </sc-if>
             <sc-if value="{{ a.isSub }}" hint-placeholder-val="{{ false }}">
@@ -1739,7 +1738,7 @@
             </sc-if>
             <sc-if value="{{ a.isProd }}" hint-placeholder-val="{{ false }}">
               <div style="{{ a.rowStyle }}">
-                <div style="display:flex;align-items:center;gap:7px"><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ a.label }}</span><sc-if value="{{ a.lockShow }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.9"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></sc-if><sc-if value="{{ a.hasPort }}" hint-placeholder-val="{{ false }}"><span title="{{ a.portTitle }}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 10px var(--font-ui);cursor:help;flex:none">◔ portions</span></sc-if><sc-if value="{{ a.hasCanal }}" hint-placeholder-val="{{ false }}"><span style="font:400 10px var(--font-ui);color:var(--color-text-muted);flex:none">{{ a.canal }}</span></sc-if></div>
+                <div style="display:flex;align-items:center;gap:7px"><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ a.label }}</span><sc-if value="{{ a.hasPort }}" hint-placeholder-val="{{ false }}"><span title="{{ a.portTitle }}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 10px var(--font-ui);cursor:help;flex:none">◔ portions</span></sc-if><sc-if value="{{ a.hasCanal }}" hint-placeholder-val="{{ false }}"><span style="font:400 10px var(--font-ui);color:var(--color-text-muted);flex:none">{{ a.canal }}</span></sc-if></div>
                 <div style="min-width:0"><span style="font:400 11px var(--font-ui);color:{{ a.stateColor }}">{{ a.stateTxt }}</span><sc-if value="{{ a.hasNav }}" hint-placeholder-val="{{ false }}"><div style="font:400 10px var(--font-ui);color:#b26a00;margin-top:2px">⚠ {{ a.navTxt }}</div></sc-if></div>
                 <div style="display:flex;justify-content:center;align-items:center;gap:7px"><sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if><button onClick="{{ a.toggle }}" style="{{ a.swStyle }}"><span style="{{ a.swKnob }}"></span></button></div>
               </div>
@@ -6640,13 +6639,16 @@ class Component extends DCLogic {
     asrRaw.forEach(a=>{ const k=a.cat||'Autres'; if(!asrCats[k]){ asrCats[k]={cat:k,prods:[]}; asrOrder.push(k); } asrCats[k].prods.push(a); });
     const assortRows=[];
     asrOrder.forEach(k=>{ const c=asrCats[k];
-      const cAct=c.prods.some(p=>p.defA!==false);
-      const allLocked=c.prods.every(p=>p.locked);
+      /* « Marque obligatoire » (mand/allLocked) et le cadenas (locked) ont
+         disparu : brand_mandatory n'existe plus (migration 0073) — le serveur
+         ne sert plus ces champs, il n'y a plus de produit qu'une boutique
+         serait tenue de produire, puisqu'elle ne choisit plus son assortiment
+         du tout. */
       // REPLI/DÉPLI par catégorie : replié PAR DÉFAUT (on ne voit que les
       // bandeaux catégorie → gestion plus simple) ; clic sur le bandeau =
       // déplier ; bouton global « Tout déplier / Tout replier ».
       const catOpen=(S.asrOpen&&S.asrOpen[k]!==undefined)?S.asrOpen[k]:!!S.asrAllOpen;
-      assortRows.push({isCat:true,isProd:false,label:c.cat,mand:allLocked,mandBadge:pill2('#fbe9eb','var(--color-primary)'),
+      assortRows.push({isCat:true,isProd:false,label:c.cat,
         caret:catOpen?'▾':'▸',nbProds:c.prods.length+' produit'+(c.prods.length>1?'s':''),
         open:()=>this.setState(s=>({asrOpen:{...(s.asrOpen||{}),[k]:!catOpen}})),
         help:'« '+c.cat+' » — ouverte à votre boutique par la marque. Vous ne pouvez pas retirer une catégorie de la vente : cela se décide dans la console marque.'});
@@ -6665,10 +6667,10 @@ class Component extends DCLogic {
         }
         if(!subOpen) return;
         sprods.forEach(p=>{ const pAct=p.defA!==false;
-        assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
+        assortRows.push({isCat:false,isProd:true,label:p.nom,
           canal:p.canal||'',hasCanal:!!p.canal,
           hasPort:!!erpPortIdx[p.nom],portTitle:erpPortIdx[p.nom]||'',
-          help:p.nonTarife?('Produit « '+p.nom+' » SANS PRIX pour cette boutique (ERP shop_product) : hors vente — invisible au webshop et refusé à la commande. Il redeviendra vendable AUTOMATIQUEMENT dès qu\'un prix sera posé dans l\'ERP.'):(p.locked?('« '+p.nom+' » est OBLIGATOIRE (marque) : sa production ne peut pas être refusée.'):('« '+p.nom+' » — sa mise en vente est décidée par la marque. Pour en fixer la quantité fabriquée, passez par Stock du jour.')),
+          help:p.nonTarife?('Produit « '+p.nom+' » SANS PRIX (ws_products.price) : hors vente — invisible au webshop et refusé à la commande, pour tout le réseau. Il redeviendra vendable AUTOMATIQUEMENT dès que la marque posera un prix.'):('« '+p.nom+' » — sa mise en vente est décidée par la marque. Pour en fixer la quantité fabriquée, passez par Stock du jour.'),
           rowStyle:'display:grid;grid-template-columns:2.4fr 1.2fr .7fr;align-items:center;padding:10px 6px 10px 22px;border-bottom:.5px solid var(--color-border-tertiary)'+((pAct&&!p.nonTarife)?'':';opacity:.5'),
           // NON TARIFÉ (aucun prix ERP > 0 pour cette boutique) : le produit est
           // hors vente quoi qu'en dise la bascule — il disparaissait AVANT du
@@ -6676,11 +6678,11 @@ class Component extends DCLogic {
           // dès que l'ERP pose un prix : aucune bascule à refaire.
           /* L'ÉTAT VIENT DU SERVEUR, il n'est plus redéduit ici.
              L'écran ne connaissait que trois cas (non tarifé · actif · inactif)
-             alors que le serveur en distingue six : brouillon, retiré du
-             catalogue réseau, exclu de cette boutique, non éligible au bureau,
-             hors saison, sans prix ERP. Un produit absent du webshop pour l'une
-             des trois raisons non couvertes s'affichait ici « Actif · vendable »
-             — l'écran contredisait la boutique.
+             alors que le serveur en distingue davantage — aujourd'hui :
+             brouillon, hors canal (click & collect ou livraison bureau), hors
+             saison, prix non fixé. Un produit absent du webshop pour une raison
+             non couverte s'affichait ici « Actif · vendable » — l'écran
+             contredisait la boutique.
              `enLigne` peut être null (produit hors du périmètre du diagnostic) :
              on retombe alors sur l'ancienne lecture plutôt que d'affirmer. */
           stateTxt:(p.enLigne===false?('Hors vente · '+(p.raison||'motif inconnu'))

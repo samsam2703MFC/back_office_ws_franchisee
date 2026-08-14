@@ -791,23 +791,32 @@ jobs:
                       ORDER BY name LIMIT 20"
               fi
 
-              # LES TROIS LEVIERS QUI RESTREIGNENT LE CATALOGUE, ET CE QU'ILS
-              # RETIENNENT REELLEMENT. Avant de simplifier le modele — « tous
-              # les produits sont communs a tous les magasins, la marque decide
-              # seulement webshop / livraison » — il faut savoir ce que chaque
-              # levier bloque AUJOURD'HUI : le retirer rendra visible tout ce
-              # qu'il cachait, et ca se fait les yeux ouverts.
-              echo "  leviers de restriction, etat actuel :"
-              WL=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active=1 AND COALESCE(brand_whitelist,1)=0")
-              PS0=$(dbq "SELECT COUNT(*) FROM ws_product_shops WHERE active=0")
-              CS=$(dbq "SELECT COUNT(*) FROM ws_categories WHERE shop_id IS NOT NULL")
-              CSP=$(dbq "SELECT COUNT(*) FROM ws_products p JOIN ws_categories c ON c.id=p.cat_id
-                          WHERE p.active=1 AND c.shop_id IS NOT NULL")
+              # LES LEVIERS DU CATALOGUE, APRES SIMPLIFICATION DU MODELE.
+              # « Tous les produits sont communs a tous les magasins » : il ne
+              # reste que active, click_and_collect, office_delivery et price —
+              # tous dans ws_products. Les anciens leviers (brand_whitelist,
+              # brand_mandatory) sont TOMBES avec la migration 0073 : cette
+              # section comptait ce qu'ils retenaient, elle verifie desormais
+              # qu'ils sont bien morts. Une colonne encore presente = le serveur
+              # n'a pas recu la migration — et l'API, qui ne la lit plus, ne le
+              # signalerait par aucun autre symptome.
+              echo "  leviers du catalogue (tout est dans ws_products) :"
+              RELIQUES=$(dbq "SELECT GROUP_CONCAT(column_name) FROM information_schema.columns
+                               WHERE table_schema=DATABASE() AND table_name='ws_products'
+                                 AND column_name IN ('brand_whitelist','brand_mandatory','webshop')")
+              if [ -n "$RELIQUES" ] && [ "$RELIQUES" != "NULL" ]; then
+                echo "    ⛔ colonne(s) supprimee(s) du modele ENCORE EN BASE : $RELIQUES"
+                echo "       → la migration 0073 n'est pas passee sur ce serveur (voir ws_schema_migrations)."
+                dbko=$((dbko+1))
+              else
+                echo "    ✓ brand_whitelist / brand_mandatory absents (migration 0073 appliquee)"
+              fi
+              CC=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active=1 AND COALESCE(click_and_collect,1)=0")
               OD=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active=1 AND COALESCE(office_delivery,1)=0")
-              printf '    %-4s produit(s) actif(s) retires par brand_whitelist=0\n' "${WL:-?}"
-              printf '    %-4s ligne(s) ws_product_shops.active=0 (exclusion par boutique)\n' "${PS0:-?}"
-              printf '    %-4s categorie(s) rattachees a UNE boutique, portant %s produit(s) actif(s)\n' "${CS:-?}" "${CSP:-?}"
+              PX=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active=1 AND COALESCE(price,0)<=0")
+              printf '    %-4s produit(s) actif(s) fermes au click & collect (click_and_collect=0)\n' "${CC:-?}"
               printf '    %-4s produit(s) actif(s) hors livraison bureau (office_delivery=0)\n' "${OD:-?}"
+              printf '    %-4s produit(s) actif(s) sans prix (price<=0) — hors vente partout\n' "${PX:-?}"
 
               # SOUS-CATEGORIES. Le webshop n'affiche la barre que si la
               # categorie propose AU MOINS DEUX sous-categories peuplees
