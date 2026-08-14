@@ -19,6 +19,13 @@ deux fois dans les deux.
 Cette répartition suit ce que chaque session a réellement construit, pas une
 préférence. Elle se change en éditant ce tableau — dans les **deux** dépôts.
 
+> **Note du 14/08/2026 — exception ponctuelle demandée explicitement par
+> l'utilisateur :** la session « franchisé » a écrit le panneau « Run
+> d'impression — cut-off delivery (réseau) » du tableau de bord de la console
+> marque (branche `claude/cutoff-print-run-network` de
+> `back_office_ws_franchisor`). La répartition ci-dessus reste inchangée pour
+> tout le reste.
+
 ## Pourquoi
 
 Trois incidents en une seule journée, tous dus au travail en parallèle :
