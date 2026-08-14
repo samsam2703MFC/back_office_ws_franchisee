@@ -667,6 +667,42 @@ jobs:
                 fi
               fi
 
+              # SOUS-CATEGORIES. Le webshop n'affiche la barre que si la
+              # categorie propose AU MOINS DEUX sous-categories peuplees
+              # (webshop-full-bundle.jsx : subs.length >= 2), et ne garde que
+              # celles qui contiennent un produit du creneau. Trois raisons
+              # distinctes de ne rien voir, qu'un simple « ca ne marche pas »
+              # ne separe pas : la table est vide, les produits n'ont pas de
+              # sub_cat_id, ou il n'y en a qu'une seule par categorie.
+              if [ -n "$(dbq "SELECT 1 FROM information_schema.tables
+                               WHERE table_schema=DATABASE() AND table_name='ws_category_subs'")" ]; then
+                NS=$(dbq "SELECT COUNT(*) FROM ws_category_subs")
+                NSA=$(dbq "SELECT COUNT(*) FROM ws_category_subs WHERE active=1")
+                PS=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active=1 AND sub_cat_id IS NOT NULL")
+                PT=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active=1")
+                echo "  sous-categories : $NS en base ($NSA actives) · $PS produits actifs sur $PT en portent une"
+                if [ "${NS:-0}" = "0" ]; then
+                  echo "    ⚠ table VIDE — aucune barre de sous-categories possible, nulle part."
+                elif [ "${PS:-0}" = "0" ]; then
+                  echo "    ⚠ AUCUN produit actif n'a de sub_cat_id — les sous-categories existent"
+                  echo "      mais rien ne s'y rattache : la barre reste vide par construction."
+                else
+                  # Par categorie : combien de sous-categories PEUPLEES. En
+                  # dessous de 2, le webshop masque la barre — volontairement.
+                  echo "    sous-categories PEUPLEES par categorie (le webshop en exige 2) :"
+                  dbq "SELECT CONCAT('        ', LPAD(COUNT(DISTINCT s.id),3,' '), '  ', c.label,
+                              IF(COUNT(DISTINCT s.id) < 2, '   ← barre masquee (moins de 2)', ''))
+                         FROM ws_category_subs s
+                         JOIN ws_categories c ON c.id = s.category_id
+                        WHERE EXISTS (SELECT 1 FROM ws_products p
+                                       WHERE p.sub_cat_id = s.id AND p.active = 1)
+                        GROUP BY c.id, c.label ORDER BY c.label LIMIT 30"
+                fi
+              else
+                echo "  ⚠ table ws_category_subs ABSENTE — aucune sous-categorie possible."
+                dbko=$((dbko+1))
+              fi
+
               # 6. Migrations présentes sur le disque mais jamais enregistrées.
               if [ -d "$API_DIR/migrations" ]; then
                 PEND=''
