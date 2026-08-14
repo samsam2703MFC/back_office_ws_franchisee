@@ -689,13 +689,22 @@ jobs:
                 else
                   # Par categorie : combien de sous-categories PEUPLEES. En
                   # dessous de 2, le webshop masque la barre — volontairement.
-                  echo "    sous-categories PEUPLEES par categorie (le webshop en exige 2) :"
-                  dbq "SELECT CONCAT('        ', LPAD(COUNT(DISTINCT s.id),3,' '), '  ', c.label,
-                              IF(COUNT(DISTINCT s.id) < 2, '   ← barre masquee (moins de 2)', ''))
+                  # « Un vrai choix » ne se mesure pas au NOMBRE de
+                  # sous-categories mais a ce qu'elles LAISSENT DE COTE. Une
+                  # sous-categorie unique qui couvre TOUS les produits de sa
+                  # categorie ne filtre rien : la masquer est juste. La meme,
+                  # qui n'en couvre qu'une partie, EST un filtre reel — et le
+                  # seuil de 2 la masque a tort. On imprime donc les deux
+                  # chiffres, seule facon de trancher.
+                  echo "    par categorie : sous-cat. peuplees · produits couverts / total actifs"
+                  dbq "SELECT CONCAT('        ', LPAD(COUNT(DISTINCT s.id),3,' '), ' sous-cat.  ',
+                              LPAD(COUNT(DISTINCT p.id),3,' '), ' / ',
+                              (SELECT COUNT(*) FROM ws_products p2
+                                WHERE p2.cat_id = c.id AND p2.active = 1), '  ', c.label,
+                              IF(COUNT(DISTINCT s.id) < 2, '   ← barre masquee (seuil de 2)', ''))
                          FROM ws_category_subs s
                          JOIN ws_categories c ON c.id = s.category_id
-                        WHERE EXISTS (SELECT 1 FROM ws_products p
-                                       WHERE p.sub_cat_id = s.id AND p.active = 1)
+                         JOIN ws_products p ON p.sub_cat_id = s.id AND p.active = 1
                         GROUP BY c.id, c.label ORDER BY c.label LIMIT 30"
                 fi
               else
