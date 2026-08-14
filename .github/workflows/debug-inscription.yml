@@ -1,0 +1,58 @@
+name: Sonde — rejouer une inscription (diagnostic 500)
+
+# Rejoue POST /inscription DEPUIS le serveur avec un code d'invitation réel,
+# affiche la réponse HTTP, puis lit les dernières lignes « [ws] » du log
+# Apache — c'est là que le handler global écrit le vrai message d'une
+# « Erreur interne ». À n'utiliser qu'en diagnostic : un essai qui RÉUSSIT
+# crée un compte jetable (e-mail debug-<horodatage>@exemple.test), qui reste
+# « pending » et se rejette depuis « Demandes de rattachement bureau ».
+
+on:
+  workflow_dispatch:
+    inputs:
+      code:
+        description: "Code court du lien (inv_…) — celui de l'URL ?c="
+        required: true
+        type: string
+      pin:
+        description: "Code PIN à 4 chiffres pour l'essai"
+        required: false
+        default: "1234"
+        type: string
+
+jobs:
+  rejouer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Rejouer l'inscription et lire le log
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+          CODE: ${{ inputs.code }}
+          PIN: ${{ inputs.pin }}
+        run: |
+          { printf 'CODE=%q\n' "$CODE"
+            printf 'PIN=%q\n' "$PIN"
+            cat probe.sh
+          } > /dev/null 2>&1 || true
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s <<EOSH
+          set -u
+          CODE='${{ inputs.code }}'
+          PIN='${{ inputs.pin }}'
+          MAIL="debug-\$(date +%s)@exemple.test"
+          echo "== POST /inscription (c=\$CODE, email \$MAIL)"
+          HTTP=\$(curl -s -o /tmp/insc.json -w '%{http_code}' -X POST \
+            -H 'Content-Type: application/json' \
+            -d "{\"c\":\"\$CODE\",\"firstName\":\"Sonde\",\"lastName\":\"Debug\",\"email\":\"\$MAIL\",\"phone\":\"0470 00 00 00\",\"postalCode\":\"1435\",\"pin\":\"\$PIN\"}" \
+            "http://localhost/webshop/api/inscription")
+          echo "HTTP \$HTTP"
+          cat /tmp/insc.json; echo
+          echo "== Dernières lignes [ws] du log Apache"
+          for LOG in /var/log/apache2/error.log /var/log/httpd/error_log; do
+            [ -r "\$LOG" ] && { grep '\[ws\]' "\$LOG" | tail -6; break; }
+          done || echo "log illisible pour cet utilisateur"
+          EOSH
