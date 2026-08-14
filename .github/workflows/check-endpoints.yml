@@ -641,6 +641,30 @@ jobs:
                   dbko=$((dbko+1)); }
                 [ "${CN:-0}" != "0" ] && \
                   echo "    ⚠ ${CN} categorie(s) active(s) SANS illustration (ws_categories.img vide)."
+
+                # RATTACHEMENT ORPHELIN, SUR TOUT LE RÉSEAU. Le contrôle
+                # « aucun produit en vente sans categorie joignable » plus haut
+                # passe par fr-assortiment, donc par la SEULE boutique sondée :
+                # un produit dont le cat_id ne pointe sur rien lui échappe s'il
+                # n'est pas à son assortiment. Ici on interroge la base entière.
+                # La categorie ne se DEDUIT pas d'un nom de produit — on nomme
+                # les lignes, le rattachement se decide dans la console marque.
+                ORPH=$(dbq "SELECT COUNT(*) FROM ws_products p WHERE p.active = 1
+                             AND (p.cat_id IS NULL
+                                  OR NOT EXISTS (SELECT 1 FROM ws_categories c WHERE c.id = p.cat_id))")
+                if [ "${ORPH:-0}" != "0" ]; then
+                  echo "    ⚠ ${ORPH} produit(s) actif(s) sans categorie existante (cat_id vide ou mort) :"
+                  dbq "SELECT CONCAT('        · ', p.name, '   cat_id=', IFNULL(p.cat_id,'NULL'))
+                         FROM ws_products p WHERE p.active = 1
+                          AND (p.cat_id IS NULL
+                               OR NOT EXISTS (SELECT 1 FROM ws_categories c WHERE c.id = p.cat_id))
+                        ORDER BY p.name LIMIT 25"
+                  [ "${ORPH:-0}" -gt 25 ] 2>/dev/null && echo "        … et $((ORPH - 25)) autre(s)"
+                  echo "      Remede : console marque, rattacher chaque produit a une categorie."
+                  dbko=$((dbko+1))
+                else
+                  echo "    OK   aucun produit actif sans categorie existante (reseau entier)"
+                fi
               fi
 
               # 6. Migrations présentes sur le disque mais jamais enregistrées.
