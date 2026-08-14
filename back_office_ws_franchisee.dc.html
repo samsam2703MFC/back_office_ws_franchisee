@@ -1582,6 +1582,51 @@
             <div style="padding:6px;font:400 12.5px var(--font-ui);color:var(--color-text-muted)">{{ avisEmptyNeg }}</div>
           </sc-if>
         </div>
+
+        <!-- avis Google de la fiche établissement — lecture seule (Places API) -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px">
+            <div class="t-section-title" style="font-size:15px">Avis Google</div>
+            <sc-if value="{{ gRevHasFiche }}" hint-placeholder-val="{{ false }}">
+              <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ gRevFiche }}</span>
+            </sc-if>
+            <sc-if value="{{ gRevHasNote }}" hint-placeholder-val="{{ false }}">
+              <span style="display:inline-flex;align-items:center;gap:6px">
+                <span style="font:700 15px var(--font-ui);color:var(--color-text)">{{ gRevNote }}</span>
+                <span style="display:inline-flex;gap:1px"><sc-for list="{{ gRevStars }}" as="s" hint-placeholder-count="5"><span style="{{ s.style }}">{{ s.ch }}</span></sc-for></span>
+                <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ gRevNb }}</span>
+              </span>
+            </sc-if>
+            <span style="margin-left:auto;display:inline-flex;gap:8px">
+              <sc-if value="{{ gRevHasUrl }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ gRevOpen }}" class="btn-secondary" style="font-size:12px">Ouvrir sur Google</button>
+              </sc-if>
+              <button onClick="{{ gRevDo }}" class="btn-secondary" style="font-size:12px">Recharger</button>
+            </span>
+          </div>
+          <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">{{ gRevHint }}</div>
+          <sc-if value="{{ gRevLoading }}" hint-placeholder-val="{{ false }}">
+            <div style="font:400 12.5px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Chargement des avis Google…</div>
+          </sc-if>
+          <sc-if value="{{ gRevError }}" hint-placeholder-val="{{ false }}">
+            <div style="background:var(--st-bad-bg);border-radius:10px;padding:12px 14px;font:500 12.5px var(--font-ui);color:var(--st-bad)">{{ gRevErrMsg }}</div>
+          </sc-if>
+          <sc-for list="{{ gRevAvis }}" as="g" hint-placeholder-count="3">
+            <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:13px 15px;margin-bottom:10px">
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px">
+                <span style="font:600 12.5px var(--font-ui);color:var(--color-text)">{{ g.auteur }}</span>
+                <span style="display:inline-flex;gap:1px"><sc-for list="{{ g.stars }}" as="s" hint-placeholder-count="5"><span style="{{ s.style }}">{{ s.ch }}</span></sc-for></span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ g.quand }}</span>
+              </div>
+              <sc-if value="{{ g.hasTexte }}" hint-placeholder-val="{{ false }}">
+                <div style="font:400 12.5px var(--font-ui);color:var(--color-text);white-space:pre-wrap">{{ g.texte }}</div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ gRevEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="font:400 12.5px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Aucun avis rendu par Google pour cette fiche.</div>
+          </sc-if>
+        </div>
       </div>
       </sc-if>
 
@@ -4986,8 +5031,33 @@ class Component extends DCLogic {
   }
   reviewsReload(){ this._reviews=null; this._revErr=null; this.reviewsEnsure(true); }
 
+  // ===== Avis Google (fiche établissement) — Places API, LECTURE seule =====
+  // Même contrat que reviewsEnsure : la portée part en ?shop=, le serveur
+  // tranche, et la clé API Google ne quitte jamais le serveur — le dépôt est
+  // public et le navigateur n'a pas à la voir. Répondre à un avis exige OAuth
+  // Business Profile : hors de portée d'une clé API, la carte le dit.
+  gRevEnsure(force){
+    if(this.state.screen!=='avis' && !force) return;
+    if(this._gRevLoading) return;
+    if(this._gRev && !force) return;
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base) return;
+    this._gRevLoading=true; this._gRevErr=null;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/google-reviews'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(d=>({ok:r.ok,d})).catch(()=>({ok:false,d:null})))
+      .then(x=>{ const ok=!!(x.ok&&x.d&&typeof x.d==='object'&&!x.d.error);
+        this._gRev=ok?x.d:null;
+        this._gRevErr=ok?null:((x.d&&x.d.error)?String(x.d.error):'Réponse illisible du serveur.');
+        this._gRevLoading=false; this.setState(st=>({_rev:(st._rev||0)+1})); })
+      .catch(()=>{ this._gRev=null; this._gRevErr='API injoignable (serveur ou réseau).';
+        this._gRevLoading=false; this.setState(st=>({_rev:(st._rev||0)+1})); });
+  }
+  gRevReload(){ this._gRev=null; this._gRevErr=null; this.gRevEnsure(true); }
+
   ensureMaps(){
     this.reviewsEnsure();
+    this.gRevEnsure();
     // Le référentiel CP→GPS se charge AVANT la garde Leaflet — la carte des
     // tournées en dépend (sinon tous les sites retombent sur le point défaut).
     if(this.state.screen==='zones'||this.state.screen==='tournees') this.zfGeoEnsure();
@@ -7595,6 +7665,7 @@ class Component extends DCLogic {
 
     // ===== Avis clients — tout vient du serveur, rien n'est déduit =====
     const RV=this._reviews, rvT=(RV&&RV.totals)||{};
+    const GR=this._gRev;
     const rvNum=(v)=>(v==null||v==='')?'—':String(v);
     const avisKpis=[
       {label:this.tr('avisTotal'),value:rvNum(rvT.total)},
@@ -7649,6 +7720,24 @@ class Component extends DCLogic {
       avisEmptyProducts:this.tr('avisEmptyProducts'), avisEmptyNeg:this.tr('avisEmptyNeg'),
       avisProductsEmpty:avisProducts.length===0&&rvErr==null&&!!RV,
       avisNegEmpty:avisNeg.length===0&&rvErr==null&&!!RV,
+      // Avis Google — la fiche de l'établissement, lus PAR le serveur (la clé
+      // API ne descend jamais au navigateur). 5 avis maximum : limite Places.
+      gRevHasNote:!!(GR&&GR.note!=null),
+      gRevNote:(GR&&GR.note!=null)?String(GR.note).replace('.',','):'—',
+      gRevStars:rvStars(GR&&GR.note!=null?GR.note:0),
+      gRevNb:(GR&&GR.nb!=null)?('('+GR.nb+' avis)'):'',
+      gRevHasFiche:!!(GR&&GR.nom),
+      gRevFiche:(GR&&GR.nom)||'',
+      gRevHint:'Les 5 avis les plus pertinents selon Google — lecture seule : répondre à un avis se fait sur Google (OAuth Business Profile, non couvert par la clé API).',
+      gRevAvis:((GR&&GR.avis)||[]).map(g=>({auteur:g.auteur||'—',quand:g.quand||'',
+        stars:rvStars(g.note),hasTexte:!!(g.texte&&String(g.texte).trim()),texte:g.texte||''})),
+      gRevEmpty:!!GR&&((GR.avis||[]).length===0),
+      gRevLoading:!!this._gRevLoading&&!GR,
+      gRevError:this._gRevErr!=null&&!this._gRevLoading,
+      gRevErrMsg:this._gRevErr||'',
+      gRevHasUrl:!!(GR&&GR.url),
+      gRevOpen:()=>{ const u=this._gRev&&this._gRev.url; if(u) window.open(u,'_blank','noopener'); },
+      gRevDo:()=>this.gRevReload(),
     };
 
     return {
