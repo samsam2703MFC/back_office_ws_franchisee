@@ -31,8 +31,10 @@
       {cle:'webshop.enabled',type:'bool',def:true},
       {cle:'nav.icon_back',type:'text',val:'arrow-left'},
       {cle:'delivery.enabled',type:'bool',def:true},
-      {cle:'order.cutoff_default',type:'text',val:'17:00'},
-      {cle:'brand.support_url',type:'text',val:'https://aide.latelierby.be'},
+      // Audit go-live : plus de cut-off 17:00 ni d'URL d'aide inventés en
+      // seed — order.cutoff_default vient de ws_param (API) ou est absent,
+      // et l'écran l'affiche absent. brand.support_url pointait vers un site
+      // qui n'existe pas (le canal réel est aide@latelierby.be).
     ],
     "email_templates": [
       {cle:'order_confirm',langue:'FR',sujet:'Votre commande {{commande_ref}} est confirmée'},
