@@ -1621,6 +1621,25 @@
               <sc-if value="{{ g.hasTexte }}" hint-placeholder-val="{{ false }}">
                 <div style="font:400 12.5px var(--font-ui);color:var(--color-text);white-space:pre-wrap">{{ g.texte }}</div>
               </sc-if>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px">
+                <button onClick="{{ g.gen }}" class="btn-secondary" style="font-size:12px">{{ g.genLabel }}</button>
+              </div>
+              <sc-if value="{{ g.hasDraftErr }}" hint-placeholder-val="{{ false }}">
+                <div style="background:var(--st-bad-bg);border-radius:10px;padding:10px 12px;margin-top:8px;font:500 12px var(--font-ui);color:var(--st-bad)">{{ g.draftErr }}</div>
+              </sc-if>
+              <sc-if value="{{ g.hasDraft }}" hint-placeholder-val="{{ false }}">
+                <div style="border:.5px solid var(--color-border-secondary);border-radius:10px;padding:12px 14px;margin-top:8px;background:var(--color-background-secondary)">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px">
+                    <span style="font:600 11.5px var(--font-ui);color:var(--color-text-muted)">Brouillon — ton « {{ g.draftTon }} »</span>
+                    <sc-if value="{{ g.draftTronque }}" hint-placeholder-val="{{ false }}">
+                      <span style="font:600 11px var(--font-ui);color:var(--st-warn)">tronqué</span>
+                    </sc-if>
+                    <button onClick="{{ gRevCopyFn }}" class="btn-secondary" style="font-size:11.5px;margin-left:auto">{{ gRevCopyLabel }}</button>
+                  </div>
+                  <div style="font:400 12.5px var(--font-ui);color:var(--color-text);white-space:pre-wrap">{{ g.draft }}</div>
+                  <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:6px">À relire puis coller sur Google — rien n'est publié d'ici.</div>
+                </div>
+              </sc-if>
             </div>
           </sc-for>
           <sc-if value="{{ gRevEmpty }}" hint-placeholder-val="{{ false }}">
@@ -5055,6 +5074,38 @@ class Component extends DCLogic {
   }
   gRevReload(){ this._gRev=null; this._gRevErr=null; this.gRevEnsure(true); }
 
+  // Brouillon de réponse à un avis — généré PAR LE SERVEUR selon la directive
+  // que la marque a écrite pour cette note (console marque, écran Avis).
+  // Publication toujours manuelle : « Copier » prépare le collage sur Google,
+  // rien ne part d'ici — c'est le garde-fou, quelle que soit la note.
+  gRevGen(i){
+    if(this._gRevGenBusy!=null) return;
+    const g=(this._gRev&&this._gRev.avis&&this._gRev.avis[i])||null;
+    if(!g) return;
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base) return;
+    this._gRevGenBusy=i; this._gRevDraft=null; this._gRevDraftErr=null;
+    this.setState(st=>({_rev:(st._rev||0)+1}));
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/google-review-reply'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+      body:JSON.stringify({auteur:g.auteur||'',note:g.note,texte:g.texte||''})})
+      .then(r=>r.json().then(d=>({ok:r.ok,d})).catch(()=>({ok:false,d:null})))
+      .then(x=>{ const ok=!!(x.ok&&x.d&&x.d.reponse);
+        this._gRevDraft=ok?{i:i,txt:String(x.d.reponse),ton:(x.d.directive&&x.d.directive.ton)||'',tronque:!!x.d.tronque}:null;
+        this._gRevDraftErr=ok?null:{i:i,msg:(x.d&&x.d.error)?String(x.d.error):'Réponse illisible du serveur.'};
+        this._gRevGenBusy=null; this.setState(st=>({_rev:(st._rev||0)+1})); })
+      .catch(()=>{ this._gRevDraft=null; this._gRevDraftErr={i:i,msg:'API injoignable (serveur ou réseau).'};
+        this._gRevGenBusy=null; this.setState(st=>({_rev:(st._rev||0)+1})); });
+  }
+  gRevCopy(){
+    const d=this._gRevDraft; if(!d) return;
+    const done=()=>{ this._gRevCopied=true; this.setState(st=>({_rev:(st._rev||0)+1}));
+      setTimeout(()=>{ this._gRevCopied=false; this.setState(st=>({_rev:(st._rev||0)+1})); },1600); };
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(d.txt).then(done,done);
+    else { const ta=document.createElement('textarea'); ta.value=d.txt; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
+  }
+
   ensureMaps(){
     this.reviewsEnsure();
     this.gRevEnsure();
@@ -7729,8 +7780,18 @@ class Component extends DCLogic {
       gRevHasFiche:!!(GR&&GR.nom),
       gRevFiche:(GR&&GR.nom)||'',
       gRevHint:'Les 5 avis les plus pertinents selon Google — lecture seule : répondre à un avis se fait sur Google (OAuth Business Profile, non couvert par la clé API).',
-      gRevAvis:((GR&&GR.avis)||[]).map(g=>({auteur:g.auteur||'—',quand:g.quand||'',
-        stars:rvStars(g.note),hasTexte:!!(g.texte&&String(g.texte).trim()),texte:g.texte||''})),
+      gRevAvis:((GR&&GR.avis)||[]).map((g,gi)=>({auteur:g.auteur||'—',quand:g.quand||'',
+        stars:rvStars(g.note),hasTexte:!!(g.texte&&String(g.texte).trim()),texte:g.texte||'',
+        gen:()=>this.gRevGen(gi),
+        genLabel:(this._gRevGenBusy===gi)?'Génération…':'Générer une réponse',
+        hasDraft:!!(this._gRevDraft&&this._gRevDraft.i===gi),
+        draft:(this._gRevDraft&&this._gRevDraft.i===gi)?this._gRevDraft.txt:'',
+        draftTon:(this._gRevDraft&&this._gRevDraft.i===gi)?(this._gRevDraft.ton||''):'',
+        draftTronque:!!(this._gRevDraft&&this._gRevDraft.i===gi&&this._gRevDraft.tronque),
+        hasDraftErr:!!(this._gRevDraftErr&&this._gRevDraftErr.i===gi),
+        draftErr:(this._gRevDraftErr&&this._gRevDraftErr.i===gi)?this._gRevDraftErr.msg:''})),
+      gRevCopyFn:()=>this.gRevCopy(),
+      gRevCopyLabel:this._gRevCopied?'Copié ✓':'Copier',
       gRevEmpty:!!GR&&((GR.avis||[]).length===0),
       gRevLoading:!!this._gRevLoading&&!GR,
       gRevError:this._gRevErr!=null&&!this._gRevLoading,

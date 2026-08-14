@@ -23,8 +23,10 @@ préférence. Elle se change en éditant ce tableau — dans les **deux** dépô
 > l'utilisateur :** la session « franchisé » a écrit le panneau « Run
 > d'impression — cut-off delivery (réseau) » du tableau de bord de la console
 > marque (branche `claude/cutoff-print-run-network` de
-> `back_office_ws_franchisor`). La répartition ci-dessus reste inchangée pour
-> tout le reste.
+> `back_office_ws_franchisor`), puis, le même jour et sur la même branche, la
+> carte « Directives de réponse — avis Google » de l'écran Avis de la console
+> marque (méthodes `rgEnsure`/`rgLoad`/`rgSave`/`rgDel`). La répartition
+> ci-dessus reste inchangée pour tout le reste.
 
 ## Pourquoi
 
