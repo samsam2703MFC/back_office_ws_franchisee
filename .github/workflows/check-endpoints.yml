@@ -759,13 +759,19 @@ jobs:
               if [ -n "$(dbq "SELECT 1 FROM information_schema.columns
                                WHERE table_schema=DATABASE() AND table_name='shops'
                                  AND column_name='webshop_enabled'")" ]; then
-                echo "  boutiques du webshop, DANS L'ORDRE SERVI par /shops (ORDER BY name) :"
-                dbq "SELECT CONCAT('        ', IF(@i:=@i+1 = 1, '→ ', '  '),
-                            'id ', LPAD(id,3,' '), '  ', name)
-                       FROM shops, (SELECT @i:=0) x
-                      WHERE active = 1 AND webshop_enabled = 1
+                # Le compteur @i marquait DEUX lignes sur quatre : MySQL lit
+                # « @i := (@i+1 = 1) », donc il rangeait un booleen et la fleche
+                # alternait. Un rapport qui designe deux « premieres » boutiques
+                # ne designe rien. La premiere se demande separement, en SQL, ou
+                # elle ne peut pas etre ambigue.
+                PREM=$(dbq "SELECT CONCAT('id ', id, '  ', name) FROM shops
+                             WHERE active = 1 AND webshop_enabled = 1
+                             ORDER BY name LIMIT 1")
+                echo "  boutique servie SANS ?shop= dans l'adresse : ${PREM:-inconnue}"
+                echo "  toutes les boutiques du webshop, DANS L'ORDRE SERVI (/shops : ORDER BY name) :"
+                dbq "SELECT CONCAT('        id ', LPAD(id,3,' '), '  ', name)
+                       FROM shops WHERE active = 1 AND webshop_enabled = 1
                       ORDER BY name LIMIT 20"
-                echo "        (→ = celle que voit un visiteur sans ?shop= dans l'adresse)"
               fi
 
               # SOUS-CATEGORIES. Le webshop n'affiche la barre que si la
