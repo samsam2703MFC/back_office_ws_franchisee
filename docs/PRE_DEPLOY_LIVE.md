@@ -117,9 +117,26 @@ la vraie base et le vrai serveur.
 
 ## Étape 6 — Après le déploiement
 
-1. Relancer la **sonde A8** : c'est elle qui voit la vraie base et le vrai serveur.
-2. `Ctrl+Shift+R` sur les deux consoles.
-3. Rejouer **W3** (aperçu = facture) et **I4** (affiche à la charte) — les deux
+1. **Le statut des DEUX déploiements**, avant tout le reste :
+   - webshop → `deploy-sftp.yml` (repo `webshop`)
+   - console franchisé → `deploy.yml` (repo `back_office_ws_franchisee`)
+
+   > **Pourquoi c'est le point n° 1.** Le 13/08, le déploiement webshop a
+   > échoué **sept commits d'affilée** sur une migration, pendant que la console
+   > se déployait normalement. Tout paraissait en ligne : la page servie portait
+   > bien les derniers marqueurs — ceux de la console. Rien de l'API ne l'était.
+   > Les deux dépôts se déploient **séparément** : l'un vert ne dit rien de
+   > l'autre.
+
+   Un échec sur `migrate.sh` est **bloquant et cumulatif** : il est fail-fast,
+   donc tous les déploiements suivants échouent aussi, y compris ceux qui n'ont
+   rien à voir avec la migration fautive.
+
+2. Relancer la **sonde A8** : c'est elle qui voit la vraie base et le vrai serveur.
+   Une ligne `TABLE ABSENTE` y désigne une migration non appliquée — elle ne se
+   confond plus avec une table vide.
+3. `Ctrl+Shift+R` sur les deux consoles.
+4. Rejouer **W3** (aperçu = facture) et **I4** (affiche à la charte) — les deux
    défauts qui ne se voient pas sans les regarder exprès.
 
 ---
