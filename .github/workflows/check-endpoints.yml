@@ -795,7 +795,7 @@ jobs:
               echo "  leviers du catalogue (tout est dans ws_products) :"
               RELIQUES=$(dbq "SELECT GROUP_CONCAT(column_name) FROM information_schema.columns
                                WHERE table_schema=DATABASE() AND table_name='ws_products'
-                                 AND column_name IN ('brand_whitelist','brand_mandatory','webshop')")
+                                 AND column_name IN ('brand_whitelist','brand_mandatory','webshop','brand_webshop')")
               if [ -n "$RELIQUES" ] && [ "$RELIQUES" != "NULL" ]; then
                 echo "    ⛔ colonne(s) supprimee(s) du modele ENCORE EN BASE : $RELIQUES"
                 echo "       → la migration 0073 n'est pas passee sur ce serveur (voir ws_schema_migrations)."
