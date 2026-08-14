@@ -436,14 +436,36 @@ jobs:
                 [ "$N" != "0" ] && printf '    %-4s %s\n' "$N" "$M"
               done
             }
+            # L'INVARIANT : TOUT CE QUE LE BO FRANCHISE LISTE DOIT ETRE EN
+            # LIGNE. C'est la regle metier posee par l'exploitant, et sans
+            # controle elle n'etait qu'une intention : le rapport comptait les
+            # hors-ligne sans jamais dire que c'etait anormal.
+            #
+            # Les raisons qui sont des DECISIONS ne comptent pas : « non produit
+            # par cette boutique » est un choix, « brouillon » et « retire du
+            # reseau » appartiennent a la marque, « hors saison » est une date.
+            # Reste ce qui n'est la decision de personne — un prix absent de
+            # l'ERP — et c'est exactement l'ecart a faire disparaitre.
+            SANSPRIX=$(printf '%s' "$ASR" | grep -o 'Sans prix dans l' | wc -l | tr -d ' ')
+            if [ "${SANSPRIX:-0}" != "0" ]; then
+              echo "  ⛔ $SANSPRIX produit(s) a l'assortiment du franchise mais PAS en ligne,"
+              echo "     faute de prix ERP pour cette boutique — ce n'est la decision de"
+              echo "     personne. Remede : poser leur prix dans l'ERP (shop_product)."
+              dbko=$((dbko+1))
+            else
+              echo "  OK       tout ce que le BO franchise liste est en ligne sur le webshop"
+            fi
+            # Un seul verdict de navigation subsiste cote API. « Categorie
+            # desactivee » a disparu (le drapeau est un cache, la barre ne le lit
+            # plus) et « categorie d'une autre boutique » est devenue un refus de
+            # VENTE. Continuer a les compter ferait croire que le rapport
+            # surveille encore quelque chose : il ne trouverait jamais rien.
             NAVO=$(cnt 'Catégorie inconnue')
-            NAVD=$(cnt 'Catégorie désactivée')
-            if [ "$NAVO" != "0" ] || [ "$NAVD" != "0" ]; then
+            if [ "$NAVO" != "0" ]; then
               echo "  EN VENTE mais INTROUVABLES dans la navigation du site :"
-              [ "$NAVO" != "0" ] && printf '    %-4s categorie inconnue (cat_id vide ou orphelin)\n' "$NAVO"
-              [ "$NAVD" != "0" ] && printf '    %-4s categorie desactivee cote marque\n' "$NAVD"
+              printf '    %-4s categorie inconnue (cat_id vide ou orphelin)\n' "$NAVO"
               echo "           ⇒ ces produits s'affichent sous « Tout » et nulle part ailleurs."
-              echo "           Remede : reactiver leur categorie, OU corriger leur rattachement."
+              echo "           Remede : rattacher ces produits a une categorie existante."
               dbko=$((dbko+1))
             else
               echo "  OK       aucun produit en vente sans categorie joignable"
