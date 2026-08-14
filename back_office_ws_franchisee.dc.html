@@ -463,6 +463,26 @@
           </div>
           <sc-if value="{{ suiviToursEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ suiviEmptyMsg }}</div></sc-if>
         </div>
+        <!-- LIVRAISONS — la liste des commandes en mode Livraison (aujourd'hui
+             et jours servis à venir, chaque ligne datée). Même geste que
+             partout : la ligne cliquée ouvre la modale de détail. -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px">
+          <div class="t-section-title" style="font-size:15px;margin-bottom:4px">Livraisons — aujourd'hui et à venir</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">ws_orders (mode Livraison) · cliquer sur une ligne pour le détail de la commande</div>
+          <div style="display:grid;grid-template-columns:1fr 1.5fr .8fr 1fr .9fr 1fr 60px;gap:12px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">N°</span><span class="t-admin-label">Client</span><span class="t-admin-label">Date</span><span class="t-admin-label">Créneau</span><span class="t-admin-label">Paiement</span><span class="t-admin-label">Statut</span><span class="t-admin-label" style="text-align:right">Pièces</span></div>
+          <sc-for list="{{ suiviOrders }}" as="so" hint-placeholder-count="4">
+            <div onClick="{{ so.open }}" title="Détail de la commande" style="display:grid;grid-template-columns:1fr 1.5fr .8fr 1fr .9fr 1fr 60px;gap:12px;align-items:center;padding:10px 6px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer">
+              <span style="font:600 11.5px var(--font-mono,monospace);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ so.ref }}</span>
+              <span style="font:500 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ so.client }}">{{ so.client }}</span>
+              <span style="font:500 11.5px var(--font-ui);color:var(--color-text)">{{ so.dateTxt }}</span>
+              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ so.creneau }}</span>
+              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ so.paye }}</span>
+              <span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ so.statutTxt }}</span>
+              <span style="font:700 12.5px var(--font-ui);color:var(--color-primary);text-align:right">{{ so.pieces }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ suiviOrdersEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune commande en livraison (ws_orders).</div></sc-if>
+        </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px">
             <div><div class="t-section-title" style="font-size:15px">{{ selNom }} · livraisons</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Tournée {{ selTournee }} · {{ selVehicule }} · {{ selAvancement }} points</div></div>
@@ -1408,7 +1428,7 @@
                   <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:color-mix(in srgb,var(--color-primary) 8%,var(--color-surface))"><span style="width:9px;height:9px;flex:none;border-radius:50%;background:var(--color-primary)"></span><span style="font:600 11.5px var(--font-ui);color:var(--color-primary)">Click &amp; Collect</span><span style="margin-left:auto;font:600 11px var(--font-ui);color:var(--color-primary)">{{ s.rubyTot }} pce(s)</span></div>
                   <sc-if value="{{ s.linesLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Chargement des commandes…</div></sc-if>
                   <sc-for list="{{ s.rubyLines }}" as="l" hint-placeholder-count="2">
-                    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--color-border-tertiary)"><span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.ref }} · {{ l.client }}</span><span style="font:700 12px var(--font-ui);color:var(--color-primary)">{{ l.qty }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.heure }}</span><span style="font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.statut }}</span></div>
+                    <div onClick="{{ l.open }}" title="Détail de la commande" style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer"><span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.ref }} · {{ l.client }}</span><span style="font:700 12px var(--font-ui);color:var(--color-primary)">{{ l.qty }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.heure }}</span><span style="font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.statut }}</span></div>
                   </sc-for>
                   <sc-if value="{{ s.rubyEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Aucune commande Click &amp; Collect aujourd'hui.</div></sc-if>
                 </div>
@@ -1416,7 +1436,7 @@
                   <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:.5px solid var(--color-border-tertiary);background:color-mix(in srgb,var(--color-secondary) 10%,var(--color-surface))"><span style="width:9px;height:9px;flex:none;border-radius:50%;background:var(--color-secondary)"></span><span style="font:600 11.5px var(--font-ui);color:var(--color-secondary)">Livraison</span><span style="margin-left:auto;font:600 11px var(--font-ui);color:var(--color-secondary)">{{ s.apricotTot }} pce(s)</span></div>
                   <sc-if value="{{ s.linesLoading }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Chargement des commandes…</div></sc-if>
                   <sc-for list="{{ s.apricotLines }}" as="l" hint-placeholder-count="2">
-                    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--color-border-tertiary)"><span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.ref }} · {{ l.client }}</span><span style="font:700 12px var(--font-ui);color:var(--color-secondary)">{{ l.qty }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.heure }}</span><span style="font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.statut }}</span></div>
+                    <div onClick="{{ l.open }}" title="Détail de la commande" style="display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer"><span style="font:500 11.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.ref }} · {{ l.client }}</span><span style="font:700 12px var(--font-ui);color:var(--color-secondary)">{{ l.qty }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.heure }}</span><span style="font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ l.statut }}</span></div>
                   </sc-for>
                   <sc-if value="{{ s.apricotEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 11px var(--font-ui);color:var(--color-text-muted)">Aucune commande en livraison aujourd'hui.</div></sc-if>
                 </div>
@@ -3892,13 +3912,34 @@ class Component extends DCLogic {
      Une section sans données LE DIT au lieu de se remplir d'exemples. Pas de
      QR ici : le seul QR signé vient du serveur (affiche du lien d'invitation) ;
      l'étiquette colis porte la référence en clair. */
-  cutoffDocHtml(parts){
+  cutoffDocHtml(parts,opts){
+    opts=opts||{};
     const T=(n)=>window.BOServer?window.BOServer.table(n):[];
     const esc=(v)=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const d=new Date();
     const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     const dateFR=d.toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     const cut=this.cutoffCfg();
+    /* CHARTE. Les polices de la marque vivent dans _ds/ et sont déployées avec
+       la console ; le document s'ouvre depuis un blob, où un chemin relatif ne
+       résout plus — d'où les URL ABSOLUES (même règle que l'affiche du lien).
+       Police indisponible ⇒ la pile retombe sur la police système, sans casser
+       l'impression. */
+    const consoleBase=location.origin+location.pathname.replace(/[^/]*$/,'');
+    const dsFonts=consoleBase+'_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/fonts/';
+    const logoUrl=consoleBase+'img/logo.png';
+    const shopNom=this.shopField('name','')||'L’Atelier By';
+    const enTete='<div class="ph"><img src="'+esc(logoUrl)+'" alt=""><span class="ph-t">'+esc(shopNom)+'</span><span class="ph-d">'+esc(dateFR)+'</span></div>';
+    /* QR « PWA livraison » — sur chaque feuille de tournée. L'URL vient de la
+       CONFIG (ws_param pwa_livraison_url) : la tablette de livraison
+       (pwa_kitchen) est déployée hors de ce dépôt et son adresse n'est connue
+       que de la config. Pas d'URL ⇒ la feuille dit quoi renseigner ; URL sans
+       QR (endpoint injoignable) ⇒ l'URL s'imprime en toutes lettres. */
+    const qrBloc=opts.pwa
+      ? (opts.qr
+        ? '<div class="qrbox"><img class="qrimg" src="'+opts.qr+'" alt="QR PWA livraison"><div class="qrtxt"><strong>PWA livraison</strong><br>Scannez pour ouvrir la tournée sur la tablette de livraison.<br><span class="mono">'+esc(opts.pwa)+'</span></div></div>'
+        : '<div class="vide">QR non généré (endpoint tour-qr injoignable) — PWA livraison : <span class="mono">'+esc(opts.pwa)+'</span></div>')
+      : '<div class="vide">PWA livraison non configurée — renseignez le paramètre ws_param « pwa_livraison_url » (adresse de la tablette pwa_kitchen) pour imprimer ici le QR d’ouverture.</div>';
     const tree=T('fr_tdb_tree'), avail=T('ws_tour_availability');
     const deptRows=T('b2b_client_company_department'), dSites=T('ws_office_delivery_sites');
     // Départements d'un bureau : les DEUX chemins que la console emploie déjà
@@ -3911,7 +3952,6 @@ class Component extends DCLogic {
           out.push(nm+((x.effectif!=null&&x.effectif!=='')?(' ('+x.effectif+')'):'')); } });
       return out; };
     const flatSites=[]; tree.forEach(t=>(t.zones||[]).forEach(z=>(z.sites||[]).forEach(s=>flatSites.push({t:t.nom,z:z.nom,s}))));
-    const ordersDeliv=T('fr_orders').filter(o=>((o.date||iso)===iso)&&o.mode==='Livraison');
     const vide=(txt)=>'<div class="vide">'+esc(txt)+'</div>';
     const out=[];
     if(parts.tournees){
@@ -3929,8 +3969,9 @@ class Component extends DCLogic {
                 +'</tbody></table>'):vide('Aucun client servi sur ce site aujourd’hui.'))+'</div>'; }); });
         out.push('<section class="page"><h1>Tournée '+esc(t.nom||'—')+'</h1>'
           +'<div class="sub">'+esc(dateFR)+((t.chauffeur&&t.chauffeur!=='—')?(' · chauffeur : '+esc(t.chauffeur)):'')
-          +((av&&av.cut)?(' · cut-off tournée : '+esc(av.cut)):(cut.ok?(' · cut-off boutique : '+esc(cut.raw)):''))+'</div>'
-          +corps+'<div class="tot">'+nCmd+' commande(s) · '+(nPcs||'—')+' pièce(s)</div></section>'); }); }
+          +((av&&av.cut)?(' · cut-off tournée : '+esc(av.cut)):(cut.ok?(' · cut-off boutique : '+esc(cut.raw)):''))
+          +' · commandes du jour et à venir — les lignes au-delà d’aujourd’hui portent leur date</div>'
+          +corps+'<div class="tot">'+nCmd+' commande(s) · '+(nPcs||'—')+' pièce(s)</div>'+qrBloc+'</section>'); }); }
     if(parts.etqSites) out.push('<section class="page"><h1>Étiquettes — delivery sites</h1><div class="sub">'+esc(dateFR)+'</div>'
       +(flatSites.length?('<div class="lab">'+flatSites.map(f=>'<div class="et"><div class="et-k">DELIVERY SITE</div><div class="et-t">'+esc(f.s.libelle||'—')+'</div><div class="et-l">'+esc(f.s.ville||'—')+'</div><div class="et-l">Tournée '+esc(f.t||'—')+(f.s.cutoff?(' · cut-off '+esc(f.s.cutoff)):'')+'</div><div class="et-l">'+((f.s.users||[]).length)+' commande(s)</div></div>').join('')+'</div>')
         :vide('Aucun delivery site servi aujourd’hui (fr_tdb_tree vide).'))+'</section>');
@@ -3938,10 +3979,14 @@ class Component extends DCLogic {
       +(flatSites.length?('<div class="lab">'+flatSites.map(f=>'<div class="et"><div class="et-k">CLIENT · BUREAU</div><div class="et-t">'+esc(f.s.office||'—')+'</div><div class="et-l">'+esc(f.s.libelle||'—')+' · '+esc(f.s.ville||'—')+'</div><div class="et-l">Tournée '+esc(f.t||'—')+'</div></div>').join('')+'</div>')
         :vide('Aucun bureau servi aujourd’hui (fr_tdb_tree vide).'))+'</section>');
     if(parts.etqColis){ const ets=[];
-      ordersDeliv.forEach(o=>{ const n=parseInt(o.pieces,10);
+      // Colis du JOUR PRÉPARÉ (badge de l'écran Préparation) : au cut-off on
+      // imprime ce qui part le prochain jour de livraison, pas la veille.
+      const jourColis=this.state.prepDay||iso;
+      const ordersColis=T('fr_orders').filter(o=>((o.date||iso)===jourColis)&&o.mode==='Livraison');
+      ordersColis.forEach(o=>{ const n=parseInt(o.pieces,10);
         if(n>0){ for(let i=1;i<=n;i++) ets.push({o,i,n}); }
         else ets.push({o,i:null,n:null}); });   // pièces non servies ⇒ une étiquette, sans numérotation supposée
-      out.push('<section class="page"><h1>Étiquettes — colis (delivery)</h1><div class="sub">'+esc(dateFR)+'</div>'
+      out.push('<section class="page"><h1>Étiquettes — colis (delivery · '+esc(jourColis===iso?'aujourd’hui':jourColis)+')</h1><div class="sub">'+esc(dateFR)+'</div>'
         +(ets.length?('<div class="lab">'+ets.map(e=>'<div class="et"><div class="et-k">COLIS'+(e.i?(' '+e.i+' / '+e.n):'')+'</div><div class="et-t mono">'+esc(e.o.ref||'—')+'</div><div class="et-l">'+esc(e.o.client||'—')+'</div><div class="et-l">'+esc(e.o.creneau||'')+'</div></div>').join('')+'</div>')
           :vide('Aucune commande delivery aujourd’hui (ws_orders).'))+'</section>'); }
     if(parts.prodProduit){ const jour=this.state.prepDay||iso;
@@ -3950,37 +3995,64 @@ class Component extends DCLogic {
         +(lignes.length?('<table><thead><tr><th>Catégorie</th><th>Produit</th><th class="num">Qté</th><th>Créneau</th><th>Tournée</th></tr></thead><tbody>'
           +lignes.map(r=>'<tr><td>'+esc(r.cat||'—')+'</td><td>'+esc(r.produit||'—')+'</td><td class="num">'+((r.qty!=null&&r.qty!=='')?esc(r.qty):'—')+'</td><td>'+esc(r.creneau||'—')+'</td><td>'+esc(r.tournee||'—')+'</td></tr>').join('')+'</tbody></table>')
           :vide('Rien à produire pour ce jour (ws_order_lines).'))+'</section>'); }
+    /* L'en-tête de marque est posé en tête de CHAQUE page A4 au moment de
+       l'assemblage — une fois écrit ici, pas répété dans chaque section. */
+    const pages=out.map(s=>s.replace('<section class="page">','<section class="page">'+enTete));
     return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Run d’impression — '+esc(dateFR)+'</title><style>'
-      +'@page{size:A4;margin:12mm}*{box-sizing:border-box}body{margin:0;font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#222}'
+      +'@font-face{font-family:\'Gotham\';src:url(\''+dsFonts+'Gotham_Regular_New.otf\');font-weight:400;font-display:swap}'
+      +'@font-face{font-family:\'Gotham\';src:url(\''+dsFonts+'Gotham_Medium.otf\');font-weight:600;font-display:swap}'
+      +'@font-face{font-family:\'Gotham\';src:url(\''+dsFonts+'Gotham_Black.otf\');font-weight:700;font-display:swap}'
+      +'@font-face{font-family:\'Vank\';src:url(\''+dsFonts+'GC_Vank.ttf\');font-weight:400;font-display:swap}'
+      +'@page{size:A4;margin:12mm}*{box-sizing:border-box}'
+      +'body{margin:0;font:12px/1.5 \'Gotham\',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#222}'
       +'.bar{position:sticky;top:0;background:#fff;border-bottom:1px solid #ddd;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}'
       +'.bar button{border:none;background:#8D1D2C;color:#fff;border-radius:8px;padding:9px 16px;font:600 13px inherit;cursor:pointer}'
       +'@media print{.no-print{display:none}}'
-      +'.page{page-break-after:always;padding:6mm 8mm}h1{font-size:17px;margin:0 0 1mm}.sub{color:#666;font-size:11px;margin-bottom:4mm}'
+      +'.ph{display:flex;align-items:center;gap:4mm;border-bottom:1.5px solid #8D1D2C;padding-bottom:2.5mm;margin-bottom:3.5mm}'
+      +'.ph img{height:9mm}.ph-t{font-weight:600;font-size:12px;letter-spacing:.02em}.ph-d{margin-left:auto;color:#666;font-size:10.5px}'
+      +'.page{page-break-after:always;padding:6mm 8mm}'
+      +'h1{font-family:\'Vank\',\'Gotham\',serif;font-weight:400;font-size:21px;color:#8D1D2C;margin:0 0 1mm}'
+      +'.sub{color:#666;font-size:11px;margin-bottom:4mm}'
       +'.zone{font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#8D1D2C;margin:4mm 0 1.5mm}'
       +'.site{border:.6px solid #bbb;border-radius:2mm;padding:3mm;margin:0 0 3mm;page-break-inside:avoid}.site-h{font-size:12.5px;margin-bottom:1mm}'
       +'.bur{font-size:11px;color:#444;margin-bottom:1.5mm}'
       +'table{width:100%;border-collapse:collapse}th,td{border:.5px solid #ccc;padding:1.6mm 2.2mm;text-align:left;font-size:11px}'
-      +'th{background:#f4f1ec;font-size:9px;text-transform:uppercase;letter-spacing:.05em}.num{text-align:right}'
+      +'th{background:#f6efe7;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#8D1D2C}.num{text-align:right}'
       +'.tot{margin-top:3mm;font-weight:700;font-size:12px;text-align:right}'
       +'.vide{border:.6px dashed #aaa;border-radius:2mm;color:#666;padding:4mm;margin:2mm 0;font-size:11px}'
       +'.lab{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}'
       +'.et{border:.6px solid #999;border-radius:2mm;padding:3mm;min-height:28mm;page-break-inside:avoid;display:flex;flex-direction:column;gap:1mm}'
       +'.et-k{font-size:8.5px;font-weight:700;letter-spacing:.08em;color:#8D1D2C}.et-t{font-size:13px;font-weight:700}.et-l{font-size:10.5px;color:#444}'
       +'.mono{font-family:ui-monospace,Menlo,Consolas,monospace}'
+      +'.qrbox{display:flex;gap:5mm;align-items:center;border:.6px solid #8D1D2C;border-radius:2mm;padding:3mm;margin-top:4mm;page-break-inside:avoid}'
+      +'.qrimg{width:30mm;height:30mm;image-rendering:pixelated}.qrtxt{font-size:11px;line-height:1.6}'
       +'</style></head><body><div class="no-print bar"><strong>Run d’impression — '+esc(dateFR)+'</strong><button onclick="window.print()">Imprimer</button></div>'
-      +out.join('')+'</body></html>'; }
+      +pages.join('')+'</body></html>'; }
   /* OUVERTURE — même contrainte que l'affiche : l'onglet s'ouvre AU CLIC
-     (après coup il serait bloqué comme popup), le contenu y est posé ensuite.
+     (après coup il serait bloqué comme popup). Le CONTENU, lui, peut arriver
+     après : le QR « PWA livraison » se télécharge d'abord (fetch avec jeton —
+     un <img> n'en porte pas), puis le document s'assemble et remplit
+     l'onglet. Échec du QR ⇒ le document part quand même et le dit.
      Onglet bloqué malgré tout ⇒ téléchargement, et on le dit. */
-  runCutoff(parts){ const html=this.cutoffDocHtml(parts||{});
+  runCutoff(parts){
     const onglet=window.open('','_blank');
-    const u=URL.createObjectURL(new Blob([html],{type:'text/html'}));
-    if(onglet){ onglet.location=u; setTimeout(()=>URL.revokeObjectURL(u),60000);
-      this.printJob('🖨 Document ouvert — le bouton « Imprimer » de l’onglet lance l’impression (papier ou PDF)'); }
-    else { const a=document.createElement('a'); a.href=u;
-      a.download='run-impression-'+new Date().toISOString().slice(0,10)+'.html';
-      document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
-      this.printJob('🖨 Onglet bloqué par le navigateur — document téléchargé à la place'); } }
+    const fr=window.__FR||{};
+    const pwa=String(window.BOServer?window.BOServer.getParam('pwa_livraison_url',''):'').trim();
+    const qrP=(pwa&&fr.base&&fr.token)
+      ? fetch(fr.base+'/franchisee/tour-qr?d='+encodeURIComponent(pwa)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+          .then(r=>r.ok?r.blob():null)
+          .then(b=>b?new Promise(res=>{ const rd=new FileReader(); rd.onload=()=>res(String(rd.result||'')); rd.onerror=()=>res(''); rd.readAsDataURL(b); }):'')
+          .catch(()=>'')
+      : Promise.resolve('');
+    qrP.then(qr=>{
+      const html=this.cutoffDocHtml(parts||{},{pwa,qr});
+      const u=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+      if(onglet){ onglet.location=u; setTimeout(()=>URL.revokeObjectURL(u),60000);
+        this.printJob('🖨 Document ouvert — le bouton « Imprimer » de l’onglet lance l’impression (papier ou PDF)'); }
+      else { const a=document.createElement('a'); a.href=u;
+        a.download='run-impression-'+new Date().toISOString().slice(0,10)+'.html';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+        this.printJob('🖨 Onglet bloqué par le navigateur — document téléchargé à la place'); } }); }
   // Reflète en mémoire les tables serveur touchées par le toggle « livraison
   // au bureau » (office créé/validé + pairing site) → l'office apparaît
   // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
@@ -6622,6 +6694,16 @@ class Component extends DCLogic {
       prodSub:'font:400 12px var(--font-ui);color:var(--color-text-muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap',
       prix:'font:600 12px var(--font-ui);color:var(--color-text);text-align:right',
       prixSub:'font:400 11.5px var(--font-ui);color:var(--color-text-muted);text-align:right'};
+    /* LIVRAISONS (écran Livraison du jour) — les commandes servies en mode
+       Livraison, aujourd'hui et jours à venir, datées ligne à ligne. Même
+       modale de détail que partout. */
+    const suiviOrders=ordersRaw.filter(o=>o.mode==='Livraison'&&((o.date||todayIso)>=todayIso))
+      .sort((a,b)=>String(a.date||todayIso).localeCompare(String(b.date||todayIso)))
+      .map(o=>{ const jl4=o.date?(o.date===todayIso?'Aujourd’hui':jourLbl(o.date)):'—';
+        return {ref:o.ref,client:o.client,dateTxt:jl4||'—',creneau:o.creneau||'—',paye:o.paye||'—',
+          statutTxt:ordStatFR[o.statut]||o.statut,pieces:String(o.pieces!=null?o.pieces:'—'),
+          open:()=>this.setState({ordDetail:o.ref})}; });
+    const suiviOrdersEmpty=suiviOrders.length===0;
     const odtLinesRaw=odtRow?[odtRow.lines,odtRow.items,odtRow.lignes,odtRow.produits].find(Array.isArray):null;
     const odtLines=[];
     (odtLinesRaw||[]).forEach(l=>{
@@ -6748,7 +6830,11 @@ class Component extends DCLogic {
           // Panneau déroulant : lignes de commande du jour (S.stkLines — null = chargement),
           // Ruby = collect (Click & Collect), Apricot = delivery (Livraison).
           const raw=Array.isArray(S.stkLines)?S.stkLines:[];
-          const mkL=l=>({ref:l.ref||'—',client:l.client||'Client webshop',qty:'×'+(+l.qty||0),heure:l.heure||'',statut:stkStatFR(l.statut)});
+          // La ligne s'ouvre dans la modale de détail — même référence que
+          // fr_orders ('#' + order_ref). Réf absente : le clic ne fait rien
+          // (odtRow introuvable ⇒ la modale ne s'ouvre pas), rien d'inventé.
+          const mkL=l=>({ref:l.ref||'—',client:l.client||'Client webshop',qty:'×'+(+l.qty||0),heure:l.heure||'',statut:stkStatFR(l.statut),
+            open:()=>{ if(l.ref&&l.ref!=='—') this.setState({ordDetail:'#'+l.ref}); }});
           const ruby=raw.filter(l=>l.mode!=='delivery'), apricot=raw.filter(l=>l.mode==='delivery');
           const rubyTot=ruby.reduce((a,l)=>a+(+l.qty||0),0), apricotTot=apricot.reduce((a,l)=>a+(+l.qty||0),0);
           const ordTot=rubyTot+apricotTot;
@@ -7989,6 +8075,7 @@ class Component extends DCLogic {
       incCount:incData.filter(i=>i.statut!=='Résolu').length,
       incBadgeStyle:'margin-left:auto;background:var(--color-primary);color:#fff;font:600 9px var(--font-ui);border-radius:9px;min-width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px',
       isTdb:screen==='tdb',isPrep:screen==='prep',isTournees:screen==='tournees',isSuivi:screen==='suivi',isClients:screen==='clients',isIncidents:screen==='incidents',isRentabilite:screen==='rentabilite',isParams:screen==='params',isGeoAnalyse:screen==='geoAnalyse',
+      suiviOrders,suiviOrdersEmpty,
       geoACountTxt:(function(self){ const F=self.geoAFiltered(); const off=F.list.filter(c=>c.type==='office').length;
         return F.list.length+' clients localisés ('+off+' office · '+(F.list.length-off)+' particuliers)'+(F.unloc?' · '+F.unloc+' clients non localisés':''); })(this),
       geoALegTot:(function(self){ const F=self.geoAFiltered(); const tot=F.list.length;
