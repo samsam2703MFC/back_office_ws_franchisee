@@ -735,34 +735,26 @@ jobs:
                   echo "    OK   aucun produit actif sans categorie existante (reseau entier)"
                 fi
 
-                # POURQUOI CE PRODUIT-LA N'EST PAS DANS MA BOUTIQUE.
-                # Le rapport disait « 10 sans prix dans l'ERP » sans les NOMMER,
-                # ni dire a quelle categorie ils appartiennent. Or une categorie
-                # peut etre rattachee a une AUTRE boutique (ws_categories.shop_id)
-                # : le produit est alors actif au back-office de la marque, et
-                # normal qu'il ne soit pas vendu ici. Sans le nom et sans ce
-                # rattachement, on ne peut pas distinguer « produit d'une autre
-                # boutique » de « prix oublie dans l'ERP » — deux remedes
-                # opposes, l'un etant de ne rien faire.
-                if [ -n "$SHOP" ] && [ -n "$(dbq "SELECT 1 FROM information_schema.columns
-                     WHERE table_schema=DATABASE() AND table_name='shop_product'
-                       AND column_name='portion_price'")" ]; then
-                  echo "  produits actifs SANS prix ERP pour la boutique $SHOP (donc hors vente ici) :"
+                # LES PRODUITS SANS PRIX, PAR LEUR NOM. Le prix est RESEAU,
+                # dans ws_products.price, depuis que cette table decide seule
+                # du webshop. Cette section lisait shop_product (le prix ERP
+                # par boutique) et titrait « donc hors vente ici » : au premier
+                # rapport apres la bascule, elle a liste 16 produits comme hors
+                # vente pendant que, quinze lignes plus haut, le meme rapport
+                # les comptait EN LIGNE (88/89). Un diagnostic qui se contredit
+                # ne sert plus a rien — c'est la regle du bandeau d'erreur.
+                # Le compteur « price<=0 » des leviers donne deja le nombre ;
+                # ici, les NOMS, parce que le remede se fait produit par produit.
+                SP=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active = 1 AND COALESCE(price,0) <= 0")
+                if [ "${SP:-0}" != "0" ]; then
+                  echo "  produits actifs SANS prix (ws_products.price <= 0 — hors vente sur tout le reseau) :"
                   dbq "SELECT CONCAT('        · ', RPAD(LEFT(p.name,32),34,' '),
-                              IFNULL(c.label,'(sans categorie)'),
-                              IF(c.shop_id IS NULL, '', CONCAT('  ← categorie de la boutique ', c.shop_id)))
+                              IFNULL(c.label,'(sans categorie)'))
                          FROM ws_products p
                          LEFT JOIN ws_categories c ON c.id = p.cat_id
-                        WHERE p.active = 1
-                          AND NOT EXISTS (SELECT 1 FROM shop_product sp
-                                           WHERE sp.id_product = p.id AND sp.id_shop = $SHOP
-                                             AND sp.portion_price > 0)
-                        ORDER BY c.shop_id IS NULL, c.label, p.name LIMIT 25"
-                  AUTRE=$(dbq "SELECT COUNT(*) FROM ws_products p
-                                JOIN ws_categories c ON c.id = p.cat_id
-                               WHERE p.active = 1 AND c.shop_id IS NOT NULL AND c.shop_id <> $SHOP")
-                  [ "${AUTRE:-0}" != "0" ] && \
-                    echo "    → dont $AUTRE produit(s) dans une categorie rattachee a une AUTRE boutique : normal, rien a corriger."
+                        WHERE p.active = 1 AND COALESCE(p.price,0) <= 0
+                        ORDER BY c.label, p.name LIMIT 25"
+                  [ "${SP:-0}" -gt 25 ] 2>/dev/null && echo "        … et $((SP - 25)) autre(s)"
                 fi
               fi
 
