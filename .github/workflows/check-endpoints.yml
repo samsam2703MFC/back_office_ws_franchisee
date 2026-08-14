@@ -22,7 +22,25 @@ name: Vérifier les endpoints /franchisee/*
 # Ce contrôle reste en LECTURE SEULE : information_schema et des COUNT(*).
 # Aucun identifiant de connexion n'est imprimé.
 #
-# Lancement : onglet Actions → ce workflow → « Run workflow ».
+# QUOTIDIEN, et il ÉCHOUE quand il faut. Il ne se lançait qu'à la main, donc
+# jamais : le jour où il aurait servi, personne ne l'avait ouvert. Il tourne
+# maintenant tous les jours à 03:00 UTC, et sort en erreur — GitHub prévient
+# alors le propriétaire du dépôt. Sans cette sortie en erreur, l'exécution
+# planifiée ne serait qu'un rapport de plus que personne ne lit.
+#
+# DEUX COMPTEURS, ET C'EST LE POINT DÉLICAT.
+#   RÉGRESSION → rouge. Une route qui a disparu, une table absente, un trigger
+#     effacé, une colonne de migration manquante, aucune catégorie active,
+#     aucun produit en ligne, un produit vendu et introuvable. Autrement dit :
+#     quelque chose qui marchait ne marche plus.
+#   HYGIÈNE → jamais rouge. Une saisie à finir en console (des sites de
+#     livraison sans société, par exemple : il y en a deux depuis des jours).
+#     C'est réel, c'est signalé, mais ça ne peut pas faire sonner l'alarme tous
+#     les matins — une alerte permanente n'est plus lue, et le jour où elle
+#     sonne pour autre chose, personne ne le voit. Même règle que le bandeau
+#     d'erreur de la console.
+#
+# Lancement manuel : onglet Actions → ce workflow → « Run workflow ».
 #
 # Secrets :  SSH_HOST · SSH_USER · SSH_PASSWORD  (les mêmes que le déploiement)
 #            ADMIN_TOKEN — FACULTATIF. S'il est défini, les appels portent
@@ -37,6 +55,11 @@ name: Vérifier les endpoints /franchisee/*
 #            sans ni l'un ni l'autre, la portée est cherchée via /franchisee/me.
 
 on:
+  # QUOTIDIEN, 03:00 UTC — 05:00 en Belgique l'été, 04:00 l'hiver (cron ne
+  # connaît pas les changements d'heure). Choisi AVANT l'ouverture : si la nuit
+  # a cassé quelque chose, on l'apprend avant les clients, pas par eux.
+  schedule:
+    - cron: '0 3 * * *'
   workflow_dispatch:
     inputs:
       shop:
@@ -164,6 +187,13 @@ jobs:
           missing=0    # 404 IMPRÉVUS
           known=0      # 404 sur une route déclarée non écrite
           dbko=0       # objets de base attendus et absents
+          # HYGIÈNE DE DONNÉES : réel, mais pas une régression — c'est une
+          # saisie à finir, pas un objet qui a disparu. Compté à part et JAMAIS
+          # rouge : une alerte qui sonne tous les jours pour la même raison
+          # connue n'est plus lue, et le jour où elle sonne pour autre chose,
+          # personne ne le voit. C'est la règle du bandeau d'erreur, appliquée
+          # au diagnostic.
+          hyg=0
           probe() {                      # $1 = URL   $2 = libellé
             # -D : on lit AUSSI les en-têtes, pour X-Tables-Absentes. Sans
             # lui, « 0 ligne » ne disait pas si la table est vide ou ABSENTE —
@@ -606,7 +636,7 @@ jobs:
                           AND (sd.office_client_id IS NULL OR sd.office_client_id = 0)
                         ORDER BY sd.name LIMIT 15"
                   [ "${ORPH_S:-0}" -gt 15 ] 2>/dev/null && echo "        … et $((ORPH_S - 15)) autre(s)"
-                  dbko=$((dbko+1))
+                  hyg=$((hyg+1))
                 fi
                 [ "${PENDING:-0}" != "0" ] && echo "    ⚠ ${PENDING} sur une societe NON VALIDEE — a valider dans Clients B2B › Bureaux."
                 [ "${NOTOUR:-0}"  != "0" ] && echo "    ⚠ ${NOTOUR} sur une societe SANS TOURNEE — a rattacher dans Tournees."
@@ -730,10 +760,17 @@ jobs:
 
           # Un compteur qui inclurait les chantiers déclarés serait toujours
           # rouge, donc ignoré. Seul l'IMPRÉVU compte comme anomalie.
-          echo "Anomalies : $((missing + dbko))   (routes absentes imprévues : $missing · objets de base manquants : $dbko)"
+          REG=$((missing + dbko))
+          echo "Régressions : $REG   (routes absentes imprévues : $missing · objets de base manquants : $dbko)"
+          [ "$hyg" -gt 0 ] && echo "Hygiène de données : $hyg — à corriger en console, NON compté comme régression."
           [ "$known" -gt 0 ] && echo "Chantiers déclarés rencontrés : $known — 404 attendu, non compté."
           echo "401/403 = route en place, jeton requis."
           echo "⚠ base = objet attendu absent : la migration est enregistrée mais son effet a disparu."
+          # SORTIE EN ERREUR SUR RÉGRESSION, et sur elle seule. C'est ce qui rend
+          # l'exécution quotidienne utile : sans ça, elle produit un rapport que
+          # personne n'ouvre. GitHub prévient le propriétaire du dépôt quand une
+          # exécution planifiée échoue — encore faut-il qu'elle puisse échouer.
+          [ "$REG" -gt 0 ] && { echo "⛔ RÉGRESSION — quelque chose qui marchait ne marche plus."; exit 1; }
           exit 0
           PROBE
 
