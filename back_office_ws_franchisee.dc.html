@@ -591,7 +591,7 @@
         <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;margin-bottom:18px"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px"><div class="t-admin-label">En attente de validation</div><div style="font:700 30px/1 var(--font-ui);color:var(--color-primary);margin:8px 0 4px">{{ valCount }}</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">comptes Office Client B2B</div></div>
-          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px"><div class="t-admin-label">Rattachés à votre magasin</div><div style="font:700 30px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">{{ valMagasin }}</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Bruxelles-Centre</div></div>
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px"><div class="t-admin-label">Rattachés à votre magasin</div><div style="font:700 30px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">{{ valMagasin }}</div></div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px"><div class="t-admin-label">TVA à vérifier (VIES)</div><div style="font:700 30px/1 var(--font-ui);color:#c9a24b;margin:8px 0 4px">{{ valVies }}</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">format à contrôler</div></div>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
@@ -2913,17 +2913,17 @@ class Component extends DCLogic {
     toast: '', printed: {},
     newRoutes: [], newZones: [], deletedRoutes: [], delRoute: null,
     rfOpen: false, rfEditId: null, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, driver:'', vehicule:'', postcodes:[], ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
-    zfOpen: false, zf: { name:'', type:'primary', parent:'', catchment:'', cp:'', vehicule:'Standard', franco:'250 €', delai:'J+1', service:15, access:10 },
+    zfOpen: false, zf: { name:'', type:'primary', parent:'', catchment:'', cp:'', vehicule:'', franco:'', delai:'', service:'', access:'' },
     obOpen: false, obStep: 0,
-    ob: { raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
-      contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
+    ob: { raison:'', tva:'', seg:'', paiement:'', plafond:'',
+      contactNom:'', contactEmail:'', contactTel:'', contactRole:'',
       adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
       // Fenêtre de livraison, jours desservis et mode de validation : ils
       // étaient ÉCRITS EN DUR dans obCreate (08:00–11:00 · L Ma Me J V · QR)
       // sans jamais être demandés, puis affichés au client comme s'il les
       // avait choisis. Ils partent vides et sont saisis à l'étape 3.
       fenDeb:'', fenFin:'', jours:[], validation:'',
-      remiseWeb:'10', franco:'250 €', drop:8,
+      remiseWeb:'', franco:'', drop:'',
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'',
     obVouchers: [], obVLibelle:'', obVValidite:'',
@@ -2933,11 +2933,11 @@ class Component extends DCLogic {
   printJob(msg){ this.setState({toast:msg}); clearTimeout(this._tt); this._tt=setTimeout(()=>this.setState({toast:''}),2800); }
   OB_STEPS=['Société','Contact','Delivery site','Départements','Webshop & voucher','Personnel & adhésion','Récapitulatif'];
   obOpen(){ this.setState({obOpen:true,obStep:0,
-    ob:{ raison:'', tva:'', seg:'horeca', paiement:'30 j fin de mois', plafond:5000,
-      contactNom:'', contactEmail:'', contactTel:'', contactRole:'Responsable achats',
+    ob:{ raison:'', tva:'', seg:'', paiement:'', plafond:'',
+      contactNom:'', contactEmail:'', contactTel:'', contactRole:'',
       adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
       fenDeb:'', fenFin:'', jours:[], validation:'',
-      remiseWeb:'10', franco:'250 €', drop:8,
+      remiseWeb:'', franco:'', drop:'',
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
     obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'',
     obVouchers:[], obVLibelle:'', obVValidite:'' }); this.zfGeoEnsure(); }
@@ -3053,6 +3053,16 @@ class Component extends DCLogic {
     const add=[]; rows.forEach(l=>{ const parts=l.split(/[,\t]/).map(x=>x.trim()); let name='',email=''; parts.forEach(p=>{ if(/@/.test(p)) email=p; else if(p&&!name) name=p; }); if(email) add.push({name:name||email.split('@')[0],email}); });
     if(add.length) this.setState(s=>({obStaff:[...s.obStaff,...add],obCsv:''})); this.printJob('✔ '+add.length+' contact(s) importé(s) depuis le CSV'); }
   obCreate(){ const S=this.state, o=S.ob; if(!window.BOServer) return;
+    /* CONDITIONS COMMERCIALES REQUISES. Elles naissaient pré-remplies
+       (plafond 5 000 €, 30 j fin de mois, remise 10 %, franco 250 €) et
+       partaient en base si l'opérateur ne les touchait pas : des engagements
+       commerciaux que personne n'avait décidés. Même doctrine que la
+       tournée : on refuse plutôt que d'inventer. */
+    if(!String(o.seg||'').trim()){ this.setState({obStep:0}); this.printJob('⚠ Segment du client requis'); return; }
+    if(!String(o.paiement||'').trim()){ this.setState({obStep:0}); this.printJob('⚠ Conditions de paiement requises'); return; }
+    if(!(+o.plafond>0)){ this.setState({obStep:0}); this.printJob('⚠ Plafond d’encours requis (montant > 0)'); return; }
+    if(o.remiseWeb===''||o.remiseWeb==null||isNaN(+o.remiseWeb)){ this.setState({obStep:4}); this.printJob('⚠ Remise webshop requise (0 pour aucune)'); return; }
+    if(!String(o.franco||'').trim()){ this.setState({obStep:4}); this.printJob('⚠ Franco de port requis'); return; }
     // Code postal OBLIGATOIRE (collecte réseau) — localité confirmée quand le
     // code couvre plusieurs localités ; sinon déduite du référentiel.
     const obCp=String(o.cp||'').trim();
@@ -3090,7 +3100,7 @@ class Component extends DCLogic {
     const num=1000+Math.floor(Math.random()*8999); const code='CL-'+num;
     const office=o.office||o.raison;
     clients.push({raison:o.raison||'Nouveau bureau',code,seg:o.seg,statut:'actif',tva:o.tva,paiement:o.paiement,
-      plafond:+o.plafond||5000,encours:0,franco:o.franco,remise:(o.remiseWeb||'0')+' %',fact:'Mensuel',
+      plafond:+o.plafond||null,encours:0,franco:o.franco,remise:(o.remiseWeb!==''&&o.remiseWeb!=null)?(o.remiseWeb+' %'):'',fact:'',
       cp:obCp,localite:obLocalite,
       points:[{libelle:office+' — '+(o.adr||'site'),adresse:o.adr,cp:obCp,localite:obLocalite,
         fenetre:obFenetre,jours:obJours,validation:o.validation,marge:0}]});
@@ -3230,7 +3240,7 @@ class Component extends DCLogic {
     tdb:{table:'ws_orders · fr_alertes · fr_live_drivers',origin:'Agrégat commandes du jour groupées par tournée → zone → site → office',calc:'count(orders) filtré sur date=today, regroupé par route_id ; KPI = SUM/COUNT en direct',dev:'2,5 j'},
     prep:{table:'ws_orders (statut=préparation)',origin:'File de préparation dérivée des commandes non clôturées',calc:'Arbre tournée→site→office, colis = SUM(lignes) ; scan met à jour prepared_count',dev:'2 j'},
     tournees:{table:'ws_routes · ws_zones · points',origin:'Constructeur : sites non assignés ↔ tournées, distances Haversine',calc:'ETA = start + Σ(travel_min + drop_min) ; travel_min≈km×2,2',dev:'4 j'},
-    suivi:{table:'fr_live_drivers',origin:'Positions chauffeurs simulées (temps réel)',calc:'Avancement = livrés / total points ; ETA prochaine = now + travel',dev:'1,5 j'},
+    suivi:{table:'fr_live_drivers',origin:'Positions chauffeurs (temps réel)',calc:'Avancement = livrés / total points ; ETA prochaine = now + travel',dev:'1,5 j'},
     clients:{table:'fr_clients · ws_office_delivery_sites · b2b_client_company_department',origin:'Clients B2B + delivery sites + départements (client_id). Édition → form clientEdit',calc:'Éligibilité = statut validé ET tournée affectée ; écrit via submitForm → BOServer.save',dev:'3 j'},
     demandesB2B:{table:'ws_office_join_requests',origin:'Rattachement (personnel validé) + demandes de nouveau bureau',calc:'Rattach → lier/rejeter ; nouveau → onboarding (obCreate) écrit 5 tables',dev:'2,5 j'},
     validations:{table:'ws_office_accounts (pending)',origin:'Comptes Office Client en attente de validation VIES',calc:'Cycle pending → validated + tournée ⇒ livrable ; state géré en mémoire (valHandled)',dev:'1,5 j'},
@@ -3259,7 +3269,7 @@ class Component extends DCLogic {
     commandes:{table:'ws_orders',origin:'Commandes du jour · filtres livraison/retrait',calc:'Statut préparation → prête → livrée cliquable ; flags[ord_*] en mémoire',dev:'1,5 j'},
     shopParams:{table:'atelierbydb_shops (+ horaires : fr_shop_availability, en lecture)',origin:'Ligne de la boutique de la portée, servie par /franchisee/me',calc:'Édition ⇒ POST /franchisee/shop-update, puis relecture de /franchisee/me ; horaires édités dans « Disponibilité & créneaux »',dev:'1 j'},
     statsReseau:{table:'ERP consolidé (lecture seule)',origin:'Stats multi-boutiques poussées par l\'ERP',calc:'Aucun formulaire ; agrégats read-only + exports CSV',dev:'1 j'},
-  }; return M[screen]||{table:'ws_param · tables du module',origin:'Données de démonstration servies par la couche BOServer (localStorage)',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
+  }; return M[screen]||{table:'ws_param · tables du module',origin:'Servi par l’API /franchisee/* via la couche BOServer',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
   // ===== Recherche profonde — index de navigation du back-office =====
   // Une entrée = un écran, ou un onglet d'écran, réellement atteignable depuis
   // la nav. Le titre et le sous-titre viennent des tables `titles`/`subs`, les
@@ -4366,10 +4376,14 @@ class Component extends DCLogic {
   costParams(){
     const gp=(k)=>{ const v=window.BOServer?window.BOServer.getParam(k,''):''; const n=parseFloat(v);
       return (v===''||v==null||isNaN(n))?null:n; };
-    const P={prep:gp('cost_prep'),emb:gp('cost_emb'),charg:gp('cost_charg'),struct:gp('cost_struct')};
+    const P={prep:gp('cost_prep'),emb:gp('cost_emb'),charg:gp('cost_charg'),struct:gp('cost_struct'),
+      // Minutes PAR COLIS : paramètres, plus des constantes de la page (les
+      // anciens 10 min de préparation et 4 min de chargement étaient codés en
+      // dur — des hypothèses jamais affichées ni paramétrées).
+      prepMin:gp('cost_prep_min'),chargMin:gp('cost_charg_min')};
     // Tout ou rien : une cascade de marge à trois composantes sur quatre est
     // plus trompeuse qu'une cascade absente.
-    return (P.prep==null||P.emb==null||P.charg==null)?null:P;
+    return (P.prep==null||P.emb==null||P.charg==null||P.prepMin==null||P.chargMin==null)?null:P;
   }
   points(){ const rows=this._rentaPts||[]; const geo=(typeof window!=='undefined'&&window.__CPGEO&&window.__CPGEO.idx)||null;
     const P=this.costParams();
@@ -4378,7 +4392,7 @@ class Component extends DCLogic {
       // Coûts : seulement si les paramètres de coût sont RENSEIGNÉS. Sans eux,
       // `couts` reste null — une marge « CA − 0 » se lisait comme une marge
       // saine alors qu'aucun coût n'avait été paramétré.
-      const couts=P?Math.round(colis*(P.emb+P.prep*10/60+P.charg*4/60)):null;
+      const couts=P?Math.round(colis*(P.emb+P.prep*P.prepMin/60+P.charg*P.chargMin/60)):null;
       return {id:o.id||('pt'+i),libelle:o.name||'—',ville:o.city||(o.cp||'—'),client:o.name||'—',
         // Sans CP au référentiel, le point n'a pas de position : il n'est pas
         // dessiné, plutôt qu'empilé au centre de Bruxelles avec les autres.
@@ -4700,8 +4714,8 @@ class Component extends DCLogic {
     const colis=pts.reduce((a,p)=>a+p.colis,0);
     const caT=pts.reduce((a,p)=>a+p.ca,0);
     const nT=Math.max(1,(window.BOServer?window.BOServer.table('ws_tours'):[]).filter(t=>t.name).length);
-    const vPrep=-Math.round(colis*P.prep*10/60), vEmb=-Math.round(colis*P.emb),
-          vCharg=-Math.round(colis*P.charg*4/60), vStruct=-Math.round(nT*P.struct);
+    const vPrep=-Math.round(colis*P.prep*P.prepMin/60), vEmb=-Math.round(colis*P.emb),
+          vCharg=-Math.round(colis*P.charg*P.chargMin/60), vStruct=-Math.round(nT*P.struct);
     const margeT=caT+vPrep+vEmb+vCharg+vStruct;
     const steps=[
       {label:'CA livré',v:caT,type:'total'},
@@ -5463,7 +5477,7 @@ class Component extends DCLogic {
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
-    const subs={avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
+    const subs={avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
@@ -5888,12 +5902,12 @@ class Component extends DCLogic {
     }));
     // Tournée du client — RÉELLE : via son office (ws_offices.tour), plus de
     // mapping de codes en dur. Cut-off affiché = paramètre réel.
-    const cutoffTxt=(window.BOServer?window.BOServer.getParam('order.cutoff_default','17:00'):'17:00');
+    const cutoffTxt=(window.BOServer?window.BOServer.getParam('order.cutoff_default',''):'');
     const eligOf=(statut,tour)=>{
       if(statut==='prospect') return {state:'Non rattaché',bg:'var(--color-background-secondary)',c:'var(--color-text-muted)',reason:'Prospect — aucun bureau validé rattaché. État : unlinked.',deliverable:false};
       if(statut==='suspendu') return {state:'Non livrable',bg:'#fbe9eb',c:'var(--color-primary)',reason:'Compte suspendu — livraison bloquée. État : pending.',deliverable:false};
       if(!tour) return {state:'Non livrable',bg:'#fbe9eb',c:'var(--color-primary)',reason:'Bureau validé, mais aucune tournée affectée (tourId manquant). État : pending.',deliverable:false};
-      return {state:'Livrable',bg:'#eaf5ec',c:'#2d7a3e',reason:'Bureau validé · '+tour+' · avant cut-off livraison '+cutoffTxt+'. État : active.',deliverable:true};
+      return {state:'Livrable',bg:'#eaf5ec',c:'#2d7a3e',reason:'Bureau validé · '+tour+(cutoffTxt?' · avant cut-off livraison '+cutoffTxt:'')+'. État : active.',deliverable:true};
     };
     // Garde-fou go-live : liste vide (plus de seed) → fiche placeholder inerte.
     const sc=clientsData[S.selClient]||{raison:'—',code:'',tva:'—',seg:'—',statut:'prospect',paiement:'—',plafond:0,franco:'—',remise:'—',fact:'—',points:[]};

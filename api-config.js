@@ -7,7 +7,8 @@
    <origin>/webshop/api  (les MÊMES endpoints/base que le webshop, le
    franchisee et le franchisor : donnée partagée = source unique).
 
-   • Sur *.github.io ou si l'API ne répond pas → mode démo (seed data.json).
+   • Sur *.github.io ou si l'API ne répond pas → ERREUR AFFICHÉE (plus
+     aucun mode démo ni seed : règle go-live « vraies données ou bug »).
    • Le jeton admin est partagé par origine (localStorage 'adminToken'),
      donc si l'admin s'est connecté au back-office webshop / franchisor,
      le franchisé le réutilise automatiquement.
