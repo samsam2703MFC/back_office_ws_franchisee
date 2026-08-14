@@ -86,20 +86,41 @@ jobs:
              AND a.action IN ('product.update','category.update','subcategory.update')
              AND JSON_EXTRACT(a.payload,'$.active') IS NOT NULL;
 
+          -- DEUX tables : MariaDB refuse d'ouvrir deux fois la même TEMPORARY
+          -- dans une requête (« Can't reopen table »), et la dérivée sur t_evt
+          -- comptait comme une seconde ouverture.
+          CREATE TEMPORARY TABLE t_last AS
+          SELECT pid, MAX(aid) aid FROM t_evt GROUP BY pid;
+
           SELECT '';
           SELECT CONCAT('== ', COUNT(*), ' produit(s) éteints par ces écritures et toujours en brouillon ==')
-            FROM (SELECT e.pid FROM t_evt e
-                   JOIN (SELECT pid, MAX(aid) aid FROM t_evt GROUP BY pid) d
-                     ON d.pid = e.pid AND d.aid = e.aid
-                   JOIN ws_products p2 ON p2.id = e.pid
-                  WHERE e.actif = 0 AND p2.active = 0) x;
+            FROM t_evt e
+            JOIN t_last d ON d.pid = e.pid AND d.aid = e.aid
+            JOIN ws_products p2 ON p2.id = e.pid
+           WHERE e.actif = 0 AND p2.active = 0;
           SELECT CONCAT('  · ', p2.name) FROM t_evt e
-            JOIN (SELECT pid, MAX(aid) aid FROM t_evt GROUP BY pid) d
-              ON d.pid = e.pid AND d.aid = e.aid
+            JOIN t_last d ON d.pid = e.pid AND d.aid = e.aid
             JOIN ws_products p2 ON p2.id = e.pid
            WHERE e.actif = 0 AND p2.active = 0 ORDER BY p2.name LIMIT 120;
           SQL
 
+          echo ""
+          echo "== QUI ÉCRIT ws_products SANS PASSER PAR LE JOURNAL ? =="
+          # Le journal n'explique pas l'extinction de masse du 14/08 : les trois
+          # seules routes d'écriture de l'API sont auditées. On cherche donc le
+          # canal FANTÔME, côté serveur : crons et scripts hors dépôt.
+          echo "  -- crontab de l'utilisateur --"
+          crontab -l 2>/dev/null | sed 's/^/    /' || echo "    (vide ou illisible)"
+          echo "  -- crons système (fichiers) --"
+          ls /etc/cron.d/ 2>/dev/null | sed 's/^/    /'
+          grep -RIl "ws_products" /etc/cron.d/ /etc/cron.hourly/ /etc/cron.daily/ 2>/dev/null | sed 's/^/    ⚠ /'
+          echo "  -- scripts serveur (hors API du dépôt) qui touchent ws_products --"
+          grep -RIl --include='*.php' --include='*.sh' --include='*.py' "ws_products" \
+               /var/www 2>/dev/null | grep -v "/webshop/api/" | head -20 | sed 's/^/    ⚠ /'
+          echo "  -- heure de dernière écriture de la table (approximation moteur) --"
+          dbq "SELECT CONCAT('    UPDATE_TIME ws_products : ', IFNULL(UPDATE_TIME,'(non suivi)'))
+                 FROM information_schema.tables
+                WHERE table_schema=DATABASE() AND table_name='ws_products'"
           echo ""
           echo "== État actuel, par catégorie =="
           dbq "SELECT CONCAT('    ', IF(c.active,'active  ','INACTIVE'), '  ',
