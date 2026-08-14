@@ -8,29 +8,18 @@
 # vraiment changé — et chaque écriture est dans bo_audit, avec l'heure et le
 # JSON envoyé.
 #
-# DEUX MODES, et le premier ne touche à rien :
-#   · voir      → liste les écritures du journal depuis l'heure donnée, et ce
-#                 que « restaurer » referait. AUCUNE écriture.
-#   · restaurer → repasse active=1 sur EXACTEMENT les produits que le journal
-#                 montre éteints depuis l'heure donnée (produit, catégorie ou
-#                 sous-catégorie), puis resynchronise le cache ws_categories.
-#                 Pas un UPDATE aveugle : un produit en brouillon AVANT
-#                 l'incident n'est pas rallumé, le journal ne le mentionne pas.
-#
-# Chaque restauration est elle-même écrite dans bo_audit (action
-# catalogue.restauration) : l'opération qui répare le journal s'y inscrit.
+# LECTURE SEULE, STRICTEMENT. Ce workflow liste les écritures du journal
+# depuis l'heure donnée, nomme les catégories touchées avec leur poids, et
+# énumère les produits que ces écritures ont éteints et qui sont toujours en
+# brouillon. Il n'écrit JAMAIS rien : la restauration est une décision
+# humaine — un clic sur la bascule « Actif » de la catégorie dans la console
+# marque refait la cascade inverse, produit par produit si besoin.
 # ─────────────────────────────────────────────────────────────────────────────
-name: Restauration catalogue (bo_audit)
+name: Journal catalogue (bo_audit, lecture seule)
 
 on:
   workflow_dispatch:
     inputs:
-      mode:
-        description: "voir = lecture seule · restaurer = réécrit active=1 d'après le journal"
-        required: true
-        type: choice
-        options: [voir, restaurer]
-        default: voir
       depuis:
         description: "Début de la fenêtre à examiner (heure serveur, format 'YYYY-MM-DD HH:MM:SS')"
         required: true
@@ -49,7 +38,6 @@ jobs:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
           SSH_PORT: ${{ vars.SSH_PORT || 22 }}
           API_BASE: ${{ vars.API_BASE || '/webshop/api' }}
-          MODE: ${{ inputs.mode }}
           DEPUIS: ${{ inputs.depuis }}
         run: |
           {
@@ -74,66 +62,53 @@ jobs:
                  FROM bo_audit WHERE created_at >= '$DEPUIS'
                   AND action IN ('product.update','category.update','subcategory.update','catalogue.restauration')
                 ORDER BY id LIMIT 400"
-
-          # LES PRODUITS À RALLUMER, d'après le journal seul :
-          #   · product.update     {"active":0}          → le produit lui-même
-          #   · category.update    {"active":0} sur #C   → tous les produits de C
-          #   · subcategory.update {"active":0} sur #S   → tous ceux de la sous-cat S
-          # Un produit rallumé PUIS re-éteint après coup n'est pas repris : seule
-          # compte la DERNIÈRE écriture 'active' le concernant dans la fenêtre.
-          dbq "DROP TEMPORARY TABLE IF EXISTS t_evt; CREATE TEMPORARY TABLE t_evt AS
-               SELECT p.id AS pid, a.id AS aid,
-                      CAST(JSON_EXTRACT(a.payload,'\$.active') AS UNSIGNED) AS actif
-                 FROM bo_audit a
-                 JOIN ws_products p ON (
-                        (a.action='product.update'     AND a.entity_id = p.id)
-                     OR (a.action='category.update'    AND a.entity_id = p.cat_id)
-                     OR (a.action='subcategory.update' AND a.entity_id = p.sub_cat_id))
-                WHERE a.created_at >= '$DEPUIS'
-                  AND a.action IN ('product.update','category.update','subcategory.update')
-                  AND JSON_EXTRACT(a.payload,'\$.active') IS NOT NULL;"
-          N=$(dbq "SELECT COUNT(*) FROM (
-                     SELECT e.pid FROM t_evt e
-                      JOIN (SELECT pid, MAX(aid) aid FROM t_evt GROUP BY pid) d
-                        ON d.pid = e.pid AND d.aid = e.aid
-                      JOIN ws_products p2 ON p2.id = e.pid
-                     WHERE e.actif = 0 AND p2.active = 0) x")
           echo ""
-          echo "== $N produit(s) éteints par ces écritures et toujours en brouillon =="
-          dbq "SELECT CONCAT('  · ', p2.name) FROM t_evt e
-                 JOIN (SELECT pid, MAX(aid) aid FROM t_evt GROUP BY pid) d
-                   ON d.pid = e.pid AND d.aid = e.aid
-                 JOIN ws_products p2 ON p2.id = e.pid
-                WHERE e.actif = 0 AND p2.active = 0 ORDER BY p2.name LIMIT 120"
+          echo "== Les catégories touchées, et leur poids =="
+          dbq "SELECT CONCAT('  #', c.id, '  ', c.label, '  — ', COUNT(p.id), ' produit(s), dont ', SUM(p.active=1), ' actif(s)')
+                 FROM ws_categories c LEFT JOIN ws_products p ON p.cat_id = c.id
+                WHERE c.id IN (SELECT DISTINCT entity_id FROM bo_audit
+                                WHERE created_at >= '$DEPUIS' AND action='category.update')
+                GROUP BY c.id, c.label"
 
-          if [ "__MODE__" = "restaurer" ]; then
-            if [ "${N:-0}" = "0" ]; then echo ""; echo "Rien à restaurer."; exit 0; fi
-            dbq "UPDATE ws_products p2
-                   JOIN (SELECT e.pid FROM t_evt e
-                          JOIN (SELECT pid, MAX(aid) aid FROM t_evt GROUP BY pid) d
-                            ON d.pid = e.pid AND d.aid = e.aid
-                         WHERE e.actif = 0) r ON r.pid = p2.id
-                  SET p2.active = 1 WHERE p2.active = 0;"
-            # Resynchroniser le cache ws_categories.active (même règle que l'API).
-            dbq "UPDATE ws_categories c
-                    SET c.active = EXISTS(SELECT 1 FROM ws_products p3
-                                           WHERE p3.cat_id = c.id AND p3.active = 1);"
-            dbq "INSERT INTO bo_audit (user_id, action, entity, entity_id, payload, ip)
-                 VALUES (NULL, 'catalogue.restauration', 'ws_products', NULL,
-                         JSON_OBJECT('produits', $N, 'depuis', '$DEPUIS'), 'workflow')"
-            echo ""
-            echo "== RESTAURÉ : $N produit(s) repassés actifs. État après =="
-            dbq "SELECT CONCAT('  ', LPAD(COUNT(*),4,' '), ' produits actifs') FROM ws_products WHERE active=1"
-            dbq "SELECT CONCAT('    ', IF(c.active,'active  ','INACTIVE'), '  ',
-                        LPAD(SUM(p4.active=1),3,' '), ' actifs  ', c.label)
-                   FROM ws_categories c LEFT JOIN ws_products p4 ON p4.cat_id = c.id
-                  GROUP BY c.id, c.label, c.active ORDER BY c.label LIMIT 30"
-          else
-            echo ""
-            echo "(mode voir : aucune écriture — relancer avec mode=restaurer pour appliquer)"
-          fi
+          # UNE SEULE SESSION MYSQL pour toute l'analyse : une table temporaire
+          # meurt avec sa connexion, et dbq en ouvre une par appel — la première
+          # version a échoué exactement là-dessus (Table t_evt doesn't exist).
+          mysql --host="$DBH" --port="$DBP" --user="$DBU" "$DBN" -N -s <<'SQL'
+          CREATE TEMPORARY TABLE t_evt AS
+          SELECT p.id AS pid, a.id AS aid,
+                 CAST(JSON_EXTRACT(a.payload,'$.active') AS UNSIGNED) AS actif
+            FROM bo_audit a
+            JOIN ws_products p ON (
+                   (a.action='product.update'     AND a.entity_id = p.id)
+                OR (a.action='category.update'    AND a.entity_id = p.cat_id)
+                OR (a.action='subcategory.update' AND a.entity_id = p.sub_cat_id))
+           WHERE a.created_at >= '__DEPUIS__'
+             AND a.action IN ('product.update','category.update','subcategory.update')
+             AND JSON_EXTRACT(a.payload,'$.active') IS NOT NULL;
+
+          SELECT '';
+          SELECT CONCAT('== ', COUNT(*), ' produit(s) éteints par ces écritures et toujours en brouillon ==')
+            FROM (SELECT e.pid FROM t_evt e
+                   JOIN (SELECT pid, MAX(aid) aid FROM t_evt GROUP BY pid) d
+                     ON d.pid = e.pid AND d.aid = e.aid
+                   JOIN ws_products p2 ON p2.id = e.pid
+                  WHERE e.actif = 0 AND p2.active = 0) x;
+          SELECT CONCAT('  · ', p2.name) FROM t_evt e
+            JOIN (SELECT pid, MAX(aid) aid FROM t_evt GROUP BY pid) d
+              ON d.pid = e.pid AND d.aid = e.aid
+            JOIN ws_products p2 ON p2.id = e.pid
+           WHERE e.actif = 0 AND p2.active = 0 ORDER BY p2.name LIMIT 120;
+          SQL
+
+          echo ""
+          echo "== État actuel, par catégorie =="
+          dbq "SELECT CONCAT('    ', IF(c.active,'active  ','INACTIVE'), '  ',
+                      LPAD(IFNULL(SUM(p4.active=1),0),3,' '), ' actifs / ', COUNT(p4.id), '  ', c.label)
+                 FROM ws_categories c LEFT JOIN ws_products p4 ON p4.cat_id = c.id
+                GROUP BY c.id, c.label, c.active ORDER BY c.label LIMIT 30"
+          echo "(lecture seule — ce workflow n'écrit jamais rien)"
           SCRIPT
-          } | sed -e "s|__API_BASE__|${API_BASE}|" -e "s|__DEPUIS__|${DEPUIS}|" -e "s|__MODE__|${MODE}|" \
+          } | sed -e "s|__API_BASE__|${API_BASE}|" -e "s|__DEPUIS__|${DEPUIS}|" \
             | sshpass -e ssh -p "${SSH_PORT}" \
                 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s
