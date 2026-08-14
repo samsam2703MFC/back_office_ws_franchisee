@@ -348,6 +348,36 @@ jobs:
           #     rattaché à rien, et un 500 muet ne se diagnostique pas ;
           #   • la TABLE ws_office_invites (migration 0062) — sans elle, aucun
           #     lien n'est émis, et la création du bureau le dit sans échouer.
+          # ── POURQUOI CES PRODUITS NE SONT-ILS PAS EN LIGNE ? ──────────────
+          # SIX conditions décident qu'un produit s'affiche, et le toggle
+          # « Webshop » de la console marque n'en porte qu'une. D'où l'écart
+          # constaté en production : « 39 produits · 1 en ligne » sans que rien
+          # n'explique les 38 autres.
+          # /franchisee/fr-assortiment rend désormais le VERDICT et sa RAISON
+          # (product_visibilite). On les compte ici : c'est le seul endroit qui
+          # donne le chiffre depuis la vraie base, avec les vrais prix ERP.
+          echo "== Produits en ligne, et pourquoi les autres ne le sont pas =="
+          ASS=$(curl -s --max-time 20 "${HDR[@]}" "$BASE/franchisee/fr-assortiment$QS" 2>/dev/null)
+          if printf '%s' "$ASS" | head -c1 | grep -q '\['; then
+            NTOT=$(printf '%s' "$ASS" | grep -o '"id":' | wc -l | tr -d ' ')
+            NON=$(printf '%s' "$ASS" | grep -o '"enLigne":true' | wc -l | tr -d ' ')
+            echo "  $NTOT produit(s) à l'assortiment · $NON en ligne pour cette boutique"
+            if [ "${NTOT:-0}" -gt 0 ] && [ "${NON:-0}" -lt "${NTOT:-0}" ]; then
+              echo "  hors ligne, par raison :"
+              printf '%s' "$ASS" | grep -o '"raison":"[^"]*"' | sed 's/^"raison":"//;s/"$//' \
+                | grep -v '^null$' | sort | uniq -c | sort -rn | sed 's/^/    /'
+            fi
+            # Un assortiment entier hors ligne n'est pas un réglage, c'est une
+            # panne : le plus souvent la source de prix ERP qui ne répond pas.
+            if [ "${NON:-0}" = "0" ] && [ "${NTOT:-0}" -gt 0 ]; then
+              echo "  ⚠ AUCUN produit en ligne — le webshop de cette boutique est vide"
+              dbko=$((dbko+1))
+            fi
+          else
+            echo "  (assortiment non lisible — jeton absent, ou portée boutique manquante)"
+          fi
+          echo
+
           echo "== Lien magique « Créer mon compte » =="
           for U in "http://localhost/webshop/inscription" "http://localhost/webshop/inscription.html"; do
             CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "$U" 2>/dev/null)
