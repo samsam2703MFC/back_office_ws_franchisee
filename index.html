@@ -4138,7 +4138,12 @@ class Component extends DCLogic {
           +(e.prod?('<div class="et-t">'+esc(e.prod)+'</div><div class="et-l mono">'+esc(e.o.ref||'—')+'</div>')
                   :('<div class="et-t mono">'+esc(e.o.ref||'—')+'</div>'))
           +(e.comps.length?('<div class="et-c">'+esc(e.comps.map(c=>'· '+c).join('   '))+'</div>'):'')
-          +'<div class="et-l">'+esc(e.o.client||'—')+'</div><div class="et-l">'+esc(e.o.creneau||'')+'</div></div>').join('')+'</div>')
+          +'<div class="et-l">'+esc(e.o.client||'—')+'</div>'
+          // Rattachement B2B servi par fr-orders — département · société,
+          // puis site · tournée. Commande privée (tout null) : lignes omises.
+          +((e.o.departement||e.o.bureau)?('<div class="et-l">'+esc([e.o.departement,e.o.bureau].filter(Boolean).join(' · '))+'</div>'):'')
+          +((e.o.site||e.o.tournee)?('<div class="et-l">'+esc([e.o.site,e.o.tournee].filter(Boolean).join(' · '))+'</div>'):'')
+          +'<div class="et-l">'+esc(e.o.creneau||'')+'</div></div>').join('')+'</div>')
           :vide('Aucune commande delivery pour ce jour (ws_orders).'))+'</section>'); }
     if(parts.prodProduit){ const jour=this.state.prepDay||iso;
       const lignes=T('fr_prep_lines').filter(r=>String(r.date||iso).slice(0,10)===jour);
@@ -6826,7 +6831,12 @@ class Component extends DCLogic {
       odtFields.push({lbl:'Créneau',val:odtRow.creneau||'—'});
       odtFields.push({lbl:'Paiement',val:odtRow.paye||'—'});
       odtFields.push({lbl:'Pièces',val:String(odtRow.pieces!=null?odtRow.pieces:'—')});
-      const odtSeen={ref:1,client:1,source:1,mode:1,date:1,creneau:1,paye:1,pieces:1,statut:1,montant:1,lines:1,items:1,lignes:1,produits:1};
+      // Rattachement B2B (servi par fr-orders) — nommés, seulement s'ils existent.
+      if(odtRow.departement) odtFields.push({lbl:'Département',val:odtRow.departement});
+      if(odtRow.bureau) odtFields.push({lbl:'Société / bureau',val:odtRow.bureau});
+      if(odtRow.site) odtFields.push({lbl:'Site',val:odtRow.site});
+      if(odtRow.tournee) odtFields.push({lbl:'Tournée',val:odtRow.tournee});
+      const odtSeen={ref:1,client:1,source:1,mode:1,date:1,creneau:1,paye:1,pieces:1,statut:1,montant:1,lines:1,items:1,lignes:1,produits:1,bureau:1,site:1,tournee:1,departement:1};
       Object.keys(odtRow).forEach(k=>{ const v=odtRow[k];
         if(odtSeen[k]||v==null||typeof v==='object'||String(v).trim()==='') return;
         odtFields.push({lbl:k,val:String(v)}); });
