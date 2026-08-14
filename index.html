@@ -1844,17 +1844,16 @@
       <sc-if value="{{ isAssortiment }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setAssortAssort }}" style="{{ assortSegAssort }}">Assortiment boutique</button><button onClick="{{ setAssortCat }}" style="{{ assortSegCat }}">Dispo par catégorie</button><button onClick="{{ setAssortProd }}" style="{{ assortSegProd }}">Dispo par produit</button></div>
-        <div style="display:flex;align-items:flex-start;gap:10px;background:#eef3fb;border:.5px solid #cfe0f5;border-radius:10px;padding:12px 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a5a9e" stroke-width="1.8" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg><div style="font:400 11.5px/1.6 var(--font-ui);color:#2a5a9e"><strong>Ces trois onglets définissent des exceptions au catalogue.</strong> Par défaut tout le catalogue actif est vendable/livrable ; ici on <strong>surcharge</strong> ce comportement : <strong>Dispo par catégorie</strong> et <strong>Livraison par catégorie</strong> agissent au niveau d'une catégorie, <strong>Dispo par produit</strong> pour un produit précis (écrase sa catégorie parente).</div></div>
+        <div style="display:flex;align-items:flex-start;gap:10px;background:#eef3fb;border:.5px solid #cfe0f5;border-radius:10px;padding:12px 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a5a9e" stroke-width="1.8" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg><div style="font:400 11.5px/1.6 var(--font-ui);color:#2a5a9e"><strong>Ces trois onglets se consultent, ils ne se règlent pas.</strong> L'assortiment — quels produits sont disponibles et vendus — est décidé par la <strong>marque</strong>, pour tout le réseau. Ils disent ce qu'elle a ouvert à votre boutique et, produit par produit, pourquoi l'un n'est pas en vente. Votre seule saisie sur les produits est la <strong>quantité fabriquée</strong> : écran <strong>Stock du jour</strong>.</div></div>
 
         <sc-if value="{{ assortTabAssort }}" hint-placeholder-val="{{ true }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:12px"><div class="t-section-title" style="font-size:15px">Assortiment par boutique</div><button onClick="{{ asrToggleAll }}" style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:999px;color:var(--color-text);font:500 12px var(--font-ui);cursor:pointer;padding:8px 15px;flex:none">{{ asrToggleAllLabel }}</button></div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Déclarez ce que votre boutique <strong>produit</strong>. L’<strong>accès au catalogue</strong> est décidé par la marque, pour tout le réseau : un produit qu’elle retire n’est pas réactivable ici. Les éléments <strong>marque obligatoire</strong> sont verrouillés · seuls les produits fabriqués sont repris dans le Stock du jour · <strong>clic sur une catégorie</strong> = déplier/replier ses produits</div>
-          <div style="display:grid;grid-template-columns:2.4fr 1.2fr .7fr;padding:8px 6px 8px 22px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Catégorie / produit</span><span class="t-admin-label">État</span><span class="t-admin-label" style="text-align:center">Je produis</span></div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px"><strong>Lecture seule.</strong> L’assortiment — ce qui est disponible et vendu — est décidé par la <strong>marque</strong>. Cet écran montre ce qu’elle a ouvert à votre boutique, et <strong>pourquoi</strong> un produit n’est pas en ligne. Votre seule saisie produit est la <strong>quantité fabriquée</strong>, dans <strong>Stock du jour</strong> · <strong>clic sur une catégorie</strong> = déplier/replier ses produits</div>
+          <div style="display:grid;grid-template-columns:2.4fr 1.2fr .7fr;padding:8px 6px 8px 22px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Catégorie / produit</span><span class="t-admin-label">État</span><span class="t-admin-label" style="text-align:center">Décidé par la marque</span></div>
           <sc-for list="{{ assortRows }}" as="a" hint-placeholder-count="8">
             <sc-if value="{{ a.isCat }}" hint-placeholder-val="{{ true }}">
               <div style="display:flex;align-items:center;gap:11px;padding:11px 8px;background:var(--color-background-secondary);border-radius:8px;margin-top:8px">
-                <button onClick="{{ a.toggle }}" style="{{ a.swStyle }}"><span style="{{ a.swKnob }}"></span></button>
                 <div onClick="{{ a.open }}" style="flex:1;display:flex;align-items:center;gap:9px;cursor:pointer;min-width:0"><span style="width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-text-muted);flex:none">{{ a.caret }}</span><span style="font:600 12px var(--font-ui);text-transform:uppercase;letter-spacing:.05em;color:var(--color-text)">{{ a.label }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);flex:none">{{ a.nbProds }}</span></div>
                 <sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if>
                 <sc-if value="{{ a.mand }}" hint-placeholder-val="{{ false }}"><span style="{{ a.mandBadge }}">Marque obligatoire</span></sc-if>
@@ -1871,7 +1870,7 @@
               <div style="{{ a.rowStyle }}">
                 <div style="display:flex;align-items:center;gap:7px"><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ a.label }}</span><sc-if value="{{ a.lockShow }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.9"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></sc-if><sc-if value="{{ a.hasPort }}" hint-placeholder-val="{{ false }}"><span title="{{ a.portTitle }}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 10px var(--font-ui);cursor:help;flex:none">◔ portions</span></sc-if><sc-if value="{{ a.hasCanal }}" hint-placeholder-val="{{ false }}"><span style="font:400 10px var(--font-ui);color:var(--color-text-muted);flex:none">{{ a.canal }}</span></sc-if></div>
                 <div style="min-width:0"><span style="font:400 11px var(--font-ui);color:{{ a.stateColor }}">{{ a.stateTxt }}</span><sc-if value="{{ a.hasNav }}" hint-placeholder-val="{{ false }}"><div style="font:400 10px var(--font-ui);color:#b26a00;margin-top:2px">⚠ {{ a.navTxt }}</div></sc-if></div>
-                <div style="display:flex;justify-content:center;align-items:center;gap:7px"><sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if><button onClick="{{ a.toggle }}" style="{{ a.swStyle }}"><span style="{{ a.swKnob }}"></span></button></div>
+                <div style="display:flex;justify-content:center;align-items:center;gap:7px"><sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if></div>
               </div>
             </sc-if>
           </sc-for>
@@ -1881,14 +1880,14 @@
         <sc-if value="{{ assortTabCat }}" hint-placeholder-val="{{ false }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div class="t-section-title" style="font-size:15px;margin-bottom:3px">Livraison par catégorie</div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Le <strong>délai</strong> = nombre de <strong>jours ouvrés</strong> pendant lesquels le produit devient disponible à la vente et/ou à la livraison (selon le client). Côté table produit : délai de production. Côté webshop : un petit tag rond <span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 9px var(--font-ui);padding:0 6px;vertical-align:middle">J+n</span> informe le client et le sélecteur de date se cale dessus.</div>
-          <div style="display:grid;grid-template-columns:1.6fr .9fr .9fr .8fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Jours ouvrés</span><span class="t-admin-label">Cut-off</span><span class="t-admin-label" style="text-align:right">Livrable</span></div>
+          <div style="font:400 11px/1.55 var(--font-ui);color:var(--color-text-muted);margin-bottom:14px"><strong>Lecture seule.</strong> Les catégories et leur activation appartiennent à la <strong>marque</strong> ; le <strong>délai</strong> et le <strong>cut-off</strong> affichés sont les valeurs de configuration en vigueur, communes à toutes les catégories — la base ne sait pas les stocker par catégorie. Le délai est un nombre de <strong>jours ouvrés</strong> avant qu’un produit devienne disponible à la vente et/ou à la livraison ; le webshop l’affiche au client sous la forme d’un tag rond <span style="display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:18px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 9px var(--font-ui);padding:0 6px;vertical-align:middle">J+n</span> et cale le sélecteur de date dessus.</div>
+          <div style="display:grid;grid-template-columns:1.6fr .9fr .9fr .9fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Catégorie</span><span class="t-admin-label">Jours ouvrés</span><span class="t-admin-label">Cut-off</span><span class="t-admin-label" style="text-align:right">Décidé par la marque</span></div>
           <sc-for list="{{ dispoCats }}" as="c" hint-placeholder-count="6">
-            <div style="display:grid;grid-template-columns:1.6fr .9fr .9fr .8fr;align-items:center;padding:12px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+            <div style="display:grid;grid-template-columns:1.6fr .9fr .9fr .9fr;align-items:center;padding:12px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
               <span style="font:500 12.5px var(--font-ui);color:{{ c.nameColor }}">{{ c.nom }}</span>
-              <div style="display:flex;align-items:center;gap:8px"><input type="number" value="{{ c.delai }}" onChange="{{ c.setDelai }}" style="{{ c.fieldStyle }}"/><span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 10px var(--font-ui);padding:0 7px" title="Vu par le client sur le webshop">{{ c.tag }}</span></div>
-              <div style="padding-right:10px"><input value="{{ c.cut }}" onChange="{{ c.setCut }}" style="{{ c.cutFieldStyle }}"/></div>
-              <div style="display:flex;justify-content:flex-end;align-items:center;gap:7px"><sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ c.help }}</span></span></sc-if><button onClick="{{ c.toggle }}" style="{{ c.trackStyle }}"><span style="{{ c.knobStyle }}"></span></button></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="font:600 12px var(--font-ui);color:{{ c.delaiColor }}">{{ c.delai }}</span><sc-if value="{{ c.hasTag }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:20px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 10px var(--font-ui);padding:0 7px" title="Vu par le client sur le webshop">{{ c.tag }}</span></sc-if></div>
+              <div style="padding-right:10px"><span style="font:400 12px var(--font-ui);color:{{ c.cutColor }}">{{ c.cut }}</span></div>
+              <div style="display:flex;justify-content:flex-end;align-items:center;gap:7px"><sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ c.help }}</span></span></sc-if><span style="{{ c.statutPill }}">{{ c.statut }}</span></div>
             </div>
           </sc-for>
         </div>
@@ -1896,13 +1895,13 @@
 
         <sc-if value="{{ assortTabProd }}" hint-placeholder-val="{{ false }}">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div><div class="t-section-title" style="font-size:15px">Exceptions au niveau produit</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Ces réglages écrasent la disponibilité de la catégorie parente</div></div><button onClick="{{ addDispoProd }}" class="btn-primary" style="font-size:12px;flex:none">+ Exception produit</button></div>
-          <div style="display:grid;grid-template-columns:1.8fr 1.1fr 1fr 36px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Produit</span><span class="t-admin-label">Catégorie</span><span class="t-admin-label" style="text-align:right">Exception</span></div>
+          <div style="margin-bottom:14px"><div class="t-section-title" style="font-size:15px">Produits non vendus ici</div><div style="font:400 11px/1.55 var(--font-ui);color:var(--color-text-muted);margin-top:3px"><strong>Lecture seule.</strong> Ce que la boutique vend est décidé par la <strong>marque</strong>. Cette liste dit ce qui manque au catalogue de cette boutique <strong>et pourquoi</strong> : « Désactivé (réseau) » vient de la marque, « Désactivé boutique » et « Sans livraison » viennent du paramétrage de la boutique côté marque. Un désaccord se règle avec elle, pas ici. Le seul levier de la boutique est le <strong>Stock du jour</strong> : les quantités produites.</div></div>
+          <div style="display:grid;grid-template-columns:1.8fr 1.1fr 1fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Produit</span><span class="t-admin-label">Catégorie</span><span class="t-admin-label" style="text-align:right">Raison</span></div>
           <sc-for list="{{ dispoProds }}" as="p" hint-placeholder-count="4">
-            <div style="display:grid;grid-template-columns:1.8fr 1.1fr 1fr 36px;align-items:center;padding:12px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+            <div style="display:grid;grid-template-columns:1.8fr 1.1fr 1fr;align-items:center;padding:12px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
               <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ p.nom }}</span>
               <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ p.cat }}</span>
-              <div style="display:flex;justify-content:flex-end"><span style="{{ p.pill }}">{{ p.rule }}</span></div><div style="display:flex;justify-content:flex-end"><button onClick="{{ p.edit }}" style="{{ pencilStyle }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h3l11-11-3-3L4 17z"/><path d="M14 5l3 3"/></svg></button></div>
+              <div style="display:flex;justify-content:flex-end"><span style="{{ p.pill }}">{{ p.rule }}</span></div>
             </div>
           </sc-for>
         </div>
@@ -3209,8 +3208,8 @@ class Component extends DCLogic {
     horaires:{table:'ws_tour_availability',origin:'Form horaire — fenêtres récurrentes par tournée',calc:'Champs tour/jour/dep/fin/cut/cap ⇒ upsert BOServer.save(ws_tour_availability)',dev:'1 j'},
     fermetures:{table:'ws_tour_closures',origin:'Form fermeture — jours où une tournée ne roule pas',calc:'Champs tour/date/type/motif ⇒ upsert ; date splittée pour la pastille',dev:'0,5 j'},
     bureauParams:{table:'ws_office_delivery_settings',origin:'Form bureauParam — jours autorisés · cut-off · tournée par bureau',calc:'daysArr piloté par les pastilles jour ; upsert BOServer.save',dev:'1 j'},
-    dispoCat:{table:'ws_param (flags catégorie)',origin:'Toggles livraison par catégorie de produit',calc:'flags[cat_*] persistés ; délai/cut-off lus depuis la config catégorie',dev:'1 j'},
-    dispoProd:{table:'ws_product_availability',origin:'Form dispoProd — exceptions produit qui écrasent la catégorie',calc:'Champs produit/cat/rule ⇒ upsert BOServer.save(ws_product_availability)',dev:'1 j'},
+    dispoCat:{table:'ws_categories (marque)',origin:'Lecture seule — activation des catégories décidée par la marque',calc:'GET fr-dispo-cats ; délai/cut-off = valeurs GLOBALES ws_param (order.lead_days_default, order.cutoff_default)',dev:'—'},
+    dispoProd:{table:'ws_products.active × ws_product_shops',origin:'Lecture seule — produits absents du catalogue de cette boutique, et la raison',calc:'GET ws-product-availability ; l\'écriture est refusée (403) : l\'assortiment est décidé par la marque',dev:'—'},
     creneaux:{table:'ws_slots',origin:'Form creneau — libellés de créneaux par mode',calc:'Champs mode/libelle/plage/cap ⇒ upsert BOServer.save(ws_slots)',dev:'0,5 j'},
     capacite:{table:'ws_slots × dates',origin:'Grille remplissage réservé/max par date × créneau',calc:'Cellule rouge si réservé≥max, orange si tension (>80%)',dev:'1,5 j'},
     reglesBoutique:{table:'fr_shop_availability',origin:'Disponibilité boutique — SOURCE UNIQUE du webshop et des HORAIRES (jours/heures · durée créneau · cut-off · lead)',calc:'GET fr-shop-availability / POST shop-availability — aucune valeur par défaut n\'est écrite',dev:'—'},
@@ -3220,7 +3219,7 @@ class Component extends DCLogic {
     pricingRules:{table:'ws_pricing_rules_local',origin:'Form pricing — règles locales ✍ vs réseau 👁 (lecture seule)',calc:'loc=true éditable ; upsert BOServer.save(ws_pricing_rules_local)',dev:'1 j'},
     vouchers:{table:'ws_vouchers_local',origin:'ws_vouchers (boutique + marque) via /franchisee/ws-vouchers-local',calc:'Création par POST /franchisee/voucher ; l’onboarding crée le sien côté serveur',dev:'—'},
     remiseWebshop:{table:'ws_param (remise webshop)',origin:'Toggle remise auto webshop',calc:'setParam(remise.webshop_enabled) ; % appliqué au panier B2B',dev:'0,5 j'},
-    assortiment:{table:'ws_param (flags assortiment)',origin:'Arbre catégories → produits · actif / verrou marque',calc:'flags[catA_*] / [prodA_*] persistés ; verrou = mandatoire non modifiable',dev:'1,5 j'},
+    assortiment:{table:'ws_products × ws_product_shops',origin:'Lecture seule — arbre catégories → produits ouverts à cette boutique par la marque',calc:'GET fr-assortiment ; POST assortiment-toggle refusé (403) : la boutique saisit les quantités, pas l\'assortiment',dev:'—'},
     paiements:{table:'ws_payment_methods',origin:'Moyens de paiement par profil (web/comptoir/bureau)',calc:'Toggles dw/dc/db persistés par ligne ; upsert BOServer.save',dev:'1 j'},
     emailsBureau:{table:'ws_office_emails',origin:'Form email — contacts groupés par bureau (rôle)',calc:'Add/del → BOServer.save ; rôle = Principal/Facturation/Livraison',dev:'1 j'},
     stockJour:{table:'ws_product_stock (catalog actif)',origin:'Stock online (webshop) + en shop, produits actifs · filtres badges',calc:'Dispo = online + shop ; sous seuil si dispo<min, tension si <min×1,25',dev:'1,5 j'},
@@ -3276,8 +3275,8 @@ class Component extends DCLogic {
     {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','except'],g:'Paramétrage › Boutique',label:'Jours exceptionnels',meta:'joursExcept',k:'fermeture horaire special date ferie vacances'},
     {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','creneaux'],g:'Paramétrage › Boutique',label:'Créneaux',meta:'creneaux',k:'libelle plage horaire capacite mode slot'},
     {s:'assortiment',grp:'g_boutique',tab:['assortTab','assort'],g:'Paramétrage › Boutique',label:'Assortiment boutique',k:'catalogue produits actifs verrou marque mandatoire categorie'},
-    {s:'assortiment',grp:'g_boutique',tab:['assortTab','cat'],g:'Paramétrage › Boutique',label:'Dispo par catégorie',meta:'dispoCat',k:'categorie delai cut-off activer desactiver livrable'},
-    {s:'assortiment',grp:'g_boutique',tab:['assortTab','prod'],g:'Paramétrage › Boutique',label:'Dispo par produit',meta:'dispoProd',k:'exception produit ecrase categorie regle'},
+    {s:'assortiment',grp:'g_boutique',tab:['assortTab','cat'],g:'Paramétrage › Boutique',label:'Dispo par catégorie',meta:'dispoCat',k:'categorie delai cut-off marque lecture seule active'},
+    {s:'assortiment',grp:'g_boutique',tab:['assortTab','prod'],g:'Paramétrage › Boutique',label:'Dispo par produit',meta:'dispoProd',k:'produit non vendu desactive reseau boutique livraison marque'},
     {s:'pricingRules',grp:'g_boutique',tab:['promoTab','prix'],g:'Paramétrage › Boutique',label:'Règles de prix',k:'promotion remise locale reseau marque tarif'},
     {s:'pricingRules',grp:'g_boutique',tab:['promoTab','bons'],g:'Paramétrage › Boutique',label:'Bons / codes',meta:'vouchers',k:'voucher code promo bienvenue bon reduction'},
     {s:'pricingRules',grp:'g_boutique',tab:['promoTab','remise'],g:'Paramétrage › Boutique',label:'Remise webshop',meta:'remiseWebshop',k:'remise automatique panier b2b pourcentage minimum'},
@@ -3297,7 +3296,6 @@ class Component extends DCLogic {
        règle de frais (ws_office_delivery_sites.name). L'adresse ne lui sert
        pas : deux sites peuvent la partager. */
     const sitesNoms=[...new Set((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(s=>s.name).filter(v=>v&&v!=='—'))];
-    const cats=['Pâtisserie fraîche','Boulangerie','Traiteur / plats','Chocolaterie','Glaces & surgelés','Épicerie fine'];
     const sel=(a)=>a.map(x=>({value:x,label:x}));
     const catchmentSel=(window.BOServer?window.BOServer.table('ws_franchisor_catchment'):[]).map(c=>({value:c.name,label:c.name}));
     return {
@@ -3467,37 +3465,27 @@ class Component extends DCLogic {
           {k:'drop',label:'Temps de dépôt (minutes)',type:'number',
            info:'Durée sur place : accès, badge, étage. Elle entre dans l’heure d’arrivée annoncée aux bureaux suivants de la tournée.'},
         ]},
-      /* DISPONIBILITÉ D'UN PRODUIT DANS CETTE BOUTIQUE.
-         L'écran s'appelait « Exception produit » et écrivait dans l'overlay
-         sous le nom ws_product_availability — une table qui n'existe nulle
-         part : l'exception saisie n'a jamais rien produit. Le vrai levier est
-         ws_product_shops (vendu ici · pas vendu ici · pas livrable).
-         Les quatre exceptions proposées (Sur devis, Saisonnier, Non livrable,
-         Délai spécifique) n'étaient pas stockables : la base n'en sait dire
-         que trois états, et ce sont ceux-ci. La « catégorie parente » a
-         disparu — elle vient du produit, on ne la choisit pas. */
-      dispoProd:{ title:'Disponibilité d’un produit', table:'ws_product_shops', save:'Enregistrer',
-        fields:[
-          {k:'produit',label:'Produit',type:'text',ph:'nom exact au catalogue',
-           info:'Le nom doit correspondre au catalogue réseau : le serveur refuse un produit qu’il ne trouve pas.'},
-          {k:'statut',label:'Dans cette boutique',type:'select',def:'Disponible',
-           options:sel(['Disponible','Désactivé en boutique','Sans livraison']),
-           info:'« Sans livraison » = vendu en boutique, mais jamais livré. Un produit coupé par la marque ne se rouvre pas d’ici.'},
-        ]},
+      /* PAS DE FORMULAIRE « disponibilité d'un produit » — la marque décide.
+         Il en a existé deux versions, fausses toutes les deux : la première
+         écrivait dans l'overlay sous le nom ws_product_availability, une table
+         qui n'existe nulle part ; la seconde écrivait bien dans
+         ws_product_shops, mais donnait à la boutique un choix qui n'est pas le
+         sien. Ce que la boutique vend est un choix de la MARQUE, pour tout le
+         réseau. Ce que la boutique décide, ce sont les QUANTITÉS produites :
+         écran « Stock du jour », form `stock`, routes /franchisee/stock-*.
+         La route /franchisee/product-availability répond 403 et le dit. */
       email:{ title:'Nouvel email bureau', table:'ws_office_emails', tbl:'ws_office_emails', save:'Ajouter l\'email',
         fields:[
           {k:'bureau',label:'Bureau',type:'select',options:sel(bureaux),def:bureaux[0]||''},
           {k:'addr',label:'Adresse email',type:'text',ph:'contact@exemple.be'},
           {k:'role',label:'Rôle',type:'select',options:sel(['Principal','Facturation','Livraison']),def:'Principal'},
         ]},
-      stock:{ title:'Ligne de stock du jour', table:'ws_product_stock', save:'Enregistrer le stock',
-        fields:[
-          {k:'produit',label:'Produit',type:'text',ph:'nom du produit'},
-          {k:'cat',label:'Catégorie',type:'select',options:sel(cats),def:cats[0]||''},
-          {k:'online',label:'Stock online (webshop)',type:'number',def:20},
-          {k:'shop',label:'Stock en shop (comptoir)',type:'number',def:20},
-          {k:'min',label:'Stock minimum disponible',type:'number',def:10},
-        ]},
+      /* PAS DE FORMULAIRE « ligne de stock » — l'écran Stock du jour saisit
+         les quantités EN LIGNE, produit par produit, et les écrit une par une
+         via /franchisee/stock-set. Ce formulaire n'était rendu nulle part
+         (`addStock` était lié mais jamais posé dans le gabarit) : personne ne
+         pouvait l'ouvrir, et il posait 20 / 20 / 10 comme valeurs par défaut —
+         des chiffres inventés qui auraient été enregistrés tels quels. */
       /* RÈGLE CALENDRIER — elle décide si une commande est acceptée.
          Les trois champs étaient du texte libre (« Lun–Ven », « 17:00 J-1 »,
          « 24 h ») écrit dans l'overlay : inanalysables, et jamais appliqués.
@@ -3608,10 +3596,6 @@ class Component extends DCLogic {
     if(S.formKey==='pricing'){ this.setState({formKey:null});
       this.routeWrite('pricing-rule',{id:(S.formRow&&S.formRow.id)||0,nom:v.nom,type:v.type,x:v.x,y:v.y,seuil:v.seuil},
         'Règle',null,'ws-pricing-rules-local','ws_pricing_rules_local',()=>'✔ Règle enregistrée — '+(v.nom||'')); return; }
-    if(S.formKey==='dispoProd'){ this.setState({formKey:null});
-      this.routeWrite('product-availability',{produit:v.produit,statut:v.statut},
-        'Disponibilité',null,'ws-product-availability','ws_product_availability',
-        j=>'✔ '+(v.produit||'')+' — '+((j&&j.statut)||v.statut)); return; }
     // Créneau et jour exceptionnel : une ligne, une route (voir slotWrite/excWrite).
     if(S.formKey==='creneau'){ this.setState({formKey:null});
       this.slotWrite({id:(S.formRow&&S.formRow.id)||0,mode:v.mode,libelle:v.libelle,ordre:v.ordre}); return; }
@@ -5142,10 +5126,10 @@ class Component extends DCLogic {
     const langList=['FR','NL','EN','DE','PL'].map(l=>({code:l,pick:setLang[l],style:langStyles[l]}));
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams'),navAvis:this.tr('navAvis'),navFidelite:this.tr('navFidelite') };
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
-      horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Disponibilité par produit',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
+      horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
     const subs={avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel · Bruxelles',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
-      horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Activer/désactiver · délai · cut-off par catégorie',dispoProd:'Exceptions produit — écrasent la catégorie',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
+      horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
     // ===== Recherche profonde (barre de nav) =====
@@ -6146,31 +6130,36 @@ class Component extends DCLogic {
       origine:b.cutHerite?('hérité de « '+(b.tour||'sa tournée')+' »'):'propre à ce bureau',
       pill:pill2('var(--color-background-secondary)','var(--color-text-muted)')}));
 
-    const dispoCats=SRV('fr_dispo_cats').map(c=>{ const on=S.flags['cat_'+c.key]!==undefined?S.flags['cat_'+c.key]:c.def;
-      const dk='catDelai_'+c.key, ck='catCut_'+c.key;
-      const delaiVal=S.flags[dk]!==undefined?S.flags[dk]:c.delai;
-      const cutVal=S.flags[ck]!==undefined?S.flags[ck]:c.cut;
-      const jours=parseInt(delaiVal,10); const nDays=isNaN(jours)?0:jours;
-      const tag='J+'+(nDays||delaiVal);
-      const fieldStyle='width:64px;box-sizing:border-box;border:.5px solid var(--color-border-tertiary);border-radius:7px;padding:6px 8px;font:600 12px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none;text-align:center';
-      const cutFieldStyle='width:100%;box-sizing:border-box;border:.5px solid var(--color-border-tertiary);border-radius:7px;padding:6px 8px;font:400 12px var(--font-ui);color:var(--color-text);background:var(--color-surface);outline:none';
+    /* ASSORTIMENT : LA MARQUE DÉCIDE, LA BOUTIQUE PRODUIT.
+       Cet écran ne portait que des leviers sans effet. La bascule « Livrable »
+       et les deux champs délai/cut-off n'écrivaient que dans S.flags, jamais
+       envoyé nulle part : le réglage disparaissait au rechargement et la
+       console affirmait entre-temps un état que ni la base ni le webshop ne
+       connaissaient. Sur des données qui, en plus, appartiennent à la marque —
+       ws_categories.active — et dont le délai/cut-off servis sont les valeurs
+       GLOBALES de configuration (order.lead_days_default, order.cutoff_default),
+       identiques pour toutes les catégories. Trois leviers, zéro écriture.
+       L'écran devient ce qu'il pouvait honnêtement être : un état des lieux. */
+    const dispoCats=SRV('fr_dispo_cats').map(c=>{ const on=!!c.def;
+      const brut=(v)=>{ const s=(v===null||v===undefined)?'':String(v).trim(); return s; };
+      const dTxt=brut(c.delai), cTxt=brut(c.cut);
+      const jours=parseInt(dTxt,10); const hasTag=!isNaN(jours);
       return {...c,nameColor:on?'var(--color-text)':'var(--color-text-muted)',
-        delai:delaiVal,cut:cutVal,fieldStyle,cutFieldStyle,tag,
-        help:'Nombre de JOURS OUVRÉS de délai avant que « '+c.nom+' » soit disponible à la vente / livraison. Table produit → délai de production. Webshop → tag rond « '+tag+' » affiché au client, le sélecteur de date se cale dessus. '+(on?'Livraison ACTIVE (désactiver = retrait uniquement).':'Livraison DÉSACTIVÉE (retrait uniquement).'),
-        setDelai:(e)=>{ const v=e.target.value; this.setState(st=>({flags:{...st.flags,[dk]:v}})); },
-        setCut:(e)=>{ const v=e.target.value; this.setState(st=>({flags:{...st.flags,[ck]:v}})); },
-        toggle:()=>this.setState(st=>({flags:{...st.flags,['cat_'+c.key]:!(st.flags['cat_'+c.key]!==undefined?st.flags['cat_'+c.key]:c.def)}})),
-        trackStyle:'position:relative;width:40px;height:22px;border-radius:20px;border:none;cursor:pointer;transition:background .15s;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)'),
-        knobStyle:'position:absolute;top:2px;left:'+(on?'20px':'2px')+';width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)'};
+        delai:dTxt||'non renseigné', delaiColor:dTxt?'var(--color-text)':'var(--color-text-muted)',
+        cut:cTxt||'non renseigné', cutColor:cTxt?'var(--color-text)':'var(--color-text-muted)',
+        hasTag, tag:'J+'+jours,
+        statut:on?'Active':'Désactivée',
+        statutPill:pill2(on?'#eaf5ec':'var(--color-background-secondary)',on?'#2d7a3e':'var(--color-text-muted)'),
+        help:'« '+c.nom+' » est '+(on?'ACTIVE':'DÉSACTIVÉE')+' au catalogue de la marque'+(on?'':' — ses produits restent vendables, mais la catégorie ne s’affiche pas dans la navigation du webshop')+'. Cette activation ne se change pas depuis une boutique. Le délai affiché ('+(dTxt||'non renseigné')+') et le cut-off ('+(cTxt||'non renseigné')+') sont les valeurs de configuration en vigueur, communes à toutes les catégories : la base ne les stocke pas par catégorie.'};
     });
-    const dispoProds=SRV('ws_product_availability').map((p,i)=>{ const rl=p.rule||''; const bg=rl==='Sur devis'?'#fff4e5':(rl==='Non livrable'?'#fbe9eb':(/J\+/.test(rl)?'#eaf5ec':'var(--color-background-secondary)')); const c=rl==='Sur devis'?'#b26a00':(rl==='Non livrable'?'var(--color-primary)':(/J\+/.test(rl)?'#2d7a3e':'var(--color-text-muted)')); return {...p,nom:p.produit,
-        /* Une coupure décidée par la MARQUE ne se lève pas d'ici : ni bouton
-           Modifier, ni bouton Supprimer, plutôt qu'un geste que le serveur
-           refusera. « Supprimer » vaut ici « redevient disponible ». */
-        edit:p.local?this.editForm('dispoProd',{...p,statut:p.statut},i):null,
-        del:p.local?(()=>this.routeWrite('product-availability',{produit:p.produit,statut:'Disponible'},
-          'Disponibilité','✔ '+(p.produit||'')+' redevient disponible','ws-product-availability','ws_product_availability')):null,
-        pill:pill2(bg,c)}; });
+    /* Même règle : cette liste CONSTATE, elle ne corrige pas. Ni bouton
+       Modifier ni bouton Supprimer — le serveur refuse désormais l'écriture
+       (403), et un geste que le serveur refuse n'a pas sa place à l'écran. */
+    const dispoProds=SRV('ws_product_availability').map(p=>{ const rl=p.rule||'';
+      const reseau=/réseau/i.test(rl), livr=/livraison/i.test(rl);
+      const bg=reseau?'#fbe9eb':(livr?'#fff4e5':'var(--color-background-secondary)');
+      const c=reseau?'var(--color-primary)':(livr?'#b26a00':'var(--color-text-muted)');
+      return {...p,nom:p.produit,pill:pill2(bg,c)}; });
 
     const toMinS=(s)=>{ const p=String(s||'').split(':'); return (parseInt(p[0],10)||0)*60+(parseInt(p[1],10)||0); };
     const hhmmS=(m)=>{ const h=Math.floor(m/60)%24,mm=m%60; return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'); };
@@ -6532,8 +6521,14 @@ class Component extends DCLogic {
 
     // ===== Catalogue partagé : catégories → produits (Assortiment + Stock) =====
     const CATALOG=SRV('fr_stock_catalog');
-    const catActive=(ci,c)=> c.catMand?true:(S.flags['catA_'+ci]!==undefined?S.flags['catA_'+ci]:true);
-    const prodActive=(ci,pi,p)=> p.mand?true:(S.flags['prodA_'+ci+'_'+pi]!==undefined?S.flags['prodA_'+ci+'_'+pi]:(p.defOff?false:true));
+    /* Le catalogue affiché est celui que le SERVEUR sert : fr-stock-catalog
+       restreint déjà aux produits actifs, repris dans l'assortiment de la
+       boutique et autorisés par la marque (brand_whitelist). Deux filtres
+       locaux — catActive / prodActive — se superposaient à ce tri, lus depuis
+       les drapeaux catA_* / prodA_* que posaient les anciennes bascules
+       d'assortiment. Ces bascules ont disparu : ce que la boutique vend est
+       décidé par la marque. Les drapeaux n'étaient donc plus jamais écrits, et
+       les deux filtres laissaient tout passer sans que rien ne le dise. */
 
     // Stock du jour — uniquement les produits actifs (catégorie active ET produit actif)
     const stkIn='width:52px;text-align:right;border:.5px solid var(--color-border-secondary);border-radius:7px;padding:6px 7px;font:500 12px var(--font-ui);color:var(--color-text);background:var(--color-surface)';
@@ -6541,8 +6536,8 @@ class Component extends DCLogic {
     let stockAll=[];
     // Libellés FR des statuts de commande (ws_orders.status) dans le panneau.
     const stkStatFR=st=>({pending:'En attente',confirmed:'Confirmée',paid:'Payée',preparing:'En préparation',ready:'Prête',completed:'Terminée',delivered:'Livrée',collected:'Retirée',cancelled:'Annulée'})[String(st||'').toLowerCase()]||st||'—';
-    CATALOG.forEach((c,ci)=>{ if(!catActive(ci,c)) return;
-      c.prods.forEach((p,pi)=>{ if(!prodActive(ci,pi,p)) return;
+    CATALOG.forEach((c,ci)=>{
+      c.prods.forEach((p,pi)=>{
         const ok='stkO_'+ci+'_'+pi, sk='stkS_'+ci+'_'+pi;
         // odk/sdk : brouillon de saisie, distinct de la valeur SERVEUR (ok/sk).
         const odk='stkOd_'+ci+'_'+pi, sdk='stkSd_'+ci+'_'+pi;
@@ -6762,31 +6757,20 @@ class Component extends DCLogic {
       return {...r,hasCat,hasPort:!!erpPortIdx[r.nom],portTitle:erpPortIdx[r.nom]||''}; });
     const stockEmpty=stockRows.length===0;
 
-    // Assortiment — arbre catégories → produits, toggles actif + verrou marque
-    const swT=(on,lock)=>({style:'position:relative;width:38px;height:21px;border-radius:20px;border:none;cursor:pointer;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)')+(lock?';opacity:.45;pointer-events:none':''),knob:'position:absolute;top:2px;left:'+(on?'19px':'2px')+';width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2)'});
-    // « Assortiment par boutique » — RÉEL : ws_products × ws_product_shops
-    // (fr_assortiment). Chaque bascule est ÉCRITE via POST assortiment-toggle ;
-    // produits « marque obligatoire » verrouillés côté serveur ET côté écran.
+    /* Assortiment — arbre catégories → produits, EN LECTURE SEULE.
+       Les bascules « Actif » ont été retirées : ce qu'une boutique vend est
+       décidé par la MARQUE, pour tout le réseau, et la route
+       /franchisee/assortiment-toggle répond désormais 403 en le disant. Le
+       seul levier de la boutique est le Stock du jour : les quantités
+       produites. `swT` (fabrique de bascule) et `asrReloadStock` (rechargement
+       du catalogue de stock après bascule) sont partis avec elles. */
     const asrRaw=SRV('fr_assortiment');
     const asrCats={}; const asrOrder=[];
     asrRaw.forEach(a=>{ const k=a.cat||'Autres'; if(!asrCats[k]){ asrCats[k]={cat:k,prods:[]}; asrOrder.push(k); } asrCats[k].prods.push(a); });
-    const asrPost=(bodyA,after)=>{ const fr=window.__FR||{};
-      fetch((fr.base||'')+'/franchisee/assortiment-toggle'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(bodyA)})
-        .then(r=>r.json()).then(after).catch(()=>this.printJob('Réseau indisponible — bascule non enregistrée')); };
-    // Après CHAQUE bascule d'assortiment : refetch du catalogue Stock du jour —
-    // un produit retiré de l'assortiment disparaît IMMÉDIATEMENT des stocks
-    // (avant, il restait affiché jusqu'au rechargement de la page).
-    const asrReloadStock=()=>{ const fr=window.__FR||{}; if(!fr.base) return;
-      fetch(fr.base+'/franchisee/fr-stock-catalog'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
-        .then(r=>r.ok?r.json():null)
-        .then(a=>{ if(Array.isArray(a)&&window.BOServer){ window.BOServer.refresh('fr_stock_catalog',a); this.setState(s=>({_rev:(s._rev||0)+1})); } })
-        .catch(()=>{}); };
-    const asrSetLocal=(pred,act)=>{ if(window.BOServer){ const rows=window.BOServer.table('fr_assortiment'); rows.forEach(x=>{ if(pred(x)&&!(x.locked&&!act)) x.defA=act; }); window.BOServer.refresh('fr_assortiment',rows); } this.setState(st=>({_rev:(st._rev||0)+1})); };
     const assortRows=[];
     asrOrder.forEach(k=>{ const c=asrCats[k];
       const cAct=c.prods.some(p=>p.defA!==false);
       const allLocked=c.prods.every(p=>p.locked);
-      const cs=swT(cAct,allLocked);
       // REPLI/DÉPLI par catégorie : replié PAR DÉFAUT (on ne voit que les
       // bandeaux catégorie → gestion plus simple) ; clic sur le bandeau =
       // déplier ; bouton global « Tout déplier / Tout replier ».
@@ -6794,10 +6778,7 @@ class Component extends DCLogic {
       assortRows.push({isCat:true,isProd:false,label:c.cat,mand:allLocked,mandBadge:pill2('#fbe9eb','var(--color-primary)'),
         caret:catOpen?'▾':'▸',nbProds:c.prods.length+' produit'+(c.prods.length>1?'s':''),
         open:()=>this.setState(s=>({asrOpen:{...(s.asrOpen||{}),[k]:!catOpen}})),
-        help:cAct?('Vous PRODUISEZ les articles de « '+c.cat+' ». La bascule dit ce que votre boutique fabrique — pas ce qui est mis en vente : l’accès au catalogue est décidé par la marque, pour tout le réseau.'):('Vous ne produisez AUCUN article de « '+c.cat+' ». Ils restent au catalogue réseau, mais votre boutique ne les propose pas.'),
-        swStyle:cs.style,swKnob:cs.knob,
-        toggle:allLocked?(()=>{}):(()=>{ const nv=!cAct;
-          asrPost({cat:c.cat,active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>(x.cat||'Autres')===k,nv); asrReloadStock(); this.printJob((nv?'✓ Catégorie « ':'Catégorie « ')+c.cat+' » '+(nv?'activée':'désactivée')+' — '+(j.n||0)+' produit(s) (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
+        help:'« '+c.cat+' » — ouverte à votre boutique par la marque. Vous ne pouvez pas retirer une catégorie de la vente : cela se décide dans la console marque.'});
       if(!catOpen) return;
       // Niveau SOUS-CATÉGORIE (même structure que le catalogue franchisor) :
       // bandeau repliable par sous-catégorie ; produits sans sous-catégorie
@@ -6812,11 +6793,11 @@ class Component extends DCLogic {
             subToggle:()=>this.setState(s=>({asrSubOpen:{...(s.asrSubOpen||{}),[skey]:!subOpen}}))});
         }
         if(!subOpen) return;
-        sprods.forEach(p=>{ const pAct=p.defA!==false; const ps2=swT(pAct,p.locked);
+        sprods.forEach(p=>{ const pAct=p.defA!==false;
         assortRows.push({isCat:false,isProd:true,label:p.nom,lockShow:!!p.locked,
           canal:p.canal||'',hasCanal:!!p.canal,
           hasPort:!!erpPortIdx[p.nom],portTitle:erpPortIdx[p.nom]||'',
-          help:p.nonTarife?('Produit « '+p.nom+' » SANS PRIX pour cette boutique (ERP shop_product) : hors vente — invisible au webshop et refusé à la commande. Il redeviendra vendable AUTOMATIQUEMENT dès qu\'un prix sera posé dans l\'ERP.'):(p.locked?('« '+p.nom+' » est OBLIGATOIRE (marque) : sa production ne peut pas être refusée.'):(pAct?('Vous produisez « '+p.nom+' ». Le décocher déclare que votre boutique ne le fabrique pas — l’accès au catalogue, lui, est décidé par la marque.'):('Vous ne produisez pas « '+p.nom+' ». Il reste au catalogue réseau ; votre boutique ne le propose pas.'))),
+          help:p.nonTarife?('Produit « '+p.nom+' » SANS PRIX pour cette boutique (ERP shop_product) : hors vente — invisible au webshop et refusé à la commande. Il redeviendra vendable AUTOMATIQUEMENT dès qu\'un prix sera posé dans l\'ERP.'):(p.locked?('« '+p.nom+' » est OBLIGATOIRE (marque) : sa production ne peut pas être refusée.'):('« '+p.nom+' » — sa mise en vente est décidée par la marque. Pour en fixer la quantité fabriquée, passez par Stock du jour.')),
           rowStyle:'display:grid;grid-template-columns:2.4fr 1.2fr .7fr;align-items:center;padding:10px 6px 10px 22px;border-bottom:.5px solid var(--color-border-tertiary)'+((pAct&&!p.nonTarife)?'':';opacity:.5'),
           // NON TARIFÉ (aucun prix ERP > 0 pour cette boutique) : le produit est
           // hors vente quoi qu'en dise la bascule — il disparaissait AVANT du
@@ -6841,11 +6822,9 @@ class Component extends DCLogic {
              arriver que par « Tout ». C'est le symptôme des cookies sans
              catégorie, et il n'était visible nulle part. */
           hasNav:!!p.navigation, navTxt:p.navigation||'',
-          swStyle:ps2.style,swKnob:ps2.knob,
-          toggle:p.locked?(()=>{}):(()=>{ const nv=!pAct;
-            asrPost({product:p.nom,productId:(p.id!=null?p.id:undefined),active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>x.nom===p.nom,nv); asrReloadStock(); this.printJob('✓ « '+p.nom+' » '+(nv?'activé':'désactivé')+' (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
         });
       });
+    });
     });
 
     // Bouton global repli/dépli de l'assortiment.
@@ -7429,7 +7408,7 @@ class Component extends DCLogic {
         this.setState({officeClash:null,formKey:null,_rev:(S._rev||0)+1}); },
       openForm:(k)=>this.openForm(k), goDemandes:this.go('demandesB2B'), goParams:this.go('params'),
       addHoraire:this.openForm('horaire'), addFee:this.openForm('fee'),
-      addSite:this.openForm('site'), addCreneau:this.openForm('creneau'), addBureauParam:this.openForm('bureauParam'), addDispoProd:this.openForm('dispoProd'),
+      addSite:this.openForm('site'), addCreneau:this.openForm('creneau'), addBureauParam:this.openForm('bureauParam'),
       // Sens de paramétrage : les horaires et fermetures sont des PARAMÈTRES DE
       // TOURNÉE → rendus dans l'écran Tournées (l'entrée de menu dédiée disparaît).
       isHoraires:screen==='horaires'||screen==='tournees',horaires,
@@ -7703,7 +7682,7 @@ class Component extends DCLogic {
       ordRangeChips,prepDayBadges,prepDayOrders,prepDayEmpty,prepProdLines,prepProdEmpty,
       tabModalOn,tabTour,tabDriver,tabDriverSet,tabClose,tabSend,tabStatusTxt,tabStatusPill,tabCanSend,tabInfo,
       tabHasList,tabNewMode,tabDriverOpts,tabDriverVal,tabDriverPick,
-      isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,addStock:this.openForm('stock'),
+      isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,
       // (i) de la colonne « Min. » : la regle de calcul du seuil doit etre
       // lisible depuis l'ecran. Une formule cachee dans une infobulle de survol
       // n'existe pas sur une tablette.
@@ -7749,7 +7728,6 @@ class Component extends DCLogic {
       assortSegCat:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.assortTab||'assort')==='cat'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       assortSegProd:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.assortTab||'assort')==='prod'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       setAssortAssort:()=>this.setState({assortTab:'assort'}),setAssortCat:()=>this.setState({assortTab:'cat'}),setAssortProd:()=>this.setState({assortTab:'prod'}),
-      addDispoProd:this.openForm('dispoProd'),
       isPaiements:screen==='paiements',payMethods,deferList,deferCount,deferTotal,deferBadge,
       // Stripe — état + compte depuis ws_param (persisté) ; plus d'identifiant fictif.
       ...(()=>{ const sOn=(()=>{ const v=window.BOServer?window.BOServer.getParam('stripe.enabled',undefined):undefined; return S.flags['stripe_on']!==undefined?S.flags['stripe_on']:((v!==undefined&&v!==null&&v!=='')?(v===true||v==='1'||v===1):false); })();
