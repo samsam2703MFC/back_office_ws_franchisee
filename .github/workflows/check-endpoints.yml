@@ -749,6 +749,25 @@ jobs:
                 fi
               fi
 
+              # QUELLE BOUTIQUE VOIT UN VISITEUR SANS ?shop= DANS L'URL.
+              # Le webshop resout : ?shop= → memoire du navigateur → shops[0].
+              # Et /shops trie PAR NOM. shops[0] n'est donc pas « la boutique
+              # par defaut », c'est la premiere par ordre alphabetique — celle
+              # que voit quiconque ouvre l'adresse nue. Comparer le webshop a la
+              # console franchise (qui, elle, porte ?shop=<id>) sans savoir
+              # laquelle c'est, revient a comparer deux catalogues differents.
+              if [ -n "$(dbq "SELECT 1 FROM information_schema.columns
+                               WHERE table_schema=DATABASE() AND table_name='shops'
+                                 AND column_name='webshop_enabled'")" ]; then
+                echo "  boutiques du webshop, DANS L'ORDRE SERVI par /shops (ORDER BY name) :"
+                dbq "SELECT CONCAT('        ', IF(@i:=@i+1 = 1, '→ ', '  '),
+                            'id ', LPAD(id,3,' '), '  ', name)
+                       FROM shops, (SELECT @i:=0) x
+                      WHERE active = 1 AND webshop_enabled = 1
+                      ORDER BY name LIMIT 20"
+                echo "        (→ = celle que voit un visiteur sans ?shop= dans l'adresse)"
+              fi
+
               # SOUS-CATEGORIES. Le webshop n'affiche la barre que si la
               # categorie propose AU MOINS DEUX sous-categories peuplees
               # (webshop-full-bundle.jsx : subs.length >= 2), et ne garde que
