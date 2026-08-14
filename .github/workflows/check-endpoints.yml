@@ -774,6 +774,24 @@ jobs:
                       ORDER BY name LIMIT 20"
               fi
 
+              # LES TROIS LEVIERS QUI RESTREIGNENT LE CATALOGUE, ET CE QU'ILS
+              # RETIENNENT REELLEMENT. Avant de simplifier le modele — « tous
+              # les produits sont communs a tous les magasins, la marque decide
+              # seulement webshop / livraison » — il faut savoir ce que chaque
+              # levier bloque AUJOURD'HUI : le retirer rendra visible tout ce
+              # qu'il cachait, et ca se fait les yeux ouverts.
+              echo "  leviers de restriction, etat actuel :"
+              WL=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active=1 AND COALESCE(brand_whitelist,1)=0")
+              PS0=$(dbq "SELECT COUNT(*) FROM ws_product_shops WHERE active=0")
+              CS=$(dbq "SELECT COUNT(*) FROM ws_categories WHERE shop_id IS NOT NULL")
+              CSP=$(dbq "SELECT COUNT(*) FROM ws_products p JOIN ws_categories c ON c.id=p.cat_id
+                          WHERE p.active=1 AND c.shop_id IS NOT NULL")
+              OD=$(dbq "SELECT COUNT(*) FROM ws_products WHERE active=1 AND COALESCE(office_delivery,1)=0")
+              printf '    %-4s produit(s) actif(s) retires par brand_whitelist=0\n' "${WL:-?}"
+              printf '    %-4s ligne(s) ws_product_shops.active=0 (exclusion par boutique)\n' "${PS0:-?}"
+              printf '    %-4s categorie(s) rattachees a UNE boutique, portant %s produit(s) actif(s)\n' "${CS:-?}" "${CSP:-?}"
+              printf '    %-4s produit(s) actif(s) hors livraison bureau (office_delivery=0)\n' "${OD:-?}"
+
               # SOUS-CATEGORIES. Le webshop n'affiche la barre que si la
               # categorie propose AU MOINS DEUX sous-categories peuplees
               # (webshop-full-bundle.jsx : subs.length >= 2), et ne garde que
