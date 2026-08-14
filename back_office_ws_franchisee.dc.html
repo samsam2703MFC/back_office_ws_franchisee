@@ -2377,14 +2377,15 @@
           <sc-if value="{{ odtHasLines }}" hint-placeholder-val="{{ false }}">
             <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden">
               <sc-for list="{{ odtLines }}" as="ln" hint-placeholder-count="3">
-                <!-- Colonnes FIXES (produit 1fr · qté 56px · prix 90px) : en
-                     flex space-between, la quantité flottait au gré de la
-                     longueur du nom — les lignes ne s'alignaient pas
-                     verticalement d'une rangée à l'autre. -->
-                <div style="display:grid;grid-template-columns:1fr 56px 90px;align-items:center;gap:10px;padding:9px 13px;border-bottom:.5px solid var(--color-border-tertiary)">
-                  <span style="font:500 12.5px var(--font-ui);color:var(--color-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ ln.produit }}</span>
+                <!-- Colonnes FIXES (produit 1fr · qté 56px · prix 90px),
+                     identiques pour les sous-lignes (composants de menu,
+                     indentées) : tout s'aligne verticalement. Styles portés
+                     par la donnée — une ligne mère et un composant ne se
+                     rendent pas pareil. -->
+                <div style="{{ ln.rowStyle }}">
+                  <span style="{{ ln.produitStyle }}" title="{{ ln.noteTitle }}">{{ ln.produit }}</span>
                   <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);text-align:right">{{ ln.qte }}</span>
-                  <span style="font:600 12px var(--font-ui);color:var(--color-text);text-align:right">{{ ln.prix }}</span>
+                  <span style="{{ ln.prixStyle }}">{{ ln.prix }}</span>
                 </div>
               </sc-for>
             </div>
@@ -6585,16 +6586,38 @@ class Component extends DCLogic {
         if(odtSeen[k]||v==null||typeof v==='object'||String(v).trim()==='') return;
         odtFields.push({lbl:k,val:String(v)}); });
     }
-    /* Lignes de la commande : rendues si le serveur les JOINT à la commande
-       (lines / items / lignes / produits), avec les valeurs qu'il emploie.
-       /franchisee/fr-orders ne les joint pas aujourd'hui : l'état vide le dit
-       et renvoie vers la vue agrégée « À produire » — rien d'inventé ici. */
+    /* Lignes de la commande, telles que servies par /franchisee/fr-orders.
+       UN MENU ARRIVE ENTIER : la ligne mère porte la formule à son prix de
+       base, ses `composants` sont les choix — prix = le SUPPLÉMENT seul,
+       `inclus` quand il est compris dans la formule. On les affiche en
+       sous-lignes : sans elles, la somme visible ne retombait pas sur le
+       total (le supplément vit sur la ligne fille) et la boutique ne savait
+       pas ce que contient le menu. La note servie (« Supplément de… » /
+       « Inclus dans… ») passe en infobulle — rien d'inventé. */
+    const odtLineStyles={
+      row:'display:grid;grid-template-columns:1fr 56px 90px;align-items:center;gap:10px;padding:9px 13px;border-bottom:.5px solid var(--color-border-tertiary)',
+      sub:'display:grid;grid-template-columns:1fr 56px 90px;align-items:center;gap:10px;padding:5px 13px 5px 27px;border-bottom:.5px solid var(--color-border-tertiary)',
+      prod:'font:500 12.5px var(--font-ui);color:var(--color-text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap',
+      prodSub:'font:400 12px var(--font-ui);color:var(--color-text-muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap',
+      prix:'font:600 12px var(--font-ui);color:var(--color-text);text-align:right',
+      prixSub:'font:400 11.5px var(--font-ui);color:var(--color-text-muted);text-align:right'};
     const odtLinesRaw=odtRow?[odtRow.lines,odtRow.items,odtRow.lignes,odtRow.produits].find(Array.isArray):null;
-    const odtLines=(odtLinesRaw||[]).map(l=>{
-      if(l==null||typeof l!=='object') return {produit:String(l),qte:'',prix:''};
+    const odtLines=[];
+    (odtLinesRaw||[]).forEach(l=>{
+      if(l==null||typeof l!=='object'){ odtLines.push({produit:String(l),qte:'',prix:'',noteTitle:'',
+        rowStyle:odtLineStyles.row,produitStyle:odtLineStyles.prod,prixStyle:odtLineStyles.prix}); return; }
       const q=[l.qty,l.qte,l.quantity].find(v=>v!=null), px=[l.prix,l.price,l.montant,l.total].find(v=>v!=null);
-      return {produit:String([l.produit,l.product,l.libelle,l.label,l.nom,l.name].find(v=>v!=null&&String(v).trim()!=='')||'—'),
-        qte:q!=null?('× '+q):'', prix:px!=null?String(px):''}; });
+      odtLines.push({produit:String([l.produit,l.product,l.libelle,l.label,l.nom,l.name].find(v=>v!=null&&String(v).trim()!=='')||'—'),
+        qte:q!=null?('× '+q):'', prix:px!=null?String(px):'', noteTitle:l.note?String(l.note):'',
+        rowStyle:odtLineStyles.row,produitStyle:odtLineStyles.prod,prixStyle:odtLineStyles.prix});
+      (Array.isArray(l.composants)?l.composants:[]).forEach(c=>{
+        const cq=(c&&c.qty!=null)?c.qty:null;
+        odtLines.push({produit:'· '+String((c&&c.produit!=null&&String(c.produit).trim()!=='')?c.produit:'—'),
+          qte:cq!=null?('× '+cq):'',
+          prix:(c&&c.inclus)?'inclus':((c&&c.prix!=null)?('+ '+c.prix):''),
+          noteTitle:(c&&c.note)?String(c.note):'',
+          rowStyle:odtLineStyles.sub,produitStyle:odtLineStyles.prodSub,prixStyle:odtLineStyles.prixSub}); });
+    });
     // Préparation : badges par JOUR (Aujourd'hui, puis jours suivants ayant des
     // commandes) — le clic affiche les commandes correspondantes.
     const prepDaysSeen={}; const prepDays=[];
