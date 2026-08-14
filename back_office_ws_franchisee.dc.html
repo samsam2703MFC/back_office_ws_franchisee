@@ -1740,7 +1740,7 @@
             <sc-if value="{{ a.isProd }}" hint-placeholder-val="{{ false }}">
               <div style="{{ a.rowStyle }}">
                 <div style="display:flex;align-items:center;gap:7px"><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ a.label }}</span><sc-if value="{{ a.lockShow }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="1.9"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></sc-if><sc-if value="{{ a.hasPort }}" hint-placeholder-val="{{ false }}"><span title="{{ a.portTitle }}" style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:#eef3fb;color:#2a5a9e;font:700 10px var(--font-ui);cursor:help;flex:none">◔ portions</span></sc-if><sc-if value="{{ a.hasCanal }}" hint-placeholder-val="{{ false }}"><span style="font:400 10px var(--font-ui);color:var(--color-text-muted);flex:none">{{ a.canal }}</span></sc-if></div>
-                <span style="font:400 11px var(--font-ui);color:{{ a.stateColor }}">{{ a.stateTxt }}</span>
+                <div style="min-width:0"><span style="font:400 11px var(--font-ui);color:{{ a.stateColor }}">{{ a.stateTxt }}</span><sc-if value="{{ a.hasNav }}" hint-placeholder-val="{{ false }}"><div style="font:400 10px var(--font-ui);color:#b26a00;margin-top:2px">⚠ {{ a.navTxt }}</div></sc-if></div>
                 <div style="display:flex;justify-content:center;align-items:center;gap:7px"><sc-if value="{{ showHelp }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ helpIcon }}">i</span><span class="bo-tip" style="{{ tipStyle }}">{{ a.help }}</span></span></sc-if><button onClick="{{ a.toggle }}" style="{{ a.swStyle }}"><span style="{{ a.swKnob }}"></span></button></div>
               </div>
             </sc-if>
@@ -6692,8 +6692,25 @@ class Component extends DCLogic {
           // hors vente quoi qu'en dise la bascule — il disparaissait AVANT du
           // webshop sans explication ici. Il redevient vendable automatiquement
           // dès que l'ERP pose un prix : aucune bascule à refaire.
-          stateTxt:p.nonTarife?'Non tarifé · hors vente':(pAct?'Actif · vendable':'Inactif (boutique)'),
-          stateColor:p.nonTarife?'#b26a00':(pAct?'#2d7a3e':'var(--color-text-muted)'),
+          /* L'ÉTAT VIENT DU SERVEUR, il n'est plus redéduit ici.
+             L'écran ne connaissait que trois cas (non tarifé · actif · inactif)
+             alors que le serveur en distingue six : brouillon, retiré du
+             catalogue réseau, exclu de cette boutique, non éligible au bureau,
+             hors saison, sans prix ERP. Un produit absent du webshop pour l'une
+             des trois raisons non couvertes s'affichait ici « Actif · vendable »
+             — l'écran contredisait la boutique.
+             `enLigne` peut être null (produit hors du périmètre du diagnostic) :
+             on retombe alors sur l'ancienne lecture plutôt que d'affirmer. */
+          stateTxt:(p.enLigne===false?('Hors vente · '+(p.raison||'motif inconnu'))
+                   :(p.enLigne===true?'En ligne':(p.nonTarife?'Non tarifé · hors vente':(pAct?'Actif · vendable':'Inactif (boutique)')))),
+          stateColor:(p.enLigne===false?'var(--color-primary)'
+                     :(p.enLigne===true?'#2d7a3e':(p.nonTarife?'#b26a00':(pAct?'#2d7a3e':'var(--color-text-muted)')))),
+          /* EN VENTE mais INTROUVABLE dans la navigation du site : catégorie
+             désactivée, ou cat_id qui ne pointe sur rien. Ce n'est pas le
+             verdict de vente — le produit se vend — mais le client ne peut y
+             arriver que par « Tout ». C'est le symptôme des cookies sans
+             catégorie, et il n'était visible nulle part. */
+          hasNav:!!p.navigation, navTxt:p.navigation||'',
           swStyle:ps2.style,swKnob:ps2.knob,
           toggle:p.locked?(()=>{}):(()=>{ const nv=!pAct;
             asrPost({product:p.nom,productId:(p.id!=null?p.id:undefined),active:nv},(j)=>{ if(j&&j.ok){ asrSetLocal(x=>x.nom===p.nom,nv); asrReloadStock(); this.printJob('✓ « '+p.nom+' » '+(nv?'activé':'désactivé')+' (ws_product_shops) · stocks mis à jour'); } else this.printJob((j&&j.error)||'Erreur assortiment'); }); })});
