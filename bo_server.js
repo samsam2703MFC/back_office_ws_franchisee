@@ -263,6 +263,13 @@
         ws_tour_closures:1, ws_tour_availability:1, ws_franchisor_catchment:1,
         catchment_postcodes:1, b2b_client_company_department:1, params:1,
         b2b_clients:1, fr_assortiment:1,
+        // Le CATALOGUE est calculé par le serveur à chaque appel (ws_products
+        // × stock du jour) : une copie bo-store est par définition périmée, et
+        // c'est exactement ce qui s'est vu le 14/08 — le BO marque et le
+        // webshop d'accord entre eux, la console franchisé affichant autre
+        // chose. fr_assortiment était déjà protégé ; stock et dispo ne
+        // l'étaient pas.
+        fr_stock_catalog:1, fr_dispo_cats:1, fr_erp_portions:1,
         fr_orders:1, fr_net_stats:1, fr_capacity:1, fr_vouchers:1, fr_shop_availability:1 };
       // CONFIGS d'écran (libellés/gabarits, pas des données métier) : une
       // réponse API vide ne les écrase pas — ce sont des textes d'interface.
