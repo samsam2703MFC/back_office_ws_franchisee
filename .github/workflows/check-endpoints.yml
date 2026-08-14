@@ -695,6 +695,36 @@ jobs:
                 else
                   echo "    OK   aucun produit actif sans categorie existante (reseau entier)"
                 fi
+
+                # POURQUOI CE PRODUIT-LA N'EST PAS DANS MA BOUTIQUE.
+                # Le rapport disait « 10 sans prix dans l'ERP » sans les NOMMER,
+                # ni dire a quelle categorie ils appartiennent. Or une categorie
+                # peut etre rattachee a une AUTRE boutique (ws_categories.shop_id)
+                # : le produit est alors actif au back-office de la marque, et
+                # normal qu'il ne soit pas vendu ici. Sans le nom et sans ce
+                # rattachement, on ne peut pas distinguer « produit d'une autre
+                # boutique » de « prix oublie dans l'ERP » — deux remedes
+                # opposes, l'un etant de ne rien faire.
+                if [ -n "$SHOP" ] && [ -n "$(dbq "SELECT 1 FROM information_schema.columns
+                     WHERE table_schema=DATABASE() AND table_name='shop_product'
+                       AND column_name='portion_price'")" ]; then
+                  echo "  produits actifs SANS prix ERP pour la boutique $SHOP (donc hors vente ici) :"
+                  dbq "SELECT CONCAT('        · ', RPAD(LEFT(p.name,32),34,' '),
+                              IFNULL(c.label,'(sans categorie)'),
+                              IF(c.shop_id IS NULL, '', CONCAT('  ← categorie de la boutique ', c.shop_id)))
+                         FROM ws_products p
+                         LEFT JOIN ws_categories c ON c.id = p.cat_id
+                        WHERE p.active = 1
+                          AND NOT EXISTS (SELECT 1 FROM shop_product sp
+                                           WHERE sp.id_product = p.id AND sp.id_shop = $SHOP
+                                             AND sp.portion_price > 0)
+                        ORDER BY c.shop_id IS NULL, c.label, p.name LIMIT 25"
+                  AUTRE=$(dbq "SELECT COUNT(*) FROM ws_products p
+                                JOIN ws_categories c ON c.id = p.cat_id
+                               WHERE p.active = 1 AND c.shop_id IS NOT NULL AND c.shop_id <> $SHOP")
+                  [ "${AUTRE:-0}" != "0" ] && \
+                    echo "    → dont $AUTRE produit(s) dans une categorie rattachee a une AUTRE boutique : normal, rien a corriger."
+                fi
               fi
 
               # SOUS-CATEGORIES. Le webshop n'affiche la barre que si la
