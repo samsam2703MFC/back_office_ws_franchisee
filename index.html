@@ -1735,6 +1735,19 @@
             </span>
           </div>
           <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">{{ gRevHint }}</div>
+          <sc-if value="{{ gRevConnectShow }}" hint-placeholder-val="{{ false }}">
+            <div style="border:.5px solid var(--color-border-secondary);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:var(--color-background-secondary)">
+              <div style="font:600 12px var(--font-ui);color:var(--color-text);margin-bottom:4px">Connecter Google (publication)</div>
+              <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-bottom:8px">Votre fiche vit sous VOTRE compte Google : générez votre refresh token via l'OAuth Playground de Google avec le client OAuth du réseau (identifiants posés par la marque), scope business.manage, puis collez-le ici — il est rangé pour votre boutique et testé aussitôt.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+                <input type="password" onChange="{{ gRevTokSet }}" placeholder="1//… refresh token" style="flex:1;min-width:220px;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 12px;font:12.5px var(--font-ui);background:var(--color-surface)"/>
+                <button onClick="{{ gRevTokSave }}" class="btn-secondary" style="font-size:12px">{{ gRevTokLabel }}</button>
+              </div>
+              <sc-if value="{{ gRevTokHasErr }}" hint-placeholder-val="{{ false }}">
+                <div style="background:var(--st-bad-bg);border-radius:10px;padding:10px 12px;margin-top:8px;font:500 12px var(--font-ui);color:var(--st-bad)">{{ gRevTokErr }}</div>
+              </sc-if>
+            </div>
+          </sc-if>
           <sc-if value="{{ gRevLoading }}" hint-placeholder-val="{{ false }}">
             <div style="font:400 12.5px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Chargement des avis Google…</div>
           </sc-if>
@@ -5289,6 +5302,27 @@ class Component extends DCLogic {
       .catch(()=>{ this._gbp=null; this._gbpErr='API injoignable (serveur ou réseau).';
         this._gbpLoading=false; this.setState(st=>({_rev:(st._rev||0)+1})); });
   }
+  // Le franchisé colle SON refresh token (le compte Google de SA fiche) —
+  // le serveur le range sous la portée boutique et le teste aussitôt.
+  gbpTokSave(){
+    if(this._gbpTokBusy) return;
+    const tk=String(this._gbpTokDraft||'').trim();
+    if(!tk){ this._gbpTokErr='Collez d\'abord le refresh token.'; this.setState(st=>({_rev:(st._rev||0)+1})); return; }
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base) return;
+    this._gbpTokBusy=true; this._gbpTokErr=null;
+    this.setState(st=>({_rev:(st._rev||0)+1}));
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/gbp-token'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+      body:JSON.stringify({token:tk})})
+      .then(r=>r.json().then(j=>({ok:r.ok,j})).catch(()=>({ok:false,j:null})))
+      .then(x=>{ this._gbpTokBusy=false;
+        if(x.ok&&x.j&&x.j.ok){ this._gbpTokDraft=''; this._gbpTokErr=null; this._gbp=null; this._gbpErr=null; this.gbpEnsure(true); }
+        else { this._gbpTokErr=(x.j&&x.j.error)?String(x.j.error):'Enregistrement en échec.'; }
+        this.setState(st=>({_rev:(st._rev||0)+1})); })
+      .catch(()=>{ this._gbpTokBusy=false; this._gbpTokErr='API injoignable (serveur ou réseau).';
+        this.setState(st=>({_rev:(st._rev||0)+1})); });
+  }
   gRevPub(i){
     if(this._gRevPubBusy!=null) return;
     if(this._gRevPubArm!==i){ this._gRevPubArm=i; this.setState(st=>({_rev:(st._rev||0)+1})); return; }
@@ -8008,6 +8042,12 @@ class Component extends DCLogic {
         pubLabel:(this._gRevPubBusy===gi)?'Publication…':((this._gRevPubArm===gi)?'Confirmer la publication':(g.repondu?'Publier (remplace la réponse)':'Publier sur Google')),
         hasPubErr:!!(this._gRevPubErr&&this._gRevPubErr.i===gi),
         pubErr:(this._gRevPubErr&&this._gRevPubErr.i===gi)?this._gRevPubErr.msg:''})),
+      gRevConnectShow:!GB&&this._gbpErr!=null,
+      gRevTokSet:(e)=>{ this._gbpTokDraft=e.target.value; },
+      gRevTokSave:()=>this.gbpTokSave(),
+      gRevTokLabel:this._gbpTokBusy?'Test…':'Enregistrer & tester',
+      gRevTokHasErr:!!this._gbpTokErr,
+      gRevTokErr:this._gbpTokErr||'',
       gRevCopyFn:()=>this.gRevCopy(),
       gRevCopyLabel:this._gRevCopied?'Copié ✓':'Copier',
       gRevEmpty:(GB?((GB.avis||[]).length===0):(!!GR&&((GR.avis||[]).length===0))),
