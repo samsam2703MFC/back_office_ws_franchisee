@@ -3075,7 +3075,7 @@ class Component extends DCLogic {
     obOpen: false, obStep: 0,
     ob: { raison:'', tva:'', seg:'', paiement:'', plafond:'',
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'',
-      adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
+      adr:'', cp:'', localite:'', etage:'', tour:'', acc:null, office:'',
       // Fenêtre de livraison, jours desservis et mode de validation : ils
       // étaient ÉCRITS EN DUR dans obCreate (08:00–11:00 · L Ma Me J V · QR)
       // sans jamais être demandés, puis affichés au client comme s'il les
@@ -3093,7 +3093,7 @@ class Component extends DCLogic {
   obOpen(){ this.setState({obOpen:true,obStep:0,
     ob:{ raison:'', tva:'', seg:'', paiement:'', plafond:'',
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'',
-      adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
+      adr:'', cp:'', localite:'', etage:'', tour:'', acc:null, office:'',
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'', franco:'', drop:'',
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
@@ -8108,7 +8108,7 @@ class Component extends DCLogic {
           osAddSite:()=>{ const nm2=String(this.state.formVals.name||'').trim(); const adr=String(this.state.osAdr||'').trim();
             if(!nm2){ this.printJob('Encodez d\'abord le nom de la société (ou choisissez un siège)'); return; }
             if(!adr){ this.printJob('Adresse du site requise'); return; }
-            if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); rows.push({bureau:nm2,office:nm2+' — site',tour:this.state.formVals.tour||'',adr:adr,etage:String(this.state.osNote||''),acc:6}); window.BOServer.save('ws_office_delivery_sites',rows); }
+            if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); rows.push({bureau:nm2,office:nm2+' — site',tour:this.state.formVals.tour||'',adr:adr,etage:String(this.state.osNote||''),acc:null}); window.BOServer.save('ws_office_delivery_sites',rows); }
             this.setState(s=>({osAdr:'',osNote:'',_rev:(s._rev||0)+1})); this.printJob('✓ Site ajouté pour « '+nm2+' »'); },
           // Engrenage « Adresses de contact / facturation » (ws_office_emails)
           // du bureau en cours de création / modification.
