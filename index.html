@@ -8060,7 +8060,7 @@ class Component extends DCLogic {
       // La carte dit sa source : Business Profile (répondre possible) ou le
       // repli Places (lecture seule) — avec la raison servie par le serveur.
       gRevHint:GB?('Source : Business Profile — tous les avis, réponses publiables d\'ici (le clic « Confirmer » est la validation humaine).')
-        :('Source : Places, lecture seule — les 5 avis les plus pertinents. Publication indisponible : '+(this._gbpErr||'connexion Business Profile non testée')+''),
+        :('Source : Places, lecture seule — les 5 derniers avis. Publication indisponible : '+(this._gbpErr||'connexion Business Profile non testée')+''),
       gRevTriShow:gSrc.length>1,
       gRevTriDatePick:()=>this.gRevTri('date'),
       gRevTriNotePick:()=>this.gRevTri('note'),
