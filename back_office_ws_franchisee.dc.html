@@ -7545,7 +7545,7 @@ class Component extends DCLogic {
       vchSaveLabel:S.vchEdit?'Enregistrer':'Créer le bon',
       vchNew:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:null,vchCode:'',vchType:'percent',vchValue:'',vchMin:'',vchMax:'',vchExp:'',vchTgtKind:'NETWORK',vchTgtId:'',vchTgtQ:'',vchTgtHc:null,vchScopePid:'',vchScopeQ:'',vchScopeQty:'',vchPerCust:'',vchReason:'MARKETING',vchNote:'',vchMsg:''}); },
       vchCancel:()=>this.setState({vchOpen:false}),
-      vchCode:S.vchCode||'',vchSetCode:vchSet('vchCode'),
+      vchCode:S.vchCode||'',vchSetCode:S.vchEdit?(()=>{}):vchSet('vchCode'),vchCodeLocked:!!S.vchEdit,
       vchType:S.vchType||'percent',vchSetType:vchSet('vchType'),
       vchValueShown:(S.vchType||'percent')==='percent'||(S.vchType||'percent')==='fixed',
       vchValue:S.vchValue||'',vchSetValue:vchSet('vchValue'),
