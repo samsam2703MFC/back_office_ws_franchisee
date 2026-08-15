@@ -3196,7 +3196,7 @@ class Component extends DCLogic {
     try { const fr=window.__FR||{};
       if(fr.base&&fr.token) fetch(fr.base+'/franchisee/onboard-office'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{
         method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
-        body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,cp:obCp,localite:obLocalite,
+        body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,remiseWeb:o.remiseWeb,franco:o.franco,cp:obCp,localite:obLocalite,
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           fenetre:obFenetre,jours:obJours,validation:o.validation,
