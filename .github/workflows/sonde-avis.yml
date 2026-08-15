@@ -43,6 +43,7 @@ jobs:
           sonde "gbp-status (clés posées + connexion OAuth)" "/franchisor/gbp-status"
           sonde "google-reviews (lecture Places, boutique \$S)" "/franchisee/google-reviews?shop=\$S"
           sonde "gbp-reviews (Business Profile, boutique \$S)" "/franchisee/gbp-reviews?shop=\$S"
+          sonde "places-tri-probe (variantes 5 derniers avis)" "/franchisor/places-tri-probe?shop=\$S"
           echo "== Dernières lignes [ws] du log Apache"
           for LOG in /var/log/apache2/error.log /var/log/httpd/error_log; do
             [ -r "\$LOG" ] && { grep '\[ws\]' "\$LOG" | tail -4; break; }
