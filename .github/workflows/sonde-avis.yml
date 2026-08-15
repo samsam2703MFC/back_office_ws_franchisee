@@ -1,0 +1,50 @@
+name: Sonde — circuit des avis Google (clés, lecture, publication)
+
+# Interroge DEPUIS le serveur les trois endpoints du circuit avis :
+#  - /franchisor/gbp-status   → quelles clés sont posées, connexion OAuth ;
+#  - /franchisee/google-reviews?shop=… → la lecture Places ;
+#  - /franchisee/gbp-reviews?shop=…    → la source Business Profile.
+# Chaque réponse est imprimée telle quelle : c'est le diagnostic.
+
+on:
+  workflow_dispatch:
+    inputs:
+      shop:
+        description: "Boutique à sonder (id numérique)"
+        required: false
+        default: "2"
+        type: string
+
+jobs:
+  sonder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Interroger les endpoints du circuit avis
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s <<EOSH
+          set -u
+          T='${{ secrets.ADMIN_TOKEN }}'
+          S='${{ inputs.shop }}'
+          B='http://localhost/webshop/api'
+          sonde() {
+            echo "== \$1"
+            HTTP=\$(curl -s -o /tmp/sonde.json -w '%{http_code}' -H "X-Admin-Token: \$T" "\$B\$2")
+            echo "HTTP \$HTTP"
+            head -c 1200 /tmp/sonde.json; echo; echo
+          }
+          sonde "gbp-status (clés posées + connexion OAuth)" "/franchisor/gbp-status"
+          sonde "google-reviews (lecture Places, boutique \$S)" "/franchisee/google-reviews?shop=\$S"
+          sonde "gbp-reviews (Business Profile, boutique \$S)" "/franchisee/gbp-reviews?shop=\$S"
+          echo "== Dernières lignes [ws] du log Apache"
+          for LOG in /var/log/apache2/error.log /var/log/httpd/error_log; do
+            [ -r "\$LOG" ] && { grep '\[ws\]' "\$LOG" | tail -4; break; }
+          done || echo "log illisible"
+          EOSH
