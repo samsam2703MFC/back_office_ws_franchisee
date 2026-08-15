@@ -5902,7 +5902,7 @@ class Component extends DCLogic {
     const rfSubmit=()=>{ if(!rfCanSubmit) return; const p=String(rForm.start).split(':'); const startMin=(+p[0])*60+(+(p[1]||0)); const editing=S.rfEditId; const newId='rn'+Date.now();
       const base={name:rForm.name,short:rForm.short||rForm.name.slice(0,8),driver:rForm.driver||'— non assigné',start:startMin,max:(String(rForm.max||'').trim()===''?null:parseInt(rForm.max,10)),
         forfait:(String(rForm.forfait||'').trim()===''?null:parseFloat(rForm.forfait)),ret:rForm.ret,vehicule:rForm.vehicule||'',days:rForm.days,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')};
-      if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); const i=editing?rows.findIndex(t=>t.id===editing):-1; if(i>=0){ rows[i]={...rows[i],...base}; } else { rows.push({id:newId,amplitude:this.NEW_AMPL,decharge:22,trajet:8,used:0,...base}); } window.BOServer.save('ws_tours',rows); }
+      if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); const i=editing?rows.findIndex(t=>t.id===editing):-1; if(i>=0){ rows[i]={...rows[i],...base}; } else { rows.push({id:newId,amplitude:null,decharge:null,trajet:null,used:0,...base}); } window.BOServer.save('ws_tours',rows); }
       if(editing){ this.setState(s=>({rfEditId:null,rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
       else { this.setState(s=>({routeAssign:{...s.routeAssign,[newId]:[]},rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
       this.printJob((editing?'✓ Tournée modifiée : ':'✓ Tournée créée : ')+base.name+' ('+(rForm.postcodes||[]).length+' CP)'); };
@@ -6242,7 +6242,7 @@ class Component extends DCLogic {
       // Sans capacité connue, une tournée n'est jamais déclarée « complète » :
       // on ne bloque pas une affectation sur un plafond que personne n'a fixé.
       valFull=(selT.max!=null)&&selT.used>=selT.max; }
-    else if(isNewT){ valHasT=true; valUsed=0; valMaxSlots=Math.floor(this.NEW_AMPL/this.NEW_PERPOINT); valAmpl=this.fmtMin(this.NEW_AMPL); valDecharge=22; valTrajet=8; valPerPoint=this.NEW_PERPOINT; valFull=false; }
+    else if(isNewT){ valHasT=true; valUsed=0; valMaxSlots=null; valAmpl='— à paramétrer'; valDecharge=null; valTrajet=null; valPerPoint=this.NEW_PERPOINT; valFull=false; }
     const valFree=Math.max(0,valMaxSlots-valUsed);
     const isNewZone=S.valZone==='__new__'||S.valZone2==='__new__';
     const zoneOk=true; // zones « secondaires » retirées : l'affectation zone vient de la tournée (chalandise)
