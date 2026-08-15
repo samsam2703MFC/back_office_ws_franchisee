@@ -1621,6 +1621,12 @@
               <sc-if value="{{ g.hasTexte }}" hint-placeholder-val="{{ false }}">
                 <div style="font:400 12.5px var(--font-ui);color:var(--color-text);white-space:pre-wrap">{{ g.texte }}</div>
               </sc-if>
+              <sc-if value="{{ g.repondu }}" hint-placeholder-val="{{ false }}">
+                <div style="border-left:3px solid var(--st-good);padding:6px 10px;margin-top:8px;background:var(--color-background-secondary);border-radius:0 8px 8px 0">
+                  <div style="font:600 11px var(--font-ui);color:var(--st-good);margin-bottom:3px">Réponse publiée</div>
+                  <div style="font:400 12px var(--font-ui);color:var(--color-text-muted);white-space:pre-wrap">{{ g.reponse }}</div>
+                </div>
+              </sc-if>
               <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px">
                 <button onClick="{{ g.gen }}" class="btn-secondary" style="font-size:12px">{{ g.genLabel }}</button>
               </div>
@@ -1637,7 +1643,16 @@
                     <button onClick="{{ gRevCopyFn }}" class="btn-secondary" style="font-size:11.5px;margin-left:auto">{{ gRevCopyLabel }}</button>
                   </div>
                   <div style="font:400 12.5px var(--font-ui);color:var(--color-text);white-space:pre-wrap">{{ g.draft }}</div>
-                  <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:6px">À relire puis coller sur Google — rien n'est publié d'ici.</div>
+                  <sc-if value="{{ g.canPub }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px">
+                      <button onClick="{{ g.pub }}" style="background:var(--color-primary);color:#fff;border:none;border-radius:9px;padding:8px 14px;font:600 12px var(--font-ui);cursor:pointer">{{ g.pubLabel }}</button>
+                      <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Relire d'abord — le second clic publie sur Google.</span>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ g.hasPubErr }}" hint-placeholder-val="{{ false }}">
+                    <div style="background:var(--st-bad-bg);border-radius:10px;padding:10px 12px;margin-top:8px;font:500 12px var(--font-ui);color:var(--st-bad)">{{ g.pubErr }}</div>
+                  </sc-if>
+                  <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:6px">À relire avant tout — rien ne part sans votre clic.</div>
                 </div>
               </sc-if>
             </div>
@@ -5094,7 +5109,8 @@ class Component extends DCLogic {
   // rien ne part d'ici — c'est le garde-fou, quelle que soit la note.
   gRevGen(i){
     if(this._gRevGenBusy!=null) return;
-    const g=(this._gRev&&this._gRev.avis&&this._gRev.avis[i])||null;
+    const src=this._gbp?((this._gbp.avis)||[]):((this._gRev&&this._gRev.avis)||[]);
+    const g=src[i]||null;
     if(!g) return;
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
     if(!fr.base) return;
@@ -5120,9 +5136,56 @@ class Component extends DCLogic {
       try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta); done(); }
   }
 
+  // ===== Business Profile : TOUS les avis + PUBLICATION =====
+  // Quand la connexion OAuth (Console marque → Avis) est posée, la carte
+  // passe sur cette source : tous les avis, leur état de réponse, et le
+  // bouton Publier — en DEUX clics, le second confirme. Sinon la carte
+  // retombe sur la lecture Places (5 avis) et dit pourquoi. Après une
+  // publication, on RELIT Google : rien n'est marqué répondu localement.
+  gbpEnsure(force){
+    if(this.state.screen!=='avis' && !force) return;
+    if(this._gbpLoading) return;
+    if((this._gbp||this._gbpErr!=null) && !force) return;
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base) return;
+    this._gbpLoading=true;
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/gbp-reviews'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(d=>({ok:r.ok,d})).catch(()=>({ok:false,d:null})))
+      .then(x=>{ const ok=!!(x.ok&&x.d&&typeof x.d==='object'&&!x.d.error);
+        this._gbp=ok?x.d:null;
+        this._gbpErr=ok?null:((x.d&&x.d.error)?String(x.d.error):'Réponse illisible du serveur.');
+        this._gbpLoading=false; this.setState(st=>({_rev:(st._rev||0)+1})); })
+      .catch(()=>{ this._gbp=null; this._gbpErr='API injoignable (serveur ou réseau).';
+        this._gbpLoading=false; this.setState(st=>({_rev:(st._rev||0)+1})); });
+  }
+  gRevPub(i){
+    if(this._gRevPubBusy!=null) return;
+    if(this._gRevPubArm!==i){ this._gRevPubArm=i; this.setState(st=>({_rev:(st._rev||0)+1})); return; }
+    const g=(this._gbp&&this._gbp.avis&&this._gbp.avis[i])||null;
+    const d=this._gRevDraft;
+    if(!g||!g.id||!d||d.i!==i){ this._gRevPubArm=null; this.setState(st=>({_rev:(st._rev||0)+1})); return; }
+    const fr=(typeof window!=='undefined'&&window.__FR)||{};
+    if(!fr.base) return;
+    this._gRevPubBusy=i; this._gRevPubArm=null; this._gRevPubErr=null;
+    this.setState(st=>({_rev:(st._rev||0)+1}));
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/gbp-reply'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+      body:JSON.stringify({id:g.id,texte:d.txt})})
+      .then(r=>r.json().then(j=>({ok:r.ok,j})).catch(()=>({ok:false,j:null})))
+      .then(x=>{ const ok=!!(x.ok&&x.j&&x.j.ok);
+        this._gRevPubBusy=null;
+        if(ok){ this._gRevDraft=null; this._gbp=null; this._gbpErr=null; this.gbpEnsure(true); }
+        else { this._gRevPubErr={i:i,msg:(x.j&&x.j.error)?String(x.j.error):'Publication en échec.'}; }
+        this.setState(st=>({_rev:(st._rev||0)+1})); })
+      .catch(()=>{ this._gRevPubBusy=null; this._gRevPubErr={i:i,msg:'API injoignable (serveur ou réseau).'};
+        this.setState(st=>({_rev:(st._rev||0)+1})); });
+  }
+
   ensureMaps(){
     this.reviewsEnsure();
     this.gRevEnsure();
+    this.gbpEnsure();
     // Le référentiel CP→GPS se charge AVANT la garde Leaflet — la carte des
     // tournées en dépend (sinon tous les sites retombent sur le point défaut).
     if(this.state.screen==='zones'||this.state.screen==='tournees') this.zfGeoEnsure();
@@ -7731,6 +7794,8 @@ class Component extends DCLogic {
     // ===== Avis clients — tout vient du serveur, rien n'est déduit =====
     const RV=this._reviews, rvT=(RV&&RV.totals)||{};
     const GR=this._gRev;
+    const GB=this._gbp;
+    const gSrc=GB?((GB.avis)||[]):((GR&&GR.avis)||[]);
     const rvNum=(v)=>(v==null||v==='')?'—':String(v);
     const avisKpis=[
       {label:this.tr('avisTotal'),value:rvNum(rvT.total)},
@@ -7787,15 +7852,19 @@ class Component extends DCLogic {
       avisNegEmpty:avisNeg.length===0&&rvErr==null&&!!RV,
       // Avis Google — la fiche de l'établissement, lus PAR le serveur (la clé
       // API ne descend jamais au navigateur). 5 avis maximum : limite Places.
-      gRevHasNote:!!(GR&&GR.note!=null),
-      gRevNote:(GR&&GR.note!=null)?String(GR.note).replace('.',','):'—',
-      gRevStars:rvStars(GR&&GR.note!=null?GR.note:0),
-      gRevNb:(GR&&GR.nb!=null)?('('+GR.nb+' avis)'):'',
-      gRevHasFiche:!!(GR&&GR.nom),
-      gRevFiche:(GR&&GR.nom)||'',
-      gRevHint:'Les 5 avis les plus pertinents selon Google — lecture seule : répondre à un avis se fait sur Google (OAuth Business Profile, non couvert par la clé API).',
-      gRevAvis:((GR&&GR.avis)||[]).map((g,gi)=>({auteur:g.auteur||'—',quand:g.quand||'',
+      gRevHasNote:!!((GB&&GB.note!=null)||(GR&&GR.note!=null)),
+      gRevNote:(GB&&GB.note!=null)?String(Math.round(GB.note*10)/10).replace('.',','):((GR&&GR.note!=null)?String(GR.note).replace('.',','):'—'),
+      gRevStars:rvStars(GB&&GB.note!=null?GB.note:(GR&&GR.note!=null?GR.note:0)),
+      gRevNb:(GB&&GB.nb!=null)?('('+GB.nb+' avis)'):((GR&&GR.nb!=null)?('('+GR.nb+' avis)'):''),
+      gRevHasFiche:!!((GB&&GB.fiche)||(GR&&GR.nom)),
+      gRevFiche:(GB&&GB.fiche)||(GR&&GR.nom)||'',
+      // La carte dit sa source : Business Profile (répondre possible) ou le
+      // repli Places (lecture seule) — avec la raison servie par le serveur.
+      gRevHint:GB?('Source : Business Profile — tous les avis, réponses publiables d\'ici (le clic « Confirmer » est la validation humaine).')
+        :('Source : Places, lecture seule — les 5 avis les plus pertinents. Publication indisponible : '+(this._gbpErr||'connexion Business Profile non testée')+''),
+      gRevAvis:gSrc.map((g,gi)=>({auteur:g.auteur||'—',quand:g.quand||'',
         stars:rvStars(g.note),hasTexte:!!(g.texte&&String(g.texte).trim()),texte:g.texte||'',
+        repondu:!!g.repondu, reponse:g.reponse||'',
         gen:()=>this.gRevGen(gi),
         genLabel:(this._gRevGenBusy===gi)?'Génération…':'Générer une réponse',
         hasDraft:!!(this._gRevDraft&&this._gRevDraft.i===gi),
@@ -7803,10 +7872,15 @@ class Component extends DCLogic {
         draftTon:(this._gRevDraft&&this._gRevDraft.i===gi)?(this._gRevDraft.ton||''):'',
         draftTronque:!!(this._gRevDraft&&this._gRevDraft.i===gi&&this._gRevDraft.tronque),
         hasDraftErr:!!(this._gRevDraftErr&&this._gRevDraftErr.i===gi),
-        draftErr:(this._gRevDraftErr&&this._gRevDraftErr.i===gi)?this._gRevDraftErr.msg:''})),
+        draftErr:(this._gRevDraftErr&&this._gRevDraftErr.i===gi)?this._gRevDraftErr.msg:'',
+        canPub:!!(GB&&g.id&&this._gRevDraft&&this._gRevDraft.i===gi&&this._gRevPubBusy==null),
+        pub:()=>this.gRevPub(gi),
+        pubLabel:(this._gRevPubBusy===gi)?'Publication…':((this._gRevPubArm===gi)?'Confirmer la publication':(g.repondu?'Publier (remplace la réponse)':'Publier sur Google')),
+        hasPubErr:!!(this._gRevPubErr&&this._gRevPubErr.i===gi),
+        pubErr:(this._gRevPubErr&&this._gRevPubErr.i===gi)?this._gRevPubErr.msg:''})),
       gRevCopyFn:()=>this.gRevCopy(),
       gRevCopyLabel:this._gRevCopied?'Copié ✓':'Copier',
-      gRevEmpty:!!GR&&((GR.avis||[]).length===0),
+      gRevEmpty:(GB?((GB.avis||[]).length===0):(!!GR&&((GR.avis||[]).length===0))),
       gRevLoading:!!this._gRevLoading&&!GR,
       gRevError:this._gRevErr!=null&&!this._gRevLoading,
       gRevErrMsg:this._gRevErr||'',
