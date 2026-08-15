@@ -5975,14 +5975,14 @@ class Component extends DCLogic {
       // proposée aux sites ni aux bureaux, sans être supprimée : la supprimer
       // perdrait ses codes postaux, ses horaires et son historique.
       const tOn=t.active!==false&&t.active!==0;
-      return {name:t.name,short:t.short||'',driver:t.driver||'— non assigné',start:this.hhmm(t.start!=null?t.start:360),
+      return {name:t.name,short:t.short||'',driver:t.driver||'— non assigné',start:(t.start!=null?this.hhmm(t.start):'— à paramétrer'),
         col, colDot:'width:10px;height:10px;border-radius:50%;flex:none;background:'+(tOn?col:'var(--color-border-secondary)'),
         tOn, tOnLabel:tOn?'Active':'Désactivée',
         tOnStyle:'display:inline-flex;align-items:center;gap:6px;height:27px;border-radius:7px;padding:0 10px;border:.5px solid '+(tOn?'#bfe0c7':'var(--color-border-secondary)')+';background:'+(tOn?'#eaf5ec':'var(--color-background-secondary)')+';color:'+(tOn?'#2d7a3e':'var(--color-text-muted)')+';font:600 10.5px var(--font-ui);cursor:pointer;white-space:nowrap',
         tOnTitle:tOn?'Désactiver — la tournée cesse d’être proposée aux sites et aux bureaux, sans rien perdre'
                     :'Réactiver — la tournée redevient proposable',
         toggleOn:tourToggleActive(t),
-        drops:String(nbOff),max:String(max),nbSites:String(sites.length),
+        drops:String(nbOff),max:(max!=null?String(max):'—'),nbSites:String(sites.length),
         // Sans capacité en base, il n'y a ni ratio ni alerte : le compteur
         // affiche « n/— » au lieu de comparer à un plafond supposé.
         capPill:tvPill(over?'#fbe9eb':((max!=null&&nbOff/max>=0.8)?'#fff4e5':'#eaf5ec'),over?'var(--color-primary)':((max!=null&&nbOff/max>=0.8)?'#b26a00':'#2d7a3e')),
