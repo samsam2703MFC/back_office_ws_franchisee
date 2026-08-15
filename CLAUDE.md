@@ -25,7 +25,7 @@ préférence. Elle se change en éditant ce tableau — dans les **deux** dépô
 > marque (branche `claude/cutoff-print-run-network` de
 > `back_office_ws_franchisor`), puis, le même jour et sur la même branche, la
 > carte « Directives de réponse — avis Google » de l'écran Avis de la console
-> marque (méthodes `rgEnsure`/`rgLoad`/`rgSave`/`rgDel`), ainsi que la carte
+> marque (méthodes `rg*` — depuis le 15/08 : ton socle commun + directives par note), ainsi que la carte
 > « Clés & connexion — avis Google » du même écran (méthodes
 > `gbEnsure`/`gbTest`/`gbSave`). La répartition ci-dessus reste inchangée
 > pour tout le reste.
