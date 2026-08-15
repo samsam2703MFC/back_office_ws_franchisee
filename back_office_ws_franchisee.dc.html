@@ -7922,7 +7922,7 @@ class Component extends DCLogic {
       gRevCopyLabel:this._gRevCopied?'Copié ✓':'Copier',
       gRevEmpty:(GB?((GB.avis||[]).length===0):(!!GR&&((GR.avis||[]).length===0))),
       gRevLoading:!!this._gRevLoading&&!GR,
-      gRevError:this._gRevErr!=null&&!this._gRevLoading,
+      gRevError:this._gRevErr!=null&&!this._gRevLoading&&!GB,
       gRevErrMsg:this._gRevErr||'',
       gRevHasUrl:!!(GR&&GR.url),
       gRevOpen:()=>{ const u=this._gRev&&this._gRev.url; if(u) window.open(u,'_blank','noopener'); },
