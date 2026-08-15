@@ -2945,7 +2945,7 @@ class Component extends DCLogic {
     obOpen: false, obStep: 0,
     ob: { raison:'', tva:'', seg:'', paiement:'', plafond:'',
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'',
-      adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
+      adr:'', cp:'', localite:'', etage:'', tour:'', acc:null, office:'',
       // Fenêtre de livraison, jours desservis et mode de validation : ils
       // étaient ÉCRITS EN DUR dans obCreate (08:00–11:00 · L Ma Me J V · QR)
       // sans jamais être demandés, puis affichés au client comme s'il les
@@ -2963,7 +2963,7 @@ class Component extends DCLogic {
   obOpen(){ this.setState({obOpen:true,obStep:0,
     ob:{ raison:'', tva:'', seg:'', paiement:'', plafond:'',
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'',
-      adr:'', cp:'', localite:'', etage:'', tour:'', acc:6, office:'',
+      adr:'', cp:'', localite:'', etage:'', tour:'', acc:null, office:'',
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'', franco:'', drop:'',
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
@@ -3196,7 +3196,7 @@ class Component extends DCLogic {
     try { const fr=window.__FR||{};
       if(fr.base&&fr.token) fetch(fr.base+'/franchisee/onboard-office'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{
         method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
-        body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,cp:obCp,localite:obLocalite,
+        body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,remiseWeb:o.remiseWeb,franco:o.franco,cp:obCp,localite:obLocalite,
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           fenetre:obFenetre,jours:obJours,validation:o.validation,
@@ -5845,14 +5845,14 @@ class Component extends DCLogic {
       // proposée aux sites ni aux bureaux, sans être supprimée : la supprimer
       // perdrait ses codes postaux, ses horaires et son historique.
       const tOn=t.active!==false&&t.active!==0;
-      return {name:t.name,short:t.short||'',driver:t.driver||'— non assigné',start:this.hhmm(t.start!=null?t.start:360),
+      return {name:t.name,short:t.short||'',driver:t.driver||'— non assigné',start:(t.start!=null?this.hhmm(t.start):'— à paramétrer'),
         col, colDot:'width:10px;height:10px;border-radius:50%;flex:none;background:'+(tOn?col:'var(--color-border-secondary)'),
         tOn, tOnLabel:tOn?'Active':'Désactivée',
         tOnStyle:'display:inline-flex;align-items:center;gap:6px;height:27px;border-radius:7px;padding:0 10px;border:.5px solid '+(tOn?'#bfe0c7':'var(--color-border-secondary)')+';background:'+(tOn?'#eaf5ec':'var(--color-background-secondary)')+';color:'+(tOn?'#2d7a3e':'var(--color-text-muted)')+';font:600 10.5px var(--font-ui);cursor:pointer;white-space:nowrap',
         tOnTitle:tOn?'Désactiver — la tournée cesse d’être proposée aux sites et aux bureaux, sans rien perdre'
                     :'Réactiver — la tournée redevient proposable',
         toggleOn:tourToggleActive(t),
-        drops:String(nbOff),max:String(max),nbSites:String(sites.length),
+        drops:String(nbOff),max:(max!=null?String(max):'—'),nbSites:String(sites.length),
         // Sans capacité en base, il n'y a ni ratio ni alerte : le compteur
         // affiche « n/— » au lieu de comparer à un plafond supposé.
         capPill:tvPill(over?'#fbe9eb':((max!=null&&nbOff/max>=0.8)?'#fff4e5':'#eaf5ec'),over?'var(--color-primary)':((max!=null&&nbOff/max>=0.8)?'#b26a00':'#2d7a3e')),
@@ -5902,7 +5902,7 @@ class Component extends DCLogic {
     const rfSubmit=()=>{ if(!rfCanSubmit) return; const p=String(rForm.start).split(':'); const startMin=(+p[0])*60+(+(p[1]||0)); const editing=S.rfEditId; const newId='rn'+Date.now();
       const base={name:rForm.name,short:rForm.short||rForm.name.slice(0,8),driver:rForm.driver||'— non assigné',start:startMin,max:(String(rForm.max||'').trim()===''?null:parseInt(rForm.max,10)),
         forfait:(String(rForm.forfait||'').trim()===''?null:parseFloat(rForm.forfait)),ret:rForm.ret,vehicule:rForm.vehicule||'',days:rForm.days,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')};
-      if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); const i=editing?rows.findIndex(t=>t.id===editing):-1; if(i>=0){ rows[i]={...rows[i],...base}; } else { rows.push({id:newId,amplitude:this.NEW_AMPL,decharge:22,trajet:8,used:0,...base}); } window.BOServer.save('ws_tours',rows); }
+      if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); const i=editing?rows.findIndex(t=>t.id===editing):-1; if(i>=0){ rows[i]={...rows[i],...base}; } else { rows.push({id:newId,amplitude:null,decharge:null,trajet:null,used:0,...base}); } window.BOServer.save('ws_tours',rows); }
       if(editing){ this.setState(s=>({rfEditId:null,rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
       else { this.setState(s=>({routeAssign:{...s.routeAssign,[newId]:[]},rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
       this.printJob((editing?'✓ Tournée modifiée : ':'✓ Tournée créée : ')+base.name+' ('+(rForm.postcodes||[]).length+' CP)'); };
@@ -6242,7 +6242,7 @@ class Component extends DCLogic {
       // Sans capacité connue, une tournée n'est jamais déclarée « complète » :
       // on ne bloque pas une affectation sur un plafond que personne n'a fixé.
       valFull=(selT.max!=null)&&selT.used>=selT.max; }
-    else if(isNewT){ valHasT=true; valUsed=0; valMaxSlots=Math.floor(this.NEW_AMPL/this.NEW_PERPOINT); valAmpl=this.fmtMin(this.NEW_AMPL); valDecharge=22; valTrajet=8; valPerPoint=this.NEW_PERPOINT; valFull=false; }
+    else if(isNewT){ valHasT=true; valUsed=0; valMaxSlots=null; valAmpl='— à paramétrer'; valDecharge=null; valTrajet=null; valPerPoint=this.NEW_PERPOINT; valFull=false; }
     const valFree=Math.max(0,valMaxSlots-valUsed);
     const isNewZone=S.valZone==='__new__'||S.valZone2==='__new__';
     const zoneOk=true; // zones « secondaires » retirées : l'affectation zone vient de la tournée (chalandise)
@@ -7545,7 +7545,7 @@ class Component extends DCLogic {
       vchSaveLabel:S.vchEdit?'Enregistrer':'Créer le bon',
       vchNew:()=>{ vchLoadTargets(); this.setState({vchOpen:true,vchEdit:null,vchCode:'',vchType:'percent',vchValue:'',vchMin:'',vchMax:'',vchExp:'',vchTgtKind:'NETWORK',vchTgtId:'',vchTgtQ:'',vchTgtHc:null,vchScopePid:'',vchScopeQ:'',vchScopeQty:'',vchPerCust:'',vchReason:'MARKETING',vchNote:'',vchMsg:''}); },
       vchCancel:()=>this.setState({vchOpen:false}),
-      vchCode:S.vchCode||'',vchSetCode:vchSet('vchCode'),
+      vchCode:S.vchCode||'',vchSetCode:S.vchEdit?(()=>{}):vchSet('vchCode'),vchCodeLocked:!!S.vchEdit,
       vchType:S.vchType||'percent',vchSetType:vchSet('vchType'),
       vchValueShown:(S.vchType||'percent')==='percent'||(S.vchType||'percent')==='fixed',
       vchValue:S.vchValue||'',vchSetValue:vchSet('vchValue'),
@@ -7978,7 +7978,7 @@ class Component extends DCLogic {
           osAddSite:()=>{ const nm2=String(this.state.formVals.name||'').trim(); const adr=String(this.state.osAdr||'').trim();
             if(!nm2){ this.printJob('Encodez d\'abord le nom de la société (ou choisissez un siège)'); return; }
             if(!adr){ this.printJob('Adresse du site requise'); return; }
-            if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); rows.push({bureau:nm2,office:nm2+' — site',tour:this.state.formVals.tour||'',adr:adr,etage:String(this.state.osNote||''),acc:6}); window.BOServer.save('ws_office_delivery_sites',rows); }
+            if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); rows.push({bureau:nm2,office:nm2+' — site',tour:this.state.formVals.tour||'',adr:adr,etage:String(this.state.osNote||''),acc:null}); window.BOServer.save('ws_office_delivery_sites',rows); }
             this.setState(s=>({osAdr:'',osNote:'',_rev:(s._rev||0)+1})); this.printJob('✓ Site ajouté pour « '+nm2+' »'); },
           // Engrenage « Adresses de contact / facturation » (ws_office_emails)
           // du bureau en cours de création / modification.

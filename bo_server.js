@@ -219,10 +219,11 @@
         return Promise.resolve(false);
       }
       if (!frHasAuth(fr)) {
-        // PAS une erreur : c'est l'état normal d'une tablette au démarrage.
-        // L'interface affiche le pavé PIN, et l'hydratation repart après la
-        // connexion (rechargement). Un bandeau « ERREUR — PLEASE DEBUG » ici
-        // affolait pour un écran de connexion parfaitement attendu.
+        // Le mode tablette (pavé PIN) a été RETIRÉ : sans jeton, il n'y a plus
+        // d'écran de connexion qui prendrait le relais — la console resterait
+        // simplement vide (ou périmée) en silence. On le DIT, avec le geste à
+        // faire, au lieu de se taire au nom d'un pavé PIN qui n'existe plus.
+        noteError('fatal', 'Aucune session — rouvrez la console avec ?shop=<id>&token=<jeton admin>.');
         return Promise.resolve(false);
       }
       ensure();
