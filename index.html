@@ -1735,6 +1735,13 @@
             </span>
           </div>
           <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">{{ gRevHint }}</div>
+          <sc-if value="{{ gRevTriShow }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 12px">
+              <span style="font:600 11px var(--font-ui);color:var(--color-text-muted)">Tri :</span>
+              <button onClick="{{ gRevTriDatePick }}" style="{{ gRevTriDateStyle }}">Plus récents d'abord</button>
+              <button onClick="{{ gRevTriNotePick }}" style="{{ gRevTriNoteStyle }}">Note la plus basse d'abord</button>
+            </div>
+          </sc-if>
           <sc-if value="{{ gRevConnectShow }}" hint-placeholder-val="{{ false }}">
             <div style="border:.5px solid var(--color-border-secondary);border-radius:10px;padding:12px 14px;margin-bottom:12px;background:var(--color-background-secondary)">
               <div style="font:600 12px var(--font-ui);color:var(--color-text);margin-bottom:4px">Connecter Google (publication)</div>
@@ -5246,13 +5253,38 @@ class Component extends DCLogic {
   }
   gRevReload(){ this._gRev=null; this._gRevErr=null; this.gRevEnsure(true); }
 
+  // ----- Tri d'affichage des avis -----
+  // UNE seule liste triée, servie au rendu ET aux actions : brouillon et
+  // publication visent un index — rendre et agir sur deux ordres différents
+  // enverrait la réponse sur le mauvais avis. Par date : plus récents
+  // d'abord ; sans date exploitable (repli Places avant redéploiement du
+  // serveur, « il y a 3 jours »), l'ordre servi est conservé tel quel.
+  gRevSrc(){
+    const src=this._gbp?((this._gbp.avis)||[]):((this._gRev&&this._gRev.avis)||[]);
+    const d=(g)=>{ if(g&&g.date) return String(g.date);
+      const q=String((g&&g.quand)||''); return /^\d{4}-\d{2}-\d{2}/.test(q)?q:''; };
+    const cmpD=(a,b)=>{ const da=d(a),db=d(b); if(da===db) return 0;
+      if(!da) return 1; if(!db) return -1; return da<db?1:-1; };
+    const out=src.slice();
+    out.sort(this._gRevTri==='note'?((a,b)=>((a.note||0)-(b.note||0))||cmpD(a,b)):cmpD);
+    return out;
+  }
+  gRevTri(m){
+    if((this._gRevTri||'date')===m) return;
+    this._gRevTri=m;
+    // Le tri renumérote la liste : tout état accroché à un index saute.
+    this._gRevDraft=null; this._gRevDraftErr=null;
+    this._gRevPubArm=null; this._gRevPubErr=null;
+    this.setState(st=>({_rev:(st._rev||0)+1}));
+  }
+
   // Brouillon de réponse à un avis — généré PAR LE SERVEUR selon la directive
   // que la marque a écrite pour cette note (console marque, écran Avis).
   // Publication toujours manuelle : « Copier » prépare le collage sur Google,
   // rien ne part d'ici — c'est le garde-fou, quelle que soit la note.
   gRevGen(i){
     if(this._gRevGenBusy!=null) return;
-    const src=this._gbp?((this._gbp.avis)||[]):((this._gRev&&this._gRev.avis)||[]);
+    const src=this.gRevSrc();
     const g=src[i]||null;
     if(!g) return;
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
@@ -5326,7 +5358,7 @@ class Component extends DCLogic {
   gRevPub(i){
     if(this._gRevPubBusy!=null) return;
     if(this._gRevPubArm!==i){ this._gRevPubArm=i; this.setState(st=>({_rev:(st._rev||0)+1})); return; }
-    const g=(this._gbp&&this._gbp.avis&&this._gbp.avis[i])||null;
+    const g=(this._gbp&&this.gRevSrc()[i])||null;
     const d=this._gRevDraft;
     if(!g||!g.id||!d||d.i!==i){ this._gRevPubArm=null; this.setState(st=>({_rev:(st._rev||0)+1})); return; }
     const fr=(typeof window!=='undefined'&&window.__FR)||{};
@@ -7959,7 +7991,7 @@ class Component extends DCLogic {
     const RV=this._reviews, rvT=(RV&&RV.totals)||{};
     const GR=this._gRev;
     const GB=this._gbp;
-    const gSrc=GB?((GB.avis)||[]):((GR&&GR.avis)||[]);
+    const gSrc=this.gRevSrc();
     const rvNum=(v)=>(v==null||v==='')?'—':String(v);
     const avisKpis=[
       {label:this.tr('avisTotal'),value:rvNum(rvT.total)},
@@ -7988,6 +8020,9 @@ class Component extends DCLogic {
     const rvErr=this._revErr;
     const avisErrMsg=(rvErr===401||rvErr===403)?this.tr('avisErrAuth')
       :(rvErr===404?this.tr('avisErrMissing'):this.tr('avisErrOther'));
+    const gTriChip=(on)=>'border:.5px solid '+(on?'var(--color-primary)':'var(--color-border-secondary)')
+      +';border-radius:20px;padding:4px 11px;font:600 11.5px var(--font-ui);cursor:pointer;background:'
+      +(on?'var(--color-primary)':'var(--color-surface)')+';color:'+(on?'#fff':'var(--color-text-muted)');
     const avisVals={
       isAvis:screen==='avis',
       avisKpis, avisProducts, avisNeg,
@@ -8026,6 +8061,11 @@ class Component extends DCLogic {
       // repli Places (lecture seule) — avec la raison servie par le serveur.
       gRevHint:GB?('Source : Business Profile — tous les avis, réponses publiables d\'ici (le clic « Confirmer » est la validation humaine).')
         :('Source : Places, lecture seule — les 5 avis les plus pertinents. Publication indisponible : '+(this._gbpErr||'connexion Business Profile non testée')+''),
+      gRevTriShow:gSrc.length>1,
+      gRevTriDatePick:()=>this.gRevTri('date'),
+      gRevTriNotePick:()=>this.gRevTri('note'),
+      gRevTriDateStyle:gTriChip(this._gRevTri!=='note'),
+      gRevTriNoteStyle:gTriChip(this._gRevTri==='note'),
       gRevAvis:gSrc.map((g,gi)=>({auteur:g.auteur||'—',quand:g.quand||'',
         stars:rvStars(g.note),hasTexte:!!(g.texte&&String(g.texte).trim()),texte:g.texte||'',
         repondu:!!g.repondu, reponse:g.reponse||'',
