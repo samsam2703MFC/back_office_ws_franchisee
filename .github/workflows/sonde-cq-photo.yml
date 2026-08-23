@@ -1,0 +1,90 @@
+name: Sonde — photo produit webshop pour le contrôle qualité
+
+# Vérifie qu'un produit contrôlé (tâche checklist CQ, pwa_consultant) a bien
+# sa photo dans le webshop : retrouve le produit par nom dans le catalogue
+# (id ws_products = id ERP), liste son fichier assets/product_pictures/<id>.*,
+# et remonte l'image en ARTEFACT pour contrôle visuel. Le jeton part en
+# en-tête, jamais dans une URL.
+
+on:
+  workflow_dispatch:
+    inputs:
+      nom:
+        description: "Fragment du nom du produit (ex. Ebly)"
+        required: true
+        default: "Ebly"
+        type: string
+
+jobs:
+  sonder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Retrouver le produit et sa photo
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "T='${{ secrets.ADMIN_TOKEN }}' NOM='${{ inputs.nom }}' bash -s" <<'EOSH'
+          set -u
+          curl -s -H "X-Admin-Token: $T" "http://localhost/webshop/api/franchisor/catalog" -o /tmp/cat.json
+          echo "== recherche « $NOM » dans le catalogue ($(wc -c < /tmp/cat.json) octets)"
+          rm -f /tmp/cq_photo_path
+          python3 - <<'EOF'
+          import json, os, glob, subprocess
+          nom = os.environ['NOM'].lower()
+          cats = json.load(open('/tmp/cat.json'))
+          hits = []
+          for c in cats:
+              for p in (c.get('prods') or []):
+                  if nom in str(p.get('nom', '')).lower():
+                      hits.append({'id': p.get('id'), 'nom': p.get('nom'), 'cat': c.get('cat'),
+                                   'sub': p.get('sub'), 'statut': p.get('statut'), 'active': p.get('active'),
+                                   'photo_flag': p.get('photo')})
+          print(json.dumps(hits, ensure_ascii=False, indent=1))
+          d = None
+          for cand in ('/var/www/html/webshop/assets/product_pictures', '/var/www/webshop/assets/product_pictures'):
+              if os.path.isdir(cand):
+                  d = cand
+                  break
+          if d is None:
+              r = subprocess.run(['find', '/var/www', '-maxdepth', '5', '-type', 'd', '-name', 'product_pictures'],
+                                 capture_output=True, text=True)
+              d = (r.stdout.strip().splitlines() or [None])[0]
+          print('DIR=' + str(d))
+          for h in hits:
+              for f in glob.glob(str(d) + '/' + str(h['id']) + '.*'):
+                  print('FICHIER=' + f)
+                  open('/tmp/cq_photo_path', 'w').write(f)
+                  raise SystemExit
+          EOF
+          echo "== chemin retenu : $(cat /tmp/cq_photo_path 2>/dev/null || echo AUCUN)"
+          EOSH
+
+      - name: Rapatrier la photo
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          F=$(sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "cat /tmp/cq_photo_path 2>/dev/null" || true)
+          echo "fichier distant : ${F:-aucun}"
+          mkdir -p /tmp/cq
+          if [ -n "$F" ]; then
+            sshpass -e scp -P ${{ vars.SSH_PORT || '22' }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:$F" /tmp/cq/
+            ls -la /tmp/cq/
+          else
+            echo "AUCUN FICHIER PHOTO pour ce produit" > /tmp/cq/ABSENTE.txt
+          fi
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cq-photo
+          path: /tmp/cq/
+          retention-days: 3
