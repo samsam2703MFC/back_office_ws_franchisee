@@ -1,0 +1,46 @@
+name: Sonde — un endpoint au choix (depuis le serveur)
+
+# « Show me » générique : interroge DEPUIS le serveur n'importe quel endpoint
+# de l'API (chemin relatif, ex. /franchisor/catalog) avec le jeton admin en
+# EN-TÊTE (jamais dans une URL de log), et imprime le code HTTP + le début de
+# la réponse telle quelle. C'est le pendant libre de « Sonde — circuit des
+# avis Google ».
+
+on:
+  workflow_dispatch:
+    inputs:
+      chemin:
+        description: "Chemin de l'endpoint (ex. /franchisor/catalog?shop=2)"
+        required: true
+        default: "/franchisor/catalog"
+        type: string
+      octets:
+        description: "Octets de réponse à imprimer"
+        required: false
+        default: "1800"
+        type: string
+
+jobs:
+  sonder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Interroger l'endpoint
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s <<EOSH
+          set -u
+          T='${{ secrets.ADMIN_TOKEN }}'
+          C='${{ inputs.chemin }}'
+          N='${{ inputs.octets }}'
+          echo "== GET \$C"
+          HTTP=\$(curl -s -o /tmp/sonde-ep.json -w '%{http_code}' -H "X-Admin-Token: \$T" "http://localhost/webshop/api\$C")
+          echo "HTTP \$HTTP — \$(wc -c < /tmp/sonde-ep.json) octets"
+          head -c "\$N" /tmp/sonde-ep.json; echo
+          EOSH
