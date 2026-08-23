@@ -27,7 +27,10 @@ préférence. Elle se change en éditant ce tableau — dans les **deux** dépô
 > carte « Directives de réponse — avis Google » de l'écran Avis de la console
 > marque (méthodes `rg*` — depuis le 15/08 : ton socle commun + directives par note), ainsi que la carte
 > « Clés & connexion — avis Google » du même écran (méthodes
-> `gbEnsure`/`gbTest`/`gbSave`). La répartition ci-dessus reste inchangée
+> `gbEnsure`/`gbTest`/`gbSave`). Le 23/08, à la demande de l'utilisateur,
+> elle a aussi passé le déclencheur « catégorie » du Panier Croisé au grain
+> SOUS-catégorie (écran Panier Croisé de la console marque + endpoints
+> cross-sell, migration 0085). La répartition ci-dessus reste inchangée
 > pour tout le reste.
 
 ## Pourquoi
