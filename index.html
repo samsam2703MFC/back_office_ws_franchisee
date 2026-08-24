@@ -3643,10 +3643,10 @@ class Component extends DCLogic {
     {s:'geoAnalyse',g:'Pilotage',label:'Analyse géo',k:'carte map clients arrondissement code postal cp commune particuliers office chalandise zone territoire densite'},
     // ---- Paramétrage › Livraison ----
     {s:'atelierLiv',g:'Paramétrage › Livraison',grp:'g_liv',label:'Atelier livraison (assistant)',meta:'atelierLiv',k:'assistant wizard creation tournee zone bureau simulation apercu client verifier cut-off fenetre midi soir garde-fou parametrage guide'},
-    {s:'tournees',g:'Paramétrage › Livraison',grp:'g_liv',k:'constructeur glisser deposer chauffeur vehicule eta publication tablette route itineraire'},
+    {s:'tournees',g:'Paramétrage › Livraison',grp:'g_liv',label:'Tournées — vue d\'ensemble',k:'constructeur glisser deposer atelier assistant chauffeur vehicule eta publication tablette route itineraire'},
     {s:'horaires',g:'Paramétrage › Livraison',grp:'g_liv',label:'Horaires & fermetures',k:'fenetre depart fin cut-off capacite fermeture ferie conge technique jour non roule'},
-    {s:'zones',g:'Paramétrage › Livraison',grp:'g_liv',k:'code postal cp primaire secondaire franco vehicule territoire carte commune chalandise'},
-    {s:'frais',g:'Paramétrage › Livraison',grp:'g_liv',label:'Frais de livraison',k:'cascade franco palier seuil gratuit facturation port'},
+    {s:'zones',g:'Paramétrage › Livraison',grp:'g_liv',label:'Zones — carte & chalandise',k:'code postal cp primaire secondaire franco vehicule territoire carte commune chalandise'},
+    {s:'frais',g:'Paramétrage › Livraison',grp:'g_liv',label:'Frais — cascade complète',k:'cascade franco palier seuil gratuit facturation port'},
     {s:'params',g:'Paramétrage › Livraison',grp:'g_liv',label:'Coût & temps',k:'cout horaire carburant emballage structure chargement version simulation'},
     // ---- Paramétrage › Clients B2B ----
     {s:'clients',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Bureaux & sites',k:'compte b2b plafond encours remise facturation differee tva segment horeca fiche client'},
@@ -3657,7 +3657,6 @@ class Component extends DCLogic {
      desc:'Création complète en 7 étapes : société, contact, site, départements, webshop, personnel',
      k:'wizard onboarding creation creer nouveau bureau societe raison sociale tournee site departements voucher invitation lien magique'},
     {s:'sites',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Sites de livraison',k:'adresse etage local temps acces quai reception chaine tournee zone'},
-    {s:'bureauParams',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Règles par bureau',k:'jours autorises cut-off tournee assignee par bureau'},
     {s:'emailsBureau',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Contacts email',k:'mail role principal facturation livraison destinataire notification'},
     // ---- Paramétrage › Boutique ----
     {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','dispo'],g:'Paramétrage › Boutique',label:'Disponibilité boutique',k:'jours heures webshop comptoir bureau ouverture livraison'},
@@ -4738,10 +4737,15 @@ class Component extends DCLogic {
       .map(o=>{ const st=setts.find(x=>String(x.office_id||x.officeId)===String(o.id))||{};
         let days=[]; try{ const a=typeof st.allowed_days==='string'?JSON.parse(st.allowed_days):st.allowed_days;
           if(Array.isArray(a)) days=a.map(Number); }catch(e){}
+        const cut=st.delivery_cutoff?String(st.delivery_cutoff).slice(0,5):'';
         return {id:o.id, nom:o.name||o.nom||('Bureau #'+o.id),
                 tourId:o.tour_id||o.tourId||st.tour_id||null,
                 tourNom:o.tour_name||o.tour||'—',
-                days:days, cutoff:st.delivery_cutoff?String(st.delivery_cutoff).slice(0,5):''}; }); }
+                days:days, cutoff:cut,
+                // Cut-off HÉRITÉ de la tournée tant que le bureau n'en pose pas
+                // un : la nuance décide de ce qu'on lit à l'écran ET de ce que
+                // « revenir au réglage de la tournée » efface.
+                cutHerite:!cut, drop:st.drop!=null?st.drop:''}; }); }
   alCurOffice(){ const l=this.alOffices(); const id=this.state.alOffice;
     return l.find(o=>String(o.id)===String(id))||l[0]||null; }
 
@@ -9055,7 +9059,8 @@ class Component extends DCLogic {
           const joursSel=Array.isArray(edO.days)?edO.days.map(Number):[];
           sections=[
             {num:'1',numS:true,titre:'Rattachement & restrictions',
-             resume:o?((o.tourNom||'sans tournée')+(joursSel.length?(' · '+joursSel.length+' jour(s)'):'')):'—',
+             resume:o?((o.tourNom||'sans tournée')+(joursSel.length?(' · '+joursSel.length+' jour(s)'):'')
+                       +' · cut-off '+(o.cutHerite?'hérité':'propre')):'—',
              kindPill:o&&o.tourId?'ok':'err',
              kind:'edit',cle:cleO,
              champs:[
@@ -9071,7 +9076,13 @@ class Component extends DCLogic {
                     this.alEditSetVal(cleO,'days',cur.sort()); }})),
                 aide:'aucun = ceux de la tournée'},
                {label:'Cut-off propre',val:edO.cutoff,set:this.alEditSet(cleO,'cutoff'),ph:'09:00',
-                aide:'vide = celui de la tournée'}],
+                aide:o&&o.cutHerite?'hérité de « '+(o.tourNom||'sa tournée')+' »':'propre à ce bureau'},
+               {label:'Revenir à la tournée',estListe:true,
+                choix:(o&&!o.cutHerite)?[{label:'Effacer le cut-off propre',
+                  style:'border:.5px solid var(--color-border-secondary);background:var(--color-surface);color:var(--color-text);'
+                       +'border-radius:999px;padding:7px 14px;font:600 11.5px var(--font-ui);cursor:pointer',
+                  pick:()=>this.alEditSetVal(cleO,'cutoff','')}]:[],
+                aide:(o&&o.cutHerite)?'déjà hérité':'le bureau suivra de nouveau la tournée'}],
              save:this.alSave(cleO,{objet:'office',officeId:o&&o.id,tourId:edO.tourId,days:joursSel,cutoff:edO.cutoff}),
              saveActif:this.alEditDirty(cleO)&&!!o,
              ouvrirLbl:'Réglages avancés (cut-off J-1 · temps de dépôt)…',
