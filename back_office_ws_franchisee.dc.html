@@ -4379,6 +4379,46 @@ class Component extends DCLogic {
         this.printJob('⚠ Publication échouée : '+(e&&e.message?e.message:'erreur')); });
   }
 
+  /* ── ÉDITION EN PLACE dans l'atelier ────────────────────────────────────
+     Le brouillon d'un objet vit sous sa clé (alEdit['tour:3']) et n'est
+     JAMAIS écrit tant que « Enregistrer » n'a pas été pressé — même règle
+     que les fenêtres. L'écriture passe par /franchisee/atelier-save, qui ne
+     touche que l'objet nommé (les routes /save remplacent la table entière :
+     y envoyer un objet seul désactiverait tout le reste). */
+  alEditGet(cle, defauts){ const S=this.state; const d=(S.alEdit||{})[cle];
+    return d?{...defauts,...d}:{...defauts}; }
+  alEditSet(cle, champ){ return (e)=>{ const v=(e&&e.target)?e.target.value:e;
+    const S=this.state; const cur=(S.alEdit||{})[cle]||{};
+    this.setState({alEdit:{...(S.alEdit||{}),[cle]:{...cur,[champ]:v}},alMsg:{...(S.alMsg||{}),[cle]:''}}); }; }
+  alEditSetVal(cle, champ, v){ const S=this.state; const cur=(S.alEdit||{})[cle]||{};
+    this.setState({alEdit:{...(S.alEdit||{}),[cle]:{...cur,[champ]:v}},alMsg:{...(S.alMsg||{}),[cle]:''}}); }
+  alEditDirty(cle){ return !!((this.state.alEdit||{})[cle]); }
+
+  /* Enregistrement d'un objet. Le message de retour reste sous la section :
+     un enregistrement silencieux laisse douter qu'il a eu lieu. */
+  alSave(cle, charge){ return ()=>{
+    const fr=(window.__FR||{});
+    if(!fr.base){ this.alMsgSet(cle,'API non configurée — rien n\'a été écrit.','err'); return; }
+    this.alMsgSet(cle,'Enregistrement…','mut');
+    fetch(fr.base+'/franchisee/atelier-save'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+          {method:'POST',headers:Object.assign({'Content-Type':'application/json'},(window.FRH?window.FRH():{})),
+           credentials:'omit',body:JSON.stringify(charge)})
+      .then(r=>r.json().catch(()=>({})).then(j=>({ok:r.ok,j:j})))
+      .then(res=>{ if(!res.ok||!res.j.ok) throw new Error(res.j&&res.j.error?res.j.error:'refus serveur');
+        // Le brouillon devient la vérité : on le retire et on rafraîchit les
+        // tables lues (le serveur fait foi au prochain hydrate).
+        const S=this.state; const dr={...(S.alEdit||{})}; delete dr[cle];
+        let extra='';
+        if(Array.isArray(res.j.refuses)&&res.j.refuses.length)
+          extra=' — hors chalandise, ignoré(s) : '+res.j.refuses.join(', ');
+        this.setState({alEdit:dr});
+        this.alMsgSet(cle,'✓ Enregistré'+extra,extra?'warn':'ok');
+        if(window.BOServer&&window.BOServer.hydrate) window.BOServer.hydrate();
+        this.alSimulate(); })
+      .catch(e=>this.alMsgSet(cle,'⚠ '+(e&&e.message?e.message:'échec'),'err')); }; }
+  alMsgSet(cle,txt,kind){ const S=this.state;
+    this.setState({alMsg:{...(S.alMsg||{}),[cle]:txt},alMsgKind:{...(S.alMsgKind||{}),[cle]:kind||'mut'}}); }
+
   /* Bureaux : réglages par bureau (tournée, jours autorisés, cut-off). */
   alOffices(){ const S=this.state;
     const setts=(window.BOServer?window.BOServer.table('ws_office_delivery_settings'):[]);
@@ -8610,21 +8650,50 @@ class Component extends DCLogic {
           +'justify-content:center;font:700 11px var(--font-ui);background:'+(on?'var(--color-primary)':'#2E7D46')+';color:#fff';
         const errWins=(sim&&sim.erreurs)?sim.erreurs.length:0;
 
+        // Champs éditables : brouillon par objet, valeurs enregistrées en défaut.
+        const cleT=tour?('tour:'+tour.id):'tour:0';
+        const edT=this.alEditGet(cleT,{name:tour?String(tour.name||''):'',maxItems:tour&&tour.max_items!=null?String(tour.max_items):''});
+        const cleF=tour?('fee:'+tour.id):'fee:0';
+        const feeRow=(window.BOServer?window.BOServer.table('ws_delivery_fee_rules'):[])
+          .find(f=>String(f.level||'').toLowerCase().indexOf('tourn')===0&&String(f.tour_id||f.tourId)===String(tour&&tour.id))||{};
+        const edF=this.alEditGet(cleF,{forfait:feeRow.fee_amount!=null?String(feeRow.fee_amount):'',
+                                       franco:feeRow.free_delivery_minimum!=null?String(feeRow.free_delivery_minimum):''});
+        const cleP=tour?('cp:'+tour.id):'cp:0';
+        const cpsTour=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])
+          .filter(r=>String(r.tour_id||r.tourId)===String(tour&&tour.id))
+          .map(r=>String(r.cp||r.postcode||'')).filter(Boolean);
+        const edP=this.alEditGet(cleP,{cps:cpsTour.join(' ')});
+        const msg=(c)=>String((S.alMsg||{})[c]||'');
+        const msgCol=(c)=>({ok:'#2E7D46',err:'#B3261E',warn:'#B26A00'}[(S.alMsgKind||{})[c]]||'var(--color-text-muted)');
+        const btnSave=(actif)=>'border:none;border-radius:999px;padding:9px 18px;font:600 12px var(--font-ui);color:#fff;'
+          +'background:var(--color-primary);cursor:'+(actif?'pointer':'not-allowed')+';opacity:'+(actif?'1':'.45');
+
         let sections=[];
         if(tab==='tours'){
           sections=[
-            {num:'1',numS:true,titre:'Identité & zone',resume:tour?((tour.zone||tour.zone_name||'zone —')+' · capacité '+(tour.max_items||'—')):'—',
-             kind:'list',lignes:tour?[{k:'Nom',v:tour.name,color:'var(--color-text)'},
-               {k:'Zone principale',v:String(tour.zone||tour.zone_name||'—'),color:'var(--color-text-muted)'},
-               {k:'Capacité (items)',v:String(tour.max_items||'—'),color:'var(--color-text-muted)'}]:[],
-             ouvrirLbl:'Modifier dans l\'écran Tournées',ouvrir:this.go('tournees')},
+            {num:'1',numS:true,titre:'Identité & capacité',
+             resume:tour?((tour.zone||tour.zone_name||'zone —')+' · capacité '+(tour.max_items||'—')):'—',
+             kind:'edit',cle:cleT,
+             champs:[{label:'Nom de la tournée',val:edT.name,set:this.alEditSet(cleT,'name'),ph:'ex. Corbais et LLN'},
+                     {label:'Capacité (items)',val:edT.maxItems,set:this.alEditSet(cleT,'maxItems'),ph:'ex. 120',
+                      aide:'vide = illimitée'}],
+             save:this.alSave(cleT,{objet:'tour',id:tour&&tour.id,name:edT.name,maxItems:edT.maxItems}),
+             saveActif:this.alEditDirty(cleT)&&!!tour,
+             ouvrirLbl:'Zone & véhicule → écran Tournées',ouvrir:this.go('tournees')},
             {num:'2',numS:true,titre:'Jours & fenêtres',
              resume:errWins?'à corriger':(nbJours?(wins.length+' fenêtre(s) sur '+nbJours+' jour(s)'):'aucune fenêtre'),
              kindPill:errWins?'err':(wins.length?'ok':'err'),kind:'wins'},
-            {num:'3',numS:true,titre:'Capacités & frais',resume:'réglés dans Frais de livraison',
-             kind:'list',lignes:[{k:'Forfait / franco',v:'écran « Frais de livraison »',color:'var(--color-text-muted)'},
-               {k:'Capacité par fenêtre',v:'max commandes — colonne « cap »',color:'var(--color-text-muted)'}],
-             ouvrirLbl:'Ouvrir les frais de livraison',ouvrir:this.go('frais')},
+            {num:'3',numS:true,titre:'Frais de livraison',
+             resume:(feeRow.fee_amount!=null?('forfait '+feeRow.fee_amount+' €'):'non réglés')
+                    +(feeRow.free_delivery_minimum?(' · franco '+feeRow.free_delivery_minimum+' €'):''),
+             kindPill:feeRow.fee_amount!=null?'ok':'mut',
+             kind:'edit',cle:cleF,
+             champs:[{label:'Forfait (€ / livraison)',val:edF.forfait,set:this.alEditSet(cleF,'forfait'),ph:'ex. 7.00'},
+                     {label:'Franco (€ de panier)',val:edF.franco,set:this.alEditSet(cleF,'franco'),ph:'ex. 50.00',
+                      aide:'au-delà, livraison offerte'}],
+             save:this.alSave(cleF,{objet:'fee',tourId:tour&&tour.id,forfait:edF.forfait,franco:edF.franco}),
+             saveActif:this.alEditDirty(cleF)&&!!tour,
+             ouvrirLbl:'Règles site / bureau → écran Frais',ouvrir:this.go('frais')},
             {num:'4',numS:true,titre:'Desserte',
              resume:(offices.filter(o=>tour&&String(o.tourId)===String(tour.id)).length)+' bureau(x) rattaché(s)',
              kind:'list',lignes:offices.filter(o=>tour&&String(o.tourId)===String(tour.id))
@@ -8635,28 +8704,55 @@ class Component extends DCLogic {
           ];
         } else if(tab==='zones'){
           sections=[
-            {num:'1',numS:true,titre:'Couverture des codes postaux',resume:cov.total+' CP couverts',kindPill:cov.total?'ok':'err',
+            {num:'1',numS:true,titre:'Codes postaux de « '+(tour?tour.name:'—')+' »',
+             resume:cpsTour.length+' CP sur cette tournée · '+cov.total+' au total',
+             kindPill:cpsTour.length?'ok':'err',
+             kind:'edit',cle:cleP,
+             champs:[{label:'Codes postaux',val:edP.cps,set:this.alEditSet(cleP,'cps'),ph:'1348 1340 1300',
+                      aide:'séparés par un espace'}],
+             save:this.alSave(cleP,{objet:'postcodes',tourId:tour&&tour.id,cps:edP.cps}),
+             saveActif:this.alEditDirty(cleP)&&!!tour,
+             ouvrirLbl:'Carte & chalandise → écran Zones',ouvrir:this.go('zones')},
+            {num:'2',numS:true,titre:'Couverture du réseau',resume:cov.total+' CP couverts',kindPill:cov.total?'ok':'err',
              kind:'list',lignes:Object.keys(cov.parCp).sort().slice(0,40)
                .map(cp=>({k:cp,v:cov.parCp[cp].join(' · '),color:cov.parCp[cp].length>1?'#B26A00':'var(--color-text-muted)'})),
-             videTxt:'Aucun code postal rattaché à une tournée : personne ne peut être livré.',
-             ouvrirLbl:'Modifier dans l\'écran Zones',ouvrir:this.go('zones')},
-            {num:'2',numS:true,titre:'Recouvrements',resume:cov.doubles.length?(cov.doubles.length+' CP en double'):'aucun',
+             videTxt:'Aucun code postal rattaché à une tournée : personne ne peut être livré.'},
+            {num:'3',numS:true,titre:'Recouvrements',resume:cov.doubles.length?(cov.doubles.length+' CP en double'):'aucun',
              kindPill:cov.doubles.length?'warn':'ok',kind:'list',
              lignes:cov.doubles.map(d=>({k:d.cp,v:'servi par '+d.tours.join(' ET '),color:'#B26A00'})),
              videTxt:'Aucun code postal servi par deux tournées.'},
-            {num:'3',numS:true,titre:'Sites hors couverture',resume:cov.orphelins.length?(cov.orphelins.length+' à rattacher'):'aucun',
+            {num:'4',numS:true,titre:'Sites hors couverture',resume:cov.orphelins.length?(cov.orphelins.length+' à rattacher'):'aucun',
              kindPill:cov.orphelins.length?'err':'ok',kind:'list',
              lignes:cov.orphelins.map(cp=>({k:'CP '+cp,v:'un site est ici, aucune tournée ne le sert',color:'#B3261E'})),
              videTxt:'Tous les sites connus tombent dans un code postal servi.'},
           ];
         } else {
           const o=office;
+          const cleO=o?('office:'+o.id):'office:0';
+          const edO=this.alEditGet(cleO,{tourId:o&&o.tourId?String(o.tourId):'',days:(o?o.days:[]).slice(),cutoff:o?o.cutoff:''});
+          const joursSel=Array.isArray(edO.days)?edO.days.map(Number):[];
           sections=[
-            {num:'1',numS:true,titre:'Rattachement',resume:o?(o.tourNom||'—'):'—',
-             kind:'list',lignes:o?[{k:'Tournée',v:String(o.tourNom||'—'),color:'var(--color-text)'},
-               {k:'Cut-off propre',v:o.cutoff||'celui de la tournée',color:'var(--color-text-muted)'},
-               {k:'Jours autorisés',v:o.days.length?o.days.map(d=>DN[d-1]).join(' · '):'tous ceux de la tournée',color:'var(--color-text-muted)'}]:[],
-             ouvrirLbl:'Modifier dans « Règles par bureau »',ouvrir:this.go('bureauParams')},
+            {num:'1',numS:true,titre:'Rattachement & restrictions',
+             resume:o?((o.tourNom||'sans tournée')+(joursSel.length?(' · '+joursSel.length+' jour(s)'):'')):'—',
+             kindPill:o&&o.tourId?'ok':'err',
+             kind:'edit',cle:cleO,
+             champs:[
+               {label:'Tournée',estListe:true,
+                choix:tours.map(t=>({label:t.name,
+                  style:chip(String(edO.tourId)===String(t.id)),
+                  pick:()=>this.alEditSetVal(cleO,'tourId',String(t.id))}))},
+               {label:'Jours autorisés',estJours:true,
+                jours:DN.map((n,i)=>({abbr:n.slice(0,3),
+                  style:chip(joursSel.indexOf(i+1)>=0),
+                  toggle:()=>{ const cur=joursSel.slice(); const k=cur.indexOf(i+1);
+                    if(k>=0) cur.splice(k,1); else cur.push(i+1);
+                    this.alEditSetVal(cleO,'days',cur.sort()); }})),
+                aide:'aucun = ceux de la tournée'},
+               {label:'Cut-off propre',val:edO.cutoff,set:this.alEditSet(cleO,'cutoff'),ph:'09:00',
+                aide:'vide = celui de la tournée'}],
+             save:this.alSave(cleO,{objet:'office',officeId:o&&o.id,tourId:edO.tourId,days:joursSel,cutoff:edO.cutoff}),
+             saveActif:this.alEditDirty(cleO)&&!!o,
+             ouvrirLbl:'Fiche complète → écran Bureaux',ouvrir:this.go('offices')},
           ];
         }
         const alSections=sections.map(sec=>({
@@ -8666,6 +8762,15 @@ class Component extends DCLogic {
           toggle:()=>this.setState({alSec:sec.kind==='wins'?(secOpen('wins')?'':'wins'):(secOpen(sec.titre)?'':sec.titre)}),
           openWins:sec.kind==='wins'&&secOpen('wins'),
           openList:sec.kind==='list'&&secOpen(sec.titre),
+          openEdit:sec.kind==='edit'&&secOpen(sec.titre),
+          champs:(sec.champs||[]).map(f=>({label:f.label, val:f.val!=null?f.val:'', set:f.set||nop,
+            ph:f.ph||'', aide:f.aide||'',
+            estTexte:!f.estJours&&!f.estListe, estJours:!!f.estJours, estListe:!!f.estListe,
+            jours:f.jours||[], choix:f.choix||[]})),
+          save:sec.save||nop, saveActif:!!sec.saveActif,
+          saveStyle:btnSave(!!sec.saveActif),
+          saveLbl:sec.saveActif?'Enregistrer':'Aucune modification',
+          msg:msg(sec.cle||''), msgColor:msgCol(sec.cle||''),
           lignes:sec.lignes||[], vide:!(sec.lignes||[]).length, videTxt:sec.videTxt||'—',
           aOuvrir:!!sec.ouvrir, ouvrirLbl:sec.ouvrirLbl||'', ouvrir:sec.ouvrir||nop,
         }));
