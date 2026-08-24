@@ -8990,7 +8990,8 @@ class Component extends DCLogic {
                       aide:'vide = illimitée'}],
              save:this.alSave(cleT,{objet:'tour',id:tour&&tour.id,name:edT.name,maxItems:edT.maxItems}),
              saveActif:this.alEditDirty(cleT)&&!!tour,
-             ouvrirLbl:'Zone & véhicule → écran Tournées',ouvrir:this.go('tournees')},
+             ouvrirLbl:'Réglages complets (véhicule · chauffeur · retour dépôt)…',
+             ouvrir:()=>{ if(tour&&this._editRouteById) this._editRouteById('r'+tour.id); }},
             {num:'2',numS:true,titre:'Jours & fenêtres',
              resume:errWins?'à corriger':(nbJours?(wins.length+' fenêtre(s) sur '+nbJours+' jour(s)'):'aucune fenêtre'),
              kindPill:errWins?'err':(wins.length?'ok':'err'),kind:'wins'},
@@ -9004,14 +9005,24 @@ class Component extends DCLogic {
                       aide:'au-delà, livraison offerte'}],
              save:this.alSave(cleF,{objet:'fee',tourId:tour&&tour.id,forfait:edF.forfait,franco:edF.franco}),
              saveActif:this.alEditDirty(cleF)&&!!tour,
-             ouvrirLbl:'Règles site / bureau → écran Frais',ouvrir:this.go('frais')},
+             ouvrirLbl:'Règle par site ou par bureau…',ouvrir:this.openForm('fee')},
             {num:'4',numS:true,titre:'Desserte',
              resume:(offices.filter(o=>tour&&String(o.tourId)===String(tour.id)).length)+' bureau(x) rattaché(s)',
              kind:'list',lignes:offices.filter(o=>tour&&String(o.tourId)===String(tour.id))
                .map(o=>({k:o.nom,v:o.days.length?('jours '+o.days.map(d=>DN[d-1].slice(0,3)).join(' · ')):'jours de la tournée',
                  color:'var(--color-text-muted)'})),
              videTxt:'Aucun bureau rattaché à cette tournée — elle roulerait à vide.',
-             ouvrirLbl:'Ouvrir les bureaux',ouvrir:this.go('offices')},
+             ouvrirLbl:'Ajouter un bureau…',ouvrir:this.openForm('office')},
+            {num:'5',numS:true,titre:'Fermetures ponctuelles',
+             resume:(function(){ const f=(window.BOServer?window.BOServer.table('ws_tour_closures'):[])
+               .filter(x=>!tour||String(x.tour||'')===String(tour.name)||String(x.tour||'').indexOf('Toutes')===0);
+               return f.length?(f.length+' date(s) fermée(s)'):'aucune'; })(),
+             kind:'list',
+             lignes:(window.BOServer?window.BOServer.table('ws_tour_closures'):[])
+               .filter(x=>!tour||String(x.tour||'')===String(tour.name)||String(x.tour||'').indexOf('Toutes')===0)
+               .map(f=>({k:String(f.date||'—'),v:String(f.type||'')+(f.motif?(' · '+f.motif):''),color:'var(--color-text-muted)'})),
+             videTxt:'Aucune fermeture — la tournée roule tous ses jours de fenêtre.',
+             ouvrirLbl:'Ajouter une fermeture (férié · congé)…',ouvrir:this.openForm('fermeture')},
           ];
         } else if(tab==='zones'){
           sections=[
@@ -9023,7 +9034,7 @@ class Component extends DCLogic {
                       aide:'séparés par un espace'}],
              save:this.alSave(cleP,{objet:'postcodes',tourId:tour&&tour.id,cps:edP.cps}),
              saveActif:this.alEditDirty(cleP)&&!!tour,
-             ouvrirLbl:'Carte & chalandise → écran Zones',ouvrir:this.go('zones')},
+             ouvrirLbl:'Créer une zone (franco · véhicule · délai)…',ouvrir:this.openForm('zone')},
             {num:'2',numS:true,titre:'Couverture du réseau',resume:cov.total+' CP couverts',kindPill:cov.total?'ok':'err',
              kind:'list',lignes:Object.keys(cov.parCp).sort().slice(0,40)
                .map(cp=>({k:cp,v:cov.parCp[cp].join(' · '),color:cov.parCp[cp].length>1?'#B26A00':'var(--color-text-muted)'})),
@@ -9063,7 +9074,8 @@ class Component extends DCLogic {
                 aide:'vide = celui de la tournée'}],
              save:this.alSave(cleO,{objet:'office',officeId:o&&o.id,tourId:edO.tourId,days:joursSel,cutoff:edO.cutoff}),
              saveActif:this.alEditDirty(cleO)&&!!o,
-             ouvrirLbl:'Fiche complète → écran Bureaux',ouvrir:this.go('offices')},
+             ouvrirLbl:'Réglages avancés (cut-off J-1 · temps de dépôt)…',
+             ouvrir:()=>{ if(o) this.openFormWith('bureauParam',{bureau:o.nom,tour:o.tourNom})(); }},
           ];
         }
         const alSections=sections.map(sec=>({
