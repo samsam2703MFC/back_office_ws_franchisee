@@ -1,0 +1,127 @@
+name: Sonde — cockpit, fonds marketing & dernier rapport PDF
+
+# Trois lectures en un passage, depuis le serveur (la sandbox n'a pas d'accès) :
+#  A. le schéma RÉEL des tables mar_fund_* / ceo_supplier — le POST
+#     /fonds/mouvement du cockpit lève « base de données indisponible »
+#     (PDOException) alors que l'écran charge leviers et campagnes : suspicion
+#     de colonnes divergentes entre l'INSERT et la table héritée du module ;
+#  B. le REJEU de cet INSERT dans une transaction annulée, pour lire le
+#     message PDO exact au lieu de le deviner ;
+#  C. le PDF du DERNIER run de rapport (ceo_rapport_run), rendu par le même
+#     moteur que le bouton PDF, remonté en artefact ET en base64 dans le log.
+# Aucune écriture ne survit (rollback) ; aucun secret ne part en URL ni au log.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  sonder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Sonder le fonds et rendre le dernier rapport
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "bash -s" <<'EOSH'
+          set -u
+          PHP=$(command -v php || command -v php8.2 || command -v php8.1)
+          echo "php : $PHP ($($PHP -v | head -1))"
+          cat > /tmp/sonde_fonds.php <<'EOPHP'
+          <?php
+          declare(strict_types=1);
+          $R = '/var/www/consulant_bo';
+          if (!is_dir($R)) { fwrite(STDERR, "cockpit introuvable : $R\n"); exit(2); }
+          require $R . '/src/Db.php';
+          require $R . '/src/installer.php';
+          require $R . '/src/mkt_types.php';
+          require $R . '/src/endpoints.php';
+          require $R . '/src/writes.php';
+          require $R . '/src/panel_api.php';
+          require $R . '/src/erp_api.php';
+          require $R . '/src/rapports.php';
+
+          $pdo = Db::pdo();
+          echo "===== A. SCHEMA =====\n";
+          foreach (['mar_fund_movement', 'mar_fund_recurrence', 'mar_lever', 'ceo_supplier'] as $t) {
+              try {
+                  $r = $pdo->query('SHOW CREATE TABLE `' . $t . '`')->fetch(PDO::FETCH_ASSOC);
+                  echo "-- $t --\n" . (string) ($r['Create Table'] ?? json_encode($r)) . "\n\n";
+              } catch (Throwable $e) {
+                  echo "-- $t -- ERREUR : " . $e->getMessage() . "\n\n";
+              }
+          }
+
+          echo "===== B. REJEU INSERT MOUVEMENT (transaction annulee) =====\n";
+          try {
+              $lev = $pdo->query('SELECT id FROM mar_lever LIMIT 1')->fetchColumn();
+              $pdo->beginTransaction();
+              $st = $pdo->prepare('INSERT INTO mar_fund_movement (direction, shop_id, campaign_id, lever_id, movement_date, label, amount, source, supplier_name, document_ref)
+                                   VALUES (?,?,?,?,?,?,?,?,?,?)');
+              $st->execute(['OUT', null, null, $lev !== false ? (int) $lev : null, '2026-08-24', 'SONDE diagnostic', 1.0, 'AUTRE', 'SONDE fournisseur', 'SONDE 1']);
+              echo "INSERT : OK (annule par rollback)\n";
+              $pdo->rollBack();
+          } catch (Throwable $e) {
+              if ($pdo->inTransaction()) { $pdo->rollBack(); }
+              echo 'INSERT : ECHEC -> ' . $e->getMessage() . "\n";
+          }
+
+          echo "\n===== C. DOUZE DERNIERES ECRITURES DU FONDS (forme actuelle) =====\n";
+          try {
+              $q = $pdo->query('SELECT id, movement_date, direction, label, amount, source, shop_id, supplier_name, document_ref FROM mar_fund_movement ORDER BY id DESC LIMIT 12');
+              foreach ($q as $m) { echo json_encode($m, JSON_UNESCAPED_UNICODE) . "\n"; }
+          } catch (Throwable $e) { echo 'lecture : ' . $e->getMessage() . "\n"; }
+
+          echo "\n===== D. DERNIERS RUNS DE RAPPORT =====\n";
+          try {
+              foreach ($pdo->query('SELECT id, rapport_id, genere_le, statut, resume, LENGTH(html) AS taille FROM ceo_rapport_run ORDER BY id DESC LIMIT 5') as $r) {
+                  echo json_encode($r, JSON_UNESCAPED_UNICODE) . "\n";
+              }
+          } catch (Throwable $e) { echo 'lecture : ' . $e->getMessage() . "\n"; }
+
+          echo "\n===== E. PDF DU DERNIER RUN =====\n";
+          try {
+              $run = Db::row('SELECT * FROM ceo_rapport_run WHERE html IS NOT NULL ORDER BY id DESC LIMIT 1');
+              if ($run === null) { echo "aucun run avec HTML\n"; exit(0); }
+              $ctx = json_decode((string) ($run['contexte'] ?? ''), true) ?: [];
+              $rep = Db::row('SELECT nom, magasins FROM ceo_rapport WHERE id = ?', [(int) ($run['rapport_id'] ?? 0)]) ?? [];
+              $pdf = rapPdfRendu((string) $run['html'], [
+                  'magasin' => (string) ($ctx['magasin'] ?? '') !== '' ? (string) $ctx['magasin'] : rapMagasinLabel($rep),
+                  'rapport' => (string) ($ctx['rapport'] ?? '') !== '' ? (string) $ctx['rapport'] : (string) ($rep['nom'] ?? ''),
+                  'genere' => date('d/m/Y à H:i', strtotime((string) ($run['genere_le'] ?? 'now'))),
+                  'envoye' => '',
+              ]);
+              if ($pdf === null) { echo "aucun moteur PDF sur le serveur\n"; exit(0); }
+              file_put_contents('/tmp/sonde_run.pdf', $pdf);
+              echo 'PDF : run ' . $run['id'] . ' -> /tmp/sonde_run.pdf (' . strlen($pdf) . " octets)\n";
+          } catch (Throwable $e) { echo 'PDF : ' . $e->getMessage() . "\n"; }
+          EOPHP
+          $PHP /tmp/sonde_fonds.php
+          if [ -s /tmp/sonde_run.pdf ] && [ "$(stat -c%s /tmp/sonde_run.pdf)" -lt 900000 ]; then
+            echo "===== F. PDF EN BASE64 ====="
+            base64 -w 200 /tmp/sonde_run.pdf | sed 's/^/B64:/'
+            echo "===== FIN BASE64 ====="
+          fi
+          EOSH
+
+      - name: Rapatrier le PDF
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          mkdir -p /tmp/sonde
+          sshpass -e scp -P ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/sonde_run.pdf" /tmp/sonde/ \
+            || echo "pas de PDF produit" > /tmp/sonde/ABSENT.txt
+          ls -la /tmp/sonde/
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonde-cockpit
+          path: /tmp/sonde/
+          retention-days: 3
