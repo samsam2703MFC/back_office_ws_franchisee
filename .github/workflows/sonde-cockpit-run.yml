@@ -1,0 +1,126 @@
+name: Sonde — nouveau run du rapport + fonds réparé + aperçu redevances
+
+# Après le déploiement « fonds-fournisseur-redevances-sortes » :
+#  A. GÉNÈRE un run frais du rapport quotidien (id 6) — ce que le bouton
+#     « Générer » du cockpit fait —, rend son PDF et le remonte dans le log en
+#     HEXADÉCIMAL : le base64 de la sonde précédente s'est fait mutiler par le
+#     masquage des secrets du runner (une sous-séquence coïncidait), l'alphabet
+#     hex [0-9a-f] ne peut pas porter ces valeurs.
+#  B. REJOUE l'écriture au fonds AVEC fournisseurAssure() sur un fournisseur
+#     inconnu, dans une transaction annulée : la preuve que le correctif
+#     ceo_supplier.email tient.
+#  C. Rend l'APERÇU des redevances du mois (lecture seule) : les lignes
+#     mois × sorte × magasin exactes que le bouton proposera.
+# Seul le run de rapport (A) survit — c'est le but ; B et C n'écrivent rien.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  sonder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Générer un run, rejouer le fonds, aperçu redevances
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "bash -s" <<'EOSH'
+          set -u
+          PHP=$(command -v php || command -v php8.2 || command -v php8.1)
+          cat > /tmp/sonde_run2.php <<'EOPHP'
+          <?php
+          declare(strict_types=1);
+          $R = '/var/www/consulant_bo';
+          require $R . '/src/Db.php';
+          require $R . '/src/installer.php';
+          require $R . '/src/mkt_types.php';
+          require $R . '/src/endpoints.php';
+          require $R . '/src/writes.php';
+          require $R . '/src/panel_api.php';
+          require $R . '/src/erp_api.php';
+          require $R . '/src/anthropic.php';
+          require $R . '/src/google_api.php';
+          require $R . '/src/smtp.php';
+          require $R . '/src/rapports.php';
+          require $R . '/src/kpis.php';
+          require $R . '/src/cadence.php';
+          require $R . '/src/connecteurs.php';
+          require $R . '/src/mesure.php';
+
+          $pdo = Db::pdo();
+
+          echo "===== B. FONDS : fournisseur nouveau + mouvement (transaction annulee) =====\n";
+          try {
+              $pdo->beginTransaction();
+              $nomTest = 'SONDE Fournisseur ' . date('His');
+              fournisseurAssure($nomTest);
+              $ligne = Db::row('SELECT id, name, email FROM ceo_supplier WHERE name = ?', [$nomTest]);
+              echo 'fournisseurAssure : ' . ($ligne !== null ? 'OK — ' . json_encode($ligne, JSON_UNESCAPED_UNICODE) : 'ECHEC — rien insere') . "\n";
+              $lev = $pdo->query('SELECT id FROM mar_lever LIMIT 1')->fetchColumn();
+              $st = $pdo->prepare('INSERT INTO mar_fund_movement (direction, shop_id, campaign_id, lever_id, movement_date, label, amount, source, supplier_name, document_ref)
+                                   VALUES (?,?,?,?,?,?,?,?,?,?)');
+              $st->execute(['OUT', null, null, $lev !== false ? (int) $lev : null, date('Y-m-d'), 'SONDE bout en bout', 1.0, 'AUTRE', $nomTest, 'SONDE 2']);
+              echo "mouvement : OK (tout est annule par rollback)\n";
+              $pdo->rollBack();
+          } catch (Throwable $e) {
+              if ($pdo->inTransaction()) { $pdo->rollBack(); }
+              echo 'ECHEC -> ' . $e->getMessage() . "\n";
+          }
+
+          echo "\n===== C. APERCU REDEVANCES DU MOIS (lecture seule) =====\n";
+          try {
+              $ap = fondsRoyaltiesEcrire(date('Y-m'), true);
+              echo json_encode($ap, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n";
+          } catch (Throwable $e) { echo 'ECHEC -> ' . $e->getMessage() . "\n"; }
+
+          echo "\n===== A. NOUVEAU RUN DU RAPPORT QUOTIDIEN =====\n";
+          try {
+              $rep = Db::row('SELECT * FROM ceo_rapport WHERE id = 6');
+              if ($rep === null) { echo "rapport 6 introuvable\n"; exit(0); }
+              $g = rapportGenerer($rep);
+              echo 'genere : ' . json_encode($g, JSON_UNESCAPED_UNICODE) . "\n";
+              $run = Db::row('SELECT * FROM ceo_rapport_run WHERE id = ?', [(int) $g['runId']]);
+              if ($run === null || $run['html'] === null) { echo "run sans HTML\n"; exit(0); }
+              $ctx = json_decode((string) ($run['contexte'] ?? ''), true) ?: [];
+              $pdf = rapPdfRendu((string) $run['html'], [
+                  'magasin' => (string) ($ctx['magasin'] ?? '') !== '' ? (string) $ctx['magasin'] : rapMagasinLabel($rep),
+                  'rapport' => (string) ($ctx['rapport'] ?? '') !== '' ? (string) $ctx['rapport'] : (string) ($rep['nom'] ?? ''),
+                  'genere' => date('d/m/Y à H:i', strtotime((string) ($run['genere_le'] ?? 'now'))),
+                  'envoye' => '',
+              ]);
+              if ($pdf === null) { echo "aucun moteur PDF\n"; exit(0); }
+              file_put_contents('/tmp/sonde_run2.pdf', $pdf);
+              echo 'PDF : run ' . $run['id'] . ' — ' . strlen($pdf) . ' octets — sha256 ' . hash('sha256', $pdf) . "\n";
+          } catch (Throwable $e) { echo 'ECHEC -> ' . $e->getMessage() . "\n"; }
+          EOPHP
+          $PHP /tmp/sonde_run2.php
+          if [ -s /tmp/sonde_run2.pdf ] && [ "$(stat -c%s /tmp/sonde_run2.pdf)" -lt 1200000 ]; then
+            echo "===== D. PDF EN HEXADECIMAL ====="
+            xxd -p /tmp/sonde_run2.pdf | tr -d '\n' | fold -w 240 | sed 's/^/HEX:/'
+            echo ""
+            echo "===== FIN HEX ====="
+          fi
+          EOSH
+
+      - name: Rapatrier le PDF
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          mkdir -p /tmp/sonde
+          sshpass -e scp -P ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/sonde_run2.pdf" /tmp/sonde/ \
+            || echo "pas de PDF produit" > /tmp/sonde/ABSENT.txt
+          ls -la /tmp/sonde/
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonde-cockpit-run
+          path: /tmp/sonde/
+          retention-days: 3
