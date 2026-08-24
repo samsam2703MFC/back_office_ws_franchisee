@@ -1,17 +1,14 @@
 name: Sonde — nouveau run du rapport + fonds réparé + aperçu redevances
 
-# Après le déploiement « fonds-fournisseur-redevances-sortes » :
-#  A. GÉNÈRE un run frais du rapport quotidien (id 6) — ce que le bouton
-#     « Générer » du cockpit fait —, rend son PDF et le remonte dans le log en
-#     HEXADÉCIMAL : le base64 de la sonde précédente s'est fait mutiler par le
-#     masquage des secrets du runner (une sous-séquence coïncidait), l'alphabet
-#     hex [0-9a-f] ne peut pas porter ces valeurs.
-#  B. REJOUE l'écriture au fonds AVEC fournisseurAssure() sur un fournisseur
-#     inconnu, dans une transaction annulée : la preuve que le correctif
-#     ceo_supplier.email tient.
-#  C. Rend l'APERÇU des redevances du mois (lecture seule) : les lignes
-#     mois × sorte × magasin exactes que le bouton proposera.
-# Seul le run de rapport (A) survit — c'est le but ; B et C n'écrivent rien.
+# v3 — le run 106 généré en CLI est sorti SANS photos : le PHP CLI n'a
+# probablement pas GD (rapImageGd teste imagecreatefromstring et rend null).
+# Cette passe :
+#  A. prouve l'état de GD en CLI ;
+#  B. génère le run par HTTP loopback — le chemin EXACT du bouton « Générer »
+#     du cockpit (contexte web, GD chargé) — avec repli CLI + `-d extension=gd`
+#     si l'API exige une session ;
+#  C. rend le PDF de CE run et le remonte en hex + sha256 ;
+#  D. retire le run 106 (essai sans photos) de l'historique.
 
 on:
   workflow_dispatch: {}
@@ -23,7 +20,7 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Générer un run, rejouer le fonds, aperçu redevances
+      - name: Générer par la voie web et rendre le PDF
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
         run: |
@@ -32,7 +29,22 @@ jobs:
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "bash -s" <<'EOSH'
           set -u
           PHP=$(command -v php || command -v php8.2 || command -v php8.1)
-          cat > /tmp/sonde_run2.php <<'EOPHP'
+          echo "===== A. GD ====="
+          echo "CLI gd : $($PHP -r 'echo function_exists("imagecreatefromstring") ? "present" : "ABSENT";')"
+          echo "CLI gd via -d extension=gd : $($PHP -d extension=gd -r 'echo function_exists("imagecreatefromstring") ? "present" : "ABSENT";' 2>/dev/null || echo 'chargement impossible')"
+
+          echo "===== B. GENERATION PAR HTTP LOOPBACK ====="
+          REP=$(curl -s -X POST 'http://127.0.0.1/consulant_bo/api/cockpit/rapports/6/generer' \
+                -H 'Content-Type: application/json' -d '{}')
+          echo "reponse : $REP"
+          RUNID=$(echo "$REP" | $PHP -r '$j=json_decode(stream_get_contents(STDIN),true)?:[];echo (int)($j["runId"]??0);')
+          MODE=web
+          if [ "$RUNID" = "0" ]; then
+            echo "voie web refusee — repli CLI avec GD charge"
+            MODE=cli
+          fi
+
+          cat > /tmp/sonde_v3.php <<'EOPHP'
           <?php
           declare(strict_types=1);
           $R = '/var/www/consulant_bo';
@@ -52,56 +64,54 @@ jobs:
           require $R . '/src/connecteurs.php';
           require $R . '/src/mesure.php';
 
-          $pdo = Db::pdo();
-
-          echo "===== B. FONDS : fournisseur nouveau + mouvement (transaction annulee) =====\n";
-          try {
-              $pdo->beginTransaction();
-              $nomTest = 'SONDE Fournisseur ' . date('His');
-              fournisseurAssure($nomTest);
-              $ligne = Db::row('SELECT id, name, email FROM ceo_supplier WHERE name = ?', [$nomTest]);
-              echo 'fournisseurAssure : ' . ($ligne !== null ? 'OK — ' . json_encode($ligne, JSON_UNESCAPED_UNICODE) : 'ECHEC — rien insere') . "\n";
-              $lev = $pdo->query('SELECT id FROM mar_lever LIMIT 1')->fetchColumn();
-              $st = $pdo->prepare('INSERT INTO mar_fund_movement (direction, shop_id, campaign_id, lever_id, movement_date, label, amount, source, supplier_name, document_ref)
-                                   VALUES (?,?,?,?,?,?,?,?,?,?)');
-              $st->execute(['OUT', null, null, $lev !== false ? (int) $lev : null, date('Y-m-d'), 'SONDE bout en bout', 1.0, 'AUTRE', $nomTest, 'SONDE 2']);
-              echo "mouvement : OK (tout est annule par rollback)\n";
-              $pdo->rollBack();
-          } catch (Throwable $e) {
-              if ($pdo->inTransaction()) { $pdo->rollBack(); }
-              echo 'ECHEC -> ' . $e->getMessage() . "\n";
-          }
-
-          echo "\n===== C. APERCU REDEVANCES DU MOIS (lecture seule) =====\n";
-          try {
-              $ap = fondsRoyaltiesEcrire(date('Y-m'), true);
-              echo json_encode($ap, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "\n";
-          } catch (Throwable $e) { echo 'ECHEC -> ' . $e->getMessage() . "\n"; }
-
-          echo "\n===== A. NOUVEAU RUN DU RAPPORT QUOTIDIEN =====\n";
-          try {
+          $mode = (string) ($argv[1] ?? 'rendre');
+          $runId = (int) ($argv[2] ?? 0);
+          if ($mode === 'generer') {
               $rep = Db::row('SELECT * FROM ceo_rapport WHERE id = 6');
-              if ($rep === null) { echo "rapport 6 introuvable\n"; exit(0); }
+              if ($rep === null) { fwrite(STDERR, "rapport 6 introuvable\n"); exit(2); }
               $g = rapportGenerer($rep);
-              echo 'genere : ' . json_encode($g, JSON_UNESCAPED_UNICODE) . "\n";
-              $run = Db::row('SELECT * FROM ceo_rapport_run WHERE id = ?', [(int) $g['runId']]);
-              if ($run === null || $run['html'] === null) { echo "run sans HTML\n"; exit(0); }
-              $ctx = json_decode((string) ($run['contexte'] ?? ''), true) ?: [];
-              $pdf = rapPdfRendu((string) $run['html'], [
-                  'magasin' => (string) ($ctx['magasin'] ?? '') !== '' ? (string) $ctx['magasin'] : rapMagasinLabel($rep),
-                  'rapport' => (string) ($ctx['rapport'] ?? '') !== '' ? (string) $ctx['rapport'] : (string) ($rep['nom'] ?? ''),
-                  'genere' => date('d/m/Y à H:i', strtotime((string) ($run['genere_le'] ?? 'now'))),
-                  'envoye' => '',
-              ]);
-              if ($pdf === null) { echo "aucun moteur PDF\n"; exit(0); }
-              file_put_contents('/tmp/sonde_run2.pdf', $pdf);
-              echo 'PDF : run ' . $run['id'] . ' — ' . strlen($pdf) . ' octets — sha256 ' . hash('sha256', $pdf) . "\n";
-          } catch (Throwable $e) { echo 'ECHEC -> ' . $e->getMessage() . "\n"; }
+              echo json_encode($g, JSON_UNESCAPED_UNICODE) . "\n";
+              exit(0);
+          }
+          if ($mode === 'menage106') {
+              // Le run 106 : essai de sonde généré en CLI SANS GD — fiches sans
+              // photos. On le retire pour ne pas polluer l'historique du rapport.
+              Db::exec('DELETE FROM ceo_rapport_run WHERE id = 106 AND statut = ?', ['genere']);
+              echo "run 106 retire (s'il etait encore la)\n";
+              exit(0);
+          }
+          $run = Db::row('SELECT * FROM ceo_rapport_run WHERE id = ?', [$runId]);
+          if ($run === null || $run['html'] === null) { fwrite(STDERR, "run $runId sans HTML\n"); exit(2); }
+          $ctx = json_decode((string) ($run['contexte'] ?? ''), true) ?: [];
+          $rep = Db::row('SELECT nom, magasins FROM ceo_rapport WHERE id = ?', [(int) ($run['rapport_id'] ?? 0)]) ?? [];
+          $pdf = rapPdfRendu((string) $run['html'], [
+              'magasin' => (string) ($ctx['magasin'] ?? '') !== '' ? (string) $ctx['magasin'] : rapMagasinLabel($rep),
+              'rapport' => (string) ($ctx['rapport'] ?? '') !== '' ? (string) $ctx['rapport'] : (string) ($rep['nom'] ?? ''),
+              'genere' => date('d/m/Y à H:i', strtotime((string) ($run['genere_le'] ?? 'now'))),
+              'envoye' => '',
+          ]);
+          if ($pdf === null) { fwrite(STDERR, "aucun moteur PDF\n"); exit(2); }
+          file_put_contents('/tmp/sonde_run3.pdf', $pdf);
+          echo 'PDF : run ' . $runId . ' — ' . strlen($pdf) . ' octets — sha256 ' . hash('sha256', $pdf) . "\n";
           EOPHP
-          $PHP /tmp/sonde_run2.php
-          if [ -s /tmp/sonde_run2.pdf ] && [ "$(stat -c%s /tmp/sonde_run2.pdf)" -lt 1200000 ]; then
-            echo "===== D. PDF EN HEXADECIMAL ====="
-            xxd -p /tmp/sonde_run2.pdf | tr -d '\n' | fold -w 240 | sed 's/^/HEX:/'
+
+          if [ "$MODE" = "cli" ]; then
+            REP=$($PHP -d extension=gd /tmp/sonde_v3.php generer)
+            echo "generation CLI : $REP"
+            RUNID=$(echo "$REP" | $PHP -r '$j=json_decode(stream_get_contents(STDIN),true)?:[];echo (int)($j["runId"]??0);')
+          fi
+          echo "run retenu : $RUNID (voie $MODE)"
+
+          echo "===== C. RENDU PDF DU RUN $RUNID ====="
+          rm -f /tmp/sonde_run3.pdf
+          $PHP -d extension=gd /tmp/sonde_v3.php rendre "$RUNID"
+
+          echo "===== D. MENAGE DU RUN 106 ====="
+          $PHP /tmp/sonde_v3.php menage106
+
+          if [ -s /tmp/sonde_run3.pdf ] && [ "$(stat -c%s /tmp/sonde_run3.pdf)" -lt 1200000 ]; then
+            echo "===== E. PDF EN HEXADECIMAL ====="
+            xxd -p /tmp/sonde_run3.pdf | tr -d '\n' | fold -w 240 | sed 's/^/HEX:/'
             echo ""
             echo "===== FIN HEX ====="
           fi
@@ -114,7 +124,7 @@ jobs:
           mkdir -p /tmp/sonde
           sshpass -e scp -P ${{ vars.SSH_PORT || '22' }} \
             -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/sonde_run2.pdf" /tmp/sonde/ \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/sonde_run3.pdf" /tmp/sonde/ \
             || echo "pas de PDF produit" > /tmp/sonde/ABSENT.txt
           ls -la /tmp/sonde/
 
