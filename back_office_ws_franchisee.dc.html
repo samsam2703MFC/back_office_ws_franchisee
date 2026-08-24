@@ -3331,6 +3331,7 @@ class Component extends DCLogic {
     {s:'rentabilite',g:'Pilotage',k:'marge ca chiffre affaires couts kilometres perte deficit point client'},
     {s:'geoAnalyse',g:'Pilotage',label:'Analyse géo',k:'carte map clients arrondissement code postal cp commune particuliers office chalandise zone territoire densite'},
     // ---- Paramétrage › Livraison ----
+    {s:'atelierLiv',g:'Paramétrage › Livraison',grp:'g_liv',label:'Atelier livraison (assistant)',meta:'atelierLiv',k:'assistant wizard creation tournee zone bureau simulation apercu client verifier cut-off fenetre midi soir garde-fou parametrage guide'},
     {s:'tournees',g:'Paramétrage › Livraison',grp:'g_liv',k:'constructeur glisser deposer chauffeur vehicule eta publication tablette route itineraire'},
     {s:'horaires',g:'Paramétrage › Livraison',grp:'g_liv',label:'Horaires & fermetures',k:'fenetre depart fin cut-off capacite fermeture ferie conge technique jour non roule'},
     {s:'zones',g:'Paramétrage › Livraison',grp:'g_liv',k:'code postal cp primaire secondaire franco vehicule territoire carte commune chalandise'},
@@ -4269,6 +4270,152 @@ class Component extends DCLogic {
   /* Zones de livraison : « Standard », « J+1 » et 15 minutes de service
      étaient des réglages inventés par la page, indiscernables d'une saisie.
      Une colonne vide s'affiche « — ». */
+  /* ═══════════ ATELIER LIVRAISON ═══════════════════════════════════════
+     Trois ateliers (tournées · zones · bureaux) partageant une règle : on
+     règle à gauche, on voit la conséquence à droite. La conséquence est
+     calculée par le SERVEUR avec le moteur de la commande — jamais
+     réimplémentée ici, sinon l'écran finirait par promettre autre chose que
+     ce que le client vit. */
+  alDayNames(){ return ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche']; }
+  alTours(){ const S=this.state; const all=(window.BOServer?window.BOServer.table('ws_tours'):[])
+      .filter(t=>t.active!==false&&t.active!==0);
+    return all.map(t=>({...t, id:t.id!=null?t.id:t.tour_id})); }
+  alCurTour(){ const l=this.alTours(); const id=this.state.alTour;
+    return l.find(t=>String(t.id)===String(id))||l[0]||null; }
+
+  /* Fenêtres en cours d'édition : le BROUILLON s'il existe, sinon celles
+     enregistrées (chargées par alLoadWins). Un brouillon n'est jamais écrit
+     tant que « Publier » n'a pas été pressé. */
+  alWins(){ const S=this.state; const t=this.alCurTour(); if(!t) return [];
+    const k=String(t.id); const d=(S.alDraft||{})[k];
+    return Array.isArray(d)?d:((S.alWinsSrv||{})[k]||[]); }
+  alSetWins(list){ const t=this.alCurTour(); if(!t) return;
+    const S=this.state; const k=String(t.id);
+    this.setState({alDraft:{...(S.alDraft||{}),[k]:list}},()=>this.alSimulate()); }
+
+  /* Chargement des fenêtres enregistrées d'une tournée (GET tour-windows).
+     Échec = tableau vide ET un motif affiché : un atelier qui montrerait une
+     grille vide sans dire pourquoi ferait recréer des fenêtres existantes. */
+  alLoadWins(tourId){
+    const fr=(window.__FR||{}); if(!fr.base||!tourId) return;
+    const S=this.state; if((S.alWinsSrv||{})[String(tourId)]) return;   // déjà chargées
+    fetch(fr.base+'/franchisee/tour-windows?tourId='+encodeURIComponent(tourId)
+          +(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),
+          {headers:(window.FRH?window.FRH():{}),credentials:'omit'})
+      .then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)))
+      .then(rows=>{ const list=(Array.isArray(rows)?rows:[]).map(w=>({
+            day:Number(w.day), label:(String(w.label||'morning').toLowerCase()==='morning')?'morning':'afternoon',
+            start:String(w.start||''), end:String(w.end||''), cutoff:String(w.cutoff||''),
+            maxOrders:(w.maxOrders==null?'':String(w.maxOrders))}));
+        this.setState({alWinsSrv:{...(this.state.alWinsSrv||{}),[String(tourId)]:list}},()=>this.alSimulate()); })
+      .catch(e=>this.setState({alLoadErr:'Fenêtres non chargées ('+(e&&e.message?e.message:'erreur')+') — ne republiez pas sans les avoir vues.'}));
+  }
+
+  /* LA SIMULATION. Envoie le brouillon au serveur et garde la réponse.
+     Debouncée : on tape une heure caractère par caractère, inutile de
+     recalculer à chaque touche. */
+  alSimulate(){
+    const fr=(window.__FR||{}); if(!fr.base) return;
+    clearTimeout(this._alSimT);
+    this._alSimT=setTimeout(()=>{
+      const S=this.state; const tab=S.alTab||'tours';
+      const t=this.alCurTour(); const off=this.alCurOffice();
+      const body={jours:7};
+      if(tab==='offices'&&off){ body.officeId=off.id;
+        if(off.tourId) body.tourId=off.tourId;
+        if(Array.isArray(off.days)&&off.days.length) body.officeDays=off.days;
+        if(off.cutoff) body.officeCutoff=off.cutoff; }
+      else if(t){ body.tourId=t.id; body.fenetres=this.alWins(); }
+      else return;
+      this.setState({alSimBusy:true});
+      fetch(fr.base+'/franchisee/tour-simulate'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+            {method:'POST',headers:Object.assign({'Content-Type':'application/json'},(window.FRH?window.FRH():{})),
+             credentials:'omit',body:JSON.stringify(body)})
+        .then(r=>r.ok?r.json():Promise.reject(new Error('HTTP '+r.status)))
+        .then(j=>this.setState({alSim:j,alSimBusy:false,alSimErr:''}))
+        .catch(e=>this.setState({alSimBusy:false,alSim:null,
+          alSimErr:'Simulation indisponible ('+(e&&e.message?e.message:'erreur')+') — ne publiez pas à l\'aveugle.'}));
+    },320);
+  }
+
+  alAddWin(day,label){ return ()=>{ const w=this.alWins().slice();
+    if(w.some(x=>x.day===day&&x.label===label)) return;   // une seule par jour × fenêtre
+    w.push({day:day,label:label,
+      start:label==='morning'?'11:30':'17:00', end:label==='morning'?'13:30':'18:30',
+      cutoff:label==='morning'?'09:30':'15:00', maxOrders:''});
+    this.alSetWins(w); }; }
+  alDelWin(day,label){ return ()=>this.alSetWins(this.alWins().filter(x=>!(x.day===day&&x.label===label))); }
+  alSetWin(day,label,champ){ return (e)=>{ const v=(e&&e.target)?e.target.value:e;
+    this.alSetWins(this.alWins().map(x=>(x.day===day&&x.label===label)?{...x,[champ]:String(v)}:x)); }; }
+  alPreset(kind){ return ()=>{
+    const w=this.alWins().filter(x=>kind==='vider'?false:true);
+    if(kind==='vider') return this.alSetWins([]);
+    const jours=kind==='midi'?[1,2,3,4,5]:[2,4];
+    const label=kind==='midi'?'morning':'afternoon';
+    const base=kind==='midi'?{start:'11:30',end:'13:30',cutoff:'09:30'}:{start:'17:00',end:'18:30',cutoff:'15:00'};
+    const out=w.slice();
+    jours.forEach(d=>{ if(!out.some(x=>x.day===d&&x.label===label)) out.push({day:d,label:label,...base,maxOrders:''}); });
+    this.alSetWins(out); }; }
+
+  /* PUBLICATION — refusée tant que la simulation n'est pas verte. Le serveur
+     revalide de toute façon : cette garde est là pour l'utilisateur, pas pour
+     la sécurité. */
+  alPublish(){
+    const S=this.state; const sim=S.alSim; const t=this.alCurTour();
+    if(!t||!sim||!sim.publiable){ this.printJob('⚠ Publication refusée : corrigez d\'abord ce que signale l\'aperçu.'); return; }
+    const fr=(window.__FR||{}); if(!fr.base) return;
+    this.setState({alSimBusy:true});
+    fetch(fr.base+'/franchisee/tour-windows'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+          {method:'POST',headers:Object.assign({'Content-Type':'application/json'},(window.FRH?window.FRH():{})),
+           credentials:'omit',body:JSON.stringify({tourId:t.id,fenetres:this.alWins()})})
+      .then(r=>r.json().catch(()=>({})).then(j=>({ok:r.ok,j:j})))
+      .then(res=>{ if(!res.ok||!res.j.ok) throw new Error(res.j&&res.j.error?res.j.error:'refus serveur');
+        const k=String(t.id);
+        const srv={...(this.state.alWinsSrv||{})}; srv[k]=this.alWins();
+        const dr={...(this.state.alDraft||{})}; delete dr[k];
+        this.setState({alWinsSrv:srv,alDraft:dr,alSimBusy:false});
+        this.printJob('✅ Tournée « '+t.name+' » publiée — '+res.j.fenetres+' fenêtre(s) enregistrée(s).'); })
+      .catch(e=>{ this.setState({alSimBusy:false});
+        this.printJob('⚠ Publication échouée : '+(e&&e.message?e.message:'erreur')); });
+  }
+
+  /* Bureaux : réglages par bureau (tournée, jours autorisés, cut-off). */
+  alOffices(){ const S=this.state;
+    const setts=(window.BOServer?window.BOServer.table('ws_office_delivery_settings'):[]);
+    return (window.BOServer?window.BOServer.table('ws_offices'):[])
+      .filter(o=>o.active!==false&&o.active!==0)
+      .map(o=>{ const st=setts.find(x=>String(x.office_id||x.officeId)===String(o.id))||{};
+        let days=[]; try{ const a=typeof st.allowed_days==='string'?JSON.parse(st.allowed_days):st.allowed_days;
+          if(Array.isArray(a)) days=a.map(Number); }catch(e){}
+        return {id:o.id, nom:o.name||o.nom||('Bureau #'+o.id),
+                tourId:o.tour_id||o.tourId||st.tour_id||null,
+                tourNom:o.tour_name||o.tour||'—',
+                days:days, cutoff:st.delivery_cutoff?String(st.delivery_cutoff).slice(0,5):''}; }); }
+  alCurOffice(){ const l=this.alOffices(); const id=this.state.alOffice;
+    return l.find(o=>String(o.id)===String(id))||l[0]||null; }
+
+  /* Zones : couverture réelle des codes postaux — quel CP est servi par quelle
+     tournée, où ça se recouvre, et ce qui n'est servi par personne. Calcul
+     LOCAL (pas d'appel) : c'est de l'arithmétique sur des listes déjà lues. */
+  alZoneCoverage(){
+    const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
+    const cps=SRV('ws_tour_postcodes');
+    const tours=this.alTours();
+    const parCp={};
+    cps.forEach(r=>{ const cp=String(r.cp||r.postcode||'').trim(); if(!cp) return;
+      const t=tours.find(x=>String(x.id)===String(r.tour_id||r.tourId));
+      (parCp[cp]=parCp[cp]||[]).push(t?t.name:('tournée #'+(r.tour_id||r.tourId))); });
+    const sites=SRV('ws_office_delivery_sites');
+    const cpsSites=[...new Set(sites.map(s=>((String(s.address||s.adresse||'').match(/\b(\d{4})\b/)||[])[1])).filter(Boolean))];
+    const couverts=Object.keys(parCp);
+    return {
+      total:couverts.length,
+      doubles:couverts.filter(cp=>parCp[cp].length>1).map(cp=>({cp:cp,tours:parCp[cp]})),
+      orphelins:cpsSites.filter(cp=>!parCp[cp]),
+      parCp:parCp,
+    };
+  }
+
   zonesData(){ return (window.BOServer?window.BOServer.table('ws_delivery_zones'):[]).map(z=>({id:z.id,nom:z.name,cp:z.cp||'—',vehicule:z.vehicule||'—',franco:z.franco||'—',delai:z.delai||'—',service:(z.service===''||z.service==null||isNaN(parseFloat(z.service)))?'—':parseFloat(z.service),catchment:z.catchment||''})); }
   fmtMin(m){ const h=Math.floor(m/60),mm=m%60; return h+' h'+(mm?String(mm).padStart(2,'0'):'00'); }
   hhmm(m){ m=Math.round(m); const h=Math.floor(m/60)%24, mm=(m%60+60)%60; return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0'); }
@@ -5573,7 +5720,7 @@ class Component extends DCLogic {
       nav[k]=this.go(k);
       navStyles[k]=this.navStyle(k);
     });
-    const paramScreens=['tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
+    const paramScreens=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
     const paramsActive=paramScreens.includes(S.screen);
     // Fil d'ariane du paramétrage livraison : 1 · Tournées → 2 · Bureaux
     // (assignés aux sites) → 3 · Clients (la page Clients). Stepper graphique :
@@ -6285,7 +6432,7 @@ class Component extends DCLogic {
     const groupsDef=[
       // « Coûts · temps · frais » sort du menu : accessible via l'ENGRENAGE de
       // l'écran Tournées (l'entrée de menu se réduit au mot « Tournées »).
-      {id:'g_liv',label:'Livraison',items:[['tournees','Tournées']]},
+      {id:'g_liv',label:'Livraison',items:[['atelierLiv','Atelier (assistant)'],['tournees','Tournées']]},
       // « Bureaux & sites » (écran clients) et « Contacts email » (emailsBureau)
       // sortent du menu : doublons — la création B2B vit dans Clients, les
       // contacts email dans le formulaire d'édition de l'Office (engrenage).
@@ -8419,6 +8566,164 @@ class Component extends DCLogic {
       b2bTabRattachStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='rattach'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       b2bTabNouveauStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='nouveau'?'background:var(--color-primary);color:#fff':'background:transparent;color:var(--color-text-muted)'),
       setTabAcces:()=>this.setState({b2bTab:'acces'}),setTabRattach:()=>this.setState({b2bTab:'rattach'}),setTabNouveau:()=>this.setState({b2bTab:'nouveau'}),
+      // ===== ATELIER LIVRAISON — assemblage des valeurs de l'écran =====
+      ...(()=>{ const nop=()=>{};
+        if(screen!=='atelierLiv') return {isAtelierLiv:false,alTabs:[],alHint:'',alNoTour:false,alEmptyTitle:'',alEmptyTxt:'',
+          alHasSubject:false,alSubjectLbl:'',alSubjects:[],alSections:[],alPresets:[],alDays:[],
+          alPanelTitle:'',alPanelSub:'',alSimBusy:false,alSimDays:[],alSimErrors:[],alPubOk:false,alPubOkTxt:'',
+          alShowPublish:false,alPublish:nop,alPubStyle:'',alPubLabel:'',alPubNote:'',alMotor:''};
+        const tab=S.alTab||'tours';
+        const tours=this.alTours(), tour=this.alCurTour();
+        const offices=this.alOffices(), office=this.alCurOffice();
+        const sim=S.alSim||null;
+        const DN=this.alDayNames();
+        const chip=(on)=>'border:.5px solid '+(on?'var(--color-primary)':'var(--color-border-secondary)')
+          +';background:'+(on?'var(--color-primary)':'var(--color-surface)')+';color:'+(on?'#fff':'var(--color-text)')
+          +';border-radius:999px;padding:8px 16px;font:600 12px var(--font-ui);cursor:pointer';
+        // Les fenêtres sont chargées à la demande, jamais en boucle de rendu.
+        if(tour&&!(S.alWinsSrv||{})[String(tour.id)]) setTimeout(()=>this.alLoadWins(tour.id),0);
+        if(!S.alSim&&!S.alSimBusy&&(tour||office)) setTimeout(()=>this.alSimulate(),0);
+
+        const wins=this.alWins();
+        const alDays=DN.map((nom,idx)=>{ const d=idx+1;
+          const ws=wins.filter(w=>w.day===d).sort((a,b)=>String(a.label).localeCompare(String(b.label)));
+          return {nom:nom, vide:ws.length===0,
+            addMidi:this.alAddWin(d,'morning'), addSoir:this.alAddWin(d,'afternoon'),
+            wins:ws.map(w=>{ const mauvais=!!(w.cutoff&&w.start&&w.cutoff>=w.start);
+              return {nom:w.label==='morning'?'☀️ Midi':'🌙 Soirée',
+                start:w.start,end:w.end,cutoff:w.cutoff,
+                cutColor:mauvais?'#B3261E':'var(--color-primary)',
+                style:'display:inline-flex;align-items:center;gap:5px;border:.5px solid '
+                      +(mauvais?'#B3261E':'var(--color-border-secondary)')+';background:'
+                      +(mauvais?'#FDECEA':'var(--color-background-secondary)')
+                      +';border-radius:8px;padding:5px 9px;font:400 11.5px var(--font-ui);color:var(--color-text)',
+                setStart:this.alSetWin(d,w.label,'start'), setEnd:this.alSetWin(d,w.label,'end'),
+                setCut:this.alSetWin(d,w.label,'cutoff'), del:this.alDelWin(d,w.label)}; })}; });
+
+        const nbJours=[...new Set(wins.map(w=>w.day))].length;
+        const cov=this.alZoneCoverage();
+        const secOpen=(k)=>String(S.alSec||(tab==='tours'?'wins':'cov'))===k;
+        const pill=(kind)=>'font:700 9.5px var(--font-ui);border-radius:999px;padding:3px 9px;background:'
+          +(kind==='err'?'#FDECEA':kind==='ok'?'#E8F4EC':'#F1ECE2')+';color:'
+          +(kind==='err'?'#B3261E':kind==='ok'?'#2E7D46':'var(--color-text-muted)');
+        const numS=(on)=>'width:21px;height:21px;border-radius:50%;flex:none;display:flex;align-items:center;'
+          +'justify-content:center;font:700 11px var(--font-ui);background:'+(on?'var(--color-primary)':'#2E7D46')+';color:#fff';
+        const errWins=(sim&&sim.erreurs)?sim.erreurs.length:0;
+
+        let sections=[];
+        if(tab==='tours'){
+          sections=[
+            {num:'1',numS:true,titre:'Identité & zone',resume:tour?((tour.zone||tour.zone_name||'zone —')+' · capacité '+(tour.max_items||'—')):'—',
+             kind:'list',lignes:tour?[{k:'Nom',v:tour.name,color:'var(--color-text)'},
+               {k:'Zone principale',v:String(tour.zone||tour.zone_name||'—'),color:'var(--color-text-muted)'},
+               {k:'Capacité (items)',v:String(tour.max_items||'—'),color:'var(--color-text-muted)'}]:[],
+             ouvrirLbl:'Modifier dans l\'écran Tournées',ouvrir:this.go('tournees')},
+            {num:'2',numS:true,titre:'Jours & fenêtres',
+             resume:errWins?'à corriger':(nbJours?(wins.length+' fenêtre(s) sur '+nbJours+' jour(s)'):'aucune fenêtre'),
+             kindPill:errWins?'err':(wins.length?'ok':'err'),kind:'wins'},
+            {num:'3',numS:true,titre:'Capacités & frais',resume:'réglés dans Frais de livraison',
+             kind:'list',lignes:[{k:'Forfait / franco',v:'écran « Frais de livraison »',color:'var(--color-text-muted)'},
+               {k:'Capacité par fenêtre',v:'max commandes — colonne « cap »',color:'var(--color-text-muted)'}],
+             ouvrirLbl:'Ouvrir les frais de livraison',ouvrir:this.go('frais')},
+            {num:'4',numS:true,titre:'Desserte',
+             resume:(offices.filter(o=>tour&&String(o.tourId)===String(tour.id)).length)+' bureau(x) rattaché(s)',
+             kind:'list',lignes:offices.filter(o=>tour&&String(o.tourId)===String(tour.id))
+               .map(o=>({k:o.nom,v:o.days.length?('jours '+o.days.map(d=>DN[d-1].slice(0,3)).join(' · ')):'jours de la tournée',
+                 color:'var(--color-text-muted)'})),
+             videTxt:'Aucun bureau rattaché à cette tournée — elle roulerait à vide.',
+             ouvrirLbl:'Ouvrir les bureaux',ouvrir:this.go('offices')},
+          ];
+        } else if(tab==='zones'){
+          sections=[
+            {num:'1',numS:true,titre:'Couverture des codes postaux',resume:cov.total+' CP couverts',kindPill:cov.total?'ok':'err',
+             kind:'list',lignes:Object.keys(cov.parCp).sort().slice(0,40)
+               .map(cp=>({k:cp,v:cov.parCp[cp].join(' · '),color:cov.parCp[cp].length>1?'#B26A00':'var(--color-text-muted)'})),
+             videTxt:'Aucun code postal rattaché à une tournée : personne ne peut être livré.',
+             ouvrirLbl:'Modifier dans l\'écran Zones',ouvrir:this.go('zones')},
+            {num:'2',numS:true,titre:'Recouvrements',resume:cov.doubles.length?(cov.doubles.length+' CP en double'):'aucun',
+             kindPill:cov.doubles.length?'warn':'ok',kind:'list',
+             lignes:cov.doubles.map(d=>({k:d.cp,v:'servi par '+d.tours.join(' ET '),color:'#B26A00'})),
+             videTxt:'Aucun code postal servi par deux tournées.'},
+            {num:'3',numS:true,titre:'Sites hors couverture',resume:cov.orphelins.length?(cov.orphelins.length+' à rattacher'):'aucun',
+             kindPill:cov.orphelins.length?'err':'ok',kind:'list',
+             lignes:cov.orphelins.map(cp=>({k:'CP '+cp,v:'un site est ici, aucune tournée ne le sert',color:'#B3261E'})),
+             videTxt:'Tous les sites connus tombent dans un code postal servi.'},
+          ];
+        } else {
+          const o=office;
+          sections=[
+            {num:'1',numS:true,titre:'Rattachement',resume:o?(o.tourNom||'—'):'—',
+             kind:'list',lignes:o?[{k:'Tournée',v:String(o.tourNom||'—'),color:'var(--color-text)'},
+               {k:'Cut-off propre',v:o.cutoff||'celui de la tournée',color:'var(--color-text-muted)'},
+               {k:'Jours autorisés',v:o.days.length?o.days.map(d=>DN[d-1]).join(' · '):'tous ceux de la tournée',color:'var(--color-text-muted)'}]:[],
+             ouvrirLbl:'Modifier dans « Règles par bureau »',ouvrir:this.go('bureauParams')},
+          ];
+        }
+        const alSections=sections.map(sec=>({
+          num:sec.num, numStyle:numS(sec.kind==='wins'), titre:sec.titre, resume:sec.resume,
+          pillStyle:pill(sec.kindPill||'mut'),
+          chevron:(sec.kind==='wins'?(secOpen('wins')?'▴':'▾'):(secOpen(sec.titre)?'▴':'▾')),
+          toggle:()=>this.setState({alSec:sec.kind==='wins'?(secOpen('wins')?'':'wins'):(secOpen(sec.titre)?'':sec.titre)}),
+          openWins:sec.kind==='wins'&&secOpen('wins'),
+          openList:sec.kind==='list'&&secOpen(sec.titre),
+          lignes:sec.lignes||[], vide:!(sec.lignes||[]).length, videTxt:sec.videTxt||'—',
+          aOuvrir:!!sec.ouvrir, ouvrirLbl:sec.ouvrirLbl||'', ouvrir:sec.ouvrir||nop,
+        }));
+
+        const simDays=(sim&&Array.isArray(sim.jours))?sim.jours.map(j=>({
+          titre:j.jour+' '+String(j.date).slice(8,10)+'/'+String(j.date).slice(5,7),
+          rien:!j.creneaux.length,
+          creneaux:j.creneaux.map(c=>({
+            gauche:(c.type==='soir'?'🌙 ':'☀️ ')+c.nom+' — livré '+c.livraison,
+            droite:c.ok?('✅ jusqu\'à '+c.cutoff):('❌ '+(c.motif||'indisponible')),
+            color:c.ok?'#2E7D46':'#B3261E'})),
+        })):[];
+        const errs=[];
+        if(S.alSimErr) errs.push({msg:S.alSimErr});
+        if(S.alLoadErr) errs.push({msg:S.alLoadErr});
+        (sim&&sim.erreurs?sim.erreurs:[]).forEach(m=>errs.push({msg:m}));
+        const publiable=!!(sim&&sim.publiable)&&!S.alSimErr;
+
+        return {isAtelierLiv:true,
+          alTabs:[{k:'tours',label:'Tournées'},{k:'zones',label:'Zones'},{k:'offices',label:'Bureaux'}]
+            .map(t=>({label:t.label,style:chip(tab===t.k),
+              pick:()=>this.setState({alTab:t.k,alSec:'',alSim:null},()=>this.alSimulate())})),
+          alHint:tab==='tours'?'Réglez à gauche — l\'aperçu de droite est calculé par le moteur de la commande.'
+                :tab==='zones'?'Couverture calculée sur les codes postaux réellement rattachés aux tournées.'
+                :'Aperçu appliquant les restrictions propres à ce bureau.',
+          alNoTour:(tab==='tours'&&!tours.length)||(tab==='offices'&&!offices.length),
+          alEmptyTitle:tab==='tours'?'Aucune tournée active':'Aucun bureau actif',
+          alEmptyTxt:tab==='tours'?'Créez d\'abord une tournée dans l\'écran Tournées : l\'atelier règle ses fenêtres, il ne la crée pas à sa place.'
+                                  :'Rattachez d\'abord un bureau à une tournée dans l\'écran Bureaux.',
+          alHasSubject:(tab==='tours'&&tours.length>0)||(tab==='offices'&&offices.length>0),
+          alSubjectLbl:tab==='tours'?'Tournée':'Bureau',
+          alSubjects:(tab==='tours'?tours.map(t=>({id:t.id,nom:t.name})):offices.map(o=>({id:o.id,nom:o.nom})))
+            .map(x=>({nom:x.nom,style:chip(tab==='tours'?(tour&&String(tour.id)===String(x.id)):(office&&String(office.id)===String(x.id))),
+              pick:()=>this.setState(tab==='tours'?{alTour:x.id,alSim:null}:{alOffice:x.id,alSim:null},()=>{
+                if(tab==='tours') this.alLoadWins(x.id); this.alSimulate(); })})),
+          alSections:alSections,
+          alPresets:[{label:'Midi lun→ven (11:30 · cut-off 09:30)',apply:this.alPreset('midi')},
+                     {label:'+ Soirée mar & jeu (17:00 · cut-off 15:00)',apply:this.alPreset('soir')},
+                     {label:'Vider',apply:this.alPreset('vider')}],
+          alDays:alDays,
+          alPanelTitle:tab==='offices'?'Ce que CE bureau verra':tab==='zones'?'État de la couverture':'Ce que le client verra',
+          alPanelSub:tab==='zones'?'Chiffres calculés sur les rattachements réels — aucune estimation.'
+                                  :'Aperçu sur 7 jours, recalculé à chaque modification.',
+          alSimBusy:!!S.alSimBusy,
+          alSimDays:tab==='zones'?[]:simDays,
+          alSimErrors:errs,
+          alPubOk:tab!=='zones'&&publiable,
+          alPubOkTxt:sim?('Configuration saine — '+sim.commandables+' créneau(x) commandable(s) sur 7 jours.'):'',
+          alShowPublish:tab==='tours'&&!!tour,
+          alPublish:()=>this.alPublish(),
+          alPubStyle:'width:100%;margin-top:10px;border:none;border-radius:999px;padding:12px;font:700 13px var(--font-ui);'
+            +'color:#fff;background:var(--color-primary);cursor:'+(publiable?'pointer':'not-allowed')+';opacity:'+(publiable?'1':'.45'),
+          alPubLabel:publiable?'Publier les fenêtres de cette tournée':'Publication bloquée',
+          alPubNote:publiable?'Écrit ws_tour_availability — les bureaux rattachés héritent aussitôt.'
+                             :'Se débloque quand l\'aperçu ne signale plus d\'erreur et rend au moins un créneau commandable.',
+          alMotor:'⚙ aperçu calculé par tour_orderable() · slots_for_office() — les fonctions qui décident des vraies commandes',
+        };
+      })(),
       isZones:screen==='zones',zones:this.zonesData(),
       catchmentOpts,
       // Tuiles « Magasins » : le magasin sélectionné voit sa zone en VERT sur
