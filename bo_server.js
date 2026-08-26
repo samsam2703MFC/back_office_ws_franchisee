@@ -93,6 +93,7 @@
     "fr_dispo_cats": [],
     "fr_stock_catalog": [],
     "fr_join_requests": [],
+    "fr_link_requests": [],
     "fr_assortiment": [],
   };
   var DB = null;
@@ -254,6 +255,7 @@
         fr_renta_kpis:'fr-renta-kpis', fr_renta_evolution:'fr-renta-evolution', fr_cout_params:'fr-cout-params',
         fr_validations:'fr-validations', fr_dispo_cats:'fr-dispo-cats',
         fr_stock_catalog:'fr-stock-catalog', fr_join_requests:'fr-join-requests',
+        fr_link_requests:'link-requests',
         fr_assortiment:'fr-assortiment',
         fr_orders:'fr-orders', fr_net_stats:'fr-net-stats', fr_capacity:'fr-capacity'
       };
