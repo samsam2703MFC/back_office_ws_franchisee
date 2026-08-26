@@ -482,30 +482,65 @@ blanc. Les deux jauges partagent **une seule échelle** — une référence par
 canal aurait mis deux axes dans la même carte — et cette référence (le plus
 haut montant du réseau sur la période) est écrite au-dessus de la grille.
 
-### D'où viendront les chiffres : `/api/v1/shops/{id}/transactions`
+### D'où viennent les chiffres : `shops/{id}/transactions`, sur l'ERP
 
-La route ERP qui porte la matière première est
-`GET /api/v1/shops/<id>/transactions` — des **transactions**, pas des agrégats.
-Deux façons de s'en servir, et elles ne se valent pas :
+Route lue dans le dépôt **WebShop** (`php-api/erp_alias.php`, `php-api/index.php`).
+`/api/v1` **n'appartient pas au webshop** : c'est l'API de l'ERP *Franchise
+Buddy*, un hôte tiers dont l'adresse vit dans `ws_param.erp_api_base`.
 
-1. **Le PHP agrège, la console lit `fr-net-stats`** (le contrat ci-dessus).
-   La règle métier — ce qui compte comme une livraison, comme un webshop, comme
-   du chiffre d'affaires (TTC ou HTVA, remboursements, commandes annulées) —
-   reste **d'un seul côté**. C'est le sens de l'incident du 14/08 : deux écrans
-   qui calculaient chacun de leur côté finissaient par ne plus dire la même
-   chose. C'est la voie recommandée.
-2. **La console lit les transactions et agrège dans le navigateur.** Il faut
-   alors une requête par boutique du réseau, ramener des milliers de lignes à
-   chaque ouverture d'écran, et surtout écrire la règle métier une deuxième
-   fois — dans un front-end, où elle dérivera de celle de l'ERP sans que
-   personne ne le voie.
+**Le navigateur ne peut pas l'appeler, et ne le pourra jamais.** Elle
+s'authentifie au **Bearer**, et ce jeton est un secret de serveur :
+`ws_param.erp_api_token`, ou une reconnexion consultant automatique
+(`erp_auth_phone` / `erp_auth_password`, jeton de 30 min mis en cache dans
+`sys_get_temp_dir()`). Le poser dans la console reviendrait à le distribuer à
+chaque franchisé, avec la lecture de tout le réseau au bout. Le débat
+« agréger dans le navigateur ou côté serveur » est donc tranché par
+l'architecture, pas par le goût : **c'est le PHP qui agrège**, la console lit
+`/franchisee/fr-net-stats` (contrat ci-dessus).
 
-Dans les deux cas, il manque la même chose : **le nom des champs**. Les deviner
-reviendrait à inventer un chiffre d'affaires, et cela ne se verrait pas — un
-mauvais nom de champ rend `0`, pas une erreur.
+Bonne nouvelle : le client existe déjà et fait tout le travail —
 
-`check-endpoints.yml` va donc les chercher : il sonde la route depuis le
-serveur (deux bases plausibles, faute de documentation) et publie le nombre
-d'enregistrements et **les noms de champs seuls** — jamais une valeur, les
-journaux du dépôt étant publics. Onglet Actions → « Vérifier les endpoints
-/franchisee/* » → Run workflow, en saisissant l'id de boutique.
+```php
+$tx = erp_get('shops/' . $shopId . '/transactions');   // php-api/erp_alias.php
+```
+
+`erp_get()` pose le Bearer, se reconnecte une fois sur 401, met en cache
+`ttl` secondes, et journalise ses échecs dans `erp_notes()` — que `/catalog/*`
+ressert déjà pour que le bandeau du webshop reste crédible. Il n'y a pas
+d'authentification à réécrire.
+
+### Ce qui manque encore : le nom des champs
+
+Aucun code n'a jamais appelé cette route — ni dans WebShop, ni ici. Personne ne
+connaît donc le nom du champ qui porte le montant, celui qui distingue une
+livraison, ni ce que l'ERP compte comme chiffre d'affaires (TTC ou HTVA,
+remboursements, commandes annulées). Les deviner reviendrait à inventer un
+chiffre d'affaires, et **cela ne se verrait pas** : un mauvais nom de champ
+rend `0`, pas une erreur.
+
+`check-endpoints.yml` va les chercher, depuis le serveur, **par le client du
+webshop** (`erp_get`) plutôt qu'en refaisant l'authentification en shell. Il
+publie l'adresse ERP, le mode d'authentification, la forme de la racine et
+**les noms de champs seuls** — jamais une valeur, jamais le jeton, et les clés
+purement numériques sont écartées (un objet indexé par id de transaction en
+aurait fait sortir la liste des ids). L'appel est fait avec `ttl = 0` : il ne
+laisse rien dans le cache disque du webshop qui servirait ensuite de réponse à
+un vrai visiteur.
+
+Onglet Actions → « Vérifier les endpoints /franchisee/* » → Run workflow, en
+saisissant l'id de boutique. Sortie attendue :
+
+```
+== ERP — transactions par boutique (source des Stats réseau) ==
+  base : https://…/api/v1
+  auth : reconnexion consultant automatique
+  OK   shops/2/transactions
+       racine : objet
+       champs : channel created_at currency customer data delivery_mode
+                email id meta name per_page reference shop_id status
+                total_excl_vat total_incl_vat
+```
+
+Vérifié en local contre le VRAI `erp_alias.php` et un faux ERP : jeton posé,
+jeton refusé (401), ERP injoignable, ERP non configuré — et aucun montant,
+client, référence ni jeton dans la sortie.

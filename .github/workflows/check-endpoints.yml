@@ -40,14 +40,22 @@ name: Vérifier les endpoints /franchisee/*
 #     sonne pour autre chose, personne ne le voit. Même règle que le bandeau
 #     d'erreur de la console.
 #
-# IL SONDE AUSSI /api/v1/shops/<id>/transactions — la source candidate des
-# « Stats réseau » (CA par boutique, Livraison et Webshop). La console ne sait
-# pas encore la lire : il lui manque le NOM DE SES CHAMPS, et les deviner
-# reviendrait à inventer des chiffres d'affaires — un mauvais champ rend 0, pas
-# une erreur, donc ça ne se verrait pas. Le rapport n'imprime QUE des noms de
-# champs et des comptes, jamais une valeur (montants, clients : les journaux de
-# ce dépôt sont publics). Purement informatif : cette route appartient à l'ERP,
-# son absence ne fait rougir personne.
+# IL SONDE AUSSI shops/<id>/transactions SUR L'ERP (Franchise Buddy) — la
+# source des « Stats réseau » (CA par boutique, Livraison et Webshop). La
+# console ne sait pas encore la lire : il lui manque le NOM DE SES CHAMPS, et
+# les deviner reviendrait à inventer des chiffres d'affaires — un mauvais champ
+# rend 0, pas une erreur, donc ça ne se verrait pas.
+#
+# L'appel passe par le CLIENT DU WEBSHOP (erp_get de php-api/erp_alias.php) :
+# l'ERP est un hôte tiers, son adresse est dans ws_param.erp_api_base et il
+# s'authentifie au Bearer — jeton statique (erp_api_token) ou reconnexion
+# consultant automatique. Refaire cette authentification dans un script shell
+# aurait été une deuxième copie à maintenir, et un secret de plus à manipuler.
+#
+# Le rapport n'imprime QUE des noms de champs et des comptes, jamais une valeur
+# (montants, clients : les journaux de ce dépôt sont publics), et jamais le
+# jeton. Purement informatif : cette route appartient à l'ERP, son absence ne
+# fait rougir personne.
 #
 # Lancement manuel : onglet Actions → ce workflow → « Run workflow ».
 #
@@ -248,43 +256,99 @@ jobs:
           probe "$BASE/geo/postcodes?groups=1" "geo/postcodes?groups=1"
           echo
           # ═══ ERP — transactions par boutique ══════════════════════════════
-          # Source candidate des « Stats réseau » (CA par boutique, Livraison et
-          # Webshop). La console ne sait pas encore lire cette route : il lui
-          # manque le NOM DE SES CHAMPS. Les deviner reviendrait à inventer des
-          # chiffres d'affaires — c'est exactement ce que la règle go-live
-          # interdit, et ça ne se verrait pas : un mauvais champ rend 0, pas une
-          # erreur. Cette sonde va donc les chercher là où ils sont.
+          # Source des « Stats réseau » (CA par boutique, Livraison et Webshop).
+          # La console ne sait pas encore lire cette route : il lui manque le
+          # NOM DE SES CHAMPS. Les deviner reviendrait à inventer des chiffres
+          # d'affaires — et ça ne se verrait pas : un mauvais nom de champ rend
+          # 0, pas une erreur. Cette sonde va donc les chercher.
           #
-          # ELLE N'IMPRIME QUE DES NOMS DE CHAMPS ET DES COMPTES, jamais une
-          # valeur : une transaction porte des montants, et peut porter un
-          # client. Les journaux de ce dépôt sont publics. Même règle que pour
-          # /franchisee/me plus haut.
+          # ELLE PASSE PAR LE CLIENT DU WEBSHOP. L'ERP est un hôte TIERS
+          # (ws_param.erp_api_base) derrière un Bearer — jeton statique, ou
+          # reconnexion consultant automatique quand erp_auth_phone /
+          # erp_auth_password sont posés. erp_get() sait déjà tout cela, y
+          # compris réessayer une fois sur 401. Le refaire en shell aurait été
+          # une deuxième copie de la logique d'authentification, et un secret de
+          # plus à promener. ws_param() vit dans index.php — qu'on ne peut pas
+          # charger sans exécuter une requête — donc on la redéfinit à
+          # l'identique, en trois lignes, sur le row() de lib.php.
           #
-          # PUREMENT INFORMATIVE : elle ne compte dans aucun compteur et ne peut
-          # pas faire rougir l'exécution quotidienne. La route appartient à
-          # l'ERP, pas à la console — son absence n'est pas une régression de ce
-          # dépôt, et une alarme qui sonne tous les matins pour une route qu'on
-          # ne maîtrise pas cesse d'être lue.
-          echo "== ERP — transactions par boutique (source candidate des Stats réseau) =="
-          erp_probe() {                  # $1 = URL
-            out=$(curl -s --max-time 20 "${HDR[@]}" -w '\n%{http_code}' "$1" 2>/dev/null)
-            ecode=$(printf '%s' "$out" | tail -n1)
-            ebody=$(printf '%s' "$out" | sed '$d')
-            printf '  %-3s  %s\n' "$ecode" "$1"
-            [ "$ecode" = "200" ] || return 0
-            en=$(printf '%s' "$ebody" | grep -o '}[[:space:]]*,[[:space:]]*{' | wc -l | tr -d ' ')
-            echo "         octets : $(printf '%s' "$ebody" | wc -c | tr -d ' ')   ·   ~$((en+1)) enregistrement(s)"
-            echo "         champs : $(printf '%s' "$ebody" | grep -o '"[a-zA-Z_][a-zA-Z0-9_]*"[[:space:]]*:' | tr -d '":' | sort -u | tr '\n' ' ')"
-          }
-          if [ -n "$SHOP" ]; then
-            # Deux bases plausibles, faute de documentation : la racine de
-            # l'hôte, et le préfixe de l'API du webshop. Celle qui répond est la
-            # bonne — on ne la choisit pas à l'avance.
-            erp_probe "http://localhost/api/v1/shops/$SHOP/transactions"
-            erp_probe "http://localhost${API_BASE}/v1/shops/$SHOP/transactions"
-          else
+          # ttl = 0 : appel FRAIS, et rien n'est écrit dans le cache disque du
+          # webshop — une sonde ne doit pas laisser de trace qui servirait
+          # ensuite de réponse à un vrai visiteur.
+          #
+          # ELLE N'IMPRIME QUE DES NOMS DE CHAMPS ET DES COMPTES. Jamais une
+          # valeur : une transaction porte des montants et peut porter un
+          # client. Jamais le jeton. Les journaux de ce dépôt sont publics.
+          # Les clés purement numériques sont écartées — un objet indexé par id
+          # de transaction en aurait fait sortir la liste des ids.
+          #
+          # PUREMENT INFORMATIVE : aucun compteur, donc jamais rouge. La route
+          # appartient à l'ERP, pas à la console — son absence n'est pas une
+          # régression de ce dépôt, et une alarme qui sonne tous les matins pour
+          # une route qu'on ne maîtrise pas cesse d'être lue.
+          echo "== ERP — transactions par boutique (source des Stats réseau) =="
+          ERP_DIR=""
+          for d in "/var/www/html${API_BASE}" /var/www/html/webshop/api /var/www/webshop/api; do
+            [ -f "$d/erp_alias.php" ] && { ERP_DIR="$d"; break; }
+          done
+          if [ -z "$ERP_DIR" ]; then
+            echo "  erp_alias.php introuvable — sonde ERP ignorée"
+          elif [ -z "$SHOP" ]; then
             echo "  portée inconnue — la route est PAR BOUTIQUE : sans id, il n'y a rien à sonder."
             echo "  (relancer en saisissant l'id dans le champ « shop », ou poser la variable SHOP_ID)"
+          else
+            php -d display_errors=0 -r '
+              $dir = $argv[1]; $shop = $argv[2];
+              require $dir . "/lib.php";
+              /* index.php porte ws_param() mais on ne peut pas le charger sans
+                 exécuter une requête : on la redéfinit telle quelle. */
+              if (!function_exists("ws_param")) {
+                function ws_param($k, $def = null) {
+                  try { $r = row("SELECT param_value AS v FROM ws_param WHERE param_key = ? LIMIT 1", [$k]);
+                        if ($r && $r["v"] !== null && $r["v"] !== "") return (string) $r["v"]; }
+                  catch (Throwable $e) {}
+                  return $def;
+                }
+              }
+              require $dir . "/erp_alias.php";
+              $cfg = erp_cfg();
+              if (!erp_enabled()) {
+                echo "  ERP non configuré : ws_param.erp_api_base est vide.\n";
+                echo "  (rien à sonder — c est aussi pourquoi les libellés traduits ne descendent pas)\n";
+                exit;
+              }
+              /* L adresse est un réglage, pas un secret — elle figure déjà dans
+                 la réponse publique de /erp/probe. Le jeton, lui, ne sort pas :
+                 on ne dit que sa PRÉSENCE. */
+              echo "  base : " . $cfg["base"] . "\n";
+              echo "  auth : " . ((($cfg["auth_phone"] ?? "") !== "" && ($cfg["auth_pass"] ?? "") !== "")
+                                   ? "reconnexion consultant automatique"
+                                   : ($cfg["token"] !== "" ? "jeton statique posé" : "AUCUNE"))  . "\n";
+              $chemin = "shops/" . rawurlencode($shop) . "/transactions";
+              $d = erp_get($chemin, 0);
+              if ($d === null) {
+                echo "  ÉCHEC sur " . $chemin . "\n";
+                foreach (erp_notes() as $n) echo "         " . $n . "\n";
+                exit;
+              }
+              $liste = (array_keys($d) === range(0, count($d) - 1));
+              echo "  OK   " . $chemin . "\n";
+              echo "       racine : " . ($liste ? ("liste de " . count($d) . " enregistrement(s)")
+                                                : ("objet")) . "\n";
+              /* Union des NOMS de clés, à toute profondeur. Les clés numériques
+                 sont écartées : ce sont des identifiants, pas des champs. */
+              $noms = [];
+              $walk = function ($v, $prof) use (&$walk, &$noms) {
+                if (!is_array($v) || $prof > 4) return;
+                foreach ($v as $k => $vv) {
+                  if (is_string($k) && preg_match("/^[A-Za-z_][A-Za-z0-9_]*$/", $k)) $noms[$k] = 1;
+                  $walk($vv, $prof + 1);
+                }
+              };
+              $walk($d, 0);
+              ksort($noms);
+              echo "       champs : " . implode(" ", array_keys($noms)) . "\n";
+            ' "$ERP_DIR" "$SHOP" 2>/dev/null || echo "  sonde ERP interrompue (PHP indisponible ou config illisible)"
           fi
           echo
           echo "== Page servie (ce que le navigateur reçoit vraiment) =="
