@@ -718,7 +718,7 @@
       <!-- ===================== VALIDATIONS OFFICE CLIENT ===================== -->
       <sc-if value="{{ isValidations }}" hint-placeholder-val="{{ true }}">
       <div>
-        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;margin-bottom:18px"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button></div>
+        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;margin-bottom:18px"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button><button onClick="{{ setTabFiches }}" style="{{ b2bTabFichesStyle }}">Rattachement de fiches</button></div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px"><div class="t-admin-label">En attente de validation</div><div style="font:700 30px/1 var(--font-ui);color:var(--color-primary);margin:8px 0 4px">{{ valCount }}</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">comptes Office Client B2B</div></div>
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px"><div class="t-admin-label">Rattachés à votre magasin</div><div style="font:700 30px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">{{ valMagasin }}</div></div>
@@ -1763,7 +1763,7 @@
       <!-- ===================== DEMANDES DE RATTACHEMENT BUREAU ===================== -->
       <sc-if value="{{ isDemandesBureau }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button></div>
+        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button><button onClick="{{ setTabFiches }}" style="{{ b2bTabFichesStyle }}">Rattachement de fiches</button></div>
         <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Une personne du <strong>personnel déjà validé</strong> demande son rattachement à un bureau B2B existant · résolution → <strong>Lier</strong> (office existant) ou <strong>Rejeter</strong> — ws_office_join_requests</div>
         <sc-for list="{{ joinRequests }}" as="r" hint-placeholder-count="3">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:16px 18px">
@@ -1782,10 +1782,54 @@
       </div>
       </sc-if>
 
+      <!-- ===================== RATTACHEMENT DE FICHES (compte webshop ↔ fiche boutique) ===================== -->
+      <sc-if value="{{ isRattachFiches }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button><button onClick="{{ setTabFiches }}" style="{{ b2bTabFichesStyle }}">Rattachement de fiches</button></div>
+        <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Un <strong>compte webshop</strong> demande à être relié à sa fiche client de la boutique, pour retrouver son historique d'achats et sa fidélité · résolution → <strong>Rattacher</strong> (écrit client.erp_client_id) ou <strong>Refuser</strong> — ws_client_link_requests</div>
+        <div style="background:#fdecea;border:.5px solid #f3c9c4;border-radius:12px;padding:12px 15px;font:400 12px var(--font-ui);color:var(--color-text);line-height:1.55">⚠ <strong>Le webshop ne vérifie aucune identité</strong> (pas d'OTP SMS ni e-mail). Le téléphone sert à <em>retrouver</em> la fiche, il ne prouve pas qu'on la possède. Rattacher donne accès à l'historique d'achats et à la fidélité de la fiche : <strong>en cas de doute, appelez — c'est votre client</strong>.</div>
+        <sc-if value="{{ lrEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:44px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune demande de rattachement en attente.</div>
+        </sc-if>
+        <sc-for list="{{ lrList }}" as="r" hint-placeholder-count="2">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:16px 18px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div style="font:600 13.5px var(--font-ui);color:var(--color-text)">{{ r.compteNom }}</div>
+              <sc-if value="{{ r.alerte }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font:600 10px var(--font-ui);background:#fff4e5;color:#b26a00">à vérifier</span></sc-if>
+              <div style="margin-left:auto;font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ r.depuis }}</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+              <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 12px">
+                <div style="font:600 9px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Compte webshop</div>
+                <div style="font:500 12px var(--font-ui);color:var(--color-text);margin-top:3px">{{ r.compteNom }}</div>
+                <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ r.compteLignes }}</div>
+              </div>
+              <div style="border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 12px">
+                <div style="font:600 9px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Fiche boutique</div>
+                <div style="font:500 12px var(--font-ui);color:var(--color-text);margin-top:3px">{{ r.ficheNom }}</div>
+                <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ r.ficheLignes }}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px">
+              <sc-for list="{{ r.champs }}" as="c" hint-placeholder-count="3">
+                <span style="{{ c.pill }}">{{ c.txt }}</span>
+              </sc-for>
+            </div>
+            <div style="height:.5px;background:var(--color-border-tertiary);margin:13px 0"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+              <button onClick="{{ r.refuser }}" class="btn-secondary">Refuser</button>
+              <sc-if value="{{ r.ficheKo }}" hint-placeholder-val="{{ false }}"><span style="font:400 11px var(--font-ui);color:#b3261e;align-self:center">Fiche absente de l’index — rattachement impossible</span></sc-if>
+              <button onClick="{{ r.rattacher }}" class="{{ r.sureClass }}">Rattacher</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      </sc-if>
+
       <!-- ===================== NOUVEAUX BUREAUX (DEMANDES DE CRÉATION) ===================== -->
       <sc-if value="{{ isNouveauxBureaux }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button></div>
+        <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start"><button onClick="{{ setTabAcces }}" style="{{ b2bTabAccesStyle }}">Accès comptes Office</button><button onClick="{{ setTabRattach }}" style="{{ b2bTabRattachStyle }}">Rattachement bureaux</button><button onClick="{{ setTabFiches }}" style="{{ b2bTabFichesStyle }}">Rattachement de fiches</button></div>
         <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Une <strong>entreprise</strong> demande l'ouverture d'un compte bureau B2B · résolution → <strong>Créer</strong> (lance l'onboarding complet) ou <strong>Rejeter</strong></div>
         <sc-if value="{{ newBureauEmpty }}" hint-placeholder-val="{{ false }}">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:44px;text-align:center;font:400 13px var(--font-ui);color:var(--color-text-muted)">✓ Aucune demande de nouveau bureau en attente.</div>
@@ -3633,6 +3677,7 @@ class Component extends DCLogic {
     {s:'stockJour',g:'Exploitation',k:'rupture seuil minimum online webshop en shop reassort inventaire disponible produit'},
     {s:'demandesB2B',tab:['b2bTab','acces'],g:'Exploitation › Demandes B2B',label:'Accès comptes Office',meta:'validations',k:'vies tva validation en attente compte client professionnel valider refuser'},
     {s:'demandesB2B',tab:['b2bTab','rattach'],g:'Exploitation › Demandes B2B',label:'Rattachement bureaux',meta:'demandesB2B',desc:'Demandes du personnel à rattacher à un bureau existant — lier · créer · rejeter',k:'join request salarie employe lier rejeter adhesion'},
+    {s:'demandesB2B',tab:['b2bTab','fiches'],g:'Exploitation › Demandes B2B',label:'Rattachement de fiches',meta:'demandesB2B',desc:'Un compte webshop demande à être relié à sa fiche client de la boutique — historique d\'achats et fidélité',k:'rattachement fiche client erp compte webshop historique fidelite lier'},
     {s:'demandesB2B',tab:['b2bTab','nouveau'],g:'Exploitation › Demandes B2B',label:'Nouveaux bureaux',meta:'demandesB2B',desc:'Demandes de création d\'un nouveau bureau — ouvre l\'onboarding en 7 étapes',k:'onboarding creation nouveau client prospect wizard'},
     {s:'incidents',g:'Exploitation',k:'avoir preuve relivraison litige casse retard reclamation geste commercial'},
     // ---- Fidélité ----
@@ -7990,6 +8035,59 @@ class Component extends DCLogic {
     const joinCount=joinRaw.length;
     const joinBadgeStyle=joinCount?'margin-left:auto;background:var(--color-primary);color:#fff;font:600 10px var(--font-ui);border-radius:9px;min-width:17px;height:17px;display:flex;align-items:center;justify-content:center;padding:0 4px':'display:none';
 
+    /* ── RATTACHEMENT DE FICHES ────────────────────────────────────────────
+       Un compte webshop demande à être relié à la fiche client de la boutique
+       pour retrouver son historique d'achats et sa fidélité.
+
+       C'est le franchisé qui tranche, et ce n'est pas une formalité : le
+       webshop n'a AUCUNE vérification d'identité (ni OTP SMS ni e-mail).
+       Le téléphone sert à RETROUVER la fiche, il ne prouve pas qu'on la
+       possède. Sur ce parc, seuls le téléphone (99 %) et le prénom (90 %)
+       sont réellement remplis — le code postal ne l'est que sur les 8 % de
+       fiches B2B. Les concordances affichées sont donc une aide à la
+       décision, jamais un feu vert : en cas de doute, il faut appeler. */
+    const lrHandled=S.lrHandled||{};
+    const lrRaw=SRV('fr_link_requests').filter(r=>!lrHandled[r.id]);
+    const lrDecide=(id,action,msg)=>()=>{ const fr=window.__FR||{};
+      if(!fr.base){ this.printJob('API indisponible — décision non enregistrée'); return; }
+      fetch(fr.base+'/franchisee/link-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),
+        {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'include',
+         body:JSON.stringify({id:id,action:action})})
+        .then(r=>r.json())
+        .then(j=>{ if(j&&j.ok){ this.setState(s=>({lrHandled:{...s.lrHandled,[id]:true}}));
+                     this.printJob(msg+(j.ficheId?(' · fiche #'+j.ficheId):'')); }
+                   else this.printJob('Refusé par le serveur : '+((j&&j.error)||'erreur inconnue')); })
+        .catch(()=>this.printJob('Réseau indisponible — décision non enregistrée')); };
+    const lrEtatPill=(e)=>e==='concorde'?pill2('#eaf5ec','#2d7a3e')
+                        :e==='diverge'?pill2('#fbe9eb','#b3261e')
+                        :pill2('#f2efe9','#7a6e5f');
+    const lrEtatTxt=(e)=>e==='concorde'?'concorde':(e==='diverge'?'diffère':'absent');
+    const lrList=lrRaw.map(r=>{
+      const ch=Array.isArray(r.champs)?r.champs:[];
+      const f=r.fiche||null;
+      const div=ch.filter(c=>c.etat==='diverge').length;
+      return {...r,
+        compteNom:(r.compte&&r.compte.nom)||'(compte sans nom)',
+        compteLignes:[(r.compte&&r.compte.email)||'',(r.compte&&r.compte.tel)||'',(r.compte&&r.compte.cp)||'']
+                       .filter(Boolean).join(' · ')||'—',
+        /* Fiche introuvable dans l'index ERP : on le DIT. Une colonne vide
+           passerait pour une fiche sans données, et le franchisé arbitrerait
+           sur du vide en croyant arbitrer sur la fiche. */
+        ficheKo:!f,
+        ficheNom:f?(f.nom||'(fiche sans nom)'):'Fiche introuvable dans l’index ERP',
+        ficheLignes:f?[f.email||'',f.tel||'',[f.cp,f.ville].filter(Boolean).join(' '),
+                       f.societe||'',f.tva||''].filter(Boolean).join(' · '):'—',
+        champs:ch.map(c=>({txt:c.label+' : '+lrEtatTxt(c.etat),pill:lrEtatPill(c.etat)})),
+        /* Une divergence ne bloque pas — une fiche société au nom du gérant en
+           produit une, légitimement. Elle retire seulement à « Rattacher » son
+           statut d'action évidente. */
+        alerte:div>0, sureClass:div>0?'btn-secondary':'btn-primary',
+        rattacher:lrDecide(r.id,'link','✔ Compte rattaché (client.erp_client_id écrit)'),
+        refuser:lrDecide(r.id,'reject','Demande refusée (ws_client_link_requests → rejected)') };
+    });
+    const lrCount=lrRaw.length;
+    const lrEmpty=lrCount===0;
+
     // Demandes de NOUVEAU bureau — onglet retiré (double emploi avec Accès
     // comptes Office). Plus AUCUNE donnée de démo : liste vide.
     const newBureauRequests=[];
@@ -8864,6 +8962,7 @@ class Component extends DCLogic {
       stkAlertOpen:()=>this.setState({stkAlert:true}),
       stkAlertClose:()=>this.setState({stkAlert:false}),
       isDemandesBureau:screen==='demandesB2B'&&(S.b2bTab||'acces')==='rattach',joinRequests,joinCount,joinBadgeStyle,
+      isRattachFiches:screen==='demandesB2B'&&(S.b2bTab||'acces')==='fiches',lrList,lrCount,lrEmpty,
       isNouveauxBureaux:screen==='demandesB2B'&&(S.b2bTab||'acces')==='nouveau',newBureauRequests,newBureauCount,newBureauEmpty,
       isStatsReseau:screen==='statsReseau',netStats,exportCA:()=>this.printJob('Export CA (CSV) généré'),exportTop:()=>this.printJob('Export top produits généré'),exportLivr:()=>this.printJob('Export taux livraison vs retrait généré'),
       isEmailsBureau:screen==='emailsBureau',officeEmails,
@@ -8920,7 +9019,8 @@ class Component extends DCLogic {
       b2bTabAccesStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='acces'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       b2bTabRattachStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='rattach'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       b2bTabNouveauStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='nouveau'?'background:var(--color-primary);color:#fff':'background:transparent;color:var(--color-text-muted)'),
-      setTabAcces:()=>this.setState({b2bTab:'acces'}),setTabRattach:()=>this.setState({b2bTab:'rattach'}),setTabNouveau:()=>this.setState({b2bTab:'nouveau'}),
+      b2bTabFichesStyle:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.b2bTab||'acces')==='fiches'?'background:var(--color-surface);color:var(--color-text);box-shadow:0 1px 2px rgba(0,0,0,.06)':'background:transparent;color:var(--color-text-muted)'),
+      setTabFiches:()=>this.setState({b2bTab:'fiches'}),setTabAcces:()=>this.setState({b2bTab:'acces'}),setTabRattach:()=>this.setState({b2bTab:'rattach'}),setTabNouveau:()=>this.setState({b2bTab:'nouveau'}),
       // ===== ATELIER LIVRAISON — assemblage des valeurs de l'écran =====
       ...(()=>{ const nop=()=>{};
         if(screen!=='atelierLiv') return {isAtelierLiv:false,alTabs:[],alHint:'',alNoTour:false,alEmptyTitle:'',alEmptyTxt:'',
