@@ -4937,7 +4937,14 @@ class Component extends DCLogic {
       // « Zone de chalandise » retirée du menu : double emploi avec l'Analyse
       // géographique (l'écran reste dans le code, réversible).
       {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['b2bClients','Clients']]},
-      {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
+      // « Assortiment » sort du menu : ses trois onglets se CONSULTENT, ils ne
+      // se règlent pas — l'assortiment est décidé par la marque pour tout le
+      // réseau (/franchisee/assortiment-toggle répond 403). Un écran en lecture
+      // seule n'a rien à faire sous « Paramétrage » : la seule saisie produit
+      // du franchisé est la quantité fabriquée, dans « Stock du jour ». L'écran
+      // reste dans le code, dans la recherche et à son adresse (#assortiment) —
+      // réversible, comme « Zone de chalandise » et « Contacts email ».
+      {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
       // Réglages : administration de la boutique, pas exploitation quotidienne.
       {id:'g_reglages',label:'Réglages',items:[['shopParams','Paramètres du shop'],['tabletteKitchen','Tablette Kitchen']]},
     ]; }
