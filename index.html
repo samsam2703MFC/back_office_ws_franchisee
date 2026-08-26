@@ -203,7 +203,7 @@
           <div style="padding:6px 12px 8px;font:600 10px var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">{{ dsCountLabel }}</div>
           <sc-for list="{{ dsResults }}" as="r" hint-placeholder-count="4">
             <button onClick="{{ r.go }}" onMouseEnter="{{ r.hover }}" style="{{ r.style }}">
-              <span style="font:600 9.5px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted)">{{ r.path }}</span>
+              <span style="display:flex;align-items:baseline;gap:8px;width:100%"><span style="flex:1;min-width:0;font:600 9.5px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.path }}</span><span style="flex:none;font:600 9.5px var(--font-mono,monospace);color:#2a5a9e">{{ r.addr }}</span></span>
               <span style="{{ r.titleStyle }}">{{ r.title }}</span>
               <span style="font:400 11px/1.45 var(--font-ui);color:var(--color-text-muted)">{{ r.desc }}</span>
             </button>
@@ -214,26 +214,26 @@
         </div>
       </sc-if>
       <div style="margin:4px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">Exploitation</div>
-      <button onClick="{{ nav.tdb }}" style="{{ navStyles.tdb }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>{{ t.navTdb }}</span></button>
-      <button onClick="{{ nav.prep }}" style="{{ navStyles.prep }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><span>{{ t.navPrep }}</span></button>
-      <button onClick="{{ nav.suivi }}" style="{{ navStyles.suivi }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Livraison du jour</span></button>
-      <button onClick="{{ nav.stockJour }}" style="{{ navStyles.stockJour }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M7.5 5.5l9 5"/></svg><span>Stock du jour</span></button>
-      <button onClick="{{ nav.demandesB2B }}" style="{{ navStyles.demandesB2B }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg><span>Demandes B2B</span><span style="{{ b2bBadgeStyle }}">{{ b2bCount }}</span></button>
-      <button onClick="{{ nav.incidents }}" style="{{ navStyles.incidents }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg><span>{{ t.navIncidents }}</span><span style="{{ incBadgeStyle }}">{{ incCount }}</span></button>
+      <button onClick="{{ nav.tdb }}" title="{{ navTitles.tdb }}" style="{{ navStyles.tdb }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>{{ t.navTdb }}</span></button>
+      <button onClick="{{ nav.prep }}" title="{{ navTitles.prep }}" style="{{ navStyles.prep }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><span>{{ t.navPrep }}</span></button>
+      <button onClick="{{ nav.suivi }}" title="{{ navTitles.suivi }}" style="{{ navStyles.suivi }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Livraison du jour</span></button>
+      <button onClick="{{ nav.stockJour }}" title="{{ navTitles.stockJour }}" style="{{ navStyles.stockJour }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M7.5 5.5l9 5"/></svg><span>Stock du jour</span></button>
+      <button onClick="{{ nav.demandesB2B }}" title="{{ navTitles.demandesB2B }}" style="{{ navStyles.demandesB2B }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg><span>Demandes B2B</span><span style="{{ b2bBadgeStyle }}">{{ b2bCount }}</span></button>
+      <button onClick="{{ nav.incidents }}" title="{{ navTitles.incidents }}" style="{{ navStyles.incidents }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg><span>{{ t.navIncidents }}</span><span style="{{ incBadgeStyle }}">{{ incCount }}</span></button>
       <div style="margin:14px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">Pilotage</div>
-      <button onClick="{{ nav.capacite }}" style="{{ navStyles.capacite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span>Capacité · remplissage</span></button>
-      <button onClick="{{ nav.rentabilite }}" style="{{ navStyles.rentabilite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/></svg><span>{{ t.navRentabilite }}</span></button>
-      <button onClick="{{ nav.geoAnalyse }}" style="{{ navStyles.geoAnalyse }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="10" r="3"/><path d="M12 21c4-4.5 7-8 7-11a7 7 0 1 0-14 0c0 3 3 6.5 7 11z"/></svg><span>Analyse géo</span></button>
-      <button onClick="{{ nav.statsReseau }}" style="{{ navStyles.statsReseau }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg><span>Stats réseau</span></button>
+      <button onClick="{{ nav.capacite }}" title="{{ navTitles.capacite }}" style="{{ navStyles.capacite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span>Capacité · remplissage</span></button>
+      <button onClick="{{ nav.rentabilite }}" title="{{ navTitles.rentabilite }}" style="{{ navStyles.rentabilite }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/></svg><span>{{ t.navRentabilite }}</span></button>
+      <button onClick="{{ nav.geoAnalyse }}" title="{{ navTitles.geoAnalyse }}" style="{{ navStyles.geoAnalyse }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="10" r="3"/><path d="M12 21c4-4.5 7-8 7-11a7 7 0 1 0-14 0c0 3 3 6.5 7 11z"/></svg><span>Analyse géo</span></button>
+      <button onClick="{{ nav.statsReseau }}" title="{{ navTitles.statsReseau }}" style="{{ navStyles.statsReseau }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg><span>Stats réseau</span></button>
       <div style="margin:14px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">{{ t.navFidelite }}</div>
-      <button onClick="{{ nav.avis }}" style="{{ navStyles.avis }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg><span>{{ t.navAvis }}</span></button>
+      <button onClick="{{ nav.avis }}" title="{{ navTitles.avis }}" style="{{ navStyles.avis }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg><span>{{ t.navAvis }}</span></button>
       <button onClick="{{ toggleParams }}" style="{{ paramsHeadStyle }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="{{ paramsChevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase">Paramétrage</span></button>
       <sc-if value="{{ paramsOpen }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="6">
-        <button onClick="{{ g.toggle }}" style="{{ g.headStyle }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="{{ g.chevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1">{{ g.label }}</span></button>
+        <button onClick="{{ g.toggle }}" title="{{ g.headAddr }}" style="{{ g.headStyle }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="{{ g.chevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1">{{ g.label }}</span></button>
         <sc-if value="{{ g.open }}" hint-placeholder-val="{{ true }}">
           <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
-            <button onClick="{{ it.go }}" style="{{ it.style }}">{{ it.label }}</button>
+            <button onClick="{{ it.go }}" title="{{ it.addr }}" style="{{ it.style }}">{{ it.label }}</button>
           </sc-for>
         </sc-if>
       </sc-for>
@@ -5191,7 +5191,13 @@ class Component extends DCLogic {
   };
   tr(k){ const lang=this.state.lang; return (this.T[k]&&this.T[k][lang])||(this.T[k]&&this.T[k].FR)||k; }
 
-  go(s){ return ()=>{ const st={screen:s};
+  go(s){ return ()=>{ this.goTo(s); this.addrPush(s); }; }
+
+  // Changement d'écran SANS toucher à l'adresse : le passage unique des effets
+  // d'entrée d'écran. `go()` l'appelle puis empile l'adresse ; l'arrivée PAR
+  // l'adresse (addrApply) l'appelle sans l'empiler — sinon le bouton
+  // « Précédent » rajouterait une entrée d'historique à chaque pas en arrière.
+  goTo(s,extra){ const st=Object.assign({screen:s},extra||{});
     // Stock du jour : à l'ARRIVÉE sur l'écran, si des produits sont sous le
     // seuil bas, la modale d'alerte se rouvre (état null = automatique).
     if(s==='stockJour') st.stkAlert=null;
@@ -5200,7 +5206,104 @@ class Component extends DCLogic {
     // Écrans à données de commandes : refetch à l'ENTRÉE (une nouvelle
     // commande webshop apparaît sans recharger toute la page).
     if(this.ORD_SCREENS[s]) setTimeout(()=>this.ordersRefresh(),0);
-    this.setState(st); }; }
+    this.setState(st); }
+
+  /* ══ ADRESSE DE CHAQUE SECTION ══════════════════════════════════
+     La console n'avait qu'UNE adresse, celle de la page : naviguer ne changeait
+     rien à la barre du navigateur. On ne pouvait ni envoyer un collègue sur
+     « Livraison du jour », ni mettre un écran en favori, ni revenir en arrière
+     autrement qu'en quittant la console. Chaque section porte donc son adresse,
+     et cette adresse EST le nom de son écran (state.screen) :
+
+         …/backoffice_franchisee/?shop=2#tournees
+
+     Pas de table « écran → joli slug » : ce serait une table de plus à tenir en
+     phase, donc une table de plus à laisser dériver. Le fragment (#) est
+     préféré à un paramètre : il ne part pas au serveur, il ne touche ni ?shop=
+     ni ?token=, et il survit à la réécriture d'URL qui retire le jeton au boot
+     (api-config.js recompose l'adresse avec location.hash).
+
+     RIEN N'EST DEVINÉ : un fragment inconnu n'est pas suivi — il ouvrirait un
+     écran vide au nom d'une adresse fausse. L'adresse est alors corrigée sur
+     l'écran réellement affiché. Même exigence que pour le bandeau d'erreur :
+     une adresse qui ment ne vaut pas mieux qu'une adresse absente. */
+
+  // Écrans proposés par le HAUT du menu (Exploitation · Pilotage · Fidélité),
+  // et écrans du bloc « Paramétrage ». Ces deux listes existaient déjà dans le
+  // rendu ; elles remontent ici pour être lues AUSSI par les adresses — une
+  // seule définition, sinon un écran ajouté au menu n'aurait pas d'adresse.
+  NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis'];
+  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
+
+  // Groupes dépliants du menu « Paramétrage ». Définis ici et non dans le rendu,
+  // parce que l'adresse doit savoir quel groupe déplier à l'arrivée sur un de
+  // ses écrans.
+  navGroupsDef(){ return [
+      // « Coûts · temps · frais » sort du menu : accessible via l'ENGRENAGE de
+      // l'écran Tournées (l'entrée de menu se réduit au mot « Tournées »).
+      {id:'g_liv',label:'Livraison',items:[['atelierLiv','Atelier (assistant)'],['tournees','Tournées']]},
+      // « Bureaux & sites » (écran clients) et « Contacts email » (emailsBureau)
+      // sortent du menu : doublons — la création B2B vit dans Clients, les
+      // contacts email dans le formulaire d'édition de l'Office (engrenage).
+      // « Zone de chalandise » retirée du menu : double emploi avec l'Analyse
+      // géographique (l'écran reste dans le code, réversible).
+      {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['b2bClients','Clients']]},
+      {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
+      // Réglages : administration de la boutique, pas exploitation quotidienne.
+      {id:'g_reglages',label:'Réglages',items:[['shopParams','Paramètres du shop'],['tabletteKitchen','Tablette Kitchen']]},
+    ]; }
+
+  /* Écrans qui ACCEPTENT d'être ouverts par leur adresse. Aucune liste de plus :
+     l'union de ce que le menu propose (NAV_KEYS, PARAM_SCREENS, les groupes) et
+     de l'index de navigation (searchDefs) — c'est-à-dire, par construction, les
+     écrans que la console sait afficher. Quatre littéraux, donc calculé une fois. */
+  addrScreens(){ if(this._addrSet) return this._addrSet;
+    const set={};
+    this.NAV_KEYS.forEach(s=>set[s]=1);
+    this.PARAM_SCREENS.forEach(s=>set[s]=1);
+    this.navGroupsDef().forEach(g=>g.items.forEach(it=>set[it[0]]=1));
+    this.searchDefs().forEach(e=>{ if(e.s) set[e.s]=1; });
+    this._addrSet=set; return set; }
+
+  // Groupe à déplier pour qu'un écran atteint PAR SON ADRESSE se voie dans le
+  // menu : arriver sur « Sites de livraison » sans que « Clients B2B » s'ouvre,
+  // c'est arriver sans savoir où l'on est.
+  navGroupOf(s){ const g=this.navGroupsDef().find(x=>x.items.some(it=>it[0]===s));
+    return g?g.id:null; }
+
+  /* Adresse d'une section. La query est reprise telle quelle — ?shop= décide de
+     TOUTE la page, une adresse sans elle désignerait une autre boutique — sauf
+     les paramètres porteurs de secret, retirés : une adresse est faite pour
+     être affichée, survolée et collée, jamais pour promener le jeton admin. */
+  addrOf(s){ let q=location.search||'';
+    try { const p=new URLSearchParams(location.search);
+      ['token','pin','secret','key','pass'].forEach(k=>p.delete(k));
+      const t=p.toString(); q=t?('?'+t):'';
+    } catch(e){}
+    return location.pathname+q+'#'+s; }
+  addrFull(s){ return location.origin+this.addrOf(s); }
+  // Ce que le survol d'une entrée de menu montre : son adresse, en toutes lettres.
+  addrTitle(s){ return 'Adresse de cette section :\n'+this.addrFull(s); }
+
+  // Navigation depuis l'écran : une entrée d'historique, donc « Précédent »
+  // ramène à la section précédente et non hors de la console.
+  addrPush(s){ try{ if(s&&location.hash!=='#'+s) history.pushState(null,'',this.addrOf(s)); }catch(e){} }
+  // L'adresse suit l'écran affiché même quand il change sans passer par go()
+  // (résultat de recherche, lien depuis une tuile, retour de formulaire) :
+  // REMPLACEMENT, pas empilement — ce n'est pas un pas de navigation de plus.
+  addrSync(){ try{ const s=this.state.screen;
+    if(s&&location.hash!=='#'+s) history.replaceState(null,'',this.addrOf(s)); }catch(e){} }
+  // Arrivée PAR l'adresse : ouverture de la page, Précédent/Suivant, lien collé.
+  addrApply(){ let s='';
+    try{ s=decodeURIComponent(String(location.hash||'').replace(/^#\/?/,'').split(/[?&]/)[0]); }catch(e){ s=''; }
+    // Adresse absente (ouverture sans fragment) ou déjà juste : on l'ALIGNE sur
+    // l'écran affiché plutôt que de la laisser muette. Sans cela, la console
+    // s'ouvrirait sur une adresse qui ne nomme aucune section, et le lien qu'on
+    // copierait à cet instant ne ramènerait personne où l'on était.
+    if(!s||s===this.state.screen){ this.addrSync(); return; }
+    if(!this.addrScreens()[s]){ this.addrSync(); return; }  // inconnu : corrigé, pas suivi
+    const g=this.navGroupOf(s);
+    this.goTo(s,g?{paramsOpen:true,openGroups:Object.assign({},this.state.openGroups,{[g]:true})}:null); }
 
   // Écrans dont les données bougent avec les commandes entrantes.
   ORD_SCREENS={tdb:1,commandes:1,prep:1,suivi:1,stockJour:1,capacite:1};
@@ -5993,8 +6096,14 @@ class Component extends DCLogic {
         window.BOServer.rehydrateCatalogue().then(ch=>{ if(ch) this.setState({}); }); };
     this._catTimer=setInterval(catRefresh,30000);
     document.addEventListener('visibilitychange',catRefresh);
+    // ADRESSE : on ouvre sur la section demandée par le fragment (#écran), et
+    // les boutons Précédent / Suivant du navigateur redeviennent utilisables.
+    // pushState/replaceState n'émettent pas 'hashchange' : pas de boucle.
+    this.addrApply();
+    this._addrHash=()=>this.addrApply();
+    window.addEventListener('hashchange',this._addrHash);
   }
-  componentDidUpdate(){ this.ensureMaps(); }
+  componentDidUpdate(){ this.ensureMaps(); this.addrSync(); }
 
   /* ══ TABLETTE KITCHEN (Réglages) ═══════════════════════════════════════════
      Le mode tablette (PIN, comptes, profils) a été retiré de ce back-office :
@@ -6070,12 +6179,15 @@ class Component extends DCLogic {
     const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
     const pts=this.points();
     // nav
-    const nav={}, navStyles={};
-    ['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis'].forEach(k=>{
+    const nav={}, navStyles={}, navTitles={};
+    this.NAV_KEYS.forEach(k=>{
       nav[k]=this.go(k);
       navStyles[k]=this.navStyle(k);
+      // Chaque entrée de menu PORTE son adresse : survol = l'adresse complète
+      // de la section, lisible et copiable sans avoir à s'y rendre d'abord.
+      navTitles[k]=this.addrTitle(k);
     });
-    const paramScreens=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
+    const paramScreens=this.PARAM_SCREENS;
     const paramsActive=paramScreens.includes(S.screen);
     // Fil d'ariane du paramétrage livraison : 1 · Tournées → 2 · Bureaux
     // (assignés aux sites) → 3 · Clients (la page Clients). Stepper graphique :
@@ -6160,9 +6272,11 @@ class Component extends DCLogic {
       // Une entrée peut viser une ACTION et pas seulement un écran : chercher
       // « nouveau bureau » doit ouvrir le wizard, pas déposer sur une liste où
       // il reste à le trouver.
-      if(e.act==='ob') setTimeout(()=>this.obOpen(),0); };
+      if(e.act==='ob') setTimeout(()=>this.obOpen(),0);
+      // Même pas de navigation qu'un clic dans le menu : même entrée d'historique.
+      this.addrPush(e.s); };
     const dsResults=dsRanked.map((x,i)=>{ const e=x.e, on=i===dsSel;
-      return { path:e.g, title:e.label, desc:dsSnippet(e), go:dsPick(e), hover:()=>this.setState({dsIdx:i}),
+      return { path:e.g, addr:'#'+e.s, title:e.label, desc:dsSnippet(e), go:dsPick(e), hover:()=>this.setState({dsIdx:i}),
         style:'display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;border:none;cursor:pointer;padding:9px 12px;border-radius:9px;background:'+(on?'var(--color-background-secondary)':'transparent'),
         titleStyle:'font:600 12.5px var(--font-ui);color:'+(on?'var(--color-primary)':'var(--color-text)') }; });
     const dsSetQuery=(ev)=>this.setState({dsQuery:ev.target.value,dsOpen:true,dsIdx:0});
@@ -6784,20 +6898,9 @@ class Component extends DCLogic {
     const valCanConfirm=!!(S.valModal&&S.valSite&&tOk&&zoneOk);
 
     // ===== LIVRAISONS — paramétrage : nav groups =====
-    const groupsDef=[
-      // « Coûts · temps · frais » sort du menu : accessible via l'ENGRENAGE de
-      // l'écran Tournées (l'entrée de menu se réduit au mot « Tournées »).
-      {id:'g_liv',label:'Livraison',items:[['atelierLiv','Atelier (assistant)'],['tournees','Tournées']]},
-      // « Bureaux & sites » (écran clients) et « Contacts email » (emailsBureau)
-      // sortent du menu : doublons — la création B2B vit dans Clients, les
-      // contacts email dans le formulaire d'édition de l'Office (engrenage).
-      // « Zone de chalandise » retirée du menu : double emploi avec l'Analyse
-      // géographique (l'écran reste dans le code, réversible).
-      {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['b2bClients','Clients']]},
-      {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['assortiment','Assortiment'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
-      // Réglages : administration de la boutique, pas exploitation quotidienne.
-      {id:'g_reglages',label:'Réglages',items:[['shopParams','Paramètres du shop'],['tabletteKitchen','Tablette Kitchen']]},
-    ];
+    // Définition dans la classe (navGroupsDef) : les adresses la lisent aussi,
+    // pour savoir quel groupe déplier à l'arrivée sur un de ses écrans.
+    const groupsDef=this.navGroupsDef();
     const navSub=(s)=>{ const active=S.screen===s; return 'display:flex;align-items:center;width:100%;padding:9px 12px 9px 32px;border:none;border-radius:8px;cursor:pointer;font:'+(active?'600':'400')+' 12.5px/1 var(--font-ui);text-align:left;'+(active?'background:var(--color-background-secondary);color:var(--color-primary)':'background:transparent;color:var(--color-text-muted)'); };
     const navGroups=groupsDef.map(g=>{
       const hasActive=g.items.some(([s])=>s===S.screen);
@@ -6809,7 +6912,10 @@ class Component extends DCLogic {
         toggle: single ? this.go(soloScreen) : (()=>{ const cur=S.openGroups[g.id]!==undefined?S.openGroups[g.id]:hasActive; this.setState(st=>({openGroups:{...st.openGroups,[g.id]:!cur}})); }),
         headStyle:'display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:none;border-radius:8px;cursor:pointer;font:600 12px/1 var(--font-ui);text-align:left;background:'+(single&&hasActive?'var(--color-background-secondary)':'transparent')+';margin-top:2px;color:'+(hasActive?'var(--color-primary)':'var(--color-text)'),
         chevStyle:'flex:none;transition:transform .15s'+(single?';opacity:0;width:0':'')+(open?';transform:rotate(90deg)':''),
-        items:g.items.map(([s,label])=>({label,go:this.go(s),style:navSub(s)})),
+        items:g.items.map(([s,label])=>({label,go:this.go(s),style:navSub(s),addr:this.addrTitle(s)})),
+        // Un GROUPE n'est pas une section : il n'a pas d'adresse — sauf quand
+        // il se réduit à un seul écran, où sa tête EST cet écran.
+        headAddr: single ? this.addrTitle(soloScreen) : '',
         groupHidden:false,
       };
     }).filter(g=>!g.groupHidden);
@@ -8913,7 +9019,7 @@ class Component extends DCLogic {
       tkCopyToken:()=>this.tkCopy(S.tkToken||'','Jeton copié'),
       tkGenerate:()=>this.tkGenerate(),
       tkRevoke:()=>this.tkRevoke(),
-      nav,navStyles,setLang,langStyles,langList,t,
+      nav,navStyles,navTitles,setLang,langStyles,langList,t,
       pageTitle:titles[screen],pageSub:subs[screen],
       isMulti:true,
       isValidations:screen==='demandesB2B'&&((S.b2bTab||'acces')==='acces'||(S.b2bTab||'')==='nouveau'),

@@ -17,6 +17,28 @@ python3 -m http.server 8080
 
 No build step. Serve over HTTP (not `file://`).
 
+## Addressing — one URL per section
+
+Every section of the nav has its own address: the fragment is the screen's own
+name, appended to the page URL, with the shop scope preserved.
+
+```
+https://<host>/webshop/backoffice_franchisee/?shop=2#tournees
+                                                    ^^^^^^^^^ the section
+```
+
+Opening such a link goes straight to that section (and unfolds its
+**Paramétrage** group so the nav shows where you are); clicking in the nav
+updates the address, so **Back / Forward** and **bookmarks** work, and a reload
+stays put. Hovering a nav entry shows that section's full address without
+having to go there first, and the deep-search results list each screen's
+fragment next to its path.
+
+An unknown fragment is **not** followed — it would open an empty screen under a
+false address. The address is corrected to the screen actually displayed.
+Addresses never carry `?token=` (or `pin`/`secret`/`key`/`pass`): they are meant
+to be shown, hovered and pasted.
+
 ## Architecture — identical to the franchisor
 
 - **`back_office_ws_franchisee.dc.html`** — the pristine Claude Design export
