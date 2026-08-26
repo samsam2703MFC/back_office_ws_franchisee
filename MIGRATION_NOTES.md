@@ -481,3 +481,31 @@ daltonisme ΔE 18,3 (deutan) / 25,0 (vision normale), contraste ≥ 3:1 sur le
 blanc. Les deux jauges partagent **une seule échelle** — une référence par
 canal aurait mis deux axes dans la même carte — et cette référence (le plus
 haut montant du réseau sur la période) est écrite au-dessus de la grille.
+
+### D'où viendront les chiffres : `/api/v1/shops/{id}/transactions`
+
+La route ERP qui porte la matière première est
+`GET /api/v1/shops/<id>/transactions` — des **transactions**, pas des agrégats.
+Deux façons de s'en servir, et elles ne se valent pas :
+
+1. **Le PHP agrège, la console lit `fr-net-stats`** (le contrat ci-dessus).
+   La règle métier — ce qui compte comme une livraison, comme un webshop, comme
+   du chiffre d'affaires (TTC ou HTVA, remboursements, commandes annulées) —
+   reste **d'un seul côté**. C'est le sens de l'incident du 14/08 : deux écrans
+   qui calculaient chacun de leur côté finissaient par ne plus dire la même
+   chose. C'est la voie recommandée.
+2. **La console lit les transactions et agrège dans le navigateur.** Il faut
+   alors une requête par boutique du réseau, ramener des milliers de lignes à
+   chaque ouverture d'écran, et surtout écrire la règle métier une deuxième
+   fois — dans un front-end, où elle dérivera de celle de l'ERP sans que
+   personne ne le voie.
+
+Dans les deux cas, il manque la même chose : **le nom des champs**. Les deviner
+reviendrait à inventer un chiffre d'affaires, et cela ne se verrait pas — un
+mauvais nom de champ rend `0`, pas une erreur.
+
+`check-endpoints.yml` va donc les chercher : il sonde la route depuis le
+serveur (deux bases plausibles, faute de documentation) et publie le nombre
+d'enregistrements et **les noms de champs seuls** — jamais une valeur, les
+journaux du dépôt étant publics. Onglet Actions → « Vérifier les endpoints
+/franchisee/* » → Run workflow, en saisissant l'id de boutique.

@@ -40,6 +40,15 @@ name: Vérifier les endpoints /franchisee/*
 #     sonne pour autre chose, personne ne le voit. Même règle que le bandeau
 #     d'erreur de la console.
 #
+# IL SONDE AUSSI /api/v1/shops/<id>/transactions — la source candidate des
+# « Stats réseau » (CA par boutique, Livraison et Webshop). La console ne sait
+# pas encore la lire : il lui manque le NOM DE SES CHAMPS, et les deviner
+# reviendrait à inventer des chiffres d'affaires — un mauvais champ rend 0, pas
+# une erreur, donc ça ne se verrait pas. Le rapport n'imprime QUE des noms de
+# champs et des comptes, jamais une valeur (montants, clients : les journaux de
+# ce dépôt sont publics). Purement informatif : cette route appartient à l'ERP,
+# son absence ne fait rougir personne.
+#
 # Lancement manuel : onglet Actions → ce workflow → « Run workflow ».
 #
 # Secrets :  SSH_HOST · SSH_USER · SSH_PASSWORD  (les mêmes que le déploiement)
@@ -237,6 +246,46 @@ jobs:
           echo "== Référentiel postal (cartes, zones, analyse géo) =="
           probe "$BASE/geo/postcodes?all=1"    "geo/postcodes?all=1"
           probe "$BASE/geo/postcodes?groups=1" "geo/postcodes?groups=1"
+          echo
+          # ═══ ERP — transactions par boutique ══════════════════════════════
+          # Source candidate des « Stats réseau » (CA par boutique, Livraison et
+          # Webshop). La console ne sait pas encore lire cette route : il lui
+          # manque le NOM DE SES CHAMPS. Les deviner reviendrait à inventer des
+          # chiffres d'affaires — c'est exactement ce que la règle go-live
+          # interdit, et ça ne se verrait pas : un mauvais champ rend 0, pas une
+          # erreur. Cette sonde va donc les chercher là où ils sont.
+          #
+          # ELLE N'IMPRIME QUE DES NOMS DE CHAMPS ET DES COMPTES, jamais une
+          # valeur : une transaction porte des montants, et peut porter un
+          # client. Les journaux de ce dépôt sont publics. Même règle que pour
+          # /franchisee/me plus haut.
+          #
+          # PUREMENT INFORMATIVE : elle ne compte dans aucun compteur et ne peut
+          # pas faire rougir l'exécution quotidienne. La route appartient à
+          # l'ERP, pas à la console — son absence n'est pas une régression de ce
+          # dépôt, et une alarme qui sonne tous les matins pour une route qu'on
+          # ne maîtrise pas cesse d'être lue.
+          echo "== ERP — transactions par boutique (source candidate des Stats réseau) =="
+          erp_probe() {                  # $1 = URL
+            out=$(curl -s --max-time 20 "${HDR[@]}" -w '\n%{http_code}' "$1" 2>/dev/null)
+            ecode=$(printf '%s' "$out" | tail -n1)
+            ebody=$(printf '%s' "$out" | sed '$d')
+            printf '  %-3s  %s\n' "$ecode" "$1"
+            [ "$ecode" = "200" ] || return 0
+            en=$(printf '%s' "$ebody" | grep -o '}[[:space:]]*,[[:space:]]*{' | wc -l | tr -d ' ')
+            echo "         octets : $(printf '%s' "$ebody" | wc -c | tr -d ' ')   ·   ~$((en+1)) enregistrement(s)"
+            echo "         champs : $(printf '%s' "$ebody" | grep -o '"[a-zA-Z_][a-zA-Z0-9_]*"[[:space:]]*:' | tr -d '":' | sort -u | tr '\n' ' ')"
+          }
+          if [ -n "$SHOP" ]; then
+            # Deux bases plausibles, faute de documentation : la racine de
+            # l'hôte, et le préfixe de l'API du webshop. Celle qui répond est la
+            # bonne — on ne la choisit pas à l'avance.
+            erp_probe "http://localhost/api/v1/shops/$SHOP/transactions"
+            erp_probe "http://localhost${API_BASE}/v1/shops/$SHOP/transactions"
+          else
+            echo "  portée inconnue — la route est PAR BOUTIQUE : sans id, il n'y a rien à sonder."
+            echo "  (relancer en saisissant l'id dans le champ « shop », ou poser la variable SHOP_ID)"
+          fi
           echo
           echo "== Page servie (ce que le navigateur reçoit vraiment) =="
           PAGE="http://localhost/webshop/backoffice_franchisee/"
