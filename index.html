@@ -1995,18 +1995,52 @@
       </div>
       </sc-if>
 
+      <!-- ===================== STATS RÉSEAU =====================
+           CA par boutique, Livraison et Webshop, semaine ou mois. Deux jauges
+           par carte sur UNE MÊME échelle, classées sur la livraison. Aucun
+           total par carte : les deux mesures se recoupent (voir renderVals). -->
       <sc-if value="{{ isStatsReseau }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div style="display:flex;align-items:center;gap:9px;background:#eef3fb;border-radius:10px;padding:11px 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a5a9e" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span style="font:400 11.5px var(--font-ui);color:#2a5a9e">Données consolidées poussées par l'ERP — lecture seule, aucun formulaire à ce niveau.</span></div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
-          <sc-for list="{{ netStats }}" as="k" hint-placeholder-count="4">
-            <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px"><div class="t-admin-label">{{ k.label }}</div><div style="font:700 24px/1 var(--font-ui);color:var(--color-text);margin:8px 0 4px">{{ k.value }}</div><div style="font:400 11px var(--font-ui);color:{{ k.deltaColor }}">{{ k.delta }}</div></div>
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;flex:none"><button onClick="{{ nsSetSem }}" style="{{ nsSegSem }}">Semaine</button><button onClick="{{ nsSetMois }}" style="{{ nsSegMois }}">Mois</button></div>
+          <div style="display:flex;align-items:center;gap:16px;flex:none">
+            <span style="display:inline-flex;align-items:center;gap:7px;font:500 11.5px var(--font-ui);color:var(--color-text-muted)"><span style="width:10px;height:10px;border-radius:3px;background:#A82A3C;flex:none"></span>Livraison</span>
+            <span style="display:inline-flex;align-items:center;gap:7px;font:500 11.5px var(--font-ui);color:var(--color-text-muted)"><span style="width:10px;height:10px;border-radius:3px;background:#3A6FB0;flex:none"></span>Webshop</span>
+          </div>
+          <span style="flex:1"></span>
+          <span style="font:400 11px var(--font-ui);color:var(--color-text-muted);text-align:right">Classées sur la livraison · {{ nsRefTxt }}</span>
+        </div>
+        <sc-if value="{{ nsEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:26px;text-align:center;font:400 12.5px/1.6 var(--font-ui);color:var(--color-text-muted)">{{ nsEmptyTxt }}</div>
+        </sc-if>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+          <sc-for list="{{ nsCards }}" as="s" hint-placeholder-count="6">
+            <div style="{{ s.cardStyle }}">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:13px">
+                <span style="{{ s.rangStyle }}">{{ s.rang }}</span>
+                <span style="flex:1;min-width:0;font:600 13.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.nom }}</span>
+                <sc-if value="{{ s.moi }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;font:700 9px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 8px;background:var(--color-background-secondary);color:var(--color-primary);flex:none">ma boutique</span></sc-if>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font:500 11px var(--font-ui);color:var(--color-text-muted)">Livraison</span><span style="font:600 19px/1 var(--font-ui);color:var(--color-text)">{{ s.livTxt }}</span></div>
+              <div style="{{ s.livTrack }}"><div style="{{ s.livFill }}"></div></div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin:13px 0 6px"><span style="font:500 11px var(--font-ui);color:var(--color-text-muted)">Webshop</span><span style="font:600 19px/1 var(--font-ui);color:var(--color-text)">{{ s.webTxt }}</span></div>
+              <div style="{{ s.webTrack }}"><div style="{{ s.webFill }}"></div></div>
+            </div>
           </sc-for>
         </div>
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div class="t-section-title" style="font-size:15px;margin-bottom:12px">Rapports & exports</div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px"><button onClick="{{ exportCA }}" class="btn-secondary" style="font-size:12px">Export CA (CSV)</button><button onClick="{{ exportTop }}" class="btn-secondary" style="font-size:12px">Top produits</button><button onClick="{{ exportLivr }}" class="btn-secondary" style="font-size:12px">Taux livraison vs retrait</button></div>
+        <sc-if value="{{ nsHasRows }}" hint-placeholder-val="{{ true }}">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:15px 18px;display:flex;align-items:center;gap:26px;flex-wrap:wrap">
+          <span class="t-admin-label" style="flex:none">Total réseau {{ nsPerLabel }}</span>
+          <div style="display:flex;align-items:baseline;gap:9px;flex:none"><span style="width:10px;height:10px;border-radius:3px;background:#A82A3C;flex:none"></span><span style="font:500 11px var(--font-ui);color:var(--color-text-muted)">Livraison</span><span style="font:700 16px/1 var(--font-ui);color:var(--color-text)">{{ nsTotLiv }}</span><span style="font:400 10.5px var(--font-ui);color:#b26a00">{{ nsNoteLiv }}</span></div>
+          <div style="display:flex;align-items:baseline;gap:9px;flex:none"><span style="width:10px;height:10px;border-radius:3px;background:#3A6FB0;flex:none"></span><span style="font:500 11px var(--font-ui);color:var(--color-text-muted)">Webshop</span><span style="font:700 16px/1 var(--font-ui);color:var(--color-text)">{{ nsTotWeb }}</span><span style="font:400 10.5px var(--font-ui);color:#b26a00">{{ nsNoteWeb }}</span></div>
+          <span style="flex:1"></span>
+          <span style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);text-align:right;max-width:330px">Les deux mesures se recoupent — une commande webshop peut être une livraison — elles ne s'additionnent donc pas en un CA total.</span>
         </div>
+        <sc-if value="{{ nsAnyNote }}" hint-placeholder-val="{{ false }}">
+          <div style="font:400 11px/1.5 var(--font-ui);color:#b26a00;padding:0 4px">Un total marqué « sans montant » est <strong>sous-évalué</strong> : l'ERP n'a pas servi ce canal pour toutes les boutiques du réseau.</div>
+        </sc-if>
+        </sc-if>
       </div>
       </sc-if>
 
@@ -8109,9 +8143,99 @@ class Component extends DCLogic {
     const newBureauCount=0;
     const newBureauEmpty=true;
 
-    // Stats réseau — RÉEL : agrégats 30 j de ws_orders + shops (fr-net-stats).
-    const netStats=SRV('fr_net_stats').map(s=>({label:s.k,value:s.v,delta:s.sub||'',deltaColor:'var(--color-text-muted)'}));
-    const netStatsEmpty=netStats.length===0;
+    /* ══ STATS RÉSEAU — CA par boutique : Livraison et Webshop ═══════════════
+       L'écran ne montre plus QUE cela : quatre vignettes génériques et trois
+       boutons d'export qui n'exportaient rien (ils affichaient « Export généré »
+       et s'arrêtaient là) sont partis avec l'ancien modèle.
+
+       DEUX MESURES QUI SE RECOUPENT, DONC AUCUN TOTAL. Une commande porte un
+       MODE (Livraison / Retrait) et une SOURCE (Webshop / comptoir) : une
+       commande webshop peut très bien être une livraison. Additionner les deux
+       compterait deux fois le même euro — il n'y a donc pas de « CA total » sur
+       les cartes, et le classement se fait sur la LIVRAISON seule. Les deux
+       totaux réseau existent, séparément, jamais l'un plus l'autre.
+
+       UNE SEULE ÉCHELLE POUR LES DEUX JAUGES. Une référence par canal aurait
+       mis deux axes dans la même carte : deux barres pleines côte à côte ne
+       valant pas le même montant. La référence est le plus haut montant du
+       réseau, tous canaux confondus, sur la période affichée — et elle est
+       ÉCRITE au-dessus de la grille, sans quoi une jauge ne veut rien dire.
+
+       CONTRAT DE L'ENDPOINT — GET /franchisee/fr-net-stats?shop=<id>, une ligne
+       par boutique du réseau :
+         { shop_id, shop_name,
+           livraison_semaine, webshop_semaine, livraison_mois, webshop_mois }
+       Les montants sont des nombres (euros) ; `null` = non servi, affiché « — »
+       et jamais remplacé par 0 — une absence n'est pas un chiffre d'affaires
+       nul. La FENÊTRE (quelle semaine, quel mois) est celle de l'ERP : la
+       console ne la recalcule pas et ne l'affiche donc pas, plutôt que de
+       dater un agrégat qu'elle n'a pas fait. */
+    const nsPer=(S.nsPer==='mois')?'mois':'semaine';
+    const nsRaw=SRV('fr_net_stats');
+    const nsNum=(r,a,b)=>{ const v=(r[a]!=null?r[a]:r[b]); const n=parseFloat(v);
+      return (v==null||v===''||isNaN(n))?null:n; };
+    const nsRows=nsRaw.map(r=>({
+      id:String(r.shop_id!=null?r.shop_id:(r.shopId!=null?r.shopId:'')),
+      nom:String(r.shop_name||r.shopName||r.name||'').trim(),
+      liv:nsNum(r,nsPer==='mois'?'livraison_mois':'livraison_semaine',nsPer==='mois'?'livraisonMois':'livraisonSemaine'),
+      web:nsNum(r,nsPer==='mois'?'webshop_mois':'webshop_semaine',nsPer==='mois'?'webshopMois':'webshopSemaine'),
+    // Une ligne sans identité NI montant n'est pas une boutique : la ranger au
+    // classement avec deux tirets ferait croire à une boutique à zéro.
+    })).filter(r=>(r.nom||r.id)&&(r.liv!=null||r.web!=null));
+    // Classement sur la LIVRAISON (voir plus haut) ; une boutique sans montant
+    // de livraison passe après celles qui en ont un, départagée au webshop.
+    const nsSorted=nsRows.slice().sort((a,b)=>
+      ((b.liv==null?-1:b.liv)-(a.liv==null?-1:a.liv))||((b.web||0)-(a.web||0))||a.nom.localeCompare(b.nom));
+    const nsRef=nsSorted.reduce((m,r)=>Math.max(m,r.liv||0,r.web||0),0);
+    // Teintes : le bordeaux L'Atelier et le bleu « source » déjà portés par les
+    // pastilles Livraison / Webshop de l'écran Commandes, d'un cran plus clairs
+    // pour tenir la bande de clarté (séparation daltonisme ΔE 18,3 deutan,
+    // contraste ≥ 3:1 sur le blanc). La piste vide est un pas clair de la MÊME
+    // teinte : l'état se lit sur toute la barre, pas seulement sur le remplissage.
+    const NS_LIV='#A82A3C', NS_WEB='#3A6FB0';
+    const nsTrack=(t)=>'height:10px;border-radius:999px;background:'+t+';overflow:hidden';
+    const nsFill=(v,c)=>'height:100%;border-radius:0 4px 4px 0;background:'+c+';width:'
+      // Un montant réel mais minuscule garde un trait visible : à 0,2 % il
+      // disparaîtrait et la boutique semblerait n'avoir rien vendu.
+      +((nsRef>0&&v)?Math.max(v/nsRef*100,1.5):0).toFixed(1)+'%';
+    const nsMe=String((window.__FR&&window.__FR.shop)||'');
+    const nsCards=nsSorted.map((r,i)=>({
+      rang:String(i+1), nom:r.nom||('boutique #'+r.id), moi:!!(nsMe&&r.id===nsMe),
+      cardStyle:'background:var(--color-surface);border:.5px solid '
+        +((nsMe&&r.id===nsMe)?'var(--color-primary)':'var(--color-border-tertiary)')+';border-radius:12px;padding:15px 17px',
+      rangStyle:'flex:none;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
+        +'font:700 11px var(--font-ui);'+((nsMe&&r.id===nsMe)?'background:var(--color-primary);color:#fff':'background:var(--color-background-secondary);color:var(--color-text-muted)'),
+      livTxt:r.liv==null?'—':this.eur(r.liv), webTxt:r.web==null?'—':this.eur(r.web),
+      livTrack:nsTrack('#F2E2E4'), livFill:nsFill(r.liv,NS_LIV),
+      webTrack:nsTrack('#E3EBF5'), webFill:nsFill(r.web,NS_WEB),
+    }));
+    const nsSeg=(p)=>'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'
+      +(nsPer===p?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)'
+                 :'background:transparent;color:var(--color-text-muted)');
+    // Deux totaux SÉPARÉS. Les additionner l'un à l'autre compterait deux fois
+    // les commandes webshop livrées — c'est la même raison qu'au niveau carte.
+    const nsHas=(f)=>nsRows.some(r=>r[f]!=null);
+    const nsTotLiv=nsHas('liv')?this.eur(nsRows.reduce((a,r)=>a+(r.liv||0),0)):'—';
+    const nsTotWeb=nsHas('web')?this.eur(nsRows.reduce((a,r)=>a+(r.web||0),0)):'—';
+    /* Un total auquel il manque une boutique est SOUS-ÉVALUÉ, et rien à
+       l'écran ne le dirait : la somme a l'air complète. On compte donc les
+       boutiques sans montant sur ce canal et on l'écrit à côté du total.
+       Le total reste affiché — le taire pour une boutique manquante rendrait
+       l'écran inutile un jour où l'ERP a un trou. */
+    const nsManque=(f)=>{ const n=nsRows.filter(r=>r[f]==null).length;
+      return n?(n===1?'1 boutique sans montant':(n+' boutiques sans montant')):''; };
+    const nsNoteLiv=nsHas('liv')?nsManque('liv'):'';
+    const nsNoteWeb=nsHas('web')?nsManque('web'):'';
+    // Vide : on dit LAQUELLE des deux absences on constate. « Rien à afficher »
+    // sur une route qui a répondu envoie chercher la panne du mauvais côté.
+    const nsEmpty=nsCards.length===0;
+    const nsEmptyTxt=nsRaw.length===0
+      ? 'Aucune donnée servie — GET /franchisee/fr-net-stats n’a rendu aucune ligne pour cette portée.'
+      : ('L’ERP a rendu '+nsRaw.length+' ligne(s), mais aucune ne porte les champs attendus : shop_name, '
+         +'livraison_semaine, webshop_semaine, livraison_mois, webshop_mois.');
+    const nsRefTxt=nsRef>0
+      ? ('jauge pleine = plus haut montant du réseau sur la période ('+this.eur(nsRef)+')')
+      : 'aucun montant servi : les jauges restent vides';
 
     // Emails bureau
     const emailTag=(role)=>pill2(role==='Facturation'?'#eef3fb':'var(--color-background-secondary)',role==='Facturation'?'#2a5a9e':'var(--color-text-muted)');
@@ -8978,7 +9102,11 @@ class Component extends DCLogic {
       stkAlertClose:()=>this.setState({stkAlert:false}),
       isDemandesBureau:screen==='demandesB2B'&&(S.b2bTab||'acces')==='rattach',joinRequests,joinCount,joinBadgeStyle,
       isNouveauxBureaux:screen==='demandesB2B'&&(S.b2bTab||'acces')==='nouveau',newBureauRequests,newBureauCount,newBureauEmpty,
-      isStatsReseau:screen==='statsReseau',netStats,exportCA:()=>this.printJob('Export CA (CSV) généré'),exportTop:()=>this.printJob('Export top produits généré'),exportLivr:()=>this.printJob('Export taux livraison vs retrait généré'),
+      isStatsReseau:screen==='statsReseau',nsCards,nsEmpty,nsEmptyTxt,nsRefTxt,nsTotLiv,nsTotWeb,
+      nsHasRows:!nsEmpty,nsNoteLiv,nsNoteWeb,nsAnyNote:!!(nsNoteLiv||nsNoteWeb),
+      nsSegSem:nsSeg('semaine'),nsSegMois:nsSeg('mois'),
+      nsSetSem:()=>this.setState({nsPer:'semaine'}),nsSetMois:()=>this.setState({nsPer:'mois'}),
+      nsPerLabel:nsPer==='mois'?'du mois':'de la semaine',
       isEmailsBureau:screen==='emailsBureau',officeEmails,
       isCalendarRules:screen==='calendarRules',calRules,addCalRule:this.openForm('calRule'),
       isPricingRules:screen==='pricingRules',priceRules,addPricing:this.openForm('pricing'),erpPortions,erpPortionsEmpty,

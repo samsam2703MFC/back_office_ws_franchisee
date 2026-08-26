@@ -414,3 +414,70 @@ passé : `mail_sent`, `mail_to`, `mail_reason`.
 La console le répète, courrier et lien **dans un seul message** : deux
 `printJob` successifs ne laissent voir que le second, et l'avertissement sur le
 courrier disparaissait derrière celui du lien.
+
+## Écran « Stats réseau » — CA par boutique, Livraison et Webshop
+
+L'écran ne portait que quatre vignettes génériques (`fr_net_stats` rendait des
+paires `{k, v, sub}`, des libellés d'affichage plus qu'une donnée) et trois
+boutons d'export **qui n'exportaient rien** : ils affichaient « Export généré »
+et s'arrêtaient là. Les uns et les autres sont partis.
+
+Il montre désormais une seule chose : le **chiffre d'affaires par boutique du
+réseau**, en Livraison et en Webshop, sur la **semaine** ou le **mois**. Une
+carte par boutique, classées sur la livraison, deux jauges par carte, la
+boutique de la portée mise en évidence.
+
+### Contrat attendu
+
+`GET <base>/franchisee/fr-net-stats?shop=<id>` — en-tête `X-Admin-Token` comme
+le reste du module. **Une ligne par boutique du réseau** :
+
+```json
+[{ "shop_id": 2, "shop_name": "Anderlecht",
+   "livraison_semaine": 6180, "webshop_semaine": 2940,
+   "livraison_mois": 25600,  "webshop_mois": 11340 }]
+```
+
+- Les montants sont des **nombres** (euros). `null` = non servi : affiché « — »,
+  jamais remplacé par `0` — une absence n'est pas un chiffre d'affaires nul.
+- Les alias camelCase (`livraisonSemaine`…) et `shopId` / `shopName` / `name`
+  sont acceptés ; rien d'autre.
+- Une ligne sans nom **ni** montant n'est pas rangée au classement : deux
+  tirets à la place d'une boutique laisseraient croire à une boutique à zéro.
+- La **fenêtre** (quelle semaine, quel mois) est celle de l'ERP. La console ne
+  la recalcule pas et ne l'affiche donc pas : dater un agrégat qu'on n'a pas
+  fait, c'est le genre de détail qui finit par être faux sans que personne ne
+  le voie. Si la fenêtre doit être montrée, elle devra venir de l'endpoint.
+
+### Deux mesures qui se recoupent — donc aucun total
+
+Une commande porte un **mode** (Livraison / Retrait) *et* une **source**
+(Webshop / comptoir) : une commande webshop peut très bien être une livraison.
+Les additionner compterait deux fois le même euro. Il n'y a donc **pas de « CA
+total » par carte**, le classement se fait sur la **livraison** seule, et les
+deux totaux réseau restent séparés — l'écran le dit en toutes lettres sous les
+totaux, pour que personne ne refasse l'addition à la main.
+
+Un total auquel il manque une boutique est **sous-évalué** et rien ne le
+dirait : les boutiques sans montant sur un canal sont comptées et signalées à
+côté du total.
+
+### Ce que l'écran dit quand il n'a rien
+
+Deux absences distinctes, deux phrases distinctes — « rien à afficher » sur une
+route qui a répondu envoie chercher la panne du mauvais côté :
+
+- route muette : « GET /franchisee/fr-net-stats n'a rendu aucune ligne pour
+  cette portée » ;
+- mauvaise forme (l'ancienne, par exemple) : « L'ERP a rendu N ligne(s), mais
+  aucune ne porte les champs attendus : … », les champs étant nommés.
+
+### Couleurs
+
+Bordeaux L'Atelier `#A82A3C` (Livraison) et bleu « source » `#3A6FB0`
+(Webshop) — les teintes des pastilles Livraison / Webshop de l'écran
+Commandes, d'un cran plus claires pour tenir la bande de clarté. Séparation
+daltonisme ΔE 18,3 (deutan) / 25,0 (vision normale), contraste ≥ 3:1 sur le
+blanc. Les deux jauges partagent **une seule échelle** — une référence par
+canal aurait mis deux axes dans la même carte — et cette référence (le plus
+haut montant du réseau sur la période) est écrite au-dessus de la grille.
