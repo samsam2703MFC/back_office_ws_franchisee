@@ -1336,6 +1336,18 @@
           <select value="{{ bcSite }}" onChange="{{ bcSetSite }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcSiteOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
           <select value="{{ bcOff }}" onChange="{{ bcSetOff }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcOffOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
           <select value="{{ bcDept }}" onChange="{{ bcSetDept }}" style="{{ bcSelStyle }}"><sc-for list="{{ bcDeptOpts }}" as="op" hint-placeholder-count="2"><option value="{{ op.value }}">{{ op.label }}</option></sc-for></select>
+          <div style="flex:0 0 100%;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-top:2px">
+          <button onClick="{{ bcSetTruck }}" title="{{ bcTruckTitle }}" style="{{ bcTruckStyle }}">{{ bcTruckTxt }}</button>
+          <span style="width:1px;height:20px;background:var(--color-border-tertiary);flex:none"></span>
+          <button onClick="{{ bcSetTelOui }}" title="Ne montrer que les clients ayant un téléphone" style="{{ bcTelOuiStyle }}">{{ bcTelOuiTxt }}</button>
+          <button onClick="{{ bcSetTelNon }}" title="Ne montrer que les clients SANS téléphone" style="{{ bcTelNonStyle }}">{{ bcTelNonTxt }}</button>
+          <span style="width:1px;height:20px;background:var(--color-border-tertiary);flex:none"></span>
+          <button onClick="{{ bcSetMailOui }}" title="Ne montrer que les clients ayant un e-mail" style="{{ bcMailOuiStyle }}">{{ bcMailOuiTxt }}</button>
+          <button onClick="{{ bcSetMailNon }}" title="Ne montrer que les clients SANS e-mail" style="{{ bcMailNonStyle }}">{{ bcMailNonTxt }}</button>
+          <sc-if value="{{ bcHasTog }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ bcResetTog }}" style="border:none;background:transparent;color:var(--color-primary);font:600 11.5px var(--font-ui);cursor:pointer;flex:none">Réinitialiser</button>
+          </sc-if>
+          </div>
           <span style="font:600 11px var(--font-ui);color:var(--color-text-muted);flex:none">{{ bcTotalTxt }}</span>
           <button onClick="{{ goDemandes }}" class="btn-secondary" style="padding:9px 14px;font-size:12px;flex:none" title="Un client B2B est une personne : elle crée son compte depuis le lien d'invitation de son bureau, puis vous la validez.">Demandes de rattachement →</button>
         </div>
@@ -1368,7 +1380,7 @@
                 <sc-if value="{{ c.noCompany }}" hint-placeholder-val="{{ false }}"><span class="t-label" style="color:var(--color-border-secondary)">—</span></sc-if>
               </div>
               <div style="display:flex;align-items:center;gap:8px;min-width:0">
-                <span class="t-label" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.emailDisplay }}</span>
+                <span class="t-label" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.emailDisplay }}<br><span style="font:500 11px var(--font-ui);color:var(--color-text-muted)">{{ c.telDisplay }}</span></span>
                 <sc-if value="{{ c.hasPostal }}" hint-placeholder-val="{{ false }}">
                   <span title="{{ c.postalTitle }}" style="flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:color-mix(in srgb, #2d7a3e 14%, transparent);color:#2d7a3e"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
                 </sc-if>
@@ -8933,8 +8945,25 @@ class Component extends DCLogic {
         const distinct=(f)=>[...new Set(rowsC.map(c=>c[f]).filter(v=>v&&v!=='—'))].sort();
         const opts=(list,ph)=>[{value:'',label:ph},...list.map(v=>({value:v,label:v}))];
         const q=String(S.bcQ||'').toLowerCase();
+        /* Un numéro peut vivre dans phone_e164 OU phone selon l'origine de la
+           fiche (inscription webshop, import, saisie console) : regarder une
+           seule des deux colonnes déclarerait « sans téléphone » des clients
+           qui en ont un. Même prudence pour l'e-mail, dont les chaînes vides
+           et les espaces ne valent pas absence de colonne. */
+        const hasTel=(c)=>!!String(c.phone_e164||c.phone||'').trim();
+        const hasMail=(c)=>!!String(c.email||'').trim();
         const match=(c)=>{ if(c.active!=null&&Number(c.active)===0) return false; // soft delete
           if(q&&![cnm(c),c.email,c.city,c.zip].some(v=>String(v||'').toLowerCase().includes(q))) return false;
+          // Camion / téléphone / e-mail : trois familles indépendantes, donc
+          // ET entre elles. « oui » et « non » sont exclusifs DANS une famille
+          // (un client a un téléphone ou n'en a pas), d'où un état à trois
+          // valeurs plutôt que deux bascules qui, cochées ensemble, ne
+          // filtreraient rien tout en ayant l'air actives.
+          if(S.bcTruck&&!Number(c.office_delivery)) return false;
+          if(S.bcTel==='oui'&&!hasTel(c)) return false;
+          if(S.bcTel==='non'&&hasTel(c)) return false;
+          if(S.bcMail==='oui'&&!hasMail(c)) return false;
+          if(S.bcMail==='non'&&hasMail(c)) return false;
           if(S.bcDept&&c.department!==S.bcDept) return false;
           if(S.bcOff&&c.office_name!==S.bcOff) return false;
           if(S.bcSite&&c.site_name!==S.bcSite) return false;
@@ -8958,6 +8987,29 @@ class Component extends DCLogic {
           const dd=c.last_order||c.created_at; if(dd) B.push({t:(c.last_order?'Dern. cmd ':'Depuis ')+String(dd).slice(0,10),style:tag('var(--color-background-secondary)','var(--color-text-muted)')});
           return B; };
         const filt=rowsC.filter(match);
+        /* COMPTES DES BASCULES. Chacun est calculé en NEUTRALISANT sa propre
+           famille : « Sans téléphone · 12 » annonce ce qu'on obtiendrait en
+           cliquant, pas ce qu'on a déjà. Compter sur `filt` donnerait 0 à
+           toute bascule inactive dès qu'une autre de la même famille est
+           active — un compteur qui ne sert à rien. */
+        const sauf=(cle)=>{ const M={...S}; M[cle]=(cle==='bcTruck')?false:''; 
+          const g=(c)=>{ if(c.active!=null&&Number(c.active)===0) return false;
+            if(q&&![cnm(c),c.email,c.city,c.zip].some(v=>String(v||'').toLowerCase().includes(q))) return false;
+            if(M.bcTruck&&!Number(c.office_delivery)) return false;
+            if(M.bcTel==='oui'&&!hasTel(c)) return false;
+            if(M.bcTel==='non'&&hasTel(c)) return false;
+            if(M.bcMail==='oui'&&!hasMail(c)) return false;
+            if(M.bcMail==='non'&&hasMail(c)) return false;
+            if(M.bcDept&&c.department!==M.bcDept) return false;
+            if(M.bcOff&&c.office_name!==M.bcOff) return false;
+            if(M.bcSite&&c.site_name!==M.bcSite) return false;
+            if(M.bcTour&&c.tour_name!==M.bcTour) return false;
+            return true; };
+          return rowsC.filter(g); };
+        const baseTruck=sauf('bcTruck'), baseTel=sauf('bcTel'), baseMail=sauf('bcMail');
+        const nTruck=baseTruck.filter(c=>Number(c.office_delivery)).length;
+        const nTelOui=baseTel.filter(hasTel).length,  nTelNon=baseTel.length-nTelOui;
+        const nMailOui=baseMail.filter(hasMail).length, nMailNon=baseMail.length-nMailOui;
         // AFFICHAGE PROGRESSIF : pas de limite d'accès (tout est filtrable),
         // mais on ne rend que bcShown lignes à la fois — le DOM reste léger.
         const shown=S.bcShown||100;
@@ -8979,6 +9031,7 @@ class Component extends DCLogic {
           noCompany:!(c.company_name&&pnameOf(c)!==c.company_name),
           companyChip:c.company_name||'',
           emailDisplay:c.email||'—',
+          telDisplay:String(c.phone_e164||c.phone||'').trim()||'—',
           hasPostal:!!(c.zip&&String(c.zip).trim()),
           noPostal:!(c.zip&&String(c.zip).trim()),
           postalTitle:(c.zip&&String(c.zip).trim())?('Code postal renseigné : '+c.zip):'Code postal manquant — éditable dans la fiche',
@@ -9044,6 +9097,13 @@ class Component extends DCLogic {
            avait bien été enregistrée par l'endpoint.
            refresh() met à jour la copie en mémoire sans aucune requête. */
         const patchLocal=(id,patch)=>{ if(window.BOServer){ const rs=window.BOServer.table('b2b_clients'); const i2=rs.findIndex(x=>String(x.id)===String(id)); if(i2>=0){ rs[i2]={...rs[i2],...patch}; window.BOServer.refresh('b2b_clients',rs); } } this.setState(s=>({_rev:(s._rev||0)+1})); };
+        /* Bascule de filtre : pleine quand active, contour sinon. Hauteur et
+           rayon alignés sur les listes déroulantes voisines pour que la barre
+           reste une seule ligne visuelle. */
+        const tglStyle=(on)=>'border:1px solid '+(on?'var(--color-primary)':'var(--color-border-secondary)')
+          +';background:'+(on?'var(--color-primary)':'var(--color-surface)')
+          +';color:'+(on?'#fff':'var(--color-text-muted)')
+          +';border-radius:20px;padding:8px 12px;font:600 11.5px var(--font-ui);cursor:pointer;white-space:nowrap;flex:none';
         const togStyle=(on,onBg,onC)=>'border:1.5px solid '+(on?onC:'var(--color-border-secondary)')+';background:'+(on?onBg:'transparent')+';color:'+(on?onC:'var(--color-text-muted)')+';border-radius:8px;padding:7px 13px;font:600 11.5px var(--font-ui);cursor:pointer;flex:none';
         const base={ isB2bClients:screen==='b2bClients',
           bcQ:S.bcQ||'',bcSetQ:(e)=>this.setState({bcQ:e.target.value}),
@@ -9052,6 +9112,31 @@ class Component extends DCLogic {
           bcOff:S.bcOff||'',bcSetOff:(e)=>this.setState({bcOff:e.target.value}),bcOffOpts:opts(distinct('office_name'),'— Office —'),
           bcSite:S.bcSite||'',bcSetSite:(e)=>this.setState({bcSite:e.target.value}),bcSiteOpts:opts(distinct('site_name'),'— Site —'),
           bcTour:S.bcTour||'',bcSetTour:(e)=>this.setState({bcTour:e.target.value}),bcTourOpts:opts(distinct('tour_name'),'— Tournée —'),
+          /* BASCULES camion / téléphone / e-mail. Un clic sur une bascule
+             déjà active la relâche : c'est le seul moyen de revenir à « tous »
+             sans un bouton de plus. Les libellés portent le compte, et le
+             titre dit ce que la bascule fera — l'icône seule ne suffit pas
+             pour « avec e-mail » face à « sans e-mail ». */
+          bcTruck:!!S.bcTruck,
+          bcTruckStyle:tglStyle(!!S.bcTruck),
+          bcTruckTxt:'🚚 Bureau · '+nTruck,
+          bcTruckTitle:S.bcTruck?'Retirer le filtre : livraison au bureau':'Ne montrer que les clients livrés au bureau',
+          bcSetTruck:()=>this.setState({bcTruck:!S.bcTruck,bcShown:100}),
+
+          bcTelOuiStyle:tglStyle(S.bcTel==='oui'), bcTelNonStyle:tglStyle(S.bcTel==='non'),
+          bcTelOuiTxt:'☎ Avec tél. · '+nTelOui, bcTelNonTxt:'☎ Sans tél. · '+nTelNon,
+          bcSetTelOui:()=>this.setState({bcTel:S.bcTel==='oui'?'':'oui',bcShown:100}),
+          bcSetTelNon:()=>this.setState({bcTel:S.bcTel==='non'?'':'non',bcShown:100}),
+
+          bcMailOuiStyle:tglStyle(S.bcMail==='oui'), bcMailNonStyle:tglStyle(S.bcMail==='non'),
+          bcMailOuiTxt:'✉ Avec e-mail · '+nMailOui, bcMailNonTxt:'✉ Sans e-mail · '+nMailNon,
+          bcSetMailOui:()=>this.setState({bcMail:S.bcMail==='oui'?'':'oui',bcShown:100}),
+          bcSetMailNon:()=>this.setState({bcMail:S.bcMail==='non'?'':'non',bcShown:100}),
+
+          // « Réinitialiser » n'apparaît que s'il y a quelque chose à défaire.
+          bcHasTog:!!(S.bcTruck||S.bcTel||S.bcMail),
+          bcResetTog:()=>this.setState({bcTruck:false,bcTel:'',bcMail:'',bcShown:100}),
+
           bcCounts,bcList,bcEmpty:filt.length===0,
           bcTotalTxt:filt.length+' client(s)'+(filt.length>shown?(' · '+shown+' affichés'):''),
           bcHasMore:filt.length>shown,
