@@ -3187,6 +3187,46 @@
           <div style="flex:1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Email</label><input value="{{ obStaffEmail }}" onInput="{{ obSetStaffEmail }}" placeholder="prenom@exemple.be" style="{{ obInStyle }}"/></div>
           <button onClick="{{ obAddStaff }}" class="btn-primary" style="font-size:13px;flex:none;height:42px">+ Ajouter</button>
         </div>
+        <!-- CHERCHER DANS LES CLIENTS EXISTANTS — la plupart du personnel d'un
+             bureau est déjà en base : le retaper invite les fautes de frappe et
+             crée des doublons que personne ne rapproche ensuite. -->
+        <div style="background:var(--color-background-secondary);border-radius:10px;padding:12px 14px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+            <span class="t-admin-label">Ou choisir parmi les clients existants</span>
+            <sc-if value="{{ obHasPicked }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ obAddPicked }}" class="btn-primary" style="font-size:12px;padding:7px 14px">{{ obAddPickedTxt }}</button>
+            </sc-if>
+          </div>
+          <input value="{{ obPickQ }}" onInput="{{ obSetPickQ }}" placeholder="Nom, société ou e-mail — 2 caractères minimum" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 11px;font:400 12.5px var(--font-ui);background:var(--color-surface);color:var(--color-text)">
+          <sc-if value="{{ obPickIdle }}" hint-placeholder-val="{{ true }}">
+            <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:8px">Tapez pour chercher — le parc compte plusieurs milliers de fiches, rien n'est listé à vide.</div>
+          </sc-if>
+          <sc-if value="{{ obPickNone }}" hint-placeholder-val="{{ false }}">
+            <div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:8px">Aucun client ne correspond — ajoutez-le à la main ci-dessus.</div>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;max-height:230px;overflow-y:auto">
+            <sc-for list="{{ obPickList }}" as="h" hint-placeholder-count="3">
+              <div onClick="{{ h.toggle }}" style="{{ h.rowStyle }}">
+                <span style="{{ h.boxStyle }}"><sc-if value="{{ h.sel }}" hint-placeholder-val="{{ false }}">✓</sc-if></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font:600 12px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ h.nm }}</div>
+                  <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ h.mail }}</div>
+                  <sc-if value="{{ h.hasSub }}" hint-placeholder-val="{{ false }}">
+                    <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ h.sub }}</div>
+                  </sc-if>
+                </div>
+                <sc-if value="{{ h.dejaLa }}" hint-placeholder-val="{{ false }}">
+                  <span style="font:600 10px var(--font-ui);color:var(--color-text-muted);flex:none">déjà ajouté</span>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ obPickMore }}" hint-placeholder-val="{{ false }}">
+            <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:7px">{{ obPickMoreTxt }}</div>
+          </sc-if>
+        </div>
+        <div style="display:none">
+        </div>
         <div style="background:var(--color-background-secondary);border-radius:10px;padding:13px 15px;margin-bottom:16px">
           <div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px">Import CSV — une ligne par personne · « Nom, email »</div>
           <textarea value="{{ obCsv }}" onInput="{{ obSetCsv }}" placeholder="Nom Prénom, adresse@exemple.be&#10;une ligne par personne" style="width:100%;min-height:74px;padding:10px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 12px var(--font-mono,monospace);color:var(--color-text);background:var(--color-surface);box-sizing:border-box;resize:vertical"></textarea>
@@ -3361,7 +3401,7 @@ class Component extends DCLogic {
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'', franco:'', drop:'',
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
-    obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'',
+    obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'', obPickQ:'', obSel:{},
     obVouchers: [], obVLibelle:'', obVValidite:'',
     profileOpen: false, srcOpen: false, paramDrafts: {},
     dsQuery: '', dsOpen: false, dsIdx: 0,
@@ -3375,7 +3415,7 @@ class Component extends DCLogic {
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'', franco:'', drop:'',
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
-    obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'',
+    obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'', obPickQ:'', obSel:{},
     obVouchers:[], obVLibelle:'', obVValidite:'' }); this.zfGeoEnsure(); }
   obClose(){ this.setState({obOpen:false}); }
   // Localités du référentiel pour un CP belge (un code peut couvrir plusieurs
@@ -3485,6 +3525,26 @@ class Component extends DCLogic {
     return out; }
   obAddStaff(){ const n=(this.state.obStaffName||'').trim(), e=(this.state.obStaffEmail||'').trim(); if(!e) return; this.setState(s=>({obStaff:[...s.obStaff,{name:n||e.split('@')[0],email:e}],obStaffName:'',obStaffEmail:''})); }
   obRemoveStaff(i){ return ()=>this.setState(s=>({obStaff:s.obStaff.filter((_,j)=>j!==i)})); }
+  /* Cocher un client EXISTANT. La sélection est mémorisée par id et non par
+     rang : la liste se réordonne à chaque frappe dans la recherche, et un
+     index aurait coché quelqu'un d'autre à la lettre suivante. */
+  obTogglePick(id){ return ()=>this.setState(s=>{ const n={...(s.obSel||{})};
+    if(n[id]) delete n[id]; else n[id]=true; return {obSel:n}; }); }
+  /* Verser les cochés dans le personnel. On DÉDOUBLONNE sur l'e-mail : le même
+     contact peut être atteint par la recherche ET déjà saisi à la main, et deux
+     lignes identiques enverraient deux demandes d'adhésion à la même personne. */
+  obAddPicked(){ const S=this.state, sel=S.obSel||{};
+    const src=(window.BOServer?window.BOServer.table('b2b_clients'):[])||[];
+    const deja=new Set((S.obStaff||[]).map(x=>String(x.email||'').toLowerCase()));
+    const add=[];
+    src.forEach(c=>{ if(!sel[String(c.id)]) return;
+      const mail=String(c.email||'').trim(); if(!mail||deja.has(mail.toLowerCase())) return;
+      deja.add(mail.toLowerCase());
+      const nom=[c.name,c.surname].filter(Boolean).join(' ').trim()||c.company_name||mail.split('@')[0];
+      add.push({name:nom,email:mail}); });
+    if(!add.length){ this.printJob('Aucun contact à ajouter (déjà présents, ou sans e-mail)'); return; }
+    this.setState(s=>({obStaff:[...s.obStaff,...add],obSel:{},obPickQ:''}));
+    this.printJob('✔ '+add.length+' contact(s) ajouté(s) depuis les clients existants'); }
   obLoadCsv(){ const raw=this.state.obCsv||''; if(!raw.trim()) return; const rows=raw.split(/[\n;]+/).map(l=>l.trim()).filter(Boolean);
     const add=[]; rows.forEach(l=>{ const parts=l.split(/[,\t]/).map(x=>x.trim()); let name='',email=''; parts.forEach(p=>{ if(/@/.test(p)) email=p; else if(p&&!name) name=p; }); if(email) add.push({name:name||email.split('@')[0],email}); });
     if(add.length) this.setState(s=>({obStaff:[...s.obStaff,...add],obCsv:''})); this.printJob('✔ '+add.length+' contact(s) importé(s) depuis le CSV'); }
@@ -8538,6 +8598,47 @@ class Component extends DCLogic {
       lblStyle:'font:'+(i===obStep?'600':'400')+' 10.5px var(--font-ui);color:'+(i===obStep?'var(--color-text)':'var(--color-text-muted)')+';white-space:nowrap'}));
     const obDeptsView=S.obDepts.map((d,i)=>({dept:d.dept,effectif:String(d.effectif),remove:this.obRemoveDept(i)}));
     const obStaffView=S.obStaff.map((st,i)=>({name:st.name,email:st.email,remove:this.obRemoveStaff(i),init:(st.name||st.email).slice(0,2).toUpperCase()}));
+    /* RECHERCHE DANS LES CLIENTS EXISTANTS. Le parc dépasse les 8 000 fiches :
+       on n'affiche RIEN tant que la recherche est vide, sinon la liste n'aide
+       personne et le rendu coûte cher. Deux caractères suffisent à déclencher. */
+    const obQ=String(S.obPickQ||'').trim().toLowerCase();
+    const obSel=S.obSel||{};
+    const obSrc=(window.BOServer?window.BOServer.table('b2b_clients'):[])||[];
+    const obDejaMails=new Set((S.obStaff||[]).map(x=>String(x.email||'').toLowerCase()));
+    let obHits=[];
+    if(obQ.length>=2){
+      obHits=obSrc.filter(c=>{
+        if(c.active!=null&&Number(c.active)===0) return false;
+        const nom=[c.name,c.surname,c.company_name].filter(Boolean).join(' ');
+        return (nom+' '+(c.email||'')).toLowerCase().includes(obQ); });
+    }
+    const OB_MAX=40;
+    const obReste=Math.max(0,obHits.length-OB_MAX);
+    const obPickList=obHits.slice(0,OB_MAX).map(c=>{
+      const mail=String(c.email||'').trim();
+      const nom=[c.name,c.surname].filter(Boolean).join(' ').trim()||c.company_name||'(sans nom)';
+      const dejaLa=!!(mail&&obDejaMails.has(mail.toLowerCase()));
+      /* Un contact sans e-mail ne peut pas recevoir de demande d'adhésion :
+         il est MONTRÉ mais non cochable, avec la raison. Le masquer ferait
+         croire qu'il n'existe pas, et on le ressaisirait à la main. */
+      const ok=!!mail&&!dejaLa;
+      return {id:String(c.id), nm:nom,
+        mail:mail||'— sans e-mail, adhésion impossible',
+        sub:[c.company_name,c.city].filter(Boolean).join(' · '),
+        hasSub:!!(c.company_name||c.city),
+        selectable:ok, notSelectable:!ok,
+        dejaLa:dejaLa,
+        sel:!!obSel[String(c.id)],
+        toggle:ok?this.obTogglePick(String(c.id)):(()=>{}),
+        boxStyle:'width:18px;height:18px;flex:none;border-radius:5px;border:1.5px solid '
+          +(obSel[String(c.id)]?'var(--color-primary)':'var(--color-border-secondary)')
+          +';background:'+(obSel[String(c.id)]?'var(--color-primary)':'var(--color-surface)')
+          +';display:flex;align-items:center;justify-content:center;color:#fff;font:700 11px var(--font-ui)'
+          +(ok?'':';opacity:.35'),
+        rowStyle:'display:flex;align-items:center;gap:10px;padding:8px 10px;border:.5px solid var(--color-border-tertiary);border-radius:9px;'
+          +(ok?'cursor:pointer;background:var(--color-surface)':'background:var(--color-background-secondary);opacity:.6')};
+    });
+    const obPickedN=Object.keys(obSel).filter(k=>obSel[k]).length;
     /* CE QUI MANQUE POUR AVANCER — dit, pas seulement empêché.
        « Suivant » était grisé avec pointer-events:none : le bouton ne réagissait
        pas et rien n'indiquait quel champ bloquait. Sur une étape à six champs,
@@ -8604,6 +8705,11 @@ class Component extends DCLogic {
       obAddDept:()=>this.obAddDept(),
       obDeptQuick:['Marketing','Bureau','Production','Direction','Accueil','Logistique','Cuisine'].map(d=>({label:d,pick:()=>this.setState({obDeptDraft:d})})),
       obStaff:obStaffView, obStaffEmpty:S.obStaff.length===0, obStaffCount:String(S.obStaff.length),
+      obPickQ:S.obPickQ||'', obSetPickQ:(e)=>this.setState({obPickQ:e.target.value}),
+      obPickList, obPickIdle:obQ.length<2, obPickNone:obQ.length>=2&&obHits.length===0,
+      obPickMore:obReste>0, obPickMoreTxt:obReste+' autre(s) — affinez la recherche',
+      obHasPicked:obPickedN>0, obAddPickedTxt:'+ Ajouter '+obPickedN+' contact(s)',
+      obAddPicked:()=>this.obAddPicked(),
       obStaffName:S.obStaffName, obStaffEmail:S.obStaffEmail,
       obSetStaffName:(e)=>this.setState({obStaffName:e.target.value}), obSetStaffEmail:(e)=>this.setState({obStaffEmail:e.target.value}),
       obAddStaff:()=>this.obAddStaff(),
