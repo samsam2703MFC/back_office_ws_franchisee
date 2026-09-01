@@ -227,6 +227,13 @@
       <button onClick="{{ nav.statsReseau }}" title="{{ navTitles.statsReseau }}" style="{{ navStyles.statsReseau }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="12" y="6" width="3" height="12"/><rect x="17" y="13" width="3" height="5"/></svg><span>Stats réseau</span></button>
       <div style="margin:14px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">{{ t.navFidelite }}</div>
       <button onClick="{{ nav.avis }}" title="{{ navTitles.avis }}" style="{{ navStyles.avis }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6.1L12 16.8 6.7 19.7l1.1-6.1L3.4 9.4l6-.8z"/></svg><span>{{ t.navAvis }}</span></button>
+      <!-- MAIL — un groupe dépliant : quatre écrans, quatre adresses. -->
+      <button onClick="{{ mailToggle }}" title="Modèles · envois · signature · journal" style="{{ mailHeadStyle }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="{{ mailChevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1">Mail</span></button>
+      <sc-if value="{{ mailOpen }}" hint-placeholder-val="{{ true }}">
+        <sc-for list="{{ mailNav }}" as="mi" hint-placeholder-count="4">
+          <button onClick="{{ mi.go }}" title="{{ mi.addr }}" style="{{ mi.style }}">{{ mi.label }}</button>
+        </sc-for>
+      </sc-if>
       <button onClick="{{ toggleParams }}" style="{{ paramsHeadStyle }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="{{ paramsChevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase">Paramétrage</span></button>
       <sc-if value="{{ paramsOpen }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="6">
@@ -2042,6 +2049,112 @@
         </sc-if>
         </sc-if>
       </div>
+      </sc-if>
+
+      <!-- ===================== MAIL › MODÈLES ===================== -->
+      <sc-if value="{{ isMailModeles }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:center;gap:9px;background:#eef3fb;border-radius:10px;padding:11px 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a5a9e" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span style="font:400 11.5px var(--font-ui);color:#2a5a9e">{{ tplMarqueTxt }}</span></div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px 20px">
+          <div class="t-section-title" style="font-size:15px;margin-bottom:4px">Modèles locaux</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Propres à cette boutique — mémorisés par boutique, pas partagés avec le réseau.</div>
+          <sc-if value="{{ tplVide }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:22px 6px;font:400 12.5px/1.6 var(--font-ui);color:var(--color-text-muted)">Aucun modèle local. Ceux de la marque arriveront par la route ci-dessus.</div>
+          </sc-if>
+          <sc-for list="{{ tplRows }}" as="tp" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:1.4fr 2.2fr .7fr 1fr 92px;gap:12px;align-items:center;padding:12px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
+              <span style="font:600 12px var(--font-mono,monospace);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ tp.cle }}</span>
+              <span style="font:400 12.5px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ tp.sujet }}</span>
+              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ tp.langue }}</span>
+              <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ tp.decl }}</span>
+              <span style="justify-self:end;{{ tp.porteeStyle }}">{{ tp.portee }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== MAIL › ENVOIS (composeur) =====================
+           On part de la DONNÉE : la source, puis l'enregistrement, et le
+           destinataire / l'objet / le récapitulatif en sortent. -->
+      <sc-if value="{{ isMailEnvois }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:330px minmax(0,1fr);gap:14px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 16px">
+            <div class="t-admin-label" style="margin-bottom:10px">1 · De quoi parle ce mail ?</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ mailSources }}" as="ms" hint-placeholder-count="2">
+                <button onClick="{{ ms.pick }}" style="{{ ms.style }}"><span style="flex:1;min-width:0"><span style="display:block;font:600 12.5px var(--font-ui);color:var(--color-text)">{{ ms.label }}</span><span style="display:block;font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ ms.sub }}</span></span></button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 16px">
+            <div class="t-admin-label" style="margin-bottom:10px">2 · Laquelle</div>
+            <sc-if value="{{ mailVide }}" hint-placeholder-val="{{ true }}">
+              <div style="padding:10px 4px;font:400 12px/1.6 var(--font-ui);color:var(--color-text-muted)">{{ mailVideTxt }}</div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:2px;max-height:320px;overflow-y:auto">
+              <sc-for list="{{ mailRows }}" as="mr" hint-placeholder-count="4">
+                <button onClick="{{ mr.pick }}" style="{{ mr.style }}"><span style="font:600 12.5px var(--font-mono,monospace);color:var(--color-text)">{{ mr.t1 }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ mr.t2 }}</span></button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+          <div class="t-admin-label">3 · Le message</div>
+          <div style="display:flex;align-items:center;gap:9px"><span style="font:500 11px var(--font-ui);color:var(--color-text-muted);flex:none;width:16px">À</span><input value="{{ mailTo }}" onInput="{{ mailSetTo }}" placeholder="adresse du destinataire" style="flex:1;box-sizing:border-box;padding:9px 11px;border-radius:8px;border:.5px solid var(--color-border-tertiary);background:var(--color-surface);color:var(--color-text);font:400 12.5px var(--font-ui);outline:none"/></div>
+          <input value="{{ mailObjet }}" onInput="{{ mailSetObjet }}" placeholder="objet du message" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:.5px solid var(--color-border-tertiary);background:var(--color-surface);color:var(--color-text);font:600 12.5px var(--font-ui);outline:none"/>
+          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+            <sc-if value="{{ mailAPick }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ mailInsert }}" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 15px;font:600 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);cursor:pointer">{{ mailInsertLbl }}</button>
+            </sc-if>
+            <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">n'insère que les champs réellement servis</span>
+          </div>
+          <textarea value="{{ mailCorps }}" onInput="{{ mailSetCorps }}" placeholder="le message" style="width:100%;box-sizing:border-box;min-height:230px;padding:12px 14px;border-radius:8px;border:.5px solid var(--color-border-tertiary);background:var(--color-surface);color:var(--color-text);font:400 12px/1.75 var(--font-mono,monospace);outline:none;resize:vertical"></textarea>
+          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+            <button onClick="{{ mailNoop }}" title="{{ mailAssistMotif }}" style="{{ mailBtnOff }}">✦ Corriger &amp; mettre en page</button>
+            <span style="flex:1"></span>
+            <button onClick="{{ mailNoop }}" title="{{ mailEnvoiMotif }}" style="{{ mailBtnOff }}">Envoyer</button>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:9px;background:#fff4e0;border-radius:9px;padding:10px 13px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b26a00" stroke-width="1.8" style="flex:none;margin-top:1px"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>
+            <span style="font:400 11px/1.6 var(--font-ui);color:#8a5200">{{ mailAssistMotif }} — {{ mailEnvoiMotif }}</span>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== MAIL › SIGNATURE ===================== -->
+      <sc-if value="{{ isMailSignature }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 1.15fr;gap:14px;align-items:start">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+          <div class="t-section-title" style="font-size:15px">Pied de mail</div>
+          <span style="{{ sigEtatStyle }}">{{ sigEtat }}</span>
+          <div style="display:flex;flex-direction:column;gap:3px;background:var(--color-background-secondary);border-radius:9px;padding:11px 13px">
+            <span style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted)">Servi par le serveur — non saisissable ici</span>
+            <span style="font:500 12px var(--font-ui);color:var(--color-text)">Enseigne : {{ sigEnseigne }}</span>
+            <span style="font:500 12px var(--font-ui);color:var(--color-text)">Adresse : {{ sigAdresse }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ sigChamps }}" as="sc" hint-placeholder-count="8">
+              <div><div style="font:500 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:4px">{{ sc.lbl }}</div><input value="{{ sc.val }}" onInput="{{ sc.set }}" placeholder="{{ sc.ph }}" style="{{ sc.style }}"/></div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px"><button onClick="{{ sigSave }}" style="{{ sigSaveStyle }}">{{ sigSaveLbl }}</button><span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ sigMsg }}</span></div>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 16px">
+          <div class="t-admin-label" style="margin-bottom:9px">Aperçu — le bloc tel qu'il partira</div>
+          <sc-if value="{{ sigAGab }}" hint-placeholder-val="{{ true }}">
+            <iframe src="{{ sigUrl }}" title="Aperçu du pied de mail" style="width:100%;height:210px;border:.5px solid var(--color-border-tertiary);border-radius:8px;background:#fff;display:block"></iframe>
+          </sc-if>
+          <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:9px">{{ sigGabErr }}Une variable non remplie reste visible en clair dans l'aperçu, entre doubles accolades : c'est exactement ce que le client verrait.</div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== MAIL › JOURNAL ===================== -->
+      <sc-if value="{{ isMailJournal }}" hint-placeholder-val="{{ false }}">
+      <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:26px;text-align:center;font:400 12.5px/1.7 var(--font-ui);color:var(--color-text-muted)">{{ jrnTxt }}</div>
       </sc-if>
 
       <!-- ===================== EMAILS BUREAU ===================== -->
@@ -5237,6 +5350,8 @@ class Component extends DCLogic {
     if(s==='stockJour') st.stkAlert=null;
     // Rentabilité : charge (une fois) les points réels (geo-clients).
     if(s==='rentabilite') setTimeout(()=>this.rentaEnsure(),0);
+    // Signature : le gabarit du pied de mail est un fichier, chargé à l'entrée.
+    if(s==='mailSignature') setTimeout(()=>this.mailSigEnsure(),0);
     // Écrans à données de commandes : refetch à l'ENTRÉE (une nouvelle
     // commande webshop apparaît sans recharger toute la page).
     if(this.ORD_SCREENS[s]) setTimeout(()=>this.ordersRefresh(),0);
@@ -5302,6 +5417,7 @@ class Component extends DCLogic {
     const set={};
     this.NAV_KEYS.forEach(s=>set[s]=1);
     this.PARAM_SCREENS.forEach(s=>set[s]=1);
+    this.MAIL_SCREENS.forEach(s=>set[s]=1);
     this.navGroupsDef().forEach(g=>g.items.forEach(it=>set[it[0]]=1));
     this.searchDefs().forEach(e=>{ if(e.s) set[e.s]=1; });
     this._addrSet=set; return set; }
@@ -5345,6 +5461,81 @@ class Component extends DCLogic {
     if(!this.addrScreens()[s]){ this.addrSync(); return; }  // inconnu : corrigé, pas suivi
     const g=this.navGroupOf(s);
     this.goTo(s,g?{paramsOpen:true,openGroups:Object.assign({},this.state.openGroups,{[g]:true})}:null); }
+
+  /* ══ MAIL ═════════════════════════════════════════════════════════════════
+     Quatre écrans sous une même entrée de rail : les MODÈLES (ce qu'on écrit
+     une fois), les ENVOIS (le composeur), la SIGNATURE (le pied de mail), le
+     JOURNAL (ce qui est réellement parti).
+
+     LE COMPOSEUR PART DE LA DONNÉE, pas du modèle. On choisit ce dont le mail
+     parle — une commande, une demande B2B — et le destinataire, l'objet et le
+     récapitulatif en sortent. Recopier à la main une référence de commande dans
+     un mail, c'est se tromper un jour sur deux chiffres et l'envoyer quand même.
+
+     CE QUI MARCHE AUJOURD'HUI, ET CE QUI ATTEND UNE ROUTE. Les sources du
+     composeur (fr_orders, fr_validations) et la signature sont réelles et
+     écrivent vraiment. L'ENVOI, la RELECTURE par Claude et le JOURNAL n'ont pas
+     d'endpoint : leurs boutons sont désactivés et DISENT lequel manque, plutôt
+     que d'afficher « envoyé » sans que rien ne parte. */
+  MAIL_SCREENS=['mailModeles','mailEnvois','mailSignature','mailJournal'];
+
+  /* Mise en forme du bloc de signature : charte L'Atelier, pas donnée métier —
+     ces valeurs-là ont leur place dans le code, au même titre que les libellés
+     de la nav. Tout le reste est saisi par la boutique ou servi par /me. */
+  MAIL_SIG_GABARIT={COLOR_BG:'#EFE9E1',COLOR_TEXT:'#222222',COLOR_TEXT_MUTED:'#666666',
+    COLOR_ACCENT:'#C8981F',COLOR_RULE:'#D8BE8A',COLOR_CTA1_BG:'#8D1D2C',COLOR_CTA1_TEXT:'#FFFFFF',
+    COLOR_CTA2_BG:'#F2C9A0',COLOR_CTA2_TEXT:'#6B4420',COLOR_BADGE_BG:'#C8981F',COLOR_BADGE_TEXT:'#FFFFFF',
+    BLOCK_WIDTH:'1080',IMAGE_COL_WIDTH:'300',FONT_STACK:'Helvetica,Arial,sans-serif',LOGO_WIDTH:'132'};
+
+  /* Variables saisies par la boutique. `ph` est une consigne de FORMAT, jamais
+     une valeur : une valeur d'exemple préremplie devient un enregistrement au
+     premier enregistrement — c'est ainsi qu'une raison sociale fictive s'est
+     retrouvée en production. Ce qui est saisi ici part chez un client. */
+  MAIL_SIG_CHAMPS=[
+    {k:'TAGLINE',        lbl:'Accroche',              ph:'une ligne, sous le logo'},
+    {k:'BASELINE',       lbl:'Baseline',              ph:'une phrase, en italique'},
+    {k:'PHONE_LABEL',    lbl:'Libellé téléphone',     ph:'Tél'},
+    {k:'PHONE',          lbl:'Téléphone',             ph:'0XX/XX XX XX'},
+    {k:'VAT_LABEL',      lbl:'Libellé TVA',           ph:'TVA'},
+    {k:'VAT',            lbl:'Numéro de TVA',         ph:'BE 0XXXXXXXXX'},
+    {k:'IBAN',           lbl:'IBAN',                  ph:'BEXX XXXX XXXX XXXX'},
+    {k:'LOGO_URL',       lbl:'Logo (URL publique)',   ph:'https://…/logo.png'},
+    {k:'PROMO_BADGE',    lbl:'Badge de la promo',     ph:'quelques mots'},
+    {k:'PROMO_IMAGE_URL',lbl:'Photo promo (URL)',     ph:'https://…/promo.jpg'},
+    {k:'PROMO_IMAGE_ALT',lbl:'Texte de la photo',     ph:'ce que montre la photo'},
+    {k:'CTA1_LABEL',     lbl:'Bouton 1 — libellé',    ph:'quelques mots'},
+    {k:'CTA1_URL',       lbl:'Bouton 1 — lien',       ph:'https://…'},
+    {k:'CTA2_LABEL',     lbl:'Bouton 2 — libellé',    ph:'quelques mots'},
+    {k:'CTA2_URL',       lbl:'Bouton 2 — lien',       ph:'https://…'},
+  ];
+
+  /* Mémorisation PAR BOUTIQUE. ws_param n'a pas de colonne boutique — le
+     serveur le dit lui-même et refuse d'ailleurs toute clé hors liste blanche :
+     l'IBAN d'une boutique y deviendrait celui de tout le réseau. ws_bo_store,
+     lui, est scopé ?shop=. D'où BOServer.save et non setParam. */
+  mailSigRow(){ const t=(window.BOServer?window.BOServer.table('mail_signature'):[]);
+    const r=t&&t[0]; return (r&&typeof r==='object')?r:{}; }
+  mailSigVal(k){ const d=this.state.mailSigDraft||{};
+    return d[k]!==undefined?d[k]:String(this.mailSigRow()[k]||''); }
+  mailSigSet(k){ return (e)=>{ const v=e.target.value;
+    this.setState(s=>({mailSigDraft:{...(s.mailSigDraft||{}),[k]:v},mailSigMsg:''})); }; }
+  mailSigDirty(){ const d=this.state.mailSigDraft||{}, r=this.mailSigRow();
+    return Object.keys(d).some(k=>String(d[k])!==String(r[k]||'')); }
+  mailSigSave(){ if(!window.BOServer||!this.mailSigDirty()) return;
+    const row={...this.mailSigRow(),...(this.state.mailSigDraft||{})};
+    Promise.resolve(window.BOServer.save('mail_signature',[row]))
+      .then(()=>this.setState({mailSigDraft:{},mailSigMsg:'✓ Signature enregistrée pour cette boutique'}),
+            (e)=>this.setState({mailSigMsg:'Échec de l’enregistrement — '+((e&&e.message)||'réseau')})); }
+
+  /* Le gabarit est un FICHIER (mail/stopper-2a.html), celui-là même que le
+     serveur doit rendre à l'envoi. Chargé, jamais recopié dans le code : deux
+     copies, c'est un aperçu qui ment sur ce que le client reçoit. */
+  mailSigEnsure(){ if(this.state.screen!=='mailSignature'||this._mailGabFait) return;
+    this._mailGabFait=true;
+    fetch('mail/stopper-2a.html',{cache:'no-store'})
+      .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+      .then(t=>{ this._mailGab=t; this.setState(s=>({_rev:(s._rev||0)+1})); })
+      .catch(e=>{ this._mailGabErr=(e&&e.message)||'échec réseau'; this.setState(s=>({_rev:(s._rev||0)+1})); }); }
 
   // Écrans dont les données bougent avec les commandes entrantes.
   ORD_SCREENS={tdb:1,commandes:1,prep:1,suivi:1,stockJour:1,capacite:1};
@@ -8237,6 +8428,155 @@ class Component extends DCLogic {
       ? ('jauge pleine = plus haut montant du réseau sur la période ('+this.eur(nsRef)+')')
       : 'aucun montant servi : les jauges restent vides';
 
+    /* ══ MAIL ═════════════════════════════════════════════════════════════ */
+    const MAIL_LBL={mailModeles:'Modèles',mailEnvois:'Envois',mailSignature:'Signature',mailJournal:'Journal'};
+    const mailActif=this.MAIL_SCREENS.indexOf(screen)>=0;
+    const mailOpen=S.mailOpen!==undefined?S.mailOpen:mailActif;
+    const mailToggle=()=>this.setState(st=>({mailOpen:!(st.mailOpen!==undefined?st.mailOpen:mailActif)}));
+    const mailHeadStyle='display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:none;'
+      +'border-radius:8px;cursor:pointer;font:600 12px/1 var(--font-ui);text-align:left;background:transparent;'
+      +'margin-top:2px;color:'+(mailActif?'var(--color-primary)':'var(--color-text)');
+    const mailChevStyle='flex:none;transition:transform .15s'+(mailOpen?';transform:rotate(90deg)':'');
+    const mailNav=this.MAIL_SCREENS.map(k=>({label:MAIL_LBL[k],go:this.go(k),style:navSub(k),addr:this.addrTitle(k)}));
+
+    /* ── Signature ────────────────────────────────────────────────────────
+       Trois origines, et l'écran ne les mélange pas : ce que le SERVEUR sert
+       (l'enseigne et l'adresse de la boutique — on ne les retape pas dans un
+       mail), ce que la BOUTIQUE saisit, et le GABARIT (mise en forme). */
+    const sigSrv={ LOGO_ALT:this.shopField('name',''),
+      ADDRESS:[this.shopField('address',''),
+               [this.shopField('cp',''),this.shopField('city','')].filter(v=>v&&v!=='—').join(' ')]
+              .filter(v=>v&&v!=='—').join(' — ') };
+    const sigChamps=this.MAIL_SIG_CHAMPS.map(c=>{ const v=this.mailSigVal(c.k);
+      return {lbl:c.lbl,ph:c.ph,val:v,set:this.mailSigSet(c.k),
+        style:'width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;border:.5px solid '
+          +(String(v).trim()?'var(--color-border-tertiary)':'#e0b6bc')
+          +';background:var(--color-surface);color:var(--color-text);font:400 12.5px var(--font-ui);outline:none'}; });
+    const sigManq=this.MAIL_SIG_CHAMPS.filter(c=>!String(this.mailSigVal(c.k)).trim()).map(c=>c.lbl);
+    const sigSrvManq=Object.keys(sigSrv).filter(k=>!sigSrv[k]);
+    /* Un mail qui part avec « {{IBAN}} » en clair est pire qu'un mail sans pied
+       de page : on NOMME ce qui manque au lieu de laisser croire que c'est prêt. */
+    const sigPrete=!sigManq.length&&!sigSrvManq.length;
+    const sigEtat=sigPrete?'Signature complète — toutes les variables sont remplies.'
+      :('Incomplète : '+[sigManq.length?(sigManq.length+' champ(s) à saisir — '+sigManq.join(', ')):'',
+         sigSrvManq.length?('non servi par /franchisee/me — '+sigSrvManq.join(', ')):'']
+        .filter(Boolean).join(' · '));
+    const sigEtatStyle='display:block;border-radius:9px;padding:8px 12px;font:600 11px/1.55 var(--font-ui);'
+      +'background:'+(sigPrete?'#eaf5ec':'#fbe9eb')+';color:'+(sigPrete?'#2d7a3e':'var(--color-primary)');
+    const sigVals={...this.MAIL_SIG_GABARIT,...sigSrv};
+    this.MAIL_SIG_CHAMPS.forEach(c=>{ const v=this.mailSigVal(c.k); if(String(v).trim()) sigVals[c.k]=v; });
+    // Une variable non remplie RESTE « {{NOM}} » dans l'aperçu : c'est ce que le
+    // client verrait, et c'est donc ce qu'il faut montrer.
+    const sigCorps=(this._mailGab||'').replace(/\{\{\s*([A-Z0-9_]+)\s*\}\}/g,
+      (m,k)=>sigVals[k]!==undefined?String(sigVals[k]):m);
+    const sigDoc=this._mailGab
+      ? ('<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff;overflow:hidden">'
+         +'<div style="width:1080px;transform:scale(.58);transform-origin:0 0">'+sigCorps+'</div></body>')
+      : '';
+    /* L'aperçu passe par une URL blob plutôt que par srcDoc : le gabarit
+       traverse l'analyseur HTML du navigateur avant le runtime, qui met les
+       attributs en minuscules — React reçoit alors « srcdoc », le refuse et
+       avertit en console. Or ici une alerte console est un DÉFAUT, pas du
+       bruit. `src` est un attribut ordinaire, insensible à la casse. L'URL
+       n'est recréée que si le contenu a changé, et la précédente est révoquée :
+       un aperçu qui se redessine à chaque frappe fuirait sinon un blob par
+       caractère tapé. */
+    let sigUrl='';
+    if(sigDoc){
+      if(this._sigDocPrec!==sigDoc){
+        try{ if(this._sigUrl) URL.revokeObjectURL(this._sigUrl); }catch(e){}
+        try{ this._sigUrl=URL.createObjectURL(new Blob([sigDoc],{type:'text/html;charset=utf-8'})); }
+        catch(e){ this._sigUrl=''; }
+        this._sigDocPrec=sigDoc;
+      }
+      sigUrl=this._sigUrl||'';
+    }
+    const sigGabErr=this._mailGab?'':(this._mailGabErr
+      ? ('Gabarit mail/stopper-2a.html illisible — '+this._mailGabErr)
+      : 'Chargement du gabarit…');
+    const sigSave=()=>this.mailSigSave();
+    const sigDirty=this.mailSigDirty();
+    const sigSaveStyle='border:none;border-radius:8px;padding:10px 18px;font:600 12px var(--font-ui);color:#fff;'
+      +'background:var(--color-primary);cursor:'+(sigDirty?'pointer':'not-allowed')+';opacity:'+(sigDirty?'1':'.45');
+
+    /* ── Composeur : on part de la DONNÉE, pas du modèle ──────────────────── */
+    const mailSrc=S.mailSrc||'commande';
+    const mailContacts={};
+    SRV('ws_office_emails').forEach(e=>{ if(e.bureau&&e.addr&&!mailContacts[e.bureau]) mailContacts[e.bureau]=String(e.addr); });
+    const mailListe=(mailSrc==='b2b')
+      ? SRV('fr_validations').map(v=>({id:'v'+v.id,kind:'b2b',row:v,
+          t1:String(v.raison||('demande #'+v.id)),
+          t2:[v.tva,v.date].filter(Boolean).join(' · '),
+          to:String(v.email||'')}))
+      : SRV('fr_orders').map(o=>({id:'o'+o.ref,kind:'commande',row:o,
+          t1:String(o.ref||'—'),
+          t2:[o.client,o.date].filter(Boolean).join(' · '),
+          to:mailContacts[o.bureau]||''}));
+    const mailSel=mailListe.find(x=>x.id===S.mailPick)||mailListe[0]||null;
+    /* Récapitulatif : UNIQUEMENT les champs que la ligne porte vraiment. Un
+       « Créneau : — » dans un mail au client, c'est nous qui avons l'air de ne
+       pas savoir ce qu'on livre. */
+    const mailRecap=(x)=>{ if(!x) return ''; const r=x.row, L=[];
+      const put=(l,v)=>{ const s2=(v===undefined||v===null)?'':String(v).trim();
+        if(s2&&s2!=='—') L.push(l+' : '+s2); };
+      if(x.kind==='commande'){ put('Commande',r.ref); put('Client',r.client); put('Date',r.date);
+        put('Créneau',r.creneau); put('Bureau',r.bureau); put('Site',r.site); put('Total',r.montant); }
+      else { put('Société',r.raison); put('N° TVA',r.tva); put('Demande du',r.date); put('Contact',r.email); }
+      return L.join('\n'); };
+    const mailObjetAuto=(x)=>!x?'':(x.kind==='commande'
+      ? ('Votre commande '+String(x.row.ref||'')).trim()
+      : ('Votre demande d’accès — '+String(x.row.raison||'')).trim());
+    const mailPickFn=(x)=>()=>this.setState({mailPick:x.id,mailTo:x.to,mailObjet:mailObjetAuto(x),mailCorps:''});
+    const mailSetSrc=(k)=>()=>this.setState({mailSrc:k,mailPick:null,mailTo:undefined,mailObjet:undefined,mailCorps:''});
+    const mailTo=S.mailTo!==undefined?S.mailTo:(mailSel?mailSel.to:'');
+    const mailObjet=S.mailObjet!==undefined?S.mailObjet:mailObjetAuto(mailSel);
+    const mailCorps=S.mailCorps||'';
+    const mailSrcBtn=(k,t,n)=>({label:t,sub:n,pick:mailSetSrc(k),
+      style:'display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;border-radius:10px;'
+        +'padding:11px 13px;border:'+(mailSrc===k?'1px solid var(--color-primary)':'.5px solid var(--color-border-tertiary)')
+        +';background:'+(mailSrc===k?'var(--color-background-secondary)':'var(--color-surface)')});
+    const mailSources=[
+      mailSrcBtn('commande','Une commande',SRV('fr_orders').length+' connue(s)'),
+      mailSrcBtn('b2b','Une demande B2B',SRV('fr_validations').length+' en attente'),
+    ];
+    const mailRows=mailListe.slice(0,40).map(x=>({t1:x.t1,t2:x.t2,pick:mailPickFn(x),
+      style:'display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;border:none;cursor:pointer;'
+        +'padding:9px 11px;border-radius:8px;background:'+((mailSel&&mailSel.id===x.id)?'var(--color-background-secondary)':'transparent')}));
+    const mailVide=mailListe.length===0;
+    const mailVideTxt=(mailSrc==='b2b')
+      ? 'Aucune demande B2B en attente — rien à quoi répondre.'
+      : 'Aucune commande servie par /franchisee/fr-orders pour cette boutique.';
+    const mailInsert=()=>{ const t=mailRecap(mailSel); if(!t) return;
+      this.setState(st=>({mailCorps:(st.mailCorps||'')+((st.mailCorps||'')?'\n\n':'')+t})); };
+    const mailSetTo=(e)=>{ const v=e.target.value; this.setState({mailTo:v}); };
+    const mailSetObjet=(e)=>{ const v=e.target.value; this.setState({mailObjet:v}); };
+    const mailSetCorps=(e)=>{ const v=e.target.value; this.setState({mailCorps:v}); };
+    /* CE QUI N'EXISTE PAS EST DÉSACTIVÉ, ET DIT POURQUOI. Un bouton « Envoyer »
+       qui affiche « envoyé » sans qu'aucune route ne soit appelée, c'est un
+       client qui attend une commande dont personne ne l'a prévenu. */
+    const mailBtnOff='border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 16px;'
+      +'font:600 12px var(--font-ui);background:var(--color-surface);color:var(--color-text-muted);cursor:not-allowed';
+    const mailAssistMotif='Route POST /franchisee/mail-assist absente. La relecture doit passer par le '
+      +'serveur : une clé API dans le navigateur serait lisible par chaque franchisé.';
+    const mailEnvoiMotif='Route POST /franchisee/mail-send absente — rien ne partirait.';
+    const mailNoop=()=>{};
+
+    /* ── Modèles : les LOCAUX sont réels (ws_bo_store), ceux de la marque
+       attendent leur route — comme l'assortiment, c'est le réseau qui les
+       décide, et on ne les invente pas en attendant. */
+    const tplRows=SRV('mail_templates').map(t=>({
+      cle:String(t.cle||t.tpl_key||'—'), sujet:String(t.sujet||t.subject||'—'),
+      langue:String(t.langue||t.lang||'—'), decl:String(t.decl||t.trigger||'manuel'),
+      portee:'locale ✍', porteeStyle:this.pill('#eaf5ec','#2d7a3e')}));
+    const tplVide=tplRows.length===0;
+    const tplMarqueTxt='Modèles de la marque : route GET /franchisee/mail-templates absente — '
+      +'ws_email_templates porte id_brand, c\'est le réseau qui les sert.';
+
+    /* ── Journal : ce qui est réellement parti. Sans route, on ne le sait pas,
+       et on le dit — « aucun envoi » serait une affirmation, pas un constat. */
+    const jrnTxt='Route GET /franchisee/mail-log absente : la console ne peut pas savoir ce qui est parti. '
+      +'Tant qu\'elle n\'existe pas, aucun envoi n\'est traçable depuis cet écran.';
+
     // Emails bureau
     const emailTag=(role)=>pill2(role==='Facturation'?'#eef3fb':'var(--color-background-secondary)',role==='Facturation'?'#2a5a9e':'var(--color-text-muted)');
     const emailRaw=SRV('ws_office_emails');
@@ -9155,6 +9495,17 @@ class Component extends DCLogic {
       tkGenerate:()=>this.tkGenerate(),
       tkRevoke:()=>this.tkRevoke(),
       nav,navStyles,navTitles,setLang,langStyles,langList,t,
+      mailNav,mailOpen,mailToggle,mailHeadStyle,mailChevStyle,mailActif,
+      isMailModeles:screen==='mailModeles',tplRows,tplVide,tplMarqueTxt,
+      isMailEnvois:screen==='mailEnvois',mailSources,mailRows,mailVide,mailVideTxt,
+      mailTo,mailObjet,mailCorps,mailSetTo,mailSetObjet,mailSetCorps,mailInsert,
+      mailBtnOff,mailAssistMotif,mailEnvoiMotif,mailNoop,
+      mailInsertLbl:mailSel?(mailSel.kind==='commande'?'＋ Insérer la commande':'＋ Insérer la demande'):'＋ Insérer',
+      mailAPick:!!mailSel,
+      isMailSignature:screen==='mailSignature',sigChamps,sigEtat,sigEtatStyle,sigUrl,sigGabErr,
+      sigAGab:!!this._mailGab,sigSave,sigSaveStyle,sigSaveLbl:sigDirty?'Enregistrer':'Aucune modification',
+      sigMsg:S.mailSigMsg||'',sigEnseigne:sigSrv.LOGO_ALT||'—',sigAdresse:sigSrv.ADDRESS||'—',
+      isMailJournal:screen==='mailJournal',jrnTxt,
       pageTitle:titles[screen],pageSub:subs[screen],
       isMulti:true,
       isValidations:screen==='demandesB2B'&&((S.b2bTab||'acces')==='acces'||(S.b2bTab||'')==='nouveau'),

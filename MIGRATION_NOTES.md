@@ -544,3 +544,76 @@ saisissant l'id de boutique. Sortie attendue :
 Vérifié en local contre le VRAI `erp_alias.php` et un faux ERP : jeton posé,
 jeton refusé (401), ERP injoignable, ERP non configuré — et aucun montant,
 client, référence ni jeton dans la sortie.
+
+## Écran « Mail » — modèles, composeur, signature, journal
+
+Une entrée dépliante dans le rail, quatre écrans, quatre adresses
+(`#mailModeles` · `#mailEnvois` · `#mailSignature` · `#mailJournal`).
+
+### Le composeur part de la DONNÉE, pas du modèle
+
+On choisit ce dont le mail parle — une **commande** (`fr_orders`) ou une
+**demande B2B** (`fr_validations`) — et le destinataire, l'objet et le
+récapitulatif en sortent. Le destinataire d'une commande est déduit du bureau
+via `ws_office_emails` ; celui d'une demande B2B est l'e-mail de la demande.
+Recopier une référence de commande à la main dans un mail, c'est se tromper un
+jour sur deux chiffres et l'envoyer quand même.
+
+Le récapitulatif inséré ne contient **que les champs que la ligne porte
+vraiment** : un champ absent est omis, jamais rendu par un tiret. « Créneau :
+— » dans un mail au client, c'est nous qui avons l'air de ne pas savoir ce
+qu'on livre.
+
+### Ce qui marche, et ce qui attend une route
+
+| | État |
+| --- | --- |
+| Sources du composeur (commandes, demandes B2B, contacts) | **réel** — tables déjà hydratées |
+| Signature : saisie, mémorisation, aperçu | **réel** — voir ci-dessous |
+| Modèles **locaux** | **réel** (`ws_bo_store`) |
+| Modèles **de la marque** | `GET /franchisee/mail-templates` — absente |
+| Relecture par Claude | `POST /franchisee/mail-assist` — absente |
+| Envoi | `POST /franchisee/mail-send` — absente |
+| Journal des envois | `GET /franchisee/mail-log` — absente |
+
+Les boutons qui dépendent d'une route absente sont **désactivés et disent
+laquelle**. Un « Envoyer » qui afficherait « envoyé » sans qu'aucune route ne
+soit appelée, c'est un client qui attend une commande dont personne ne l'a
+prévenu.
+
+### La clé Anthropic ne peut pas vivre dans le navigateur
+
+La relecture (« Corriger & mettre en page ») doit passer par le serveur :
+`POST /franchisee/mail-assist`, qui appelle Claude côté PHP. Une clé API posée
+dans la console serait lisible par **chaque franchisé** — même raisonnement que
+le jeton ERP des Stats réseau. Le SDK PHP officiel (`anthropic-sdk-php`) est la
+voie ; ce chantier vit dans le dépôt **WebShop**, pas ici.
+
+### Signature — mémorisée PAR BOUTIQUE, et c'est le point délicat
+
+Le gabarit est `mail/stopper-2a.html` (voir `mail/README.md`) : un bloc HTML
+d'e-mail entièrement variabilisé en `{{ }}` — la même syntaxe que
+`mail_render()` côté serveur.
+
+Les valeurs sont écrites via `BOServer.save('mail_signature', …)`, donc dans
+**`ws_bo_store`, qui est scopé `?shop=`**. Surtout **pas** par `setParam` :
+`ws_param` n'a pas de colonne boutique — le serveur le dit lui-même et refuse
+d'ailleurs toute clé hors liste blanche. L'IBAN d'une boutique y serait devenu
+celui de tout le réseau.
+
+Trois origines, jamais mélangées :
+
+- **serveur** (`/franchisee/me`) : enseigne et adresse — on ne les retape pas ;
+- **boutique** : téléphone, TVA, IBAN, promo, boutons — 15 champs ;
+- **gabarit** : couleurs et largeurs, charte L'Atelier, pas donnée métier.
+
+**Rien n'est prérempli**, y compris à partir de l'exemple Gosselies fourni : une
+valeur d'exemple devient un enregistrement au premier enregistrement. Les champs
+non remplis sont **nommés** dans un bandeau, et l'aperçu — le vrai gabarit, rendu
+dans une iframe — laisse la variable en clair entre accolades. Un mail qui part
+avec `{{IBAN}}` visible est pire qu'un mail sans pied de page.
+
+L'aperçu passe par une **URL blob** et non par `srcDoc` : le gabarit traverse
+l'analyseur HTML du navigateur avant le runtime, qui met les attributs en
+minuscules — React reçoit alors `srcdoc`, le refuse et avertit en console. Ici
+une alerte console est un défaut, pas du bruit.
