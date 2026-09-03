@@ -2493,6 +2493,17 @@
       </div>
       <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
         <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div class="t-admin-label">Gammes dans la brochure</div><div style="display:flex;gap:12px;font:500 11px var(--font-ui)"><button onClick="{{ brToutes }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-primary);font:inherit">Toutes</button><button onClick="{{ brAucune }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-text-muted);font:inherit">Aucune</button></div></div>
+          <sc-if value="{{ br.chargement }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Lecture des gammes servies…</div></sc-if>
+          <sc-if value="{{ br.erreur }}" hint-placeholder-val="{{ false }}"><div style="font:500 12px var(--font-ui);color:var(--color-primary);padding:6px 0">{{ br.erreur }}</div></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px">
+            <sc-for list="{{ br.cats }}" as="c" hint-placeholder-count="6">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 8px;border-radius:8px;background:var(--color-background-secondary)"><input type="checkbox" checked="{{ c.on }}" onChange="{{ c.toggle }}"/><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ c.nom }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-left:auto">{{ c.n }}</span></label>
+            </sc-for>
+          </div>
+          <sc-if value="{{ br.aucune }}" hint-placeholder-val="{{ false }}"><div style="font:500 11px var(--font-ui);color:var(--color-primary);margin-top:6px">Choisissez au moins une gamme.</div></sc-if>
+        </div>
+        <div>
           <div class="t-admin-label" style="margin-bottom:6px">Disponibilité des produits</div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:400 13px var(--font-ui);color:var(--color-text)">Catalogue tel qu'il sera servi le</span><input type="date" value="{{ br.date }}" onChange="{{ brDate }}" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:6px">Les produits saisonniers et les périodes ERP s'appliquent à cette date : un produit hors saison ce jour-là n'apparaît pas.</div>
@@ -4590,15 +4601,32 @@ class Component extends DCLogic {
      un bureau. Même mécanique que l'affiche : l'onglet s'ouvre AU CLIC (sinon
      bloqué comme popup), le fetch emporte le jeton, la réponse arrive en blob. */
   brOpen(officeId,nom){ const d=new Date(); const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    this.setState({br:{officeId:officeId!=null?officeId:null,nom:nom||'',date:iso,sansSaison:false}}); }
-  brVals(){ const br=this.state.br; if(!br) return {brModal:false,br:{cible:'',date:'',sansSaison:false},brFermer:()=>{},brDate:()=>{},brSaison:()=>{},brLancer:()=>{}};
-    return {brModal:true,br:{...br,cible:br.officeId!=null?('Bureau '+br.nom+' — son assortiment, ses prix ou non, son QR de rattachement'):'Toute la boutique — tous les produits, sans QR de bureau'},
+    this.setState({br:{officeId:officeId!=null?officeId:null,nom:nom||'',date:iso,sansSaison:false,cats:[],chargement:true,erreur:''}},()=>this.brOptions()); }
+  /* Les gammes proposées viennent de l'endpoint, jamais d'une table en mémoire :
+     celles réellement servies pour la boutique ou le bureau, à la date choisie. */
+  brOptions(){ const br=this.state.br; const fr=window.__FR||{}; if(!br||!fr.base) return;
+    const qs=(br.officeId!=null?('?office='+encodeURIComponent(br.officeId)):'?x=1')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'')+(br.date?('&date='+encodeURIComponent(br.date)):'');
+    const dateDemandee=br.date;
+    fetch(fr.base+'/franchisee/office-brochure-options'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(j=>({ok:r.ok,j})).catch(()=>({ok:false,j:null})))
+      .then(({ok,j})=>{ const cur=this.state.br; if(!cur||cur.date!==dateDemandee) return;
+        if(!ok||!j||!Array.isArray(j.cats)){ this.setState({br:{...cur,chargement:false,erreur:(j&&j.error)||'Gammes indisponibles'}}); return; }
+        const anciennes={}; (cur.cats||[]).forEach(c=>{ anciennes[c.key]=c.on; });
+        this.setState({br:{...cur,chargement:false,erreur:'',cats:j.cats.map(c=>({key:c.key,nom:c.nom,n:c.n,on:anciennes[c.key]!==undefined?anciennes[c.key]:true}))}}); })
+      .catch(e=>{ const cur=this.state.br; if(cur) this.setState({br:{...cur,chargement:false,erreur:(e&&e.message)||'réseau indisponible'}}); }); }
+  brVals(){ const br=this.state.br; if(!br) return {brModal:false,br:{cible:'',date:'',sansSaison:false,cats:[],aucune:false,chargement:false,erreur:''},brToutes:()=>{},brAucune:()=>{},brFermer:()=>{},brDate:()=>{},brSaison:()=>{},brLancer:()=>{}};
+    const cats=(br.cats||[]).map(c=>({...c,toggle:()=>this.setState({br:{...this.state.br,cats:this.state.br.cats.map(x=>x.key===c.key?{...x,on:!x.on}:x)}})}));
+    return {brModal:true,br:{...br,cats,aucune:cats.length>0&&!cats.some(c=>c.on),cible:br.officeId!=null?('Bureau '+br.nom+' — son assortiment, ses prix ou non, son QR de rattachement'):'Toute la boutique — tous les produits, sans QR de bureau'},
+      brToutes:()=>this.setState({br:{...this.state.br,cats:this.state.br.cats.map(x=>({...x,on:true}))}}),
+      brAucune:()=>this.setState({br:{...this.state.br,cats:this.state.br.cats.map(x=>({...x,on:false}))}}),
       brFermer:()=>this.setState({br:null}),
-      brDate:(e)=>this.setState({br:{...this.state.br,date:e&&e.target?e.target.value:this.state.br.date}}),
+      brDate:(e)=>this.setState({br:{...this.state.br,date:e&&e.target?e.target.value:this.state.br.date,chargement:true}},()=>this.brOptions()),
       brSaison:(e)=>this.setState({br:{...this.state.br,sansSaison:!!(e&&e.target&&e.target.checked)}}),
       brLancer:()=>this.brLancer()}; }
   brLancer(){ const br=this.state.br; const fr=window.__FR||{}; if(!br||!fr.base) return;
-    const qs=(br.officeId!=null?('?office='+encodeURIComponent(br.officeId)):'?x=1')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'')+(br.date?('&date='+encodeURIComponent(br.date)):'')+(br.sansSaison?'&sansSaison=1':'');
+    const cats=br.cats||[]; const cochees=cats.filter(c=>c.on); if(cats.length&&!cochees.length){ this.printJob('⚠ Choisissez au moins une gamme.'); return; }
+    const catsQs=(cats.length&&cochees.length<cats.length)?('&cats='+encodeURIComponent(cochees.map(c=>c.key).join(','))):'';
+    const qs=(br.officeId!=null?('?office='+encodeURIComponent(br.officeId)):'?x=1')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'')+(br.date?('&date='+encodeURIComponent(br.date)):'')+(br.sansSaison?'&sansSaison=1':'')+catsQs;
     const onglet=window.open('','_blank');
     this.setState({br:null}); this.printJob('Préparation du dossier'+(br.nom?(' — '+br.nom):'')+'…');
     fetch(fr.base+'/franchisee/office-brochure'+qs,{headers:FRH(),credentials:'omit'})
