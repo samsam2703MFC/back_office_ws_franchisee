@@ -1394,10 +1394,28 @@
 
       <!-- ===================== ASSORTIMENT D'UN BUREAU (0113) ===================== -->
       <sc-if value="{{ isBureauAssort }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ baNone }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Un bureau (personne morale) peut ne recevoir qu'une partie du catalogue et commander sans voir les prix. Choisissez le bureau à régler.</div>
+        <sc-for list="{{ bureauParams }}" as="b" hint-placeholder-count="3">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 260px">
+              <div style="width:38px;height:38px;flex:none;border-radius:10px;background:#eef3fb;display:flex;align-items:center;justify-content:center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2a5a9e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M15 9h3a1 1 0 0 1 1 1v11M9 8h2M9 12h2M9 16h2"/></svg></div>
+              <div style="min-width:0"><div style="font:600 14px var(--font-ui);color:var(--color-text)">{{ b.nom }}</div><span style="{{ b.pill }}">{{ b.contrat }}</span></div>
+            </div>
+            <div style="flex:1 1 200px"><div class="t-admin-label" style="margin-bottom:3px">Assortiment</div><div style="font:600 13px var(--font-ui);color:{{ b.assortColor }}">{{ b.assortLabel }} <span style="font-weight:400;color:var(--color-text-muted)">· {{ b.assortDetail }}</span></div></div>
+            <div style="flex:1 1 200px"><div class="t-admin-label" style="margin-bottom:3px">Prix affichés</div><div style="font:600 13px var(--font-ui);color:{{ b.prixColor }}">{{ b.prixLabel }} <span style="font-weight:400;color:var(--color-text-muted)">· {{ b.prixDetail }}</span></div></div>
+            <button onClick="{{ b.editAssort }}" class="btn-primary" style="font-size:12px;flex:none;white-space:nowrap">Modifier l'assortiment →</button>
+          </div>
+        </sc-for>
+        <sc-if value="{{ bureauxVides }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:20px 0">Aucun bureau rattaché à une tournée de cette boutique.</div></sc-if>
+      </div>
+      </sc-if>
+      <sc-if value="{{ baOn }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
           <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
-            <button onClick="{{ baBack }}" style="background:none;border:none;padding:0;text-align:left;cursor:pointer;font:500 12px var(--font-ui);color:var(--color-primary)">‹ Bureaux · Paramètres</button>
+            <button onClick="{{ baBack }}" style="background:none;border:none;padding:0;text-align:left;cursor:pointer;font:500 12px var(--font-ui);color:var(--color-primary)">‹ Tous les bureaux</button>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <div class="t-section-title" style="font-size:18px">{{ ba.nom }}</div>
               <span style="{{ ba.pill }}">{{ ba.contrat }}</span>
@@ -1472,6 +1490,7 @@
           </div>
         </sc-if>
       </div>
+      </sc-if>
       </sc-if>
 
       <!-- ===================== DISPO PAR CATÉGORIE ===================== -->
@@ -3773,6 +3792,7 @@ class Component extends DCLogic {
     // ---- Paramétrage › Clients B2B ----
     {s:'clients',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Bureaux & sites',k:'compte b2b plafond encours remise facturation differee tva segment horeca fiche client'},
     {s:'offices',g:'Paramétrage › Clients B2B',grp:'g_b2b',k:'bureau client statut valide departements effectif'},
+    {s:'bureauAssortiment',g:'Paramétrage › Clients B2B',grp:'g_b2b',k:'assortiment bureau produits proposes prix masques affiches selection reduit personne morale'},
     // Le WIZARD lui-même est une destination : on le cherche par « nouveau
     // bureau », pas par le nom de l'écran qui l'héberge. `act` l'ouvre.
     {s:'offices',act:'ob',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Nouveau bureau B2B (onboarding)',
@@ -4369,7 +4389,8 @@ class Component extends DCLogic {
      bureau de la boutique, état coché), et écrit les trois réglages d'un coup.
      Le serveur décide de la portée : un bureau hors boutique rend 404. */
   baOpen(officeId,nom,contrat){ if(officeId==null) return;
-    this.setState({ba:{officeId,nom:nom||'',contrat:contrat||'',loading:true,err:'',cats:[],ids:{},mode:'full',show:true,deferred:false,total:0,q:'',dirty:false,preview:null}},()=>{ this.goTo('bureauAssortiment'); this.addrPush('bureauAssortiment'); this.baLoad(); }); }
+    const ba={officeId,nom:nom||'',contrat:contrat||'',loading:true,err:'',cats:[],ids:{},mode:'full',show:true,deferred:false,total:0,q:'',dirty:false,preview:null};
+    this.goTo('bureauAssortiment',{ba}); this.addrPush('bureauAssortiment'); setTimeout(()=>this.baLoad(),0); }
   baLoad(){ const fr=window.__FR||{}; const ba=this.state.ba; if(!ba||!fr.base){ if(ba) this.setState({ba:{...ba,loading:false,err:'API non configurée'}}); return; }
     const qs='?officeId='+encodeURIComponent(ba.officeId)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'');
     fetch(fr.base+'/franchisee/office-assortment'+qs,{headers:FRH(),credentials:'omit'})
@@ -4405,7 +4426,7 @@ class Component extends DCLogic {
       .catch(()=>{}); }
   baVals(){ const ba=this.state.ba; const eur=v=>(Number(v)||0).toFixed(2).replace('.',',')+'\u00a0€';
     if(!ba) return {ba:{nom:'',contrat:'',err:'',loading:false,total:0,checked:0,q:'',dirtyTxt:'',preview:null},baCats:[],baPreviewList:[],
-      baBack:this.go('bureauParams'),baPreview:()=>{},baPreviewClose:()=>{},baModeFull:()=>{},baModeCustom:()=>{},baTogglePrix:()=>{},baSearch:()=>{},baSave:()=>{},baReload:()=>{}};
+      baOn:false,baNone:true,baBack:()=>{},baPreview:()=>{},baPreviewClose:()=>{},baModeFull:()=>{},baModeCustom:()=>{},baTogglePrix:()=>{},baSearch:()=>{},baSave:()=>{},baReload:()=>{}};
     const q=String(ba.q||'').trim().toLowerCase();
     const checked=Object.keys(ba.ids).length;
     const opt=(on)=>'display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;cursor:pointer;border:'+(on?'1.5px solid var(--color-primary);background:#fdf7f3':'.5px solid var(--color-border-secondary)');
@@ -4427,7 +4448,7 @@ class Component extends DCLogic {
         dirtyTxt:ba.dirty?' · modifications non enregistrées':'',
         previewTxt:ba.preview?((ba.preview.list||[]).length+' produit(s)'+(ba.preview.show?', prix affichés':', sans prix')):''},
       baCats:cats,baPreviewList:ba.preview?(ba.preview.list||[]).map(v=>({...v,prix:ba.preview.show?eur(v.price):'—'})):[],
-      baBack:this.go('bureauParams'),baPreview:()=>this.baPreview(),baPreviewClose:()=>this.setState({ba:{...this.state.ba,preview:null}}),
+      baOn:true,baNone:false,baBack:()=>this.setState({ba:null}),baPreview:()=>this.baPreview(),baPreviewClose:()=>this.setState({ba:{...this.state.ba,preview:null}}),
       baModeFull:()=>this.baSet({mode:'full'}),baModeCustom:()=>this.baSet({mode:'custom'}),
       baTogglePrix:()=>{ const b2=this.state.ba; if(b2.show&&!b2.deferred){ this.setState({ba:{...b2,err:'Prix masqués impossibles sans facturation différée.'}}); return; } this.baSet({show:!b2.show,err:''}); },
       baSearch:(e)=>{ const b2=this.state.ba; this.setState({ba:{...b2,q:e&&e.target?e.target.value:''}}); },
@@ -5392,6 +5413,9 @@ class Component extends DCLogic {
     // Stock du jour : à l'ARRIVÉE sur l'écran, si des produits sont sous le
     // seuil bas, la modale d'alerte se rouvre (état null = automatique).
     if(s==='stockJour') st.stkAlert=null;
+    // Assortiment par bureau : par le rail ou l'adresse, on arrive sur la LISTE
+    // des bureaux (ba vidé) ; baOpen passe le bureau en `extra` et garde l'éditeur.
+    if(s==='bureauAssortiment'){ if(!(extra&&extra.ba)) st.ba=null; setTimeout(()=>this.bpRefresh(),0); }
     // Rentabilité : charge (une fois) les points réels (geo-clients).
     if(s==='rentabilite') setTimeout(()=>this.rentaEnsure(),0);
     // Écrans à données de commandes : refetch à l'ENTRÉE (une nouvelle
@@ -5438,7 +5462,7 @@ class Component extends DCLogic {
       // contacts email dans le formulaire d'édition de l'Office (engrenage).
       // « Zone de chalandise » retirée du menu : double emploi avec l'Analyse
       // géographique (l'écran reste dans le code, réversible).
-      {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['b2bClients','Clients']]},
+      {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['bureauAssortiment','Assortiment par bureau'],['b2bClients','Clients']]},
       // « Assortiment » sort du menu : ses trois onglets se CONSULTENT, ils ne
       // se règlent pas — l'assortiment est décidé par la marque pour tout le
       // réseau (/franchisee/assortiment-toggle répond 403). Un écran en lecture
@@ -9375,7 +9399,7 @@ class Component extends DCLogic {
           fcCloseComplaint:()=>{ post('client-complaint',{resolve_client_id:fc.id},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:0}); this.printJob('✓ Réclamation close'); } else this.printJob((j&&j.error)||'Erreur'); }); } };
       })(),
       isBureauParams:screen==='bureauParams',bureauParams,
-      isBureauAssort:screen==='bureauAssortiment',...this.baVals(),
+      isBureauAssort:screen==='bureauAssortiment',bureauxVides:!bureauParams.length,...this.baVals(),
       isDispoCat:screen==='dispoCat',dispoCats,
       isDispoProd:screen==='dispoProd',dispoProds,
       isCreneaux:screen==='reglesBoutique'&&(S.dispoTab||'dispo')==='creneaux',creneaux,slotGridOpen,toggleSlotGrid,sgList,sgActive,slotStart,slotEnd,slotSetStart,slotSetEnd,slotFieldStyle,slotStepLabel,slotStepOpts,
