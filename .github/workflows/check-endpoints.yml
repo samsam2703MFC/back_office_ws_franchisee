@@ -270,7 +270,8 @@ jobs:
               TOT=$(printf '%s' "$P1" | grep -o '"total":[0-9]*' | head -1 | cut -d: -f2)
               NCAT=$(printf '%s' "$P1" | grep -o '"products":\[' | wc -l | tr -d ' ')
               echo "  ✔ lecture : mode=$MODE prix=$SHOW cochés=$CHK/$TOT catégories=$NCAT"
-              IDS=$(printf '%s' "$P1" | tr -d '\n ' | grep -o '{"id":[0-9]*,"name":"[^"]*","price":[0-9.]*,"img":[^,]*,"channels":\[[^]]*\],"checked":true}' | grep -o '"id":[0-9]*' | cut -d: -f2 | paste -sd, -)
+              # Les produits cochés : chaque objet produit, quel que soit l'ordre ou le nombre de ses champs.
+              IDS=$(printf '%s' "$P1" | tr -d '\n ' | grep -o '{"id":[0-9]*,[^{}]*"checked":true[^{}]*}' | grep -o '^{"id":[0-9]*' | cut -d: -f2 | paste -sd, -)
               BODY="{\"officeId\":$OID,\"mode\":\"$MODE\",\"showPrices\":$SHOW,\"productIds\":[${IDS}]}"
               W=$(curl -s --max-time 15 "${HDR[@]}" -H 'Content-Type: application/json' -X POST -d "$BODY" -w '\n%{http_code}' "$BASE/franchisee/office-assortment$QS" 2>/dev/null)
               CW=$(printf '%s' "$W" | tail -n1); PW=$(printf '%s' "$W" | sed '$d')
