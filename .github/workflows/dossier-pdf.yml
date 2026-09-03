@@ -36,13 +36,16 @@ jobs:
           SHOP: ${{ inputs.shop }}
           OFFICE: ${{ inputs.office }}
           DATE: ${{ inputs.date }}
+          PUBLIC_HOST: ${{ vars.PUBLIC_HOST || 'atelierby.online' }}
         run: |
           { printf 'API_BASE=%q\n' "$API_BASE"; printf 'ADMIN_TOKEN=%q\n' "${ADMIN_TOKEN:-}"
-            printf 'SHOP=%q\n' "$SHOP"; printf 'OFFICE=%q\n' "${OFFICE:-}"; printf 'DATE=%q\n' "${DATE:-}"
+            printf 'SHOP=%q\n' "$SHOP"; printf 'OFFICE=%q\n' "${OFFICE:-}"; printf 'DATE=%q\n' "${DATE:-}"; printf 'PUBLIC_HOST=%q\n' "$PUBLIC_HOST"
             cat <<'REMOTE'
           set -u
           QS="?shop=$SHOP"; [ -n "$OFFICE" ] && QS="$QS&office=$OFFICE"; [ -n "$DATE" ] && QS="$QS&date=$DATE"
-          CODE=$(curl -s --max-time 60 -H "X-Admin-Token: $ADMIN_TOKEN" -o /tmp/dossier.html -w '%{http_code}' "http://localhost${API_BASE}/franchisee/office-brochure$QS")
+          # L'hôte PUBLIC est passé dans la requête : le lien d'invitation (et son QR)
+          # se construisent sur l'hôte reçu — en local, ils porteraient « localhost ».
+          CODE=$(curl -s --max-time 60 -H "X-Admin-Token: $ADMIN_TOKEN" -H "Host: $PUBLIC_HOST" -H "X-Forwarded-Proto: https" -o /tmp/dossier.html -w '%{http_code}' "http://localhost${API_BASE}/franchisee/office-brochure$QS")
           echo "STATUS=$CODE"
           echo "PAGES=$(grep -o '<section class="page' /tmp/dossier.html | wc -l | tr -d ' ')"
           echo "---BEGIN---"; base64 -w0 /tmp/dossier.html; echo; echo "---END---"
