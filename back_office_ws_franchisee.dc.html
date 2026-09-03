@@ -1186,6 +1186,7 @@
               <span style="text-align:center;font:600 13px var(--font-ui);color:var(--color-text)">{{ o.sitesCount }}</span>
               <span style="text-align:center;font:600 13px var(--font-ui);color:var(--color-primary)">{{ o.deptCount }}</span>
               <div style="display:flex;gap:6px;justify-content:flex-end">
+                <button onClick="{{ o.brochure }}" title="Imprimer le dossier « Carte &amp; tarifs » de ce bureau (assortiment, prix, QR de rattachement)" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg></button>
                 <button onClick="{{ o.invite }}" title="Lien d'invitation « Créer mon compte » du personnel de ce bureau" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#2a5a9e;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7.1 0l3-3a5 5 0 0 0-7.1-7.1L11 5"/><path d="M14 11a5 5 0 0 0-7.1 0l-3 3a5 5 0 0 0 7.1 7.1L13 19"/></svg></button>
                 <button onClick="{{ o.gear }}" title="Paramètres du bureau (jours, cut-off, tournée)" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#b26a00;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
                 <button onClick="{{ o.edit }}" title="Éditer" style="width:28px;height:28px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-text-muted);display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
@@ -1396,7 +1397,7 @@
       <sc-if value="{{ isBureauAssort }}" hint-placeholder-val="{{ false }}">
       <sc-if value="{{ baNone }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Un bureau (personne morale) peut ne recevoir qu'une partie du catalogue et commander sans voir les prix. Choisissez le bureau à régler.</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Un bureau (personne morale) peut ne recevoir qu'une partie du catalogue et commander sans voir les prix. Choisissez le bureau à régler.</div><button onClick="{{ brShop }}" class="btn-secondary" style="font-size:12px;flex:none">Imprimer le dossier de la boutique</button></div>
         <sc-for list="{{ bureauParams }}" as="b" hint-placeholder-count="3">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 260px">
@@ -1405,6 +1406,7 @@
             </div>
             <div style="flex:1 1 200px"><div class="t-admin-label" style="margin-bottom:3px">Assortiment</div><div style="font:600 13px var(--font-ui);color:{{ b.assortColor }}">{{ b.assortLabel }} <span style="font-weight:400;color:var(--color-text-muted)">· {{ b.assortDetail }}</span></div></div>
             <div style="flex:1 1 200px"><div class="t-admin-label" style="margin-bottom:3px">Prix affichés</div><div style="font:600 13px var(--font-ui);color:{{ b.prixColor }}">{{ b.prixLabel }} <span style="font-weight:400;color:var(--color-text-muted)">· {{ b.prixDetail }}</span></div></div>
+            <button onClick="{{ b.brochure }}" class="btn-secondary" style="font-size:12px;flex:none;white-space:nowrap">Imprimer le dossier</button>
             <button onClick="{{ b.editAssort }}" class="btn-primary" style="font-size:12px;flex:none;white-space:nowrap">Modifier l'assortiment →</button>
           </div>
         </sc-for>
@@ -4563,6 +4565,19 @@ class Component extends DCLogic {
       .catch(e=>{ if(onglet) onglet.close();
         this.setState({inv:{...this.state.inv,msg:'Affiche indisponible — '+(e&&e.message?e.message:'réseau')+'.'}});
         this.printJob('⚠ Affiche non produite — '+(e&&e.message?e.message:'réseau')); }); }
+  /* DOSSIER « CARTE & TARIFS » (A4) — pour la boutique (officeId null) ou pour
+     un bureau. Même mécanique que l'affiche : l'onglet s'ouvre AU CLIC (sinon
+     bloqué comme popup), le fetch emporte le jeton, la réponse arrive en blob. */
+  brOpen(officeId,nom){ const fr=window.__FR||{}; if(!fr.base) return;
+    const qs=(officeId!=null?('?office='+encodeURIComponent(officeId)):'?x=1')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'');
+    const onglet=window.open('','_blank');
+    this.printJob('Préparation du dossier'+(nom?(' — '+nom):'')+'…');
+    fetch(fr.base+'/franchisee/office-brochure'+qs,{headers:FRH(),credentials:'omit'})
+      .then(async r=>{ if(!r.ok){ const j=await r.json().catch(()=>null); throw new Error((j&&j.error)||('HTTP '+r.status)); } return r.blob(); })
+      .then(bl=>{ const u=URL.createObjectURL(new Blob([bl],{type:'text/html'}));
+        if(onglet){ onglet.location=u; setTimeout(()=>URL.revokeObjectURL(u),60000); this.printJob('✔ Dossier ouvert — le bouton « Imprimer » y produit le PDF'); }
+        else { const a=document.createElement('a'); a.href=u; a.download='dossier-'+String(nom||'boutique').replace(/[^A-Za-z0-9]+/g,'-')+'.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); this.printJob('✔ Dossier téléchargé (onglet bloqué)'); } })
+      .catch(e=>{ if(onglet) onglet.close(); this.printJob('⚠ Dossier non produit — '+(e&&e.message?e.message:'réseau')); }); }
   /* Envoi (ou renvoi) de l'e-mail au contact du bureau : conditions, bouton
      « Créer mon compte », affiche en pièce jointe. */
   invEnvoyer(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
@@ -7283,6 +7298,7 @@ class Component extends DCLogic {
         // enregistrement des règles échouait en « bureau inconnu ».
         gear:this.openFormWith('bureauParam',{bureau:o.name,officeId:(o.id!=null?o.id:null)}),
         invite:()=>this.invOpen(o),
+        brochure:()=>this.brOpen(o.id!=null?o.id:null,o.name),
         edit:this.editForm('office',{...o,...obx},i), del:this.deleteRow('ws_offices',i,'l\'office « '+o.name+' »') };
     });
     /* Panneau « lien d'invitation ». Tout y vient de l'état renvoyé par le
@@ -7487,6 +7503,7 @@ class Component extends DCLogic {
       prixColor:b.showPrices===false?'var(--color-primary)':'var(--color-text)',
       prixBg:b.showPrices===false?'#fbeaec':'var(--color-background-secondary)',
       editAssort:()=>this.baOpen(b.officeId,b.bureau,b.contrat),
+      brochure:()=>this.brOpen(b.officeId,b.bureau),
       pill:pill2('var(--color-background-secondary)','var(--color-text-muted)')}));
 
     /* ASSORTIMENT : LA MARQUE DÉCIDE, LA BOUTIQUE PRODUIT.
@@ -9426,7 +9443,7 @@ class Component extends DCLogic {
           fcCloseComplaint:()=>{ post('client-complaint',{resolve_client_id:fc.id},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:0}); this.printJob('✓ Réclamation close'); } else this.printJob((j&&j.error)||'Erreur'); }); } };
       })(),
       isBureauParams:screen==='bureauParams',bureauParams,
-      isBureauAssort:screen==='bureauAssortiment',bureauxVides:!bureauParams.length,...this.baVals(),
+      isBureauAssort:screen==='bureauAssortiment',bureauxVides:!bureauParams.length,brShop:()=>this.brOpen(null,''),...this.baVals(),
       isDispoCat:screen==='dispoCat',dispoCats,
       isDispoProd:screen==='dispoProd',dispoProds,
       isCreneaux:screen==='reglesBoutique'&&(S.dispoTab||'dispo')==='creneaux',creneaux,slotGridOpen,toggleSlotGrid,sgList,sgActive,slotStart,slotEnd,slotSetStart,slotSetEnd,slotFieldStyle,slotStepLabel,slotStepOpts,

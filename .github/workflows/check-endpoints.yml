@@ -280,6 +280,8 @@ jobs:
               MODE2=$(printf '%s' "$A2" | grep -o '"mode":"[a-z]*"' | head -1 | cut -d'"' -f4)
               if [ "$CHK2" = "$CHK" ] && [ "$MODE2" = "$MODE" ]; then echo "  ✔ relecture identique : mode=$MODE2 cochés=$CHK2 — la jointure et ws_offices sont écrites et relues"
               else echo "  ✗ relecture différente : mode=$MODE2 cochés=$CHK2 (attendu $MODE / $CHK)"; fi
+              BR=$(curl -s --max-time 30 "${HDR[@]}" -w '\n%{http_code}' "$BASE/franchisee/office-brochure?office=$OID${QS:+&${QS#?}}" 2>/dev/null)
+              echo "  dossier « Carte & tarifs » du bureau : HTTP $(printf '%s' "$BR" | tail -n1) — $(printf '%s' "$BR" | sed '$d' | grep -o '<section class="page' | wc -l | tr -d ' ') page(s) A4, $(printf '%s' "$BR" | sed '$d' | grep -o '@font-face' | wc -l | tr -d ' ') police(s) embarquée(s), QR : $(printf '%s' "$BR" | sed '$d' | grep -c 'class="qr"' | tr -d ' ')"
               PV=$(curl -s --max-time 15 "${HDR[@]}" -w '\n%{http_code}' "$BASE/franchisee/office-preview?officeId=$OID${QS:+&${QS#?}}" 2>/dev/null)
               echo "  aperçu webshop : HTTP $(printf '%s' "$PV" | tail -n1) — $(printf '%s' "$PV" | sed '$d' | grep -o '"products":\[' | wc -l | tr -d ' ') liste, showPrices=$(printf '%s' "$PV" | grep -o '"showPrices":[a-z]*' | head -1 | cut -d: -f2), produits=$(printf '%s' "$PV" | sed '$d' | grep -o '"id":[0-9]*' | wc -l | tr -d ' ')"
             fi
