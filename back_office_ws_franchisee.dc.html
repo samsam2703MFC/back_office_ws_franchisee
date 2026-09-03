@@ -1368,8 +1368,109 @@
               <div><div class="t-admin-label" style="margin-bottom:6px">Jours autorisés</div><div style="display:flex;gap:5px;flex-wrap:wrap"><sc-for list="{{ b.days }}" as="d" hint-placeholder-count="7"><span style="{{ d.style }}">{{ d.k }}</span></sc-for></div></div>
               <div style="display:flex;gap:20px"><div><div class="t-admin-label" style="margin-bottom:4px">Cut-off commande</div><div style="font:600 13px var(--font-ui);color:var(--color-primary)">{{ b.cut }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ b.origine }}</div></div><div><div class="t-admin-label" style="margin-bottom:4px">Temps de dépôt</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ b.drop }} min</div></div></div>
             </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;padding-top:14px;border-top:.5px solid var(--color-border-tertiary)">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:34px;height:34px;flex:none;border-radius:9px;background:{{ b.assortBg }};display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8D1D2C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h9M4 17h6"/><path d="m15 15 2 2 4-4"/></svg></div>
+                <div style="flex:1;min-width:0">
+                  <div class="t-admin-label" style="margin-bottom:3px">Assortiment</div>
+                  <div style="font:600 13px var(--font-ui);color:{{ b.assortColor }}">{{ b.assortLabel }} <span style="font-weight:400;color:var(--color-text-muted)">· {{ b.assortDetail }}</span></div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0">
+                  <div style="width:34px;height:34px;flex:none;border-radius:9px;background:{{ b.prixBg }};display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8D1D2C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+                  <div style="min-width:0">
+                    <div class="t-admin-label" style="margin-bottom:3px">Prix affichés</div>
+                    <div style="font:600 13px var(--font-ui);color:{{ b.prixColor }}">{{ b.prixLabel }} <span style="font-weight:400;color:var(--color-text-muted)">· {{ b.prixDetail }}</span></div>
+                  </div>
+                </div>
+                <button onClick="{{ b.editAssort }}" class="btn-secondary" style="font-size:12px;flex:none;white-space:nowrap">Modifier l'assortiment →</button>
+              </div>
+            </div>
           </div>
         </sc-for>
+      </div>
+      </sc-if>
+
+      <!-- ===================== ASSORTIMENT D'UN BUREAU (0113) ===================== -->
+      <sc-if value="{{ isBureauAssort }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+            <button onClick="{{ baBack }}" style="background:none;border:none;padding:0;text-align:left;cursor:pointer;font:500 12px var(--font-ui);color:var(--color-primary)">‹ Bureaux · Paramètres</button>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div class="t-section-title" style="font-size:18px">{{ ba.nom }}</div>
+              <span style="{{ ba.pill }}">{{ ba.contrat }}</span>
+            </div>
+            <div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Assortiment et affichage des prix pour ce bureau — les collaborateurs rattachés ne voient que ce qui est réglé ici</div>
+          </div>
+          <button onClick="{{ baPreview }}" class="btn-secondary" style="font-size:12px;flex:none">Voir ce que ce bureau verra</button>
+        </div>
+        <sc-if value="{{ ba.err }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 14px;border-radius:12px;background:#fbeaec;font:500 12px var(--font-ui);color:#8D1D2C">{{ ba.err }}</div></sc-if>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+            <div><div class="t-section-title" style="font-size:15px">Assortiment</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Ce que le catalogue propose à ce bureau</div></div>
+            <div onClick="{{ baModeFull }}" style="{{ ba.fullStyle }}">
+              <div style="{{ ba.fullDot }}"></div>
+              <div><div style="font:600 13px var(--font-ui);color:{{ ba.fullColor }}">Assortiment complet</div><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Tout le catalogue bureau de la boutique · {{ ba.total }} produits</div></div>
+            </div>
+            <div onClick="{{ baModeCustom }}" style="{{ ba.customStyle }}">
+              <div style="{{ ba.customDot }}"></div>
+              <div><div style="font:600 13px var(--font-ui);color:{{ ba.customColor }}">Assortiment réduit</div><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Seuls les produits cochés ci-dessous · {{ ba.checked }} sur {{ ba.total }}. Un produit décoché n'apparaît pas, même s'il est en vente en boutique.</div></div>
+            </div>
+          </div>
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
+            <div><div class="t-section-title" style="font-size:15px">Prix</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Ce que les collaborateurs voient en commandant</div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;border:.5px solid var(--color-border-secondary);border-radius:12px">
+              <div><div style="font:600 13px var(--font-ui);color:var(--color-text)">Afficher les prix pour ce bureau</div><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ ba.prixAide }}</div></div>
+              <button onClick="{{ baTogglePrix }}" aria-label="Afficher les prix" style="{{ ba.switchStyle }}"><span style="{{ ba.knobStyle }}"></span></button>
+            </div>
+            <div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Le prix reste résolu et enregistré côté serveur sur chaque ligne : seul son affichage change. Le bureau est facturé au tarif normal.</div>
+          </div>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <div><div class="t-section-title" style="font-size:15px">Produits proposés à ce bureau</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Cochés = visibles pour le bureau. Les prix sont ceux de la boutique, jamais modifiés par bureau.</div></div>
+            <input value="{{ ba.q }}" onChange="{{ baSearch }}" placeholder="Rechercher un produit…" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 12px;width:220px;font:400 12px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/>
+          </div>
+          <sc-if value="{{ ba.loading }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:20px 0">Chargement du catalogue…</div></sc-if>
+          <sc-for list="{{ baCats }}" as="c" hint-placeholder-count="3">
+            <div style="background:var(--color-background-secondary);border-radius:12px;padding:2px 4px 6px">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 6px">
+                <div><span style="font:600 12.5px var(--font-ui);color:var(--color-text)">{{ c.name }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-left:8px">{{ c.n }} sur {{ c.total }}</span></div>
+                <div style="display:flex;gap:12px;font:500 11px var(--font-ui)"><button onClick="{{ c.all }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-primary);font:inherit">Tout</button><button onClick="{{ c.none }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-text-muted);font:inherit">Aucun</button></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <sc-for list="{{ c.products }}" as="p" hint-placeholder-count="4">
+                  <div onClick="{{ p.toggle }}" style="{{ p.rowStyle }}">
+                    <div style="{{ p.cbStyle }}"><sc-if value="{{ p.checked }}" hint-placeholder-val="{{ true }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></sc-if></div>
+                    <div style="width:34px;height:34px;flex:none;border-radius:8px;background:var(--color-background-secondary);overflow:hidden"><sc-if value="{{ p.img }}" hint-placeholder-val="{{ false }}"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/></sc-if></div>
+                    <div style="flex:1;min-width:0;font:500 13px var(--font-ui);color:{{ p.nameColor }}">{{ p.name }}</div>
+                    <span style="font:600 10px var(--font-ui);padding:3px 7px;border-radius:999px;background:var(--color-background-secondary);color:var(--color-text-muted)">{{ p.canal }}</span>
+                    <div style="font:400 12px var(--font-ui);color:var(--color-text-muted);min-width:56px;text-align:right;font-variant-numeric:tabular-nums">{{ p.prix }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:4px;padding:12px 14px;border-top:.5px solid var(--color-border-tertiary)">
+            <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)"><strong style="color:var(--color-text)">{{ ba.checked }} produits</strong> proposés sur {{ ba.total }}{{ ba.dirtyTxt }}</div>
+            <div style="display:flex;gap:8px"><button onClick="{{ baReload }}" class="btn-secondary" style="font-size:12px">Annuler</button><button onClick="{{ baSave }}" class="btn-primary" style="font-size:12px">Enregistrer pour ce bureau</button></div>
+          </div>
+        </div>
+        <sc-if value="{{ ba.preview }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><div><div class="t-section-title" style="font-size:15px">Ce que ce bureau verra</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ba.previewTxt }}</div></div><button onClick="{{ baPreviewClose }}" class="btn-secondary" style="font-size:12px">Fermer</button></div>
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+              <sc-for list="{{ baPreviewList }}" as="v" hint-placeholder-count="8">
+                <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+                  <div style="height:96px;background:var(--color-background-secondary);overflow:hidden"><sc-if value="{{ v.img }}" hint-placeholder-val="{{ false }}"><img src="{{ v.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/></sc-if></div>
+                  <div style="padding:8px 10px 10px"><div style="font:700 12px var(--font-ui);color:var(--color-text)">{{ v.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ v.prix }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
       </div>
       </sc-if>
 
@@ -4262,6 +4363,75 @@ class Component extends DCLogic {
         else this.printJob('⚠ Paramètres non enregistrés — '+((j&&j.error)||'refus du serveur')); })
       .catch(e=>this.printJob('⚠ Paramètres non enregistrés — '+((e&&e.message)||'réseau indisponible')));
   }
+  /* ══ ASSORTIMENT D'UN BUREAU (0113) ═══════════════════════════════
+     Un bureau peut ne recevoir qu'une partie du catalogue et commander sans
+     voir les prix. L'écran lit /franchisee/office-assortment (bureau + catalogue
+     bureau de la boutique, état coché), et écrit les trois réglages d'un coup.
+     Le serveur décide de la portée : un bureau hors boutique rend 404. */
+  baOpen(officeId,nom,contrat){ if(officeId==null) return;
+    this.setState({ba:{officeId,nom:nom||'',contrat:contrat||'',loading:true,err:'',cats:[],ids:{},mode:'full',show:true,deferred:false,total:0,q:'',dirty:false,preview:null}},()=>{ this.goTo('bureauAssortiment'); this.addrPush('bureauAssortiment'); this.baLoad(); }); }
+  baLoad(){ const fr=window.__FR||{}; const ba=this.state.ba; if(!ba||!fr.base){ if(ba) this.setState({ba:{...ba,loading:false,err:'API non configurée'}}); return; }
+    const qs='?officeId='+encodeURIComponent(ba.officeId)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'');
+    fetch(fr.base+'/franchisee/office-assortment'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(j=>({ok:r.ok,j})).catch(()=>({ok:false,j:null})))
+      .then(({ok,j})=>{ const cur=this.state.ba; if(!cur||cur.officeId!==ba.officeId) return;
+        if(!ok||!j||!j.office){ this.setState({ba:{...cur,loading:false,err:(j&&j.error)||'Lecture refusée par le serveur'}}); return; }
+        const ids={}; (j.categories||[]).forEach(c=>(c.products||[]).forEach(p=>{ if(p.checked) ids[p.id]=true; }));
+        this.setState({ba:{...cur,loading:false,err:'',nom:j.office.name||cur.nom,mode:j.office.mode||'full',show:j.office.showPrices!==false,deferred:!!j.office.deferredBilling,
+          cats:j.categories||[],ids,total:(j.counts&&j.counts.total)||0,dirty:false,preview:null}}); })
+      .catch(e=>{ const cur=this.state.ba; if(cur) this.setState({ba:{...cur,loading:false,err:(e&&e.message)||'réseau indisponible'}}); }); }
+  baSet(patch){ const ba=this.state.ba; if(!ba) return; this.setState({ba:{...ba,...patch,dirty:true}}); }
+  baToggle(pid){ const ba=this.state.ba; if(!ba) return; const ids={...ba.ids}; if(ids[pid]) delete ids[pid]; else ids[pid]=true; this.baSet({ids,mode:'custom'}); }
+  baBulk(cat,on){ const ba=this.state.ba; if(!ba) return; const ids={...ba.ids}; (cat.products||[]).forEach(p=>{ if(on) ids[p.id]=true; else delete ids[p.id]; }); this.baSet({ids,mode:'custom'}); }
+  baSave(){ const fr=window.__FR||{}; const ba=this.state.ba; if(!ba) return;
+    if(!fr.base){ this.printJob('⚠ Assortiment non enregistré — API non configurée'); return; }
+    const productIds=Object.keys(ba.ids).map(Number);
+    if(ba.mode==='custom'&&!productIds.length){ this.setState({ba:{...ba,err:'Un assortiment réduit doit proposer au moins un produit.'}}); return; }
+    if(!ba.show&&!ba.deferred){ this.setState({ba:{...ba,err:'Prix masqués impossibles sans facturation différée.'}}); return; }
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    fetch(fr.base+'/franchisee/office-assortment'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+      body:JSON.stringify({officeId:ba.officeId,mode:ba.mode,showPrices:ba.show,productIds})})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ if(j&&j.ok){ this.printJob('✔ Assortiment enregistré — '+(j.mode==='custom'?(j.count+' produit(s) proposé(s)'):'catalogue complet')+(j.showPrices===false?' · prix masqués':'')); this.setState({ba:{...this.state.ba,dirty:false,err:''}}); this.bpRefresh(); }
+        else this.setState({ba:{...this.state.ba,err:(j&&j.error)||'refus du serveur'}}); })
+      .catch(e=>this.setState({ba:{...this.state.ba,err:(e&&e.message)||'réseau indisponible'}})); }
+  baPreview(){ const fr=window.__FR||{}; const ba=this.state.ba; if(!ba||!fr.base) return;
+    const qs='?officeId='+encodeURIComponent(ba.officeId)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'');
+    fetch(fr.base+'/franchisee/office-preview'+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().catch(()=>null))
+      .then(j=>{ const cur=this.state.ba; if(!cur) return;
+        if(!j||!Array.isArray(j.products)){ this.setState({ba:{...cur,err:(j&&j.error)||'Aperçu indisponible'}}); return; }
+        this.setState({ba:{...cur,err:'',preview:{show:j.showPrices!==false,list:j.products}}}); })
+      .catch(()=>{}); }
+  baVals(){ const ba=this.state.ba; const eur=v=>(Number(v)||0).toFixed(2).replace('.',',')+'\u00a0€';
+    if(!ba) return {ba:{nom:'',contrat:'',err:'',loading:false,total:0,checked:0,q:'',dirtyTxt:'',preview:null},baCats:[],baPreviewList:[],
+      baBack:this.go('bureauParams'),baPreview:()=>{},baPreviewClose:()=>{},baModeFull:()=>{},baModeCustom:()=>{},baTogglePrix:()=>{},baSearch:()=>{},baSave:()=>{},baReload:()=>{}};
+    const q=String(ba.q||'').trim().toLowerCase();
+    const checked=Object.keys(ba.ids).length;
+    const opt=(on)=>'display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;cursor:pointer;border:'+(on?'1.5px solid var(--color-primary);background:#fdf7f3':'.5px solid var(--color-border-secondary)');
+    const dot=(on)=>'width:18px;height:18px;flex:none;border-radius:50%;box-sizing:border-box;margin-top:1px;border:'+(on?'5px solid var(--color-primary)':'1.5px solid var(--color-border-secondary)');
+    const cats=(ba.cats||[]).map(c=>{ const prods=(c.products||[]).filter(p=>!q||String(p.name||'').toLowerCase().includes(q)).map(p=>{ const on=!!ba.ids[p.id];
+        return {...p,checked:on,toggle:()=>this.baToggle(p.id),prix:eur(p.price),canal:(p.channels||[]).includes('office_delivery')?'Livraison au bureau':'Click & Collect',
+          nameColor:on?'var(--color-text)':'var(--color-text-muted)',
+          rowStyle:'display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;cursor:pointer;background:'+(on?'var(--color-surface)':'transparent'),
+          cbStyle:'width:18px;height:18px;flex:none;border-radius:5px;display:flex;align-items:center;justify-content:center;'+(on?'background:var(--color-primary);border:1.5px solid var(--color-primary)':'background:var(--color-surface);border:1.5px solid var(--color-border-secondary)')}; });
+      return {...c,products:prods,n:(c.products||[]).filter(p=>ba.ids[p.id]).length,total:(c.products||[]).length,all:()=>this.baBulk(c,true),none:()=>this.baBulk(c,false)}; }).filter(c=>!q||c.products.length);
+    const custom=ba.mode==='custom';
+    return {ba:{...ba,checked,
+        fullStyle:opt(!custom),fullDot:dot(!custom),fullColor:!custom?'var(--color-primary)':'var(--color-text)',
+        customStyle:opt(custom),customDot:dot(custom),customColor:custom?'var(--color-primary)':'var(--color-text)',
+        prixAide:ba.show?'Activé : les collaborateurs voient les montants.':'Désactivé : aucun montant, ni sur les vignettes, ni sur la fiche, ni dans le panier. La commande part sans paiement et la facture suit le contrat du bureau.',
+        switchStyle:'width:44px;height:26px;flex:none;border-radius:999px;border:none;cursor:pointer;position:relative;background:'+(ba.show?'var(--color-primary)':'#d9d2c8'),
+        knobStyle:'position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);left:'+(ba.show?'21px':'3px'),
+        pill:'display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;font:600 10.5px var(--font-ui);background:'+(ba.contrat==='Facturation différée'?'#F2C9A0':'var(--color-background-secondary)')+';color:'+(ba.contrat==='Facturation différée'?'#6b4420':'var(--color-text-muted)'),
+        dirtyTxt:ba.dirty?' · modifications non enregistrées':'',
+        previewTxt:ba.preview?((ba.preview.list||[]).length+' produit(s)'+(ba.preview.show?', prix affichés':', sans prix')):''},
+      baCats:cats,baPreviewList:ba.preview?(ba.preview.list||[]).map(v=>({...v,prix:ba.preview.show?eur(v.price):'—'})):[],
+      baBack:this.go('bureauParams'),baPreview:()=>this.baPreview(),baPreviewClose:()=>this.setState({ba:{...this.state.ba,preview:null}}),
+      baModeFull:()=>this.baSet({mode:'full'}),baModeCustom:()=>this.baSet({mode:'custom'}),
+      baTogglePrix:()=>{ const b2=this.state.ba; if(b2.show&&!b2.deferred){ this.setState({ba:{...b2,err:'Prix masqués impossibles sans facturation différée.'}}); return; } this.baSet({show:!b2.show,err:''}); },
+      baSearch:(e)=>{ const b2=this.state.ba; this.setState({ba:{...b2,q:e&&e.target?e.target.value:''}}); },
+      baSave:()=>this.baSave(),baReload:()=>this.baLoad()}; }
   bpRefresh(){ const fr=window.__FR||{}; if(!fr.base) return;
     const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
     fetch(fr.base+'/franchisee/ws-office-delivery-settings'+qs,{headers:FRH(),credentials:'omit'})
@@ -5254,7 +5424,7 @@ class Component extends DCLogic {
   // rendu ; elles remontent ici pour être lues AUSSI par les adresses — une
   // seule définition, sinon un écran ajouté au menu n'aurait pas d'adresse.
   NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis'];
-  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
+  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
 
   // Groupes dépliants du menu « Paramétrage ». Définis ici et non dans le rendu,
   // parce que l'adresse doit savoir quel groupe déplier à l'arrivée sur un de
@@ -6246,10 +6416,10 @@ class Component extends DCLogic {
     const langList=['FR','NL','EN','DE','PL'].map(l=>({code:l,pick:setLang[l],style:langStyles[l]}));
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams'),navAvis:this.tr('navAvis'),navFidelite:this.tr('navFidelite') };
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
-      horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
+      horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',bureauAssortiment:'Assortiment d\'un bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
       commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
     const subs={avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
-      horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
+      horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',bureauAssortiment:'Produits proposés et affichage des prix — pour un bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
     // ===== Recherche profonde (barre de nav) =====
@@ -7256,6 +7426,16 @@ class Component extends DCLogic {
       edit:this.editForm('bureauParam',b,i),
       del:b.cutHerite?null:(()=>this.bpWrite({officeId:b.officeId,cutHeure:'',cutDecal:1,drop:b.drop})),
       origine:b.cutHerite?('hérité de « '+(b.tour||'sa tournée')+' »'):'propre à ce bureau',
+      // Assortiment et prix (0113) : lus sur la même carte, édités sur leur écran.
+      assortLabel:b.assortmentMode==='custom'?'Réduit':'Complet',
+      assortDetail:b.assortmentMode==='custom'?((b.assortmentCount!=null?b.assortmentCount:'?')+' produits'+(b.catalogCount!=null?(' sur '+b.catalogCount):'')):(b.catalogCount!=null?('les '+b.catalogCount+' produits de la boutique'):'tout le catalogue'),
+      assortColor:b.assortmentMode==='custom'?'var(--color-primary)':'var(--color-text)',
+      assortBg:b.assortmentMode==='custom'?'#fbeaec':'var(--color-background-secondary)',
+      prixLabel:b.showPrices===false?'Non':'Oui',
+      prixDetail:b.showPrices===false?'commande sans montant, facture au contrat':(b.deferredBilling?'les collaborateurs voient les montants':'paiement par le collaborateur'),
+      prixColor:b.showPrices===false?'var(--color-primary)':'var(--color-text)',
+      prixBg:b.showPrices===false?'#fbeaec':'var(--color-background-secondary)',
+      editAssort:()=>this.baOpen(b.officeId,b.bureau,b.contrat),
       pill:pill2('var(--color-background-secondary)','var(--color-text-muted)')}));
 
     /* ASSORTIMENT : LA MARQUE DÉCIDE, LA BOUTIQUE PRODUIT.
@@ -9195,6 +9375,7 @@ class Component extends DCLogic {
           fcCloseComplaint:()=>{ post('client-complaint',{resolve_client_id:fc.id},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:0}); this.printJob('✓ Réclamation close'); } else this.printJob((j&&j.error)||'Erreur'); }); } };
       })(),
       isBureauParams:screen==='bureauParams',bureauParams,
+      isBureauAssort:screen==='bureauAssortiment',...this.baVals(),
       isDispoCat:screen==='dispoCat',dispoCats,
       isDispoProd:screen==='dispoProd',dispoProds,
       isCreneaux:screen==='reglesBoutique'&&(S.dispoTab||'dispo')==='creneaux',creneaux,slotGridOpen,toggleSlotGrid,sgList,sgActive,slotStart,slotEnd,slotSetStart,slotSetEnd,slotFieldStyle,slotStepLabel,slotStepOpts,
