@@ -1482,14 +1482,24 @@
         <sc-if value="{{ ba.preview }}" hint-placeholder-val="{{ false }}">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;justify-content:space-between;align-items:center"><div><div class="t-section-title" style="font-size:15px">Ce que ce bureau verra</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ba.previewTxt }}</div></div><button onClick="{{ baPreviewClose }}" class="btn-secondary" style="font-size:12px">Fermer</button></div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
-              <sc-for list="{{ baPreviewList }}" as="v" hint-placeholder-count="8">
-                <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
-                  <div style="height:96px;background:var(--color-background-secondary);overflow:hidden"><sc-if value="{{ v.img }}" hint-placeholder-val="{{ false }}"><img src="{{ v.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/></sc-if></div>
-                  <div style="padding:8px 10px 10px"><div style="font:700 12px var(--font-ui);color:var(--color-text)">{{ v.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ v.prix }}</div></div>
-                </div>
-              </sc-for>
-            </div>
+            <sc-for list="{{ baPreviewGroups }}" as="g" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:baseline;gap:8px;padding:6px 0 0"><span style="font:600 13px var(--font-ui);color:var(--color-text)">{{ g.name }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ g.n }} produit(s)</span></div>
+                <sc-for list="{{ g.subs }}" as="s" hint-placeholder-count="2">
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div class="t-admin-label" style="padding:2px 0">{{ s.name }} · {{ s.n }}</div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
+                      <sc-for list="{{ s.products }}" as="v" hint-placeholder-count="4">
+                        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+                          <div style="height:96px;background:var(--color-background-secondary);overflow:hidden"><sc-if value="{{ v.img }}" hint-placeholder-val="{{ false }}"><img src="{{ v.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/></sc-if></div>
+                          <div style="padding:8px 10px 10px"><div style="font:700 12px var(--font-ui);color:var(--color-text)">{{ v.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ v.prix }}</div></div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
           </div>
         </sc-if>
       </div>
@@ -4428,7 +4438,7 @@ class Component extends DCLogic {
         this.setState({ba:{...cur,err:'',preview:{show:j.showPrices!==false,list:j.products}}}); })
       .catch(()=>{}); }
   baVals(){ const ba=this.state.ba; const eur=v=>(Number(v)||0).toFixed(2).replace('.',',')+'\u00a0€';
-    if(!ba) return {ba:{nom:'',contrat:'',err:'',loading:false,total:0,checked:0,q:'',dirtyTxt:'',preview:null},baCats:[],baPreviewList:[],
+    if(!ba) return {ba:{nom:'',contrat:'',err:'',loading:false,total:0,checked:0,q:'',dirtyTxt:'',preview:null},baCats:[],baPreviewList:[],baPreviewGroups:[],
       baOn:false,baNone:true,baBack:()=>{},baPreview:()=>{},baPreviewClose:()=>{},baModeFull:()=>{},baModeCustom:()=>{},baTogglePrix:()=>{},baSearch:()=>{},baSave:()=>{},baReload:()=>{}};
     const q=String(ba.q||'').trim().toLowerCase();
     const checked=Object.keys(ba.ids).length;
@@ -4455,6 +4465,16 @@ class Component extends DCLogic {
         dirtyTxt:ba.dirty?' · modifications non enregistrées':'',
         previewTxt:ba.preview?((ba.preview.list||[]).length+' produit(s)'+(ba.preview.show?', prix affichés':', sans prix')):''},
       baCats:cats,baPreviewList:ba.preview?(ba.preview.list||[]).map(v=>({...v,prix:ba.preview.show?eur(v.price):'—'})):[],
+      // Aperçu regroupé comme l'éditeur : catégorie → sous-catégorie, dans l'ordre
+      // servi ; la sous-catégorie vient de la lecture de l'assortiment (même
+      // produit, même libellé), sinon du produit lui-même, sinon « Autres ».
+      baPreviewGroups:(()=>{ if(!ba.preview) return []; const info={}; (ba.cats||[]).forEach(c=>(c.products||[]).forEach(p=>{ info[p.id]={cat:c.name,sub:p.subCatName||'Autres',subId:p.subCatId!=null?String(p.subCatId):'_'}; }));
+        const groups=[]; const gById={};
+        (ba.preview.list||[]).forEach(v=>{ const i=info[v.id]||{cat:v.category||'Sans catégorie',sub:v.subCatName||'Autres',subId:v.subCatId!=null?String(v.subCatId):(v.subCat!=null?String(v.subCat):'_')};
+          if(!gById[i.cat]){ gById[i.cat]={name:i.cat,n:0,subs:[],sById:{}}; groups.push(gById[i.cat]); } const g=gById[i.cat];
+          if(!g.sById[i.subId]){ g.sById[i.subId]={name:i.sub,n:0,products:[]}; g.subs.push(g.sById[i.subId]); }
+          g.sById[i.subId].products.push({...v,prix:ba.preview.show?eur(v.price):'—'}); g.sById[i.subId].n++; g.n++; });
+        return groups; })(),
       baOn:true,baNone:false,baBack:()=>this.setState({ba:null}),baPreview:()=>this.baPreview(),baPreviewClose:()=>this.setState({ba:{...this.state.ba,preview:null}}),
       baModeFull:()=>this.baSet({mode:'full'}),baModeCustom:()=>this.baSet({mode:'custom'}),
       baTogglePrix:()=>{ const b2=this.state.ba; if(b2.show&&!b2.deferred){ this.setState({ba:{...b2,err:'Prix masqués impossibles sans facturation différée.'}}); return; } this.baSet({show:!b2.show,err:''}); },
