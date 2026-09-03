@@ -251,6 +251,41 @@ jobs:
           echo "== Appelés par les écrans =="
           for t in $DIRECT; do probe "$BASE/franchisee/$t$QS" "$t"; done
           echo
+          # ═══ ASSORTIMENT PAR BUREAU (0113) — aller-retour RÉEL en base ═══
+          # Lit l'assortiment du premier bureau de la boutique, le réécrit À
+          # L'IDENTIQUE (même mode, mêmes prix, mêmes produits) et relit : la
+          # table de jointure et les deux colonnes de ws_offices sont prouvées
+          # sans rien changer. 501 = migration 0113 non appliquée.
+          echo "== Assortiment par bureau (0113) =="
+          OFFS=$(curl -s --max-time 12 "${HDR[@]}" "$BASE/franchisee/ws-office-delivery-settings$QS" 2>/dev/null)
+          OID=$(printf '%s' "$OFFS" | grep -o '"officeId":[0-9]*' | head -1 | grep -o '[0-9]*')
+          if [ -z "$OID" ]; then echo "  aucun bureau rattaché à une tournée : rien à sonder"; else
+            echo "  bureau sondé : id $OID — $(printf '%s' "$OFFS" | grep -o '"bureau":"[^"]*"' | head -1 | cut -d'"' -f4)"
+            A1=$(curl -s --max-time 15 "${HDR[@]}" -w '\n%{http_code}' "$BASE/franchisee/office-assortment?officeId=$OID${QS:+&${QS#?}}" 2>/dev/null)
+            C1=$(printf '%s' "$A1" | tail -n1); P1=$(printf '%s' "$A1" | sed '$d')
+            if [ "$C1" != "200" ]; then echo "  ✗ lecture : HTTP $C1 — $(printf '%s' "$P1" | head -c 160)"; else
+              MODE=$(printf '%s' "$P1" | grep -o '"mode":"[a-z]*"' | head -1 | cut -d'"' -f4)
+              SHOW=$(printf '%s' "$P1" | grep -o '"showPrices":[a-z]*' | head -1 | cut -d: -f2)
+              CHK=$(printf '%s' "$P1" | grep -o '"checked":[0-9]*' | head -1 | cut -d: -f2)
+              TOT=$(printf '%s' "$P1" | grep -o '"total":[0-9]*' | head -1 | cut -d: -f2)
+              NCAT=$(printf '%s' "$P1" | grep -o '"products":\[' | wc -l | tr -d ' ')
+              echo "  ✔ lecture : mode=$MODE prix=$SHOW cochés=$CHK/$TOT catégories=$NCAT"
+              IDS=$(printf '%s' "$P1" | tr -d '\n ' | grep -o '{"id":[0-9]*,"name":"[^"]*","price":[0-9.]*,"img":[^,]*,"channels":\[[^]]*\],"checked":true}' | grep -o '"id":[0-9]*' | cut -d: -f2 | paste -sd, -)
+              BODY="{\"officeId\":$OID,\"mode\":\"$MODE\",\"showPrices\":$SHOW,\"productIds\":[${IDS}]}"
+              W=$(curl -s --max-time 15 "${HDR[@]}" -H 'Content-Type: application/json' -X POST -d "$BODY" -w '\n%{http_code}' "$BASE/franchisee/office-assortment$QS" 2>/dev/null)
+              CW=$(printf '%s' "$W" | tail -n1); PW=$(printf '%s' "$W" | sed '$d')
+              echo "  écriture à l'identique : HTTP $CW — $(printf '%s' "$PW" | head -c 140)"
+              A2=$(curl -s --max-time 15 "${HDR[@]}" "$BASE/franchisee/office-assortment?officeId=$OID${QS:+&${QS#?}}" 2>/dev/null)
+              CHK2=$(printf '%s' "$A2" | grep -o '"checked":[0-9]*' | head -1 | cut -d: -f2)
+              MODE2=$(printf '%s' "$A2" | grep -o '"mode":"[a-z]*"' | head -1 | cut -d'"' -f4)
+              if [ "$CHK2" = "$CHK" ] && [ "$MODE2" = "$MODE" ]; then echo "  ✔ relecture identique : mode=$MODE2 cochés=$CHK2 — la jointure et ws_offices sont écrites et relues"
+              else echo "  ✗ relecture différente : mode=$MODE2 cochés=$CHK2 (attendu $MODE / $CHK)"; fi
+              PV=$(curl -s --max-time 15 "${HDR[@]}" -w '\n%{http_code}' "$BASE/franchisee/office-preview?officeId=$OID${QS:+&${QS#?}}" 2>/dev/null)
+              echo "  aperçu webshop : HTTP $(printf '%s' "$PV" | tail -n1) — $(printf '%s' "$PV" | sed '$d' | grep -o '"products":\[' | wc -l | tr -d ' ') liste, showPrices=$(printf '%s' "$PV" | grep -o '"showPrices":[a-z]*' | head -1 | cut -d: -f2), produits=$(printf '%s' "$PV" | sed '$d' | grep -o '"id":[0-9]*' | wc -l | tr -d ' ')"
+            fi
+          fi
+          echo
+
           echo "== Référentiel postal (cartes, zones, analyse géo) =="
           probe "$BASE/geo/postcodes?all=1"    "geo/postcodes?all=1"
           probe "$BASE/geo/postcodes?groups=1" "geo/postcodes?groups=1"
