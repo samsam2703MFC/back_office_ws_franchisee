@@ -1588,8 +1588,10 @@
                 <div><span style="font:600 12.5px var(--font-ui);color:var(--color-text)">{{ c.name }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-left:8px">{{ c.n }} sur {{ c.total }}</span></div>
                 <div style="display:flex;gap:12px;font:500 11px var(--font-ui)"><button onClick="{{ c.all }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-primary);font:inherit">Tout</button><button onClick="{{ c.none }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-text-muted);font:inherit">Aucun</button></div>
               </div>
+              <sc-for list="{{ c.subs }}" as="sc" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px 2px"><span style="font:600 11px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">{{ sc.name }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ sc.n }} sur {{ sc.total }}</span></div>
               <div style="display:flex;flex-direction:column;gap:3px">
-                <sc-for list="{{ c.products }}" as="p" hint-placeholder-count="4">
+                <sc-for list="{{ sc.products }}" as="p" hint-placeholder-count="4">
                   <div onClick="{{ p.toggle }}" style="{{ p.rowStyle }}">
                     <div style="{{ p.cbStyle }}"><sc-if value="{{ p.checked }}" hint-placeholder-val="{{ true }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></sc-if></div>
                     <div style="width:34px;height:34px;flex:none;border-radius:8px;background:var(--color-background-secondary);overflow:hidden"><sc-if value="{{ p.img }}" hint-placeholder-val="{{ false }}"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/></sc-if></div>
@@ -1599,6 +1601,7 @@
                   </div>
                 </sc-for>
               </div>
+              </sc-for>
             </div>
           </sc-for>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:4px;padding:12px 14px;border-top:.5px solid var(--color-border-tertiary)">
@@ -4566,7 +4569,11 @@ class Component extends DCLogic {
           nameColor:on?'var(--color-text)':'var(--color-text-muted)',
           rowStyle:'display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;cursor:pointer;flex-wrap:wrap;background:'+(on?'var(--color-surface)':'transparent'),
           cbStyle:'width:18px;height:18px;flex:none;border-radius:5px;display:flex;align-items:center;justify-content:center;'+(on?'background:var(--color-primary);border:1.5px solid var(--color-primary)':'background:var(--color-surface);border:1.5px solid var(--color-border-secondary)')}; });
-      return {...c,products:prods,n:(c.products||[]).filter(p=>ba.ids[p.id]).length,total:(c.products||[]).length,all:()=>this.baBulk(c,true),none:()=>this.baBulk(c,false)}; }).filter(c=>!q||c.products.length);
+      // Sous-catégories : regroupées dans l'ordre servi (le serveur trie déjà
+      // par sous-catégorie puis nom) ; sans sous-catégorie → « Autres ».
+      const subs=[]; const byId={};
+      prods.forEach(p=>{ const k=p.subCatId!=null?String(p.subCatId):'_'; if(!byId[k]){ byId[k]={id:k,name:p.subCatName||'Autres',products:[],n:0,total:0}; subs.push(byId[k]); } byId[k].products.push(p); byId[k].total++; if(p.checked) byId[k].n++; });
+      return {...c,products:prods,subs,n:(c.products||[]).filter(p=>ba.ids[p.id]).length,total:(c.products||[]).length,all:()=>this.baBulk(c,true),none:()=>this.baBulk(c,false)}; }).filter(c=>!q||c.products.length);
     const custom=ba.mode==='custom';
     return {ba:{...ba,checked,
         fullStyle:opt(!custom),fullDot:dot(!custom),fullColor:!custom?'var(--color-primary)':'var(--color-text)',
