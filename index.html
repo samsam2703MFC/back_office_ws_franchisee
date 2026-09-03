@@ -2638,7 +2638,16 @@
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:400 13px var(--font-ui);color:var(--color-text)">Catalogue tel qu'il sera servi le</span><input type="date" value="{{ br.date }}" onChange="{{ brDate }}" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></div>
           <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:6px">Les produits saisonniers et les périodes ERP s'appliquent à cette date : un produit hors saison ce jour-là n'apparaît pas.</div>
         </div>
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" checked="{{ br.sansSaison }}" onChange="{{ brSaison }}" style="margin-top:3px"/><span><span style="font:500 13px var(--font-ui);color:var(--color-text)">Sans les produits saisonniers</span><br><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Un dossier juste toute l'année : seuls les produits sans saison.</span></span></label>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div class="t-admin-label">Saisons dans la brochure</div><div style="display:flex;gap:12px;font:500 11px var(--font-ui)"><button onClick="{{ brSaisonsToutes }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-primary);font:inherit">Toutes</button><button onClick="{{ brSaisonsAucune }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-primary);font:inherit">Aucune</button></div></div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 14px">
+            <sc-for list="{{ br.saisons }}" as="sa" hint-placeholder-count="4">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 8px;border-radius:8px;background:var(--color-background-secondary)"><input type="checkbox" checked="{{ sa.on }}" onChange="{{ sa.toggle }}"/><span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ sa.nom }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-left:auto">{{ sa.n }}</span></label>
+            </sc-for>
+          </div>
+          <sc-if value="{{ br.aucuneSaison }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:4px 0">Aucun produit saisonnier au catalogue ce jour-là.</div></sc-if>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:6px">Une saison décochée sort ses produits du dossier ; les produits sans saison restent. Tout décocher donne un dossier juste toute l'année.</div>
+        </div>
       </div>
       <div style="padding:14px 24px 20px;border-top:.5px solid var(--color-border-tertiary);display:flex;gap:8px;justify-content:flex-end"><button onClick="{{ brFermer }}" class="btn-secondary" style="font-size:12px">Annuler</button><button onClick="{{ brLancer }}" class="btn-primary" style="font-size:12px">Imprimer le dossier</button></div>
     </div>
@@ -4777,11 +4786,18 @@ class Component extends DCLogic {
       .then(({ok,j})=>{ const cur=this.state.br; if(!cur||cur.date!==dateDemandee) return;
         if(!ok||!j||!Array.isArray(j.cats)){ this.setState({br:{...cur,chargement:false,erreur:(j&&j.error)||'Gammes indisponibles'}}); return; }
         const anciennes={}; (cur.cats||[]).forEach(c=>{ anciennes[c.key]=c.on; });
-        this.setState({br:{...cur,chargement:false,erreur:'',cats:j.cats.map(c=>({key:c.key,nom:c.nom,n:c.n,on:anciennes[c.key]!==undefined?anciennes[c.key]:true}))}}); })
+        const anciennesS={}; (cur.saisons||[]).forEach(c=>{ anciennesS[c.key]=c.on; });
+        this.setState({br:{...cur,chargement:false,erreur:'',cats:j.cats.map(c=>({key:c.key,nom:c.nom,n:c.n,on:anciennes[c.key]!==undefined?anciennes[c.key]:true})),
+          saisons:(Array.isArray(j.saisons)?j.saisons:[]).map(c=>({key:c.key,nom:c.nom,n:c.n,on:anciennesS[c.key]!==undefined?anciennesS[c.key]:true}))}}); })
       .catch(e=>{ const cur=this.state.br; if(cur) this.setState({br:{...cur,chargement:false,erreur:(e&&e.message)||'réseau indisponible'}}); }); }
-  brVals(){ const br=this.state.br; if(!br) return {brModal:false,br:{cible:'',date:'',sansSaison:false,cats:[],aucune:false,chargement:false,erreur:''},brToutes:()=>{},brAucune:()=>{},brFermer:()=>{},brDate:()=>{},brSaison:()=>{},brLancer:()=>{}};
+  brVals(){ const br=this.state.br; if(!br) return {brModal:false,br:{cible:'',date:'',sansSaison:false,cats:[],saisons:[],aucune:false,aucuneSaison:false,chargement:false,erreur:''},brToutes:()=>{},brAucune:()=>{},brSaisonsToutes:()=>{},brSaisonsAucune:()=>{},brFermer:()=>{},brDate:()=>{},brSaison:()=>{},brLancer:()=>{}};
     const cats=(br.cats||[]).map(c=>({...c,toggle:()=>this.setState({br:{...this.state.br,cats:this.state.br.cats.map(x=>x.key===c.key?{...x,on:!x.on}:x)}})}));
-    return {brModal:true,br:{...br,cats,aucune:cats.length>0&&!cats.some(c=>c.on),cible:br.officeId!=null?('Bureau '+br.nom+' — son assortiment, ses prix ou non, son QR de rattachement'):'Toute la boutique — tous les produits, sans QR de bureau'},
+    // Saisons (gammes saisonnières ERP : Noël, Épiphanie, été, glaces…) présentes
+    // au catalogue à la date choisie. Décocher une saison retire ses produits.
+    const saisons=(br.saisons||[]).map(c=>({...c,toggle:()=>this.setState({br:{...this.state.br,saisons:this.state.br.saisons.map(x=>x.key===c.key?{...x,on:!x.on}:x)}})}));
+    return {brModal:true,br:{...br,cats,saisons,aucune:cats.length>0&&!cats.some(c=>c.on),aucuneSaison:saisons.length===0&&!br.chargement&&!br.erreur,cible:br.officeId!=null?('Bureau '+br.nom+' — son assortiment, ses prix ou non, son QR de rattachement'):'Toute la boutique — tous les produits, sans QR de bureau'},
+      brSaisonsToutes:()=>this.setState({br:{...this.state.br,saisons:(this.state.br.saisons||[]).map(x=>({...x,on:true}))}}),
+      brSaisonsAucune:()=>this.setState({br:{...this.state.br,saisons:(this.state.br.saisons||[]).map(x=>({...x,on:false}))}}),
       brToutes:()=>this.setState({br:{...this.state.br,cats:this.state.br.cats.map(x=>({...x,on:true}))}}),
       brAucune:()=>this.setState({br:{...this.state.br,cats:this.state.br.cats.map(x=>({...x,on:false}))}}),
       brFermer:()=>this.setState({br:null}),
@@ -4791,7 +4807,9 @@ class Component extends DCLogic {
   brLancer(){ const br=this.state.br; const fr=window.__FR||{}; if(!br||!fr.base) return;
     const cats=br.cats||[]; const cochees=cats.filter(c=>c.on); if(cats.length&&!cochees.length){ this.printJob('⚠ Choisissez au moins une gamme.'); return; }
     const catsQs=(cats.length&&cochees.length<cats.length)?('&cats='+encodeURIComponent(cochees.map(c=>c.key).join(','))):'';
-    const qs=(br.officeId!=null?('?office='+encodeURIComponent(br.officeId)):'?x=1')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'')+(br.date?('&date='+encodeURIComponent(br.date)):'')+(br.sansSaison?'&sansSaison=1':'')+catsQs;
+    const sais=br.saisons||[]; const saisOn=sais.filter(c=>c.on);
+    const saisQs=sais.length?(saisOn.length===0?'&sansSaison=1':(saisOn.length<sais.length?('&saisons='+encodeURIComponent(saisOn.map(c=>c.key).join(','))):'')):(br.sansSaison?'&sansSaison=1':'');
+    const qs=(br.officeId!=null?('?office='+encodeURIComponent(br.officeId)):'?x=1')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'')+(br.date?('&date='+encodeURIComponent(br.date)):'')+saisQs+catsQs;
     const onglet=window.open('','_blank');
     this.setState({br:null}); this.printJob('Préparation du dossier'+(br.nom?(' — '+br.nom):'')+'…');
     fetch(fr.base+'/franchisee/office-brochure'+qs,{headers:FRH(),credentials:'omit'})
