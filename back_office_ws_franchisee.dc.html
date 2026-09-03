@@ -2813,6 +2813,13 @@
             <sc-if value="{{ f.isText }}" hint-placeholder-val="{{ false }}">
               <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
             </sc-if>
+            <sc-if value="{{ f.isImage }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <sc-if value="{{ f.hasImg }}" hint-placeholder-val="{{ false }}"><img src="{{ f.imgSrc }}" alt="" style="max-width:160px;max-height:64px;width:auto;height:auto;object-fit:contain;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:8px;padding:6px"/></sc-if>
+                <input type="file" accept="image/png,image/jpeg,image/webp" onChange="{{ f.imgPick }}" style="font:400 12px var(--font-ui);color:var(--color-text-muted);max-width:100%"/>
+                <sc-if value="{{ f.hasImg }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ f.imgClear }}" class="btn-secondary" style="padding:7px 12px;font-size:12px">Retirer le logo</button></sc-if>
+              </div>
+            </sc-if>
             <sc-if value="{{ f.isNumber }}" hint-placeholder-val="{{ false }}">
               <input type="number" value="{{ f.value }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
             </sc-if>
@@ -3120,6 +3127,14 @@
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Segment</label><select value="{{ ob.seg }}" onChange="{{ obSetSeg }}" style="{{ obInStyle }}"><sc-for list="{{ obSegOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Conditions de paiement</label><input value="{{ ob.paiement }}" onInput="{{ obSetPaiement }}" placeholder="ex. 30 j fin de mois" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Encours autorisé (€)</label><input type="number" value="{{ ob.plafond }}" onInput="{{ obSetPlafond }}" style="{{ obInStyle }}"/></div>
+          <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Logo de l'entreprise</label>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <sc-if value="{{ obHasLogo }}" hint-placeholder-val="{{ false }}"><img src="{{ obLogoSrc }}" alt="" style="max-width:160px;max-height:64px;width:auto;height:auto;object-fit:contain;background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:8px;padding:6px"/></sc-if>
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange="{{ obLogoPick }}" style="font:400 12px var(--font-ui);color:var(--color-text-muted);max-width:100%"/>
+              <sc-if value="{{ obHasLogo }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ obLogoClear }}" class="btn-secondary" style="padding:7px 12px;font-size:12px">Retirer</button></sc-if>
+            </div>
+            <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:5px">Sur la couverture du dossier imprimé du bureau, à côté du logo L'Atelier. PNG, JPG ou WebP ; réduit à 600 px avant envoi. Facultatif.</div>
+          </div>
         </div>
         </sc-if>
 
@@ -3702,7 +3717,7 @@ class Component extends DCLogic {
       if(fr.base&&fr.token) fetch(fr.base+'/franchisee/onboard-office'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{
         method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
         body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,remiseWeb:o.remiseWeb,franco:o.franco,cp:obCp,localite:obLocalite,
-          contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,
+          contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,logo:o.logo||'',
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
           fenetre:obFenetre,jours:obJours,validation:o.validation,
           departements:S.obDepts,staff:S.obStaff,
@@ -3973,6 +3988,7 @@ class Component extends DCLogic {
           {k:'name',label:'Nom de l\'office (lieu de livraison)',type:'text',ph:'ex. KBC — Cafétéria HQ',info:'Un office est un LIEU DE LIVRAISON d\'un client. Un site (building) peut regrouper plusieurs offices ; un office contient plusieurs départements, auxquels se rattachent les clients (personnes) qui commandent.',section:'Identité'},
           {k:'status',label:'Statut',type:'toggle',options:[{value:'pending',label:'En attente'},{value:'validated',label:'Validé'}],def:'validated',info:'À la création : Validé. Toute MODIFICATION repasse l\'office « En attente » jusqu\'à re-validation.',section:'Identité'},
           {k:'vat',label:'N° TVA',type:'text',ph:'BE0123456789',info:'TVA du bureau — sert au contrôle de conflit (un même CP déjà desservi sous une autre TVA).',section:'Identité'},
+          {k:'logo_url',label:'Logo de l\'entreprise (bureau)',type:'image',info:'Figure sur la couverture du dossier imprimé de ce bureau, à côté du logo L\'Atelier. PNG, JPG ou WebP ; réduit à 600 px avant envoi. Sans logo, la couverture n\'en montre pas.',section:'Identité'},
           {k:'site',label:'Site (building) du bureau',type:'select',options:[{value:'',label:'— Aucun building (site à créer) —'},...buildings.map(b=>({value:b,label:b}))],info:'Sens du paramétrage : c\'est le BUREAU qui choisit son building (site). Un site peut regrouper plusieurs bureaux — c\'est l\'arrêt physique de la tournée.',section:'Identité'},
           {k:'address',label:'Adresse',type:'text',ph:'Rue, n°',section:'Coordonnées'},
           {k:'postal_code',label:'Code postal',type:'text',ph:'1000',half:true,section:'Coordonnées'},
@@ -4132,6 +4148,25 @@ class Component extends DCLogic {
   }
   // Office : la tournée choisie impose cut-off + jours autorisés (ws_tour_availability).
   officeAutofill(v){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v.tour); if(av){ v.delivery_cutoff=av.cut||''; v.allowed_days=av.jour||''; } return v; }
+  /* URL servie d'un fichier du webshop (assets/…) : la base de l'API moins /php-api. */
+  assetUrl(rel){ const r=String(rel||''); if(!r||/^(https?:)?\/\//.test(r)||r.indexOf('data:')===0) return r;
+    const fr=(window.__FR||{}); const base=String(fr.base||'').replace(/\/php-api\/?$/,'').replace(/\/$/,'');
+    return (base||'')+'/'+r.replace(/^\//,''); }
+  /* Fichier image choisi → data: URL PNG réduite à 600 px (le serveur refuse au-delà de 2 Mo). */
+  imgReduire(file){ return new Promise(res=>{ const rd=new FileReader(); rd.onerror=()=>res('');
+    rd.onload=()=>{ const im=new Image(); im.onerror=()=>res('');
+      im.onload=()=>{ const M=600, r=Math.min(1,M/Math.max(im.width||1,im.height||1)), w=Math.max(1,Math.round((im.width||1)*r)), h=Math.max(1,Math.round((im.height||1)*r));
+        const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(im,0,0,w,h);
+        try{ res(c.toDataURL('image/png')); }catch(e){ res(''); } };
+      im.src=String(rd.result||''); };
+    rd.readAsDataURL(file); }); }
+  imgLire(e){ const f=e&&e.target&&e.target.files&&e.target.files[0]; if(!f) return Promise.resolve(null);
+    if(!/^image\/(png|jpeg|webp)$/.test(f.type)){ this.printJob('⚠ Logo : PNG, JPG ou WebP attendus'); return Promise.resolve(null); }
+    if(f.size>8*1024*1024){ this.printJob('⚠ Logo : 8 Mo maximum avant réduction'); return Promise.resolve(null); }
+    return this.imgReduire(f).then(d=>{ if(!d) this.printJob('⚠ Logo illisible'); return d||null; }); }
+  fImgPick(k,e){ this.imgLire(e).then(d=>{ if(d) this.setState(s3=>({formVals:{...(s3.formVals||{}),[k]:d}})); }); }
+  obLogoPick(e){ this.imgLire(e).then(d=>{ if(d) this.setState(s3=>({ob:{...(s3.ob||{}),logo:d}})); }); }
+  obLogoClear(){ this.setState(s3=>({ob:{...(s3.ob||{}),logo:''}})); }
   openForm(key){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=f.def!==undefined?f.def:''; }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure(); this.setState({formKey:key,formVals:v,formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   /* formRow porte AUSSI le contexte ici : les renvois (« Modifier la fiche du
      bureau ») et les écritures (bpWrite lit officeId) le lisent. Sans lui, un
@@ -7823,7 +7858,11 @@ class Component extends DCLogic {
               const n=c.includes(iso)?c.filter(x=>x!==iso):[...c,iso].sort((a,b)=>a-b);
               return {formVals:{...s.formVals,[f.k]:n}}; })};
         }):[],
-        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&f.type!=='date'&&f.type!=='days'&&!isToggle&&!f.readonly,
+        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&f.type!=='date'&&f.type!=='days'&&f.type!=='image'&&!isToggle&&!f.readonly,
+        // Image (logo du bureau) : la valeur est une URL servie (existant) ou une
+        // data: URL (fichier choisi, réduit à 600 px) ; vide = retirer.
+        isImage:f.type==='image', hasImg:!!val, imgSrc:this.assetUrl(val),
+        imgPick:e=>this.fImgPick(f.k,e), imgClear:()=>this.setState(s3=>({formVals:{...(s3.formVals||{}),[f.k]:''}})),
         // Un champ en lecture seule qui RENVOIE vers l'écran où il se modifie.
         // La cible dépend du champ : fiche bureau (défaut), fiche client de la
         // société, ou règles de livraison du bureau.
@@ -8833,10 +8872,10 @@ class Component extends DCLogic {
     ].map(x=>({...x,style:obChip}));
     const obVals={
       obOpen:S.obOpen, obTitle:'Onboarding bureau', obStep, obSteps,
-      obStep0:obStep===0,obStep1:obStep===1,obStep2:obStep===2,obStep3:obStep===3,obStep4:obStep===4,obStep5:obStep===5,obStep6:obStep===6,
+      obStep0:obStep===0,obHasLogo:!!(S.ob&&S.ob.logo),obLogoSrc:(S.ob&&S.ob.logo)||'',obStep1:obStep===1,obStep2:obStep===2,obStep3:obStep===3,obStep4:obStep===4,obStep5:obStep===5,obStep6:obStep===6,
       ob:O, obInStyle:obIn,
       obSetRaison:this.obSet('raison'),obSetTva:this.obSet('tva'),obSetSeg:this.obSet('seg'),obSetPaiement:this.obSet('paiement'),obSetPlafond:this.obSet('plafond'),
-      obSetContactNom:this.obSet('contactNom'),obSetContactEmail:this.obSet('contactEmail'),obSetContactTel:this.obSet('contactTel'),obSetContactRole:this.obSet('contactRole'),
+      obSetContactNom:this.obSet('contactNom'),obLogoPick:(e)=>this.obLogoPick(e),obLogoClear:()=>this.obLogoClear(),obSetContactEmail:this.obSet('contactEmail'),obSetContactTel:this.obSet('contactTel'),obSetContactRole:this.obSet('contactRole'),
       obSetAdr:this.obSet('adr'),obSetEtage:this.obSet('etage'),obSetTour:this.obSet('tour'),obSetAcc:this.obSet('acc'),obSetOffice:this.obSet('office'),
       obSetCp:(e)=>this.obSetCp(e),obSetLocalite:this.obSet('localite'),
       // Engagement de livraison — saisi, jamais supposé.
