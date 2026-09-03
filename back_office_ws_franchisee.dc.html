@@ -2483,6 +2483,27 @@
   </div>
   </sc-if>
 
+  <!-- ===================== IMPRIMER LE DOSSIER — sélection avant impression ===================== -->
+  <sc-if value="{{ brModal }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:2000;padding:24px">
+    <div style="background:var(--color-surface);border-radius:14px;width:460px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+      <div style="padding:20px 24px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:start">
+        <div><div class="t-page-title" style="font-size:18px">Imprimer le dossier</div><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ br.cible }}</div></div>
+        <button onClick="{{ brFermer }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button>
+      </div>
+      <div style="padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div class="t-admin-label" style="margin-bottom:6px">Disponibilité des produits</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font:400 13px var(--font-ui);color:var(--color-text)">Catalogue tel qu'il sera servi le</span><input type="date" value="{{ br.date }}" onChange="{{ brDate }}" style="border:.5px solid var(--color-border-secondary);border-radius:8px;padding:8px 10px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-top:6px">Les produits saisonniers et les périodes ERP s'appliquent à cette date : un produit hors saison ce jour-là n'apparaît pas.</div>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input type="checkbox" checked="{{ br.sansSaison }}" onChange="{{ brSaison }}" style="margin-top:3px"/><span><span style="font:500 13px var(--font-ui);color:var(--color-text)">Sans les produits saisonniers</span><br><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Un dossier juste toute l'année : seuls les produits sans saison.</span></span></label>
+      </div>
+      <div style="padding:14px 24px 20px;border-top:.5px solid var(--color-border-tertiary);display:flex;gap:8px;justify-content:flex-end"><button onClick="{{ brFermer }}" class="btn-secondary" style="font-size:12px">Annuler</button><button onClick="{{ brLancer }}" class="btn-primary" style="font-size:12px">Imprimer le dossier</button></div>
+    </div>
+  </div>
+  </sc-if>
+
   <sc-if value="{{ rfOpen }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:2000;padding:24px">
     <div class="lz" style="background:var(--color-surface);border-radius:14px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)">
@@ -4568,15 +4589,23 @@ class Component extends DCLogic {
   /* DOSSIER « CARTE & TARIFS » (A4) — pour la boutique (officeId null) ou pour
      un bureau. Même mécanique que l'affiche : l'onglet s'ouvre AU CLIC (sinon
      bloqué comme popup), le fetch emporte le jeton, la réponse arrive en blob. */
-  brOpen(officeId,nom){ const fr=window.__FR||{}; if(!fr.base) return;
-    const qs=(officeId!=null?('?office='+encodeURIComponent(officeId)):'?x=1')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'');
+  brOpen(officeId,nom){ const d=new Date(); const iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    this.setState({br:{officeId:officeId!=null?officeId:null,nom:nom||'',date:iso,sansSaison:false}}); }
+  brVals(){ const br=this.state.br; if(!br) return {brModal:false,br:{cible:'',date:'',sansSaison:false},brFermer:()=>{},brDate:()=>{},brSaison:()=>{},brLancer:()=>{}};
+    return {brModal:true,br:{...br,cible:br.officeId!=null?('Bureau '+br.nom+' — son assortiment, ses prix ou non, son QR de rattachement'):'Toute la boutique — tous les produits, sans QR de bureau'},
+      brFermer:()=>this.setState({br:null}),
+      brDate:(e)=>this.setState({br:{...this.state.br,date:e&&e.target?e.target.value:this.state.br.date}}),
+      brSaison:(e)=>this.setState({br:{...this.state.br,sansSaison:!!(e&&e.target&&e.target.checked)}}),
+      brLancer:()=>this.brLancer()}; }
+  brLancer(){ const br=this.state.br; const fr=window.__FR||{}; if(!br||!fr.base) return;
+    const qs=(br.officeId!=null?('?office='+encodeURIComponent(br.officeId)):'?x=1')+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):'')+(br.date?('&date='+encodeURIComponent(br.date)):'')+(br.sansSaison?'&sansSaison=1':'');
     const onglet=window.open('','_blank');
-    this.printJob('Préparation du dossier'+(nom?(' — '+nom):'')+'…');
+    this.setState({br:null}); this.printJob('Préparation du dossier'+(br.nom?(' — '+br.nom):'')+'…');
     fetch(fr.base+'/franchisee/office-brochure'+qs,{headers:FRH(),credentials:'omit'})
       .then(async r=>{ if(!r.ok){ const j=await r.json().catch(()=>null); throw new Error((j&&j.error)||('HTTP '+r.status)); } return r.blob(); })
       .then(bl=>{ const u=URL.createObjectURL(new Blob([bl],{type:'text/html'}));
         if(onglet){ onglet.location=u; setTimeout(()=>URL.revokeObjectURL(u),60000); this.printJob('✔ Dossier ouvert — le bouton « Imprimer » y produit le PDF'); }
-        else { const a=document.createElement('a'); a.href=u; a.download='dossier-'+String(nom||'boutique').replace(/[^A-Za-z0-9]+/g,'-')+'.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); this.printJob('✔ Dossier téléchargé (onglet bloqué)'); } })
+        else { const a=document.createElement('a'); a.href=u; a.download='dossier-'+String(br.nom||'boutique').replace(/[^A-Za-z0-9]+/g,'-')+'.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); this.printJob('✔ Dossier téléchargé (onglet bloqué)'); } })
       .catch(e=>{ if(onglet) onglet.close(); this.printJob('⚠ Dossier non produit — '+(e&&e.message?e.message:'réseau')); }); }
   /* Envoi (ou renvoi) de l'e-mail au contact du bureau : conditions, bouton
      « Créer mon compte », affiche en pièce jointe. */
@@ -9443,7 +9472,7 @@ class Component extends DCLogic {
           fcCloseComplaint:()=>{ post('client-complaint',{resolve_client_id:fc.id},(j)=>{ if(j&&j.ok){ patchLocal(fc.id,{complaint_open:0}); this.printJob('✓ Réclamation close'); } else this.printJob((j&&j.error)||'Erreur'); }); } };
       })(),
       isBureauParams:screen==='bureauParams',bureauParams,
-      isBureauAssort:screen==='bureauAssortiment',bureauxVides:!bureauParams.length,brShop:()=>this.brOpen(null,''),...this.baVals(),
+      isBureauAssort:screen==='bureauAssortiment',bureauxVides:!bureauParams.length,brShop:()=>this.brOpen(null,''),...this.brVals(),...this.baVals(),
       isDispoCat:screen==='dispoCat',dispoCats,
       isDispoProd:screen==='dispoProd',dispoProds,
       isCreneaux:screen==='reglesBoutique'&&(S.dispoTab||'dispo')==='creneaux',creneaux,slotGridOpen,toggleSlotGrid,sgList,sgActive,slotStart,slotEnd,slotSetStart,slotSetEnd,slotFieldStyle,slotStepLabel,slotStepOpts,
