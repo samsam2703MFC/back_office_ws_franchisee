@@ -1368,7 +1368,7 @@
               <div><div class="t-admin-label" style="margin-bottom:6px">Jours autorisés</div><div style="display:flex;gap:5px;flex-wrap:wrap"><sc-for list="{{ b.days }}" as="d" hint-placeholder-count="7"><span style="{{ d.style }}">{{ d.k }}</span></sc-for></div></div>
               <div style="display:flex;gap:20px"><div><div class="t-admin-label" style="margin-bottom:4px">Cut-off commande</div><div style="font:600 13px var(--font-ui);color:var(--color-primary)">{{ b.cut }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ b.origine }}</div></div><div><div class="t-admin-label" style="margin-bottom:4px">Temps de dépôt</div><div style="font:600 13px var(--font-ui);color:var(--color-text)">{{ b.drop }} min</div></div></div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px;padding-top:14px;border-top:.5px solid var(--color-border-tertiary)">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:14px;padding-top:14px;border-top:.5px solid var(--color-border-tertiary)">
               <div style="display:flex;align-items:center;gap:12px">
                 <div style="width:34px;height:34px;flex:none;border-radius:9px;background:{{ b.assortBg }};display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8D1D2C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h9M4 17h6"/><path d="m15 15 2 2 4-4"/></svg></div>
                 <div style="flex:1;min-width:0">
@@ -1413,7 +1413,7 @@
       </sc-if>
       <sc-if value="{{ baOn }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
             <button onClick="{{ baBack }}" style="background:none;border:none;padding:0;text-align:left;cursor:pointer;font:500 12px var(--font-ui);color:var(--color-primary)">‹ Tous les bureaux</button>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -1425,7 +1425,7 @@
           <button onClick="{{ baPreview }}" class="btn-secondary" style="font-size:12px;flex:none">Voir ce que ce bureau verra</button>
         </div>
         <sc-if value="{{ ba.err }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 14px;border-radius:12px;background:#fbeaec;font:500 12px var(--font-ui);color:#8D1D2C">{{ ba.err }}</div></sc-if>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px">
             <div><div class="t-section-title" style="font-size:15px">Assortiment</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Ce que le catalogue propose à ce bureau</div></div>
             <div onClick="{{ baModeFull }}" style="{{ ba.fullStyle }}">
@@ -1464,7 +1464,7 @@
                     <div style="{{ p.cbStyle }}"><sc-if value="{{ p.checked }}" hint-placeholder-val="{{ true }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg></sc-if></div>
                     <div style="width:34px;height:34px;flex:none;border-radius:8px;background:var(--color-background-secondary);overflow:hidden"><sc-if value="{{ p.img }}" hint-placeholder-val="{{ false }}"><img src="{{ p.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/></sc-if></div>
                     <div style="flex:1;min-width:0;font:500 13px var(--font-ui);color:{{ p.nameColor }}">{{ p.name }}</div>
-                    <span style="font:600 10px var(--font-ui);padding:3px 7px;border-radius:999px;background:var(--color-background-secondary);color:var(--color-text-muted)">{{ p.canal }}</span>
+                    <span style="font:600 10px var(--font-ui);padding:3px 7px;border-radius:999px;background:var(--color-background-secondary);color:var(--color-text-muted);white-space:nowrap">{{ p.canal }}</span>
                     <div style="font:400 12px var(--font-ui);color:var(--color-text-muted);min-width:56px;text-align:right;font-variant-numeric:tabular-nums">{{ p.prix }}</div>
                   </div>
                 </sc-for>
@@ -1479,7 +1479,7 @@
         <sc-if value="{{ ba.preview }}" hint-placeholder-val="{{ false }}">
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
             <div style="display:flex;justify-content:space-between;align-items:center"><div><div class="t-section-title" style="font-size:15px">Ce que ce bureau verra</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ ba.previewTxt }}</div></div><button onClick="{{ baPreviewClose }}" class="btn-secondary" style="font-size:12px">Fermer</button></div>
-            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">
               <sc-for list="{{ baPreviewList }}" as="v" hint-placeholder-count="8">
                 <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
                   <div style="height:96px;background:var(--color-background-secondary);overflow:hidden"><sc-if value="{{ v.img }}" hint-placeholder-val="{{ false }}"><img src="{{ v.img }}" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/></sc-if></div>
@@ -4434,7 +4434,7 @@ class Component extends DCLogic {
     const cats=(ba.cats||[]).map(c=>{ const prods=(c.products||[]).filter(p=>!q||String(p.name||'').toLowerCase().includes(q)).map(p=>{ const on=!!ba.ids[p.id];
         return {...p,checked:on,toggle:()=>this.baToggle(p.id),prix:eur(p.price),canal:(p.channels||[]).includes('office_delivery')?'Livraison au bureau':'Click & Collect',
           nameColor:on?'var(--color-text)':'var(--color-text-muted)',
-          rowStyle:'display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;cursor:pointer;background:'+(on?'var(--color-surface)':'transparent'),
+          rowStyle:'display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;cursor:pointer;flex-wrap:wrap;background:'+(on?'var(--color-surface)':'transparent'),
           cbStyle:'width:18px;height:18px;flex:none;border-radius:5px;display:flex;align-items:center;justify-content:center;'+(on?'background:var(--color-primary);border:1.5px solid var(--color-primary)':'background:var(--color-surface);border:1.5px solid var(--color-border-secondary)')}; });
       return {...c,products:prods,n:(c.products||[]).filter(p=>ba.ids[p.id]).length,total:(c.products||[]).length,all:()=>this.baBulk(c,true),none:()=>this.baBulk(c,false)}; }).filter(c=>!q||c.products.length);
     const custom=ba.mode==='custom';
