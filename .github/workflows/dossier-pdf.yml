@@ -1,0 +1,83 @@
+name: Dossier Carte & tarifs (PDF)
+
+# Produit le dossier « Carte & tarifs » d'un bureau (ou de la boutique) tel
+# que le serveur le rend, avec le jeton admin qu'il détient, puis le convertit
+# en PDF sur le runner et le dépose en artefact. Même authentification que la
+# sonde d'endpoints (secrets SSH_* et ADMIN_TOKEN, variable API_BASE).
+
+on:
+  workflow_dispatch:
+    inputs:
+      shop:
+        description: "Boutique (id numérique, ex. 2)"
+        required: true
+        type: string
+      office:
+        description: "Bureau (id numérique) — vide : le dossier de toute la boutique"
+        required: false
+        type: string
+      date:
+        description: "Date de disponibilité (AAAA-MM-JJ) — vide : aujourd'hui"
+        required: false
+        type: string
+
+jobs:
+  dossier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+
+      - name: Récupérer le dossier depuis le serveur (jeton admin)
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          API_BASE: ${{ vars.API_BASE || '/webshop/api' }}
+          SHOP: ${{ inputs.shop }}
+          OFFICE: ${{ inputs.office }}
+          DATE: ${{ inputs.date }}
+        run: |
+          { printf 'API_BASE=%q\n' "$API_BASE"; printf 'ADMIN_TOKEN=%q\n' "${ADMIN_TOKEN:-}"
+            printf 'SHOP=%q\n' "$SHOP"; printf 'OFFICE=%q\n' "${OFFICE:-}"; printf 'DATE=%q\n' "${DATE:-}"
+            cat <<'REMOTE'
+          set -u
+          QS="?shop=$SHOP"; [ -n "$OFFICE" ] && QS="$QS&office=$OFFICE"; [ -n "$DATE" ] && QS="$QS&date=$DATE"
+          CODE=$(curl -s --max-time 60 -H "X-Admin-Token: $ADMIN_TOKEN" -o /tmp/dossier.html -w '%{http_code}' "http://localhost${API_BASE}/franchisee/office-brochure$QS")
+          echo "STATUS=$CODE"
+          echo "PAGES=$(grep -o '<section class="page' /tmp/dossier.html | wc -l | tr -d ' ')"
+          echo "---BEGIN---"; base64 -w0 /tmp/dossier.html; echo; echo "---END---"
+          REMOTE
+          } | sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s > remote.out
+          grep -E '^(STATUS|PAGES)=' remote.out
+          sed -n '/^---BEGIN---$/,/^---END---$/p' remote.out | sed '1d;$d' | base64 -d > dossier.html
+          echo "dossier.html : $(wc -c < dossier.html) octets"
+          grep -q '^STATUS=200$' remote.out || { echo "Le serveur n'a pas rendu le dossier :"; head -c 400 dossier.html; echo; exit 1; }
+
+      - name: Convertir en PDF (Chromium)
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund playwright@1.47.2 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+          cat > topdf.mjs <<'EOF2'
+          import { chromium } from 'playwright';
+          import path from 'node:path';
+          const br = await chromium.launch();
+          const p = await br.newPage();
+          await p.goto('file://' + path.resolve('dossier.html'), { waitUntil: 'load' });
+          await p.waitForTimeout(3000);
+          await p.emulateMedia({ media: 'print' });
+          await p.pdf({ path: 'dossier.pdf', format: 'A4', printBackground: true, margin: { top: 0, bottom: 0, left: 0, right: 0 } });
+          await br.close();
+          EOF2
+          node topdf.mjs
+          echo "dossier.pdf : $(wc -c < dossier.pdf) octets"
+
+      - name: Déposer le dossier
+        uses: actions/upload-artifact@v4
+        with:
+          name: dossier-boutique-${{ inputs.shop }}-bureau-${{ inputs.office || 'tous' }}
+          path: |
+            dossier.pdf
+            dossier.html
+          retention-days: 7
