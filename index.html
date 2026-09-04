@@ -167,6 +167,19 @@
   .tw-sugmsg{padding:9px 13px;font:400 11.5px var(--font-ui);color:var(--color-text-muted)}
   /* Chronologie des tournées (toggle Carte / Chronologie). */
   .ch-lane{display:flex;align-items:center;min-height:66px;border-bottom:.5px solid var(--color-border-tertiary)}
+  .ch-fix{border:none;background:var(--color-primary);color:#fff;border-radius:999px;padding:2px 9px;font:600 10.5px var(--font-ui);cursor:pointer;margin-top:3px;white-space:nowrap}
+  .ch-fix:hover{filter:brightness(1.1)}
+  .ch-tog{border:.5px solid var(--color-border-secondary);background:var(--color-surface);color:var(--color-text-muted);border-radius:999px;padding:1px 8px;font:500 10.5px var(--font-ui);cursor:pointer;margin-left:6px;vertical-align:1px}
+  .ch-tog:hover{color:var(--color-text);border-color:var(--color-text-muted)}
+  .ch-det{margin:0 0 10px 230px;padding:6px 12px 8px;border:.5px solid var(--color-border-tertiary);border-top:none;border-radius:0 0 10px 10px;background:var(--color-surface)}
+  .ch-det-row{display:flex;gap:12px;padding:4px 0;border-top:.5px dashed var(--color-border-tertiary);font:400 11.5px var(--font-ui);color:var(--color-text)}
+  .ch-det-row:first-child{border-top:none}
+  .ch-det-h{flex:none;width:112px;font-variant-numeric:tabular-nums;color:var(--color-text-muted)}
+  .ch-det-t{flex:1;min-width:0}
+  .ch-det-row.dep .ch-det-t,.ch-det-row.fin .ch-det-t{font-weight:600}
+  .ch-det-row.ch-ko .ch-det-t{color:var(--color-primary);font-weight:600}
+  .ch-det-row.warn .ch-det-t{color:var(--color-primary)}
+  .ch-det-row.ch-att .ch-det-t{color:#8a5a13}
   .ch-nm{width:230px;flex:none;padding-right:12px;min-width:0}
   .ch-bar{position:relative;flex:1;height:48px}
   .ch-seg{position:absolute;top:12px;height:24px;border-radius:5px;font:600 10px var(--font-ui);display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden;white-space:nowrap;padding:0 3px;box-sizing:border-box}
@@ -603,7 +616,7 @@
             <div onClick="{{ r.dropHere }}" style="{{ r.tileStyle }}">
               <div style="display:flex;align-items:center;gap:9px;min-width:0">
                 <span style="{{ r.colDot }}"></span>
-                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px">{{ r.driver }} · départ {{ r.start }}</div></div>
+                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.duree }} · départ {{ r.start }}">{{ r.duree }}</div></div>
                 <div style="flex:none;display:flex;gap:5px">
                   <button onClick="{{ r.toggleOn }}" title="{{ r.tOnTitle }}" style="{{ r.tOnStyle }}">{{ r.tOnLabel }}</button>
                   <button onClick="{{ r.itin }}" title="Voir l'itinéraire sur la carte (ordre des arrêts)" style="{{ r.itinStyle }}">🗺 Itinéraire</button>
@@ -671,7 +684,7 @@
           <div style="position:relative;height:22px;margin-left:230px;border-bottom:.5px solid var(--color-border-secondary)"><sc-for list="{{ chronoTicks }}" as="k" hint-placeholder-count="6"><span class="ch-tick" style="left:{{ k.left }}%">{{ k.label }}</span></sc-for></div>
           <sc-for list="{{ chronoLanes }}" as="l" hint-placeholder-count="2">
             <div class="ch-lane">
-              <div class="ch-nm"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:{{ l.color }}"></span>{{ l.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.sub }}">{{ l.sub }}</div><sc-if value="{{ l.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px var(--font-ui);color:var(--color-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.warn }}">{{ l.warn }}</div></sc-if></div>
+              <div class="ch-nm"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:{{ l.color }}"></span>{{ l.name }} <button onClick="{{ l.toggle }}" class="ch-tog" title="Le détail de la tournée, étape par étape">{{ l.chev }} détail</button></div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.sub }}">{{ l.sub }}</div><sc-if value="{{ l.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px var(--font-ui);color:var(--color-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.warn }}">{{ l.warn }}</div></sc-if><sc-if value="{{ l.hasFix }}" hint-placeholder-val="{{ false }}"><button onClick="{{ l.fixGo }}" class="ch-fix" title="{{ l.warn }}">{{ l.fixLbl }}</button></sc-if></div>
               <div class="ch-bar">
                 <sc-for list="{{ chronoTicks }}" as="k" hint-placeholder-count="6"><span class="ch-grid" style="left:{{ k.left }}%"></span></sc-for>
                 <sc-for list="{{ l.wins }}" as="w" hint-placeholder-count="2"><span class="ch-win {{ w.cls }}" style="left:{{ w.left }}%;width:{{ w.width }}%" title="{{ w.title }}">{{ w.label }}</span></sc-for>
@@ -680,6 +693,8 @@
                 <sc-if value="{{ chronoHasNow }}" hint-placeholder-val="{{ false }}"><span class="ch-now" style="left:{{ chronoNowLeft }}%"></span></sc-if>
               </div>
             </div>
+            <!-- Le détail déplié : chaque étape avec son heure, dans l'ordre. -->
+            <sc-if value="{{ l.open }}" hint-placeholder-val="{{ false }}"><div class="ch-det"><sc-for list="{{ l.detail }}" as="r" hint-placeholder-count="6"><div class="ch-det-row {{ r.cls }}"><span class="ch-det-h">{{ r.h }}</span><span class="ch-det-t">{{ r.txt }} <sc-if value="{{ r.hasFix }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.fixGo }}" class="ch-fix">{{ r.fixLbl }}</button></sc-if></span></div></sc-for></div></sc-if>
           </sc-for>
           <sc-if value="{{ chronoEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 0;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée active avec des sites : la chronologie se construit depuis l'assistant tournée.</div></sc-if>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:12px;font:400 11px var(--font-ui);color:var(--color-text-muted)">
@@ -734,6 +749,10 @@
           <sc-if value="{{ suiviOrdersEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune commande en livraison (ws_orders).</div></sc-if>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
+          <!-- Sans télémétrie (fr-live-table vide), la carte le DIT au lieu
+               d'afficher un en-tête sans nom ni chiffres. -->
+          <sc-if value="{{ selNoDriver }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);text-align:center;padding:6px 0">Aucun chauffeur en tournée — aucune position ni avancement reçus de la tablette.</div></sc-if>
+          <sc-if value="{{ selHasDriver }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px">
             <div><div class="t-section-title" style="font-size:15px">{{ selNom }} · livraisons</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Tournée {{ selTournee }} · {{ selVehicule }} · {{ selAvancement }} points</div></div>
             <div style="text-align:right;flex:none"><span style="{{ selStatutStyle }}">{{ selStatut }}</span><div style="font:600 13px var(--font-ui);color:var(--color-primary);margin-top:4px;display:inline-flex;align-items:center;gap:5px">ETA {{ selEta }} <span style="font-weight:400;font-size:10px;color:{{ selDriftColor }}">{{ selDrift }}</span><span class="bo-tiph"><span style="{{ etaInfoIcon }}">i</span><span class="bo-tip" style="{{ etaTipStyle }}">{{ etaTipTxt }}</span></span></div></div>
@@ -751,16 +770,52 @@
             </sc-for>
           </div>
           </sc-if>
+          </sc-if>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--color-background-secondary)">
             <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font:400 11px var(--font-ui);color:var(--color-text-muted)"><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#2e9e44;vertical-align:middle;margin-right:5px"></i>fluide</span><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#f2a900;vertical-align:middle;margin-right:5px"></i>ralenti</span><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#c62828;vertical-align:middle;margin-right:5px"></i>bouchon</span><span><i style="display:inline-block;width:16px;height:0;border-top:2px dashed #999;vertical-align:middle;margin-right:5px"></i>sans tracé Google (ligne droite)</span><span>{{ trEtat }}</span></div>
-            <button onClick="{{ trGo }}" class="btn-secondary" title="Tracé réel Google et trafic à l'instant (Routes API) — rafraîchi automatiquement toutes les 2 minutes" style="font-size:11.5px;padding:6px 11px;{{ trBtnStyle }}">{{ trBtn }}</button>
+            <div style="display:flex;align-items:center;gap:8px;flex:none"><span style="display:inline-flex;border:.5px solid var(--color-border-secondary);border-radius:9px;overflow:hidden;flex:none"><button onClick="{{ svMap }}" style="{{ svMapStyle }}">🗺 Carte</button><button onClick="{{ svChrono }}" style="{{ svChronoStyle }}">☰ Chronologie</button></span><button onClick="{{ trGo }}" class="btn-secondary" title="Tracé réel Google et trafic à l'instant (Routes API) — rafraîchi automatiquement toutes les 2 minutes" style="font-size:11.5px;padding:6px 11px;{{ trBtnStyle }}">{{ trBtn }}</button></div>
           </div>
         </div>
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+        <div id="map-suivi-wrap" style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div id="map-suivi" style="width:100%;height:480px;background:var(--color-background-secondary)"></div>
         </div>
+        <!-- CHRONOLOGIE DES TOURNÉES DU JOUR (même moteur que Tournées, filtré
+             sur les jours de passage ; fermetures du jour et chauffeurs en
+             tournée signalés). -->
+        <sc-if value="{{ suiviChrono }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 18px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+            <div><div class="t-section-title" style="font-size:15px;display:inline-flex;align-items:center;gap:6px">Chronologie des tournées du jour <span class="bo-tiph"><span style="{{ etaInfoIcon }}">i</span><span class="bo-tip" style="{{ etaTipStyle }}">{{ etaTipTxt }}</span></span></div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ svTitre }} · {{ svSub }}</div></div>
+            <div style="display:flex;gap:8px;align-items:center"><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ svEtat }}</span><button onClick="{{ svRecalc }}" class="btn-secondary" style="font-size:12px;{{ svBtnStyle }}">Recalculer (Google)</button></div>
+          </div>
+          <div style="position:relative;height:22px;margin-left:230px;border-bottom:.5px solid var(--color-border-secondary)"><sc-for list="{{ svTicks }}" as="k" hint-placeholder-count="6"><span class="ch-tick" style="left:{{ k.left }}%">{{ k.label }}</span></sc-for></div>
+          <sc-for list="{{ svLanes }}" as="l" hint-placeholder-count="2">
+            <div class="ch-lane">
+              <div class="ch-nm"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:{{ l.color }}"></span>{{ l.name }} <button onClick="{{ l.toggle }}" class="ch-tog" title="Le détail de la tournée, étape par étape">{{ l.chev }} détail</button></div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.sub }}">{{ l.sub }}</div><sc-if value="{{ l.hasLive }}" hint-placeholder-val="{{ false }}"><div style="font:600 10.5px var(--font-ui);color:#2d7a3e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.live }}">🚚 {{ l.live }}</div></sc-if><sc-if value="{{ l.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px var(--font-ui);color:var(--color-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.warn }}">{{ l.warn }}</div></sc-if><sc-if value="{{ l.hasFix }}" hint-placeholder-val="{{ false }}"><button onClick="{{ l.fixGo }}" class="ch-fix" title="{{ l.warn }}">{{ l.fixLbl }}</button></sc-if></div>
+              <div class="ch-bar">
+                <sc-for list="{{ svTicks }}" as="k" hint-placeholder-count="6"><span class="ch-grid" style="left:{{ k.left }}%"></span></sc-for>
+                <sc-for list="{{ l.wins }}" as="w" hint-placeholder-count="2"><span class="ch-win {{ w.cls }}" style="left:{{ w.left }}%;width:{{ w.width }}%" title="{{ w.title }}">{{ w.label }}</span></sc-for>
+                <sc-for list="{{ l.segs }}" as="g" hint-placeholder-count="6"><span class="ch-seg {{ g.cls }}" style="left:{{ g.left }}%;width:{{ g.width }}%;{{ g.style }}" title="{{ g.title }}">{{ g.label }}</span></sc-for>
+                <sc-if value="{{ l.empty }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:16px;left:10px;font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ l.emptyTxt }}</span></sc-if>
+                <sc-if value="{{ svHasNow }}" hint-placeholder-val="{{ false }}"><span class="ch-now" style="left:{{ svNowLeft }}%"></span></sc-if>
+              </div>
+            </div>
+            <sc-if value="{{ l.open }}" hint-placeholder-val="{{ false }}"><div class="ch-det"><sc-for list="{{ l.detail }}" as="r" hint-placeholder-count="6"><div class="ch-det-row {{ r.cls }}"><span class="ch-det-h">{{ r.h }}</span><span class="ch-det-t">{{ r.txt }} <sc-if value="{{ r.hasFix }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.fixGo }}" class="ch-fix">{{ r.fixLbl }}</button></sc-if></span></div></sc-for></div></sc-if>
+          </sc-for>
+          <sc-if value="{{ svEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 0;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée active avec des sites : la chronologie se construit depuis l'assistant tournée.</div></sc-if>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:12px;font:400 11px var(--font-ui);color:var(--color-text-muted)">
+            <span><i style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px;background:#c9c2b8"></i>trajet (Google, ≈ vol d'oiseau)</span>
+            <span><i class="ch-acc" style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px"></i>accès au site</span>
+            <span><i style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px;background:var(--color-primary)"></i>dépôt (couleur de la tournée)</span>
+            <span><i class="ch-att" style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px"></i>attente avant la fenêtre</span>
+            <span><i style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px;border:1.5px dashed rgba(34,34,34,.35);box-sizing:border-box"></i>fenêtre d'engagement du bureau (onboarding)</span>
+            <span><i style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px;outline:2px solid var(--color-primary);outline-offset:-2px"></i>dépôt hors fenêtre</span>
+            <span><i style="display:inline-block;width:2px;height:12px;vertical-align:middle;margin-right:5px;background:#2a5a9e"></i>maintenant</span>
+          </div>
+        </div>
+        </sc-if>
       </div>
       </sc-if>
 
@@ -4033,7 +4088,7 @@ class Component extends DCLogic {
     // Assistant tournée (tw), listes d'adresses Google par champ (geo), onboarding : recherche clients, VIES, bon choisi.
     tw: null, geo: {}, obSearchQ:'', obViesLocked:false, obViesMsg:'', obViesOk:null, obVSel:'',
     // Tournées : vue carte ou chronologie ; tronçons Google par tournée (clé = ordre des arrêts).
-    tourView:'map', chrono:{legs:{},busy:0,err:''},
+    tourView:'map', suiviView:'map', chrono:{legs:{},busy:0,err:''},
     // Tracés Google + trafic par tournée (clé = ordre des arrêts), rafraîchis toutes les 2 min sur Tournées / Suivi.
     trace:{byTour:{},busy:0,err:'',at:null},
     dsQuery: '', dsOpen: false, dsIdx: 0,
@@ -4262,19 +4317,28 @@ class Component extends DCLogic {
   chronoTours(){ const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); const sites=this.sitesData();
     return (this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false).map((t,i)=>{ const k=norm(t.name);
       const stops=sites.filter(s=>norm(s.zone)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
-      return {t,i,key:String(t.id),stops,sig:stops.map(s=>s.id).join(',')+'|'+(t.ret!==false?'r':'n')}; }); }
-  chronoRoutes(force){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
-    const jobs=this.chronoTours().filter(x=>x.stops.length&&x.stops.every(s=>s.lat!=null&&s.lng!=null)).filter(x=>{ const c=(this.state.chrono.legs||{})[x.key]; return force||!c||c.sig!==x.sig; });
+      // La signature porte la POSITION de chaque arrêt, pas seulement son
+      // identifiant : un site dont l'adresse change garde son id, et les
+      // trajets mémorisés seraient resservis tels quels.
+      return {t,i,key:String(t.id),stops,sig:this.traceSig(t,stops)}; }); }
+  /* Demande différée des trajets Google de la chronologie : dès qu'une ligne
+     se calcule à vol d'oiseau alors que ses arrêts sont positionnés. Un refus
+     ne se retente pas avant 60 s. */
+  chronoAsk(list){ if(this._chronoAskT) return;
+    this._chronoAskT=setTimeout(()=>{ this._chronoAskT=null; const C=this.state.chrono||{}; if(C.busy) return; this.chronoRoutes(false,list); },350); }
+  chronoRoutes(force,list){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
+    const fails=this._chronoFail||(this._chronoFail={}); const now=Date.now();
+    const jobs=(list||this.chronoTours()).filter(x=>x.stops.length&&x.stops.every(s=>s.lat!=null&&s.lng!=null)).filter(x=>{ const c=(this.state.chrono.legs||{})[x.key]; return (force||!c||c.sig!==x.sig)&&(force||!fails[x.sig]||now-fails[x.sig]>60000); });
     if(!jobs.length) return;
     this.setState(s=>({chrono:{...s.chrono,busy:jobs.length,err:''}}));
     jobs.forEach(x=>{ fetch(fr.base+'/franchisee/tour-route'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
         body:JSON.stringify({tourId:+String(x.t.id).replace(/^r/,'')||null,returnToDepot:x.t.ret!==false,stops:x.stops.map(s=>({lat:s.lat,lng:s.lng,label:s.name}))})})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
         this.setState(s=>{ const legs={...(s.chrono.legs||{})}; let err=s.chrono.err;
-          if(st===200&&j&&j.ok) legs[x.key]={sig:x.sig,legs:Array.isArray(j.legs)?j.legs:[],km:+j.km,minutes:+j.minutes,at:new Date().toISOString()};
-          else err=(j&&j.error)||('Itinéraire Google indisponible (HTTP '+st+')');
+          if(st===200&&j&&j.ok){ legs[x.key]={sig:x.sig,legs:Array.isArray(j.legs)?j.legs:[],km:+j.km,minutes:+j.minutes,at:new Date().toISOString()}; delete fails[x.sig]; }
+          else { err=(j&&j.error)||('Itinéraire Google indisponible (HTTP '+st+')'); fails[x.sig]=Date.now(); }
           return {chrono:{...s.chrono,legs,busy:Math.max(0,s.chrono.busy-1),err}}; }); })
-      .catch(()=>this.setState(s=>({chrono:{...s.chrono,busy:Math.max(0,s.chrono.busy-1),err:'Réseau indisponible'}}))); }); }
+      .catch(()=>{ fails[x.sig]=Date.now(); this.setState(s=>({chrono:{...s.chrono,busy:Math.max(0,s.chrono.busy-1),err:'Réseau indisponible'}})); }); }); }
   chronoVals(){ const S=this.state; const on=S.tourView==='chrono'; const C=S.chrono||{legs:{},busy:0,err:''};
     const base={tourChrono:on,tvMap:()=>this.chronoToggle('map'),tvChrono:()=>this.chronoToggle('chrono'),
       tvMapStyle:'border:none;padding:8px 13px;font:600 12px var(--font-ui);cursor:pointer;'+(!on?'background:var(--color-primary);color:#fff':'background:var(--color-surface);color:var(--color-text-muted)'),
@@ -4282,68 +4346,153 @@ class Component extends DCLogic {
       tourMapOn:!on,chronoRecalc:()=>this.chronoRoutes(true),chronoBtnStyle:C.busy?'opacity:.6;pointer-events:none':'',
       chronoEtat:C.busy?('Google : '+C.busy+' tournée(s) en cours…'):(C.err||''),chronoTicks:[],chronoLanes:[],chronoEmpty:false,chronoHasNow:false,chronoNowLeft:0,chronoSub:''};
     if(!on) return base;
+    const list=this.chronoTours(); const b=this.chronoBuild(list,C,null);
+    // Une ligne encore à vol d'oiseau alors que tout est positionné : les
+    // trajets Google se demandent tout de suite, sans attendre le bouton.
+    if(!C.busy&&(b.chronoLanes||[]).some(l=>l.manqueGoogle)) this.chronoAsk(list);
+    return {...base,...b}; }
+  /* Construction des lignes de temps — partagée par Tournées (toutes les
+     tournées actives) et Suivi (celles qui passent aujourd'hui). `extra(x)`
+     rend, par tournée, {closed, live} : une fermeture du jour vide la ligne
+     et le dit ; un chauffeur en tournée (tablette) s'ajoute au sous-titre. */
+  chronoBuild(tours,C,extra){
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F']; const d=this.depot(); const depOk=!!(d&&d.lat!=null);
-    const tours=this.chronoTours(); const lanes=[]; let tMin=Infinity,tMax=-Infinity;
-    tours.forEach(x=>{ const t=x.t; const color=colors[x.i%colors.length]; const start=(t.start!=null&&t.start!=='')?+t.start:null;
+    // Chaque avertissement mène DIRECTEMENT là où la donnée se saisit : la
+    // fiche du site, les paramètres du bureau, l'assistant de la tournée, la
+    // fiche de la boutique — un clic, pas une recherche.
+    const TB=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
+    const fixSite=(s0)=>{ const rows=TB('ws_office_delivery_sites'); const i=rows.findIndex(r=>String(r.id)===String(s0.id)); if(i<0) return null;
+      return ()=>{ this.goTo('sites'); setTimeout(()=>this.editForm('site',rows[i],i)(),80); }; };
+    const fixOffice=(off)=>{ const name=off.name; const o=(off.id!=null)?{id:off.id}:TB('ws_offices').find(x=>x&&x.name===name);
+      return ()=>{ this.goTo('offices'); setTimeout(()=>this.openFormWith('bureauParam',{bureau:name,officeId:(o&&o.id!=null)?o.id:null})(),80); }; };
+    const fixTour=(t)=>()=>{ this.goTo('tournees'); setTimeout(()=>this.twOpen(t.id),80); };
+    const fixShop=()=>{ this.openForm('shop')(); };
+    const lanes=[]; let tMin=Infinity,tMax=-Infinity;
+    tours.forEach(x=>{ const t=x.t; const color=colors[x.i%colors.length]; const start=(t.start!=null&&t.start!=='')?+t.start:null; const ex=extra?extra(x):null;
       const cache=(C.legs||{})[x.key]; const legs=(cache&&cache.sig===x.sig)?cache.legs:null; const google=!!legs;
       const segs=[],wins=[]; let warn='',cur=start,prev=depOk?{lat:d.lat,lng:d.lng}:null,km=0,nbOff=0,late=0,attente=0,fin=null;
-      const stopLegs=[];
-      if(start==null) warn='heure de départ à paramétrer — aucune heure annoncée';
-      else if(!x.stops.length) warn='aucun site sur cette tournée';
-      else if(!depOk) warn='boutique non positionnée';
+      const stopLegs=[]; let fix=null,fixLbl='';
+      if(ex&&ex.closed) warn=ex.closed;
+      else if(start==null){ warn='heure de départ à paramétrer — aucune heure annoncée'; fix=fixTour(t); fixLbl='Fixer le départ →'; }
+      else if(!x.stops.length){ warn='aucun site sur cette tournée'; fix=fixTour(t); fixLbl='Ajouter des sites →'; }
+      else if(!depOk){ warn='boutique non positionnée'; fix=fixShop; fixLbl='Positionner la boutique →'; }
       else { for(let i=0;i<x.stops.length;i++){ const s=x.stops[i];
           let lg=null; if(legs&&legs[i]) lg={min:+legs[i].min||0,km:+legs[i].km||0,g:true}; else if(prev&&s.lat!=null&&s.lng!=null){ const h=this.travelMin(prev,{lat:+s.lat,lng:+s.lng}); lg={min:h.min,km:h.km,g:false}; }
-          if(!lg){ warn='« '+s.name+' » : adresse non positionnée — la ligne s’arrête là'; break; }
+          if(!lg){ warn='« '+s.name+' » : adresse non positionnée — la ligne s’arrête là'; fix=fixSite(s); fixLbl='Choisir l’adresse Google →'; break; }
           segs.push({t0:cur,t1:cur+lg.min,cls:'ch-trj',label:(lg.g?'':'≈ ')+lg.min+' min',title:'Trajet vers '+s.name+' : '+lg.min+' min · '+lg.km.toFixed(1).replace('.',',')+' km'+(lg.g?' (Google)':' (≈ vol d’oiseau)')});
           cur+=lg.min; km+=lg.km; const arr=cur;
           const offs=(s.offices||[]).filter(o=>o.name&&o.name.charAt(0)!=='—');
+          if(!offs.length) segs.push({t0:cur,t1:cur+0.01,cls:'',label:'',title:'Site « '+s.name+' » sans bureau rattaché : aucun dépôt — rattachez un bureau depuis sa fiche'});
           const fens=offs.map(o=>({o,f:this.chronoFen(o.name)})).filter(z=>z.f);
           let wait=0; if(fens.length){ const wsMin=Math.min(...fens.map(z=>z.f.ws)); if(arr<wsMin) wait=wsMin-arr; }
           if(wait>0){ segs.push({t0:cur,t1:cur+wait,cls:'ch-att',label:'attente '+wait,title:'Attente avant l’ouverture de la fenêtre : '+wait+' min'}); cur+=wait; attente+=wait; }
-          if(s.access==null){ segs.push({t0:cur,t1:cur+8,cls:'ch-acc',label:'?',title:'Temps d’accès du site non renseigné'}); warn='« '+s.name+' » : temps d’accès à saisir — les heures suivantes ne sont pas annoncées'; fin=null; break; }
+          if(s.access==null){ segs.push({t0:cur,t1:cur+8,cls:'ch-acc',label:'?',title:'Temps d’accès du site non renseigné'}); warn='« '+s.name+' » : temps d’accès à saisir — les heures suivantes ne sont pas annoncées'; fix=fixSite(s); fixLbl='Saisir le temps d’accès →'; fin=null; break; }
           segs.push({t0:cur,t1:cur+s.access,cls:'ch-acc',label:'',title:'Accès au site '+s.name+' : '+s.access+' min'}); cur+=s.access;
           let brk=false;
           for(const o of offs){ const f=this.chronoFen(o.name); const short=String(o.name).split(/\s+/).slice(0,2).join(' ');
             if(f){ const ko=cur>f.we; if(ko) late++; wins.push({t0:f.ws,t1:f.we,label:short+' '+f.txt,cls:ko?'ko':'',title:o.name+' — fenêtre '+f.txt+(ko?' — dépôt '+this.hhmm(cur)+' hors fenêtre':'')}); }
-            if(o.drop==null){ segs.push({t0:cur,t1:cur+6,cls:'',style:'background:'+color+';opacity:.45',label:short+' ?',title:o.name+' : temps de dépôt non renseigné'}); warn='« '+o.name+' » : temps de dépôt à saisir (Paramètres livraison — bureau)'; brk=true; break; }
+            if(o.drop==null){ segs.push({t0:cur,t1:cur+6,cls:'',style:'background:'+color+';opacity:.45',label:short+' ?',title:o.name+' : temps de dépôt non renseigné'}); warn='« '+o.name+' » : temps de dépôt à saisir (Paramètres livraison — bureau)'; fix=fixOffice(o); fixLbl='Saisir le temps de dépôt →'; brk=true; break; }
             const ko=f?(cur>f.we):false; segs.push({t0:cur,t1:cur+o.drop,cls:ko?'ch-ko':'',style:'background:'+color,label:short,title:o.name+' : dépôt '+this.hhmm(cur)+' → '+this.hhmm(cur+o.drop)+(f?(' · fenêtre '+f.txt+(ko?' — HORS FENÊTRE':'')):' · pas de fenêtre d’engagement')}); cur+=o.drop; nbOff++; }
           if(brk){ fin=null; break; }
           if(s.lat!=null&&s.lng!=null) prev={lat:+s.lat,lng:+s.lng}; fin=cur; }
         if(fin!=null&&t.ret!==false&&prev){ let lg=null; const n=x.stops.length; if(legs&&legs[n]) lg={min:+legs[n].min||0,km:+legs[n].km||0,g:true}; else { const h=this.travelMin(prev,{lat:d.lat,lng:d.lng}); lg={min:h.min,km:h.km,g:false}; }
           segs.push({t0:cur,t1:cur+lg.min,cls:'ch-trj',label:(lg.g?'':'≈ ')+'retour '+lg.min,title:'Retour au dépôt : '+lg.min+' min'+(lg.g?' (Google)':' (≈)')}); cur+=lg.min; km+=lg.km; fin=cur; } }
       segs.forEach(g=>{ tMin=Math.min(tMin,g.t0); tMax=Math.max(tMax,g.t1); }); wins.forEach(w=>{ tMin=Math.min(tMin,w.t0); tMax=Math.max(tMax,w.t1); }); if(start!=null){ tMin=Math.min(tMin,start); tMax=Math.max(tMax,start+30); }
-      lanes.push({name:t.name,color,start,fin,km,nbOff,late,attente,google,segs,wins,warn,hasWarn:!!warn,empty:!segs.length,emptyTxt:warn||'—',
-        sub:(start!=null?this.hhmm(start):'—')+(fin!=null?(' → '+this.hhmm(fin)):'')+(km?(' · '+(google?'':'≈ ')+km.toFixed(1).replace('.',',')+' km'):'')+' · '+nbOff+' dépôt(s)'+(late?(' · '+late+' hors fenêtre'):'')+(attente?(' · attente '+attente+' min'):'')}); });
-    if(!lanes.length||!isFinite(tMin)) return {...base,chronoEmpty:!lanes.length,chronoLanes:lanes.map(l=>({...l,segs:[],wins:[]})),chronoSub:'Aucune heure calculable.'};
+      // Le DÉTAIL, dépliable : chaque étape dans l'ordre avec son heure —
+      // trajet, attente, accès, dépôt par bureau et sa fenêtre, retour.
+      const openMap=this.state.chronoOpen||{}; const lk=x.key; const open=!!openMap[lk];
+      const detail=[]; if(start!=null) detail.push({h:this.hhmm(start),txt:'Départ de la boutique',cls:'dep'});
+      segs.forEach(g=>detail.push({h:this.hhmm(g.t0)+' → '+this.hhmm(g.t1),txt:g.title,cls:g.cls||'',ko:g.cls==='ch-ko'}));
+      if(fin!=null) detail.push({h:this.hhmm(fin),txt:'Fin de tournée'+(t.ret!==false?' — retour à la boutique':''),cls:'fin'});
+      if(warn) detail.push({h:'',txt:'⚠ '+warn,cls:'warn',hasFix:!!fix,fixGo:fix||(()=>{}),fixLbl});
+      const manqueGoogle=!google&&x.stops.length>0&&x.stops.every(s0=>s0.lat!=null&&s0.lng!=null)&&start!=null&&depOk;
+      lanes.push({key:lk,open,chev:open?'▾':'▸',toggle:()=>this.setState(s0=>({chronoOpen:{...(s0.chronoOpen||{}),[lk]:!((s0.chronoOpen||{})[lk])}})),detail,hasDetail:detail.length>0,manqueGoogle,
+        hasFix:!!fix,fixGo:fix||(()=>{}),fixLbl,
+        name:t.name,color,start,fin,km,nbOff,late,attente,google,segs,wins,warn,hasWarn:!!warn,empty:!segs.length,emptyTxt:warn||'—',
+        sub:(start!=null?this.hhmm(start):'—')+(fin!=null?(' → '+this.hhmm(fin)):'')+(km?(' · '+(google?'':'≈ ')+km.toFixed(1).replace('.',',')+' km'):'')+' · '+nbOff+' dépôt(s)'+(late?(' · '+late+' hors fenêtre'):'')+(attente?(' · attente '+attente+' min'):''),live:(ex&&ex.live)||'',hasLive:!!(ex&&ex.live)}); });
+    if(!lanes.length||!isFinite(tMin)) return {chronoEmpty:!lanes.length,chronoLanes:lanes.map(l=>({...l,segs:[],wins:[]})),chronoSub:'Aucune heure calculable.'};
     let lo=Math.floor((tMin-30)/30)*30, hi=Math.ceil((tMax+30)/30)*30; if(hi-lo<120) hi=lo+120; const span=hi-lo;
     const pct=v=>Math.round(((v-lo)/span)*10000)/100; const ticks=[]; for(let m=lo;m<=hi;m+=(span>420?60:30)) ticks.push({left:pct(m),label:this.hhmm(m)});
     const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes(); const hasNow=nowMin>=lo&&nowMin<=hi;
     const lanesV=lanes.map(l=>({...l,segs:l.segs.map(g=>({...g,left:pct(g.t0),width:Math.max(0.6,pct(g.t1)-pct(g.t0)),style:g.style||''})),wins:l.wins.map(w=>({...w,left:pct(w.t0),width:Math.max(1,pct(w.t1)-pct(w.t0))}))}));
     const tot=lanes.reduce((a,l)=>({off:a.off+l.nbOff,late:a.late+l.late,km:a.km+l.km,att:a.att+l.attente}),{off:0,late:0,km:0,att:0});
-    return {...base,chronoTicks:ticks,chronoLanes:lanesV,chronoEmpty:false,chronoHasNow:hasNow,chronoNowLeft:pct(nowMin),
+    return {chronoTicks:ticks,chronoLanes:lanesV,chronoEmpty:false,chronoHasNow:hasNow,chronoNowLeft:pct(nowMin),
       chronoSub:lanes.length+' tournée(s) · '+tot.off+' dépôt(s) · '+tot.km.toFixed(1).replace('.',',')+' km · '+(tot.late?(tot.late+' dépôt(s) hors fenêtre'):'toutes les fenêtres tenues')+(tot.att?(' · '+tot.att+' min d’attente'):'')+' · trajets '+(Object.keys(C.legs||{}).length?'Google':'à vol d’oiseau (≈) — « Recalculer (Google) »')}; }
+  /* ── CHRONOLOGIE SUR SUIVI : les tournées qui passent AUJOURD'HUI ─────
+     Jour de passage = `days` servi par ws-tours (ws_tour_availability) ; une
+     tournée sans jour ne passe pas. Les fermetures du jour (ws_tour_closures)
+     vident la ligne et le disent ; un chauffeur en tournée s'ajoute. */
+  suiviToday(){ const key=['D','L','Ma','Me','J','V','S'][new Date().getDay()]; return this.chronoTours().filter(x=>!!(x.t.days&&x.t.days[key]===true)); }
+  suiviMapShow(show){ const w=document.getElementById('map-suivi-wrap'); if(w) w.style.display=show?'':'none'; }
+  suiviToggle(v){ this.setState({suiviView:v},()=>{ this.suiviMapShow(v!=='chrono'); if(v==='chrono') this.chronoRoutes(false,this.suiviToday());
+      else setTimeout(()=>{ try{ if(this._suiviMap) this._suiviMap.invalidateSize(); }catch(e){} },60); }); }
+  suiviChronoVals(){ const S=this.state; const on=S.suiviView==='chrono'; const C=S.chrono||{legs:{},busy:0,err:''};
+    const seg=(a)=>'border:none;padding:8px 13px;font:600 12px var(--font-ui);cursor:pointer;'+(a?'background:var(--color-primary);color:#fff':'background:var(--color-surface);color:var(--color-text-muted)');
+    const base={suiviChrono:on,svMap:()=>this.suiviToggle('map'),svChrono:()=>this.suiviToggle('chrono'),svMapStyle:seg(!on),svChronoStyle:seg(on),suiviMapOn:!on,
+      svRecalc:()=>this.chronoRoutes(true,this.suiviToday()),svBtnStyle:C.busy?'opacity:.6;pointer-events:none':'',svEtat:C.busy?('Google : '+C.busy+' tournée(s) en cours…'):(C.err||''),
+      svTicks:[],svLanes:[],svEmpty:false,svHasNow:false,svNowLeft:0,svSub:'',svTitre:'',svEmptyTxt:''};
+    if(!on) return base;
+    const now=new Date(); const JL=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi']; const today=this.suiviToday();
+    const dstr=String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
+    const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); const T=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
+    const clos=T('ws_tour_closures'), live=T('fr_live_drivers');
+    const extra=(x)=>{ const c=clos.find(r=>r&&r.date===dstr&&(r.tour==='Toutes les tournées'||norm(r.tour)===norm(x.t.name)));
+      const dv=live.find(r=>r&&(String(r.tourId)===String(x.t.id).replace(/^r/,'')||norm(r.tour)===norm(x.t.name)));
+      return {closed:c?('Fermée aujourd’hui'+(c.motif&&c.motif!=='—'?(' — '+c.motif):'')+(c.type&&c.type!=='Fermeture'?(' ('+c.type+')'):'')):'',
+              live:dv?('en tournée : '+(dv.nom||'chauffeur')+(dv.avancement?(' · '+dv.avancement):'')):''}; };
+    const b=this.chronoBuild(today,C,extra); const all=this.chronoTours().length;
+    if(!C.busy&&(b.chronoLanes||[]).some(l=>l.manqueGoogle)) this.chronoAsk(today);
+    return {...base,svTicks:b.chronoTicks,svLanes:b.chronoLanes,svEmpty:b.chronoEmpty,svHasNow:b.chronoHasNow,svNowLeft:b.chronoNowLeft,svSub:b.chronoSub,
+      svTitre:JL[now.getDay()]+' '+dstr+' · '+today.length+' tournée(s) prévue(s) sur '+all+' active(s)',
+      svEmptyTxt:all?('Aucune tournée ne passe le '+JL[now.getDay()]+' — jours de passage à régler dans l’assistant tournée.'):'Aucune tournée active.'}; }
   /* ── TRACÉ GOOGLE + TRAFIC (Routes API, TRAFFIC_ON_POLYLINE) ──────────────
      Par tournée dont tous les arrêts sont positionnés : tracé réel, portions
      colorées fluide / ralenti / bouchon, durée avec et sans trafic. Rafraîchi
      à l'arrivée sur Tournées / Suivi puis toutes les 2 minutes ; sans tracé,
      la carte garde ses lignes droites (pointillées) et le dit. */
-  traceSig(t,pts){ return pts.map(p=>p.id).join(',')+'|'+(t.ret!==false?'r':'n'); }
+  traceSig(t,pts){ const c=v=>(v==null||isNaN(+v))?'?':(+v).toFixed(5); return pts.map(p=>p.id+'@'+c(p.lat)+','+c(p.lng)).join(',')+'|'+(t.ret!==false?'r':'n'); }
   traceFor(t,pts){ const c=((this.state.trace||{}).byTour||{})[String(t.id)]; return (c&&c.sig===this.traceSig(t,pts)&&Array.isArray(c.points)&&c.points.length>1)?c:null; }
+  /* Demande DIFFÉRÉE du tracé : appelée par les cartes chaque fois qu'une
+     tournée se dessine à vol d'oiseau. Regroupée à 350 ms, jamais pendant
+     une demande en cours — la carte n'attend plus l'entrée sur l'écran ni le
+     minuteur des deux minutes : dès que les sites sont là, Google est appelé. */
+  traceAsk(){ if(this._traceAskT) return;
+    this._traceAskT=setTimeout(()=>{ this._traceAskT=null; const T=this.state.trace||{}; if(T.busy) return; this.traceRefresh(false); },350); }
   traceRefresh(force){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); const sites=this.sitesData();
+    // Un tronçon refusé par Google ne se redemande pas avant 60 s : sans ce
+    // délai, chaque redessin de la carte relancerait l'appel en boucle.
+    const fails=this._traceFail||(this._traceFail={}); const now=Date.now();
     const jobs=(this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false).map(t=>{ const pts=sites.filter(s=>norm(s.zone)===norm(t.name)&&s.lat!=null).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))); return {t,pts,sig:this.traceSig(t,pts)}; })
-      .filter(x=>x.pts.length&&(force||!this.traceFor(x.t,x.pts)));
+      .filter(x=>x.pts.length&&(force||!this.traceFor(x.t,x.pts))&&(force||!fails[x.sig]||now-fails[x.sig]>60000));
     if(!jobs.length) return;
     this.setState(s=>({trace:{...s.trace,busy:jobs.length,err:''}}));
     jobs.forEach(x=>{ fetch(fr.base+'/franchisee/tour-trace'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
         body:JSON.stringify({returnToDepot:x.t.ret!==false,stops:x.pts.map(p=>({lat:p.lat,lng:p.lng,label:p.name}))})})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
         this.setState(s=>{ const byTour={...(s.trace.byTour||{})}; let err=s.trace.err;
-          if(st===200&&j&&j.ok) byTour[String(x.t.id)]={sig:x.sig,points:j.points||[],intervals:j.intervals||[],legs:j.legs||[],km:+j.km,minutes:+j.minutes,minutesSans:+j.minutesSans,trafic:j.trafic||null,at:new Date()};
-          else err=(j&&j.error)||('Tracé Google indisponible (HTTP '+st+')');
+          if(st===200&&j&&j.ok){ byTour[String(x.t.id)]={sig:x.sig,points:j.points||[],intervals:j.intervals||[],legs:j.legs||[],km:+j.km,minutes:+j.minutes,minutesSans:+j.minutesSans,trafic:j.trafic||null,at:new Date()}; delete fails[x.sig]; }
+          else { err=(j&&j.error)||(st===404?'POST /franchisee/tour-trace absent du serveur — déployez le webshop.':st===401?'Session expirée — reconnectez-vous.':('Tracé Google indisponible (HTTP '+st+')')); fails[x.sig]=Date.now(); }
           // Pas de redessin ici : le rendu qui suit ce setState redessine les cartes (ensureMaps).
           return {trace:{...s.trace,byTour,busy:Math.max(0,s.trace.busy-1),err,at:new Date()}}; }); })
-      .catch(()=>this.setState(s=>({trace:{...s.trace,busy:Math.max(0,s.trace.busy-1),err:'Réseau indisponible'}}))); }); }
+      .catch(()=>{ fails[x.sig]=Date.now(); this.setState(s=>({trace:{...s.trace,busy:Math.max(0,s.trace.busy-1),err:'Réseau indisponible'}})); }); }); }
+  /* Ce que vaut la ligne droite : le tracé Google est en route, ou refusé —
+     et pourquoi. Sert aux info-bulles des lignes à vol d'oiseau et au bandeau. */
+  traceEtatTxt(){ const T=this.state.trace||{}; if(T.busy) return 'tracé Google en cours…'; if(T.err) return 'tracé Google indisponible : '+T.err; return 'tracé Google en attente'; }
+  /* Bandeau sur la carte quand une tournée reste à vol d'oiseau : la ligne
+     droite ne doit jamais passer pour un itinéraire. Retiré dès que tout est tracé. */
+  traceBanner(elId, manque){
+    if(typeof document==='undefined') return;
+    const el=document.getElementById(elId); if(!el) return;
+    const id=elId+'-tracewarn'; let b=document.getElementById(id);
+    if(!manque){ if(b&&b.parentNode) b.parentNode.removeChild(b); return; }
+    if(!b){ b=document.createElement('div'); b.id=id;
+      b.style.cssText='position:absolute;z-index:500;bottom:10px;left:50%;transform:translateX(-50%);max-width:92%;padding:6px 11px;border-radius:8px;'
+        +'background:rgba(255,255,255,.94);color:#6b4420;font:500 11.5px sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);text-align:center;pointer-events:none';
+      try { if(window.getComputedStyle(el).position==='static') el.style.position='relative'; } catch(e){}
+      el.appendChild(b); }
+    const T=this.state.trace||{};
+    b.textContent=(T.err?'⚠ ':'')+'Lignes à vol d’oiseau — '+this.traceEtatTxt(); }
   traceDraw(L,g,t,pts,col,o,tip){ const tr=this.traceFor(t,pts); if(!tr) return false;
     const P=tr.points; const COL={NORMAL:'#2e9e44',SLOW:'#f2a900',TRAFFIC_JAM:'#c62828'};
     const w=o.focus?6:4.5, op=o.dim?0.15:0.95;
@@ -6272,9 +6421,14 @@ class Component extends DCLogic {
         // des bureaux concernés.
         const cp=(String(adr).match(/\b(\d{4})\b/)||[])[1]||String(r.office_cp||'').trim();
         const e=(geo&&geo.idx)?geo.idx[cp]:null;
+        // La POSITION du site d'abord : celle choisie dans la liste Google et
+        // servie par le serveur (lat / lng). Le centre du code postal n'est
+        // qu'un repli — il posait chaque site au milieu de sa commune, quelle
+        // que soit l'adresse encodée.
+        const own=(r.lat!=null&&r.lng!=null&&!isNaN(parseFloat(r.lat))&&!isNaN(parseFloat(r.lng)))?{lat:parseFloat(r.lat),lng:parseFloat(r.lng)}:null;
         seen[adr]=out.length;
-        out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,
-          ville:e?e.city:(r.office_city||cp||'—'),lat:e?e.lat:null,lng:e?e.lng:null,cp,
+        out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,adr,geoGoogle:!!own,
+          ville:(r.city&&String(r.city).trim())||(e?e.city:(r.office_city||cp||'—')),lat:own?own.lat:(e?e.lat:null),lng:own?own.lng:(e?e.lng:null),cp,
           stop:(r.stop!=null?+r.stop:null),
           // Temps d'accès : celui de la base, ou RIEN. Les 10 minutes par
           // défaut entraient dans chaque ETA sans que personne les ait
@@ -6288,12 +6442,16 @@ class Component extends DCLogic {
       // par le CP d'un autre bureau du même bâtiment.
       if(r.stop!=null&&(st.stop==null||+r.stop<st.stop)) st.stop=+r.stop;
       if(st.lat==null&&geo&&geo.idx){ const cp2=String(r.office_cp||'').trim(); const e2=geo.idx[cp2]; if(e2){ st.lat=e2.lat; st.lng=e2.lng; st.ville=e2.city; st.cp=cp2; } }
-      const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
+      // Un BUREAU, seulement s'il y en a un : sans bureau rattaché, le
+      // serveur renvoie le nom du site à la place — la chronologie réclamait
+      // alors un temps de dépôt pour un bureau qui n'existe pas, et rien ne
+      // pouvait l'enregistrer.
+      const b=(r.office&&r.office!=='—')?r.office:null;
       if(b&&!st.offices.some(o=>o.name===b)){
         const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
         // Temps de dépôt : celui paramétré pour CE bureau, ou inconnu — pas
         // 5 minutes décidées par la page et additionnées à chaque arrêt.
-        st.offices.push({name:b,addr:oAdr||'adresse non renseignée',drop:dropDe(b,r)});
+        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||'adresse non renseignée',drop:dropDe(b,r)});
       }
     });
     // Un site dont le CP n'est pas au référentiel n'est PAS placé au centre de
@@ -6662,6 +6820,9 @@ class Component extends DCLogic {
     if(s==='offices'){ setTimeout(()=>{ this.bcRefreshOffices(); this.bpRefresh(); },0); }
     // Tournées / Suivi : tracé Google + trafic à l'arrivée (puis toutes les 2 min par le minuteur).
     if(s==='tournees'||s==='suivi') setTimeout(()=>this.traceRefresh(false),400);
+    // Le conteneur de la carte est recréé au rendu : la vue « Chronologie » le re-masque.
+    if(s==='tournees') setTimeout(()=>this.chronoMapShow(this.state.tourView!=='chrono'),0);
+    if(s==='suivi') setTimeout(()=>this.suiviMapShow(this.state.suiviView!=='chrono'),0);
     // Rentabilité : charge (une fois) les points réels (geo-clients).
     if(s==='rentabilite') setTimeout(()=>this.rentaEnsure(),0);
     // Écrans à données de commandes : refetch à l'ENTRÉE (une nouvelle
@@ -7369,7 +7530,7 @@ class Component extends DCLogic {
         // départ gardait l'ancienne jusqu'au rechargement.
         const dep=this.depot();
         const sig=JSON.stringify([(window.__CPGEO?1:0),dep.lat,dep.lng,dep.libelle,this.state.mapFocusTour||'',
-          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
+          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop,r.latitude!=null?r.latitude:r.lat,r.longitude!=null?r.longitude:r.lng,r.adr||r.address||''])]);
         if(this._suiviSig!==sig){ this._suiviSig=sig; this.drawSuiviMap(); }
       }
       this.drawSuiviMap();
@@ -7395,7 +7556,7 @@ class Component extends DCLogic {
         // départ gardait l'ancienne jusqu'au rechargement.
         const dep=this.depot();
         const sig=JSON.stringify([(window.__CPGEO?1:0),dep.lat,dep.lng,dep.libelle,this.state.mapFocusTour||'',
-          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
+          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop,r.latitude!=null?r.latitude:r.lat,r.longitude!=null?r.longitude:r.lng,r.adr||r.address||''])]);
         if(this._routeSig!==sig){ this._routeSig=sig; this.drawRoute(); }
       }
       this.drawRoute();
@@ -7416,9 +7577,10 @@ class Component extends DCLogic {
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
     const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     const sites=this.sitesData(); const tours=this.routesMeta();
-    const focus=this.state.mapFocusTour||null;
+    const focus=this.state.mapFocusTour||null; let manqueTrace=false;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
     const sitePopup=(p,t,k)=>'<div style="font:12.5px/1.5 sans-serif;min-width:210px"><b>'+esc(p.name)+'</b>'
+      +'<br><span style="color:#666;font-size:11.5px">'+esc(p.adr||'')+(p.geoGoogle?' · position Google':' · ≈ centre du code postal, adresse à choisir dans la liste Google')+'</span>'
       +(t?('<br><span style="color:#666">'+esc(t)+' · arrêt n°'+k+'</span>'):'<br><span style="color:#666">Sans tournée</span>')
       +'<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><b style="font-size:11px">Bureaux &amp; adresses</b>'
       +p.offices.map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>';
@@ -7447,11 +7609,13 @@ class Component extends DCLogic {
       if(t.ret!==false&&depC.length) coords.push(depC[0]);
       const itin=pts.map((p,k)=>(k+1)+'. '+p.name).join(' → ');
       if(!this.traceDraw(L,g,t,pts,col,{focus:isFocus,dim},'<b>'+esc(t.name)+'</b><br>'+esc(itin))){
+        manqueTrace=true; this.traceAsk();
         const line=L.polyline(coords,{color:col,weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}).addTo(g);
-        line.bindTooltip('<b>'+esc(t.name)+'</b><br>'+esc(itin),{sticky:true});
+        line.bindTooltip('<b>'+esc(t.name)+'</b><br>'+esc(itin)+'<br><span style="color:#666">à vol d’oiseau · '+esc(this.traceEtatTxt())+'</span>',{sticky:true});
         line.on('mouseover',function(){ this.setStyle({weight:6,opacity:1,dashArray:null}); });
         line.on('mouseout',function(){ this.setStyle({weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}); }); }
       if(isFocus) focusBounds=L.latLngBounds(coords);
+      this.traceBanner('map-tournees', manqueTrace);
       pts.forEach((p,k)=>{
         const icon=L.divIcon({className:'',html:`<div style="width:26px;height:26px;border-radius:50%;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);opacity:${dim?0.25:1}">${k+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
         L.marker([p.lat,p.lng],{icon}).addTo(g).bindPopup(sitePopup(p,t.name,k+1));
@@ -7513,7 +7677,7 @@ class Component extends DCLogic {
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
     const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     const sites=this.sitesData(); const tours=this.routesMeta(); const etas=this.tourEtas();
-    const focus=this.state.mapFocusTour||null;
+    const focus=this.state.mapFocusTour||null; let manqueTrace=false;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
     const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
     /* Position seulement approximative (centroïde du CP, résolu par le
@@ -7537,8 +7701,10 @@ class Component extends DCLogic {
       const et=etas[k]||{stops:{},dep:'—',fin:'—'};
       const coords=[...depC,...pts.map(p=>[p.lat,p.lng]),...depC];
       if(!this.traceDraw(L,g,t,pts,col,{focus:isFocus,dim},'<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin))){
-        const line=L.polyline(coords,{color:col,weight:isFocus?5:3.5,opacity:dim?0.15:0.8}).addTo(g);
-        line.bindTooltip('<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin),{sticky:true}); }
+        manqueTrace=true; this.traceAsk();
+        const line=L.polyline(coords,{color:col,weight:isFocus?5:3.5,opacity:dim?0.15:0.8,dashArray:'6 5'}).addTo(g);
+        line.bindTooltip('<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin)+'<br><span style="color:#666">à vol d’oiseau · '+esc(this.traceEtatTxt())+'</span>',{sticky:true}); }
+      this.traceBanner('map-suivi', manqueTrace);
       pts.forEach((p,kk)=>{
         const no=p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').length;
         const eta=et.stops[p.id]||'—';
@@ -7548,6 +7714,7 @@ class Component extends DCLogic {
         const mk=L.marker([p.lat,p.lng],{icon}).addTo(g);
         mk.bindTooltip(esc(p.name)+' · '+no+' bureau'+(no>1?'x':'')+' · ETA ~'+esc(eta),{direction:'top',offset:[0,-14]});
         mk.bindPopup('<div style="font:12.5px/1.5 sans-serif;min-width:210px"><b>'+esc(p.name)+'</b>'
+          +'<br><span style="color:#666;font-size:11.5px">'+esc(p.adr||'')+(p.geoGoogle?' · position Google':' · ≈ centre du code postal')+'</span>'
           +'<br><span style="color:#666">'+esc(t.name)+' · arrêt n°'+(kk+1)+' · <b>ETA ~'+esc(eta)+'</b></span>'
           +'<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><b style="font-size:11px">'+no+' bureau'+(no>1?'x':'')+'</b>'
           +p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>');
@@ -8022,7 +8189,16 @@ class Component extends DCLogic {
       this.printJob(next?('✓ Tournée « '+t.name+' » activée')
         :('⏸ Tournée « '+t.name+' » désactivée — elle n’est plus proposée aux sites ni aux bureaux'));
     };
+    // La DURÉE ESTIMÉE de chaque tournée : la même chronologie que l'onglet
+    // « Chronologie » (départ, trajets Google ou ≈, attentes, accès, dépôts,
+    // retour). Sans heure calculable, la carte dit ce qui manque.
+    const dureeDe={}; try{ const cb=this.chronoBuild(this.chronoTours(),this.state.chrono||{legs:{},busy:0,err:''},null);
+      (cb.chronoLanes||[]).forEach(l=>{ dureeDe[tNorm(l.name)]=l; }); }catch(e){}
+    const fmtDuree=(m)=>{ m=Math.round(m); const h=Math.floor(m/60), mn=m%60; return String(h).padStart(2,'0')+'h'+String(mn).padStart(2,'0'); };
     const tourTiles=rMeta.filter(t=>t.name).map((t,ti)=>{
+      const ln=dureeDe[tNorm(t.name)]||null;
+      const duree=(ln&&ln.start!=null&&ln.fin!=null)?('Durée estimée '+(ln.google?'':'≈ ')+fmtDuree(ln.fin-ln.start)+(ln.km?(' - '+Math.round(ln.km)+' km'):''))
+        :(ln&&ln.warn?('Durée non calculable : '+ln.warn):'Durée non calculable');
       const sites=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(t.name))
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       const nbOff=sites.reduce((a,b)=>a+b.offices.length,0);
@@ -8037,7 +8213,7 @@ class Component extends DCLogic {
       // proposée aux sites ni aux bureaux, sans être supprimée : la supprimer
       // perdrait ses codes postaux, ses horaires et son historique.
       const tOn=t.active!==false&&t.active!==0;
-      return {name:t.name,short:t.short||'',driver:t.driver||'— non assigné',start:(t.start!=null?this.hhmm(t.start):'— à paramétrer'),
+      return {name:t.name,short:t.short||'',driver:t.driver||'— non assigné',start:(t.start!=null?this.hhmm(t.start):'— à paramétrer'),duree,
         col, colDot:'width:10px;height:10px;border-radius:50%;flex:none;background:'+(tOn?col:'var(--color-border-secondary)'),
         tOn, tOnLabel:tOn?'Active':'Désactivée',
         tOnStyle:'display:inline-flex;align-items:center;gap:6px;height:27px;border-radius:7px;padding:0 10px;border:.5px solid '+(tOn?'#bfe0c7':'var(--color-border-secondary)')+';background:'+(tOn?'#eaf5ec':'var(--color-background-secondary)')+';color:'+(tOn?'#2d7a3e':'var(--color-text-muted)')+';font:600 10.5px var(--font-ui);cursor:pointer;white-space:nowrap',
@@ -11402,6 +11578,7 @@ class Component extends DCLogic {
       openRouteForm:()=>this.setState({rfOpen:true,rfEditId:null,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,pricePerKm:'',driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),
       ...twVals,
       ...this.chronoVals(),
+      ...this.suiviChronoVals(),
       ...this.dcVals(),
       ...this.traceVals(),
       rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false,rfEditId:null}),
@@ -11445,7 +11622,7 @@ class Component extends DCLogic {
       zoneParentOpts,zfCanSubmit,zfSubmitExtra:zfCanSubmit?'':'opacity:.45;pointer-events:none',zfSubmit,
       publier:this.go('suivi'),publierLabel:'Publier vers la tablette',
       liveDrivers,liveEta,liveTable,suiviTours,suiviToursEmpty,suiviEmptyMsg,
-      selNom:selDrv.nom,selTournee:selDrv.tournee,selVehicule:selDrv.vehicule,selAvancement:selDrv.avancement,selEta:selDrv.eta,selDrift:selDrv.drift,selDriftColor:selDrv.driftColor,selStatut:selDrv.statut,selStatutStyle:selDrv.statutStyle,selColor:selDrv.color,selStops:selDrv.stops,selHasStops:(selDrv.stops||[]).length>0,
+      selHasDriver:liveTable.length>0,selNoDriver:liveTable.length===0,selNom:selDrv.nom,selTournee:selDrv.tournee,selVehicule:selDrv.vehicule,selAvancement:selDrv.avancement,selEta:selDrv.eta,selDrift:selDrv.drift,selDriftColor:selDrv.driftColor,selStatut:selDrv.statut,selStatutStyle:selDrv.statutStyle,selColor:selDrv.color,selStops:selDrv.stops,selHasStops:(selDrv.stops||[]).length>0,
       clients,sel,
       incidents,selInc,
       kpis,classement,nbPerte,rentaTree,perteOpen,pertePoints,perteBadgeStyle,togglePerte,
