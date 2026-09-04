@@ -86,10 +86,27 @@ que le jeton admin passe.
   (`order_ref`), celle que l'API sert déjà dans `fr-tdb-tree`. C'est le seul
   point d'impression à ajouter côté préparation.
 
-Lecture native `BarcodeDetector` (Chrome Android) : aucune librairie, donc rien
-à charger d'un CDN et rien à maintenir hors ligne. Sur un téléphone sans cette
-API, la saisie du numéro prend le relais — et la case à cocher, avec motif
-obligatoire, reste le dernier recours. **Aucun « tout cocher », nulle part.**
+### Le lecteur : deux décodeurs, et un préalable
+
+1. **`BarcodeDetector`**, natif, quand le navigateur l'a (Chrome Android) ;
+2. **`vendor/jsqr.js`** (jsQR 1.4.0, Apache-2.0, embarqué) partout ailleurs.
+
+Le second n'est pas un luxe : `BarcodeDetector` **n'existe ni sur iPhone
+(Safari) ni sous Firefox**. Sans lui, l'appareil photo ne s'allumait tout
+simplement pas sur ces téléphones. Il est vendu avec l'application, jamais
+chargé d'un CDN — le scan doit marcher dans un sous-sol sans réseau.
+
+**Préalable : HTTPS.** Aucun navigateur ne donne la caméra à une page servie en
+`http://` (sauf `localhost`). Si la PWA est ouverte en clair, l'écran le dit
+mot pour mot au lieu de laisser chercher : « La caméra exige HTTPS… ». Les
+autres refus sont nommés de la même façon (permission refusée, aucune caméra,
+caméra occupée par une autre application).
+
+La **saisie du numéro de bon a été retirée** : le bon se scanne, et si le QR ne
+passe pas, la tournée se choisit dans la liste juste dessous — une liste de ce
+que le serveur sert vaut mieux qu'un numéro tapé de mémoire. Pour les **colis**,
+la saisie du numéro et la case à cocher (motif obligatoire) restent le dernier
+recours. **Aucun « tout cocher », nulle part.**
 
 ## Développement local
 

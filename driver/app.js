@@ -139,7 +139,10 @@
                drive: vDrive, stop: vStop, close: vClose, day: vDay, sync: vSync, noscope: vNoScope })[S.screen] || vBoot;
     app.innerHTML = f();
     var b = app.querySelector('[data-focus]'); if (b) b.focus();
-    if (S.screen === 'load' || S.screen === 'stop') mountScanner();
+    /* Le scanner vit sur TOUS les écrans qui portent un viseur (#vf) : prendre
+       sa tournée, le chargement, la remise. Il n'était monté que sur deux
+       d'entre eux — sur l'écran d'accueil, « Scanner » n'allumait donc RIEN. */
+    if (S.scanOn && app.querySelector('#vf')) mountScanner();
     else stopScanner();
     if (S.screen === 'drive') startPos(); else stopPos();
   }
@@ -242,11 +245,11 @@
           : '')
       + '<div class="scan"><div class="vf" id="vf">' + corners()
         + '<div class="hint">' + esc(S.scanMsg || 'Le QR du bon de livraison (ERP) — 1 bon = 1 tournée') + '</div></div>'
-        + '<div class="lg">' + (S.scanOn ? 'Scan en cours…' : 'Appuie sur « Scanner »') + '</div></div>'
-      + '<div class="row" style="gap:8px"><button class="btn gh sm grow" data-act="scanon">' + (S.scanOn ? 'Arrêter le scan' : CAM + ' Scanner le bon') + '</button>'
-      + '<button class="btn gh sm grow" data-act="manual">Saisir le n° du bon</button></div>'
+        + '<div class="lg">' + (S.scanOn ? 'Scan en cours — ' + scanMoteur() : 'Appuie sur « Scanner »') + '</div></div>'
+      + '<button class="btn gh sm" data-act="scanon">' + (S.scanOn ? 'Arrêter le scan' : CAM + ' Scanner le bon') + '</button>'
       + '<div class="card"><div class="row"><div class="h3">Tes tournées du jour</div><span class="pill ruby" style="margin-left:auto">' + ts.length + '</span></div>'
       + (ts.length ? '<div class="sep"></div>' + list
+                     + '<div class="p" style="font-size:10.5px;margin-top:9px">Le QR ne passe pas ? Appuie simplement sur ta tournée ci-dessus.</div>'
                    : '<div class="p" style="margin-top:6px">Aucune tournée servie pour aujourd\'hui. Rien n\'est inventé ici : si le dépôt en a préparé une, elle apparaîtra dès que le serveur la sert.</div>')
       + '</div>'
       + (sel ? '<div class="lbl">Véhicule</div><div class="row wrap" style="gap:7px">'
@@ -502,38 +505,124 @@
           : '<button class="btn gh" data-act="logout">Se déconnecter</button>') + '</div>';
   }
 
-  /* ── scanner QR (BarcodeDetector natif : aucune librairie, donc rien à
-     charger depuis un CDN et rien à maintenir hors ligne) ───────────── */
-  var SC = { stream: null, video: null, det: null, timer: null };
+  /* ── scanner QR ─────────────────────────────────────────────────────────
+     DEUX décodeurs, dans cet ordre :
+       1. BarcodeDetector, natif — quand le navigateur l'a (Chrome Android) ;
+       2. jsQR, embarqué dans vendor/ — partout ailleurs. Il le fallait : sur
+          iPhone (Safari) et sous Firefox, BarcodeDetector N'EXISTE PAS, donc
+          l'appareil photo ne s'allumait jamais et l'app renvoyait vers une
+          saisie manuelle. Embarqué, pas chargé d'un CDN : le scan doit marcher
+          dans un sous-sol sans réseau.
+
+     Et AVANT tout ça, le diagnostic : une caméra qui ne s'allume pas a presque
+     toujours une de ces deux causes, et il vaut mieux la NOMMER que laisser
+     chercher — page servie en http:// (aucun navigateur ne donne la caméra
+     hors HTTPS), ou permission refusée. */
+  var SC = { stream: null, video: null, det: null, timer: null, cv: null, cx: null };
+
+  function camBlocage() {
+    if (!window.isSecureContext && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+      return 'La caméra exige HTTPS. Cette page est servie en ' + location.protocol
+           + ' — ouvre-la en https:// (même adresse), sinon aucun navigateur n\'autorise le scan.';
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      return 'Ce navigateur ne donne pas accès à la caméra. Ouvre l\'app dans Chrome (Android) ou Safari (iPhone).';
+    }
+    return null;
+  }
+  function camErreur(e) {
+    var n = (e && e.name) || '';
+    if (n === 'NotAllowedError' || n === 'SecurityError')
+      return 'Accès à la caméra refusé. Autorise-le pour ce site (cadenas dans la barre d\'adresse, ou Réglages du téléphone), puis réessaie.';
+    if (n === 'NotFoundError' || n === 'OverconstrainedError')
+      return 'Aucune caméra trouvée sur cet appareil.';
+    if (n === 'NotReadableError')
+      return 'La caméra est déjà utilisée par une autre application — ferme-la et réessaie.';
+    return 'Caméra indisponible' + (n ? ' (' + n + ')' : '') + '.';
+  }
+
   function mountScanner() {
     var host = document.getElementById('vf');
     if (!S.scanOn || !host) { if (!S.scanOn) stopScanner(); return; }
-    if (SC.video && host.contains(SC.video)) return;
-    if (!('BarcodeDetector' in window)) {
-      S.scanOn = false; S.scanMsg = 'Ce téléphone ne lit pas les QR — utilise « Saisir un n° ».'; render(); return;
+    /* Chaque rendu reconstruit le HTML, donc EMPORTE la balise vidéo. On ne
+       redemande pas la caméra pour autant : on ré-accroche le flux déjà ouvert.
+       Sans ça, chaque colis scanné rouvrait l'appareil photo (clignotement,
+       batterie, et parfois refus du navigateur). */
+    if (SC.video) {
+      if (!host.contains(SC.video)) host.insertBefore(SC.video, host.firstChild);
+      if (!SC.timer) SC.timer = setInterval(tick, 280);
+      legende(); return;
     }
+    var ko = camBlocage();
+    if (ko) { S.scanOn = false; S.scanMsg = ko; render(); return; }
+
     var v = document.createElement('video');
-    v.setAttribute('playsinline', ''); v.muted = true; host.insertBefore(v, host.firstChild);
+    v.setAttribute('playsinline', ''); v.setAttribute('autoplay', ''); v.setAttribute('muted', '');
+    v.muted = true; v.playsInline = true;
+    host.insertBefore(v, host.firstChild);
     SC.video = v;
     navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
       .then(function (st) {
-        SC.stream = st; v.srcObject = st; return v.play();
+        SC.stream = st; v.srcObject = st;
+        // Sur iOS, play() peut être rejeté sans geste : le scan part d'un
+        // bouton, donc on est dans les clous — mais on ne bloque pas dessus.
+        return v.play().catch(function () {});
       })
       .then(function () {
-        SC.det = new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'ean_13', 'code_39'] });
-        SC.timer = setInterval(function () {
-          if (!SC.det || !SC.video) return;
-          SC.det.detect(SC.video).then(function (codes) {
-            if (codes && codes.length) onCode(String(codes[0].rawValue || '').trim());
-          }).catch(function () {});
-        }, 320);
+        if (window.BarcodeDetector) {
+          try { SC.det = new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'ean_13', 'code_39'] }); }
+          catch (e) { SC.det = null; }
+        }
+        if (!SC.det && !window.jsQR) {
+          S.scanOn = false; stopScanner();
+          S.scanMsg = 'Décodeur QR absent (vendor/jsqr.js non chargé) — recharge la page.'; render(); return;
+        }
+        S.scanMsg = '';
+        if (!SC.cv) { SC.cv = document.createElement('canvas'); SC.cx = SC.cv.getContext('2d', { willReadFrequently: true }); }
+        SC.timer = setInterval(tick, 280);
+        // Surtout PAS render() ici : il reconstruirait le HTML et jetterait la
+        // vidéo qu'on vient d'accrocher. Seule la légende bouge.
+        legende();
       })
       .catch(function (e) {
-        S.scanOn = false;
-        S.scanMsg = 'Caméra indisponible (' + (e && e.name ? e.name : 'refus') + ') — utilise « Saisir un n° ».';
+        S.scanOn = false; stopScanner();
+        S.scanMsg = camErreur(e);
         render();
       });
   }
+
+  function tick() {
+    var v = SC.video;
+    if (!v || !v.videoWidth) return;
+    if (SC.det) {
+      SC.det.detect(v).then(function (codes) {
+        if (codes && codes.length) onCode(String(codes[0].rawValue || '').trim());
+      }).catch(function () {});
+      return;
+    }
+    // jsQR : on réduit l'image avant de décoder — inutile de traiter 1080p
+    // trente fois par minute sur un téléphone qui roule.
+    var w = Math.min(480, v.videoWidth), h = Math.round(v.videoHeight * (w / v.videoWidth));
+    SC.cv.width = w; SC.cv.height = h;
+    SC.cx.drawImage(v, 0, 0, w, h);
+    var img;
+    try { img = SC.cx.getImageData(0, 0, w, h); } catch (e) { return; }
+    var r = window.jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
+    if (r && r.data) onCode(String(r.data).trim());
+  }
+
+  /* La légende dit l'ÉTAT RÉEL : tant que le flux n'est pas ouvert, elle
+     annonce le démarrage — elle ne prétend pas scanner. */
+  function scanMoteur() {
+    if (!SC.stream) return 'démarrage de la caméra…';
+    return SC.det ? 'lecteur natif' : 'lecteur embarqué';
+  }
+  function legende() {
+    var el = document.querySelector('.scan .lg');
+    if (el && el.firstChild && el.firstChild.nodeType === 3) el.firstChild.nodeValue = 'Scan — ' + scanMoteur() + ' ';
+    else if (el) el.insertBefore(document.createTextNode('Scan — ' + scanMoteur() + ' '), el.firstChild);
+  }
+
   function stopScanner() {
     if (SC.timer) clearInterval(SC.timer); SC.timer = null;
     if (SC.stream) SC.stream.getTracks().forEach(function (t) { t.stop(); });
@@ -656,7 +745,9 @@
     if (a === 'gostop') { S.stopIx = Number(el.getAttribute('data-i')); S.screen = 'drive'; return render(); }
 
     if (a === 'scanon') { S.scanOn = !S.scanOn; S.scanMsg = ''; S.lastScan = ''; return render(); }
-    if (a === 'manual') { var b = prompt('Numéro du bon de livraison'); if (b) matchTour(b.trim()); return; }
+    /* La saisie du numéro de bon a été RETIRÉE : le bon se scanne, et si le QR
+       ne passe pas, la tournée se choisit dans la liste juste dessous — une
+       liste de ce que le serveur sert vaut mieux qu'un numéro tapé de mémoire. */
     if (a === 'manualref') {
       var r = prompt('Numéro de colis (sur l\'étiquette)'); if (!r) return;
       S.lastScan = ''; return onCode(r.trim());

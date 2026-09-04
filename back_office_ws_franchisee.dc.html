@@ -408,6 +408,36 @@
       <!-- ===================== CONSTRUCTEUR TOURNÉES ===================== -->
       <sc-if value="{{ isTournees }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- APPLICATION CHAUFFEUR — ici, en tête des Tournées, parce que c'est
+             l'écran qu'on ouvre quand on s'occupe des tournées. La même carte
+             existe dans la modale « Envoi vers la tablette », mais celle-ci ne
+             s'affiche que s'il y a des commandes du jour : l'adresse, elle,
+             doit être trouvable même un jour sans livraison. -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 18px">
+          <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:260px">
+              <div class="t-section-title" style="font-size:15px">Application chauffeur (téléphone)</div>
+              <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Le chauffeur ouvre cette adresse et l'ajoute à son écran d'accueil. {{ pwaScopeTxt }}</div>
+              <div style="font:600 12.5px var(--font-ui);color:var(--color-text);word-break:break-all;margin-top:8px">{{ pwaUrl }}</div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+                <button onClick="{{ pwaCopy }}" class="btn-secondary" style="padding:9px 14px;font-size:12px">Copier l'adresse</button>
+                <button onClick="{{ pwaQrToggle }}" class="btn-secondary" style="padding:9px 14px;font-size:12px">{{ pwaQrLabel }}</button>
+                <button onClick="{{ pwaTokToggle }}" class="btn-secondary" style="padding:9px 14px;font-size:12px">{{ pwaTokLabel }}</button>
+              </div>
+              <sc-if value="{{ pwaTokOn }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fbe9eb;border:.5px solid #f0c4ca;border-radius:9px;padding:10px 12px;font:500 11px/1.5 var(--font-ui);color:var(--color-primary);margin-top:10px">⚠ Le QR porte le <b>jeton admin</b> — mode test, en attendant les comptes chauffeur. Il ouvre TOUTES les boutiques : ne l'affichez pas devant n'importe qui, et retirez-le du téléphone (bouton « Oublier le jeton » dans l'app) dès qu'un PIN existe.</div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ pwaQrOn }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:12px;align-items:center;flex:none">
+              <img src="{{ pwaQrSrc }}" alt="QR — application chauffeur" style="width:148px;height:148px;border-radius:8px;background:#fff"/>
+              <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);max-width:190px">{{ pwaQrNote }}</div>
+            </div>
+            </sc-if>
+          </div>
+        </div>
+
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 18px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px"><div><div class="t-section-title" style="font-size:15px">Sites non assignés</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">« Ajouter » → tournée surlignée</div></div><div style="display:flex;align-items:center;gap:8px;flex:none"><button onClick="{{ goParams }}" title="Coûts · temps · frais — paramètres de coût des tournées" style="width:34px;height:34px;border-radius:8px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#b26a00;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><span style="display:inline-flex;border:.5px solid var(--color-border-secondary);border-radius:9px;overflow:hidden;flex:none"><button onClick="{{ tvMap }}" style="{{ tvMapStyle }}">🗺 Carte</button><button onClick="{{ tvChrono }}" style="{{ tvChronoStyle }}">☰ Chronologie</button></span><button onClick="{{ openRouteForm }}" class="btn-secondary" title="Formulaire court : nom, départ, capacité, codes postaux" style="padding:9px 14px;font-size:12px;flex:none">Formulaire rapide</button><button onClick="{{ twNew }}" class="btn-primary" title="Assistant : tournée → sites → bureaux, itinéraire Google, prix au km" style="padding:9px 16px;font-size:12px;flex:none">+ Nouvelle tournée (assistant)</button></div></div>
           <div style="display:flex;flex-wrap:wrap;gap:10px">

@@ -119,7 +119,7 @@ jobs:
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s << 'REMOTE'
           BASE="http://localhost/webshop/driver"
           fail=0
-          for f in "" index.html app.js api.js app.css sw.js manifest.webmanifest icon-192.png \
+          for f in "" index.html app.js api.js app.css sw.js manifest.webmanifest icon-192.png vendor/jsqr.js \
                    _ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css img/logo.png; do
             out=$(curl -s -o /dev/null -w "%{http_code} %{size_download}" "$BASE/$f")
             set -- $out; code=$1; size=$2
