@@ -5,11 +5,11 @@
    • les appels API ne sont JAMAIS servis depuis le cache. Une donnée de tournée
      périmée présentée comme fraîche est pire que pas de donnée : l'application
      affiche l'échec réseau et ce qu'elle avait en mémoire, en le disant. */
-var CACHE = 'drv-shell-v6';   // v6 : coque réseau-d'abord + arrêts de secours (sites)
+var CACHE = 'drv-shell-v6';   // v6 : coque réseau-d'abord, PWA complète (icônes, install, hors-ligne)
 var SHELL = [
   './', 'index.html', 'app.css', 'app.js', 'api.js', 'manifest.webmanifest',
   'vendor/jsqr.js',
-  'icon-192.png', 'icon-512.png', 'img/logo.png',
+  'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'img/logo.png',
   '_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css'
 ];
 
@@ -26,6 +26,9 @@ self.addEventListener('activate', function (e) {
     return Promise.all(ks.filter(function (k) { return k !== CACHE; }).map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
+
+// La page demande à la nouvelle version de prendre la main sans attendre.
+self.addEventListener('message', function (e) { if (e.data === 'skip-waiting') self.skipWaiting(); });
 
 self.addEventListener('fetch', function (e) {
   var r = e.request;
@@ -48,7 +51,16 @@ self.addEventListener('fetch', function (e) {
       fetch(r).then(function (res) {
         if (res && res.ok) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(r, copy); }); }
         return res;
-      }).catch(function () { return caches.match(r); })
+      }).catch(function () {
+        // Hors réseau : la coque en cache. Pour une NAVIGATION, on rend la
+        // page d'accueil du cache — sinon le chauffeur tombe sur l'écran
+        // « pas d'internet » du navigateur au lieu de sa tournée.
+        return caches.match(r).then(function (hit) {
+          if (hit) return hit;
+          if (r.mode === 'navigate') return caches.match('index.html').then(function (h2) { return h2 || caches.match('./'); });
+          return undefined;
+        });
+      })
     );
     return;
   }
