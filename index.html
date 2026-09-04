@@ -4437,7 +4437,7 @@ class Component extends DCLogic {
           let brk=false;
           for(const o of offs){ const f=this.chronoFen(o.name); const short=String(o.name).split(/\s+/).slice(0,2).join(' ');
             if(f){ const ko=cur>f.we; if(ko) late++; wins.push({t0:f.ws,t1:f.we,label:short+' '+f.txt,cls:ko?'ko':'',title:o.name+' — fenêtre '+f.txt+(ko?' — dépôt '+this.hhmm(cur)+' hors fenêtre':'')}); }
-            if(o.drop==null){ segs.push({t0:cur,t1:cur+6,cls:'',style:'background:'+color+';opacity:.45',label:short+' ?',title:o.name+' : temps de dépôt non renseigné'}); warn='« '+o.name+' » : temps de dépôt à saisir (Paramètres livraison — bureau)'; fix=fixOffice(o); fixLbl='Saisir le temps de dépôt →'; brk=true; break; }
+            if(!(+o.drop>0)){ segs.push({t0:cur,t1:cur+6,cls:'',style:'background:'+color+';opacity:.45',label:short+' ?',title:o.name+' : temps de dépôt '+(o.drop==null?'non renseigné':'à zéro — ce n’est pas une mesure')}); warn='« '+o.name+' » : temps de dépôt à saisir (Paramètres livraison — bureau)'; fix=fixOffice(o); fixLbl='Saisir le temps de dépôt →'; brk=true; break; }
             const ko=f?(cur>f.we):false; segs.push({t0:cur,t1:cur+o.drop,cls:ko?'ch-ko':'',style:'background:'+color,label:short,title:o.name+' : dépôt '+this.hhmm(cur)+' → '+this.hhmm(cur+o.drop)+(f?(' · fenêtre '+f.txt+(ko?' — HORS FENÊTRE':'')):' · pas de fenêtre d’engagement')}); cur+=o.drop; nbOff++; }
           if(brk){ fin=null; break; }
           if(s.lat!=null&&s.lng!=null) prev={lat:+s.lat,lng:+s.lng}; fin=cur; }
@@ -4460,7 +4460,7 @@ class Component extends DCLogic {
     let lo=Math.floor((tMin-30)/30)*30, hi=Math.ceil((tMax+30)/30)*30; if(hi-lo<120) hi=lo+120; const span=hi-lo;
     const pct=v=>Math.round(((v-lo)/span)*10000)/100; const ticks=[]; for(let m=lo;m<=hi;m+=(span>420?60:30)) ticks.push({left:pct(m),label:this.hhmm(m)});
     const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes(); const hasNow=nowMin>=lo&&nowMin<=hi;
-    const lanesV=lanes.map(l=>({...l,segs:l.segs.map(g=>({...g,left:pct(g.t0),width:Math.max(0.6,pct(g.t1)-pct(g.t0)),style:g.style||''})),wins:l.wins.map(w=>({...w,left:pct(w.t0),width:Math.max(1,pct(w.t1)-pct(w.t0))}))}));
+    const lanesV=lanes.map(l=>({...l,segs:l.segs.map(g=>({...g,left:pct(g.t0),width:Math.max(g.info?0:1.4,pct(g.t1)-pct(g.t0)),style:g.style||''})),wins:l.wins.map(w=>({...w,left:pct(w.t0),width:Math.max(1,pct(w.t1)-pct(w.t0))}))}));
     const tot=lanes.reduce((a,l)=>({off:a.off+l.nbOff,late:a.late+l.late,km:a.km+l.km,att:a.att+l.attente}),{off:0,late:0,km:0,att:0});
     return {chronoTicks:ticks,chronoLanes:lanesV,chronoEmpty:false,chronoHasNow:hasNow,chronoNowLeft:pct(nowMin),
       chronoSub:lanes.length+' tournée(s) · '+tot.off+' dépôt(s) · '+tot.km.toFixed(1).replace('.',',')+' km · '+(tot.late?(tot.late+' dépôt(s) hors fenêtre'):'toutes les fenêtres tenues')+(tot.att?(' · '+tot.att+' min d’attente'):'')+' · trajets '+(Object.keys(C.legs||{}).length?'Google':'à vol d’oiseau (≈) — « Recalculer (Google) »')}; }
@@ -4592,7 +4592,7 @@ class Component extends DCLogic {
       this.goTo('clients'); if(i2>=0) setTimeout(()=>this.editForm('clientEdit',{...cls[i2]},i2)(),80); };
     T('b2b_clients').filter(c=>c&&(c.street||c.zip)&&(c.lat==null||c.lng==null)).forEach(c=>H.push({what:c.company_name||c.name||'Client',why:'Adresse du client non vérifiée par Google — aucune position en base',
       ctx:[c.street,[c.zip,c.city||c.locality].filter(Boolean).join(' ')].filter(Boolean).join(', ')||'adresse absente',lien:'Choisir l’adresse Google → fiche client',go:goClient(c)}));
-    offices.filter(o=>o.tour&&o.tour!=='—').forEach(o=>{ const d=dset[String(o.id)]; if(!d||d.drop==null||d.drop===''){ H.push({what:o.name,why:'Temps de dépôt du bureau non renseigné — l’heure de départ de l’arrêt est inconnue',ctx:'Tournée '+o.tour,lien:'Saisir → paramètres du bureau',go:goParam(o)}); } });
+    offices.filter(o=>o.tour&&o.tour!=='—').forEach(o=>{ const d=dset[String(o.id)]; if(!d||!(+d.drop>0)){ H.push({what:o.name,why:'Temps de dépôt du bureau non renseigné — l’heure de départ de l’arrêt est inconnue',ctx:'Tournée '+o.tour,lien:'Saisir → paramètres du bureau',go:goParam(o)}); } });
     offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&!fen(o.name)).forEach(o=>H.push({what:o.name,why:'Pas de fenêtre d’engagement — impossible de dire si la livraison est à l’heure',ctx:'Bureau validé · tournée '+o.tour,lien:'Voir la fiche → Clients',go:goScreen('clients')}));
     // Coûts et validation : taux horaire, prix au km, doublons de sites.
     if(gp('cost_driver_hour')==null) C.push({what:'Taux horaire chauffeur',why:'Non paramétré — aucun coût de tournée dans la rentabilité',ctx:'Paramètres de coûts · clé cost_driver_hour',lien:'Paramétrer → Paramètres de coûts',go:goScreen('params')});
@@ -6225,7 +6225,7 @@ class Component extends DCLogic {
     if(o.lat==null||o.lng==null) m.push('adresse non validée par Google');
     if(vide(o.tour)) m.push('tournée');
     const bp=SRV('ws_office_delivery_settings').find(b=>b&&b.officeId!=null&&String(b.officeId)===String(o.id));
-    if(!bp||bp.drop==null||bp.drop==='') m.push('temps de dépôt');
+    if(!bp||!(+bp.drop>0)) m.push('temps de dépôt');
     return m; }
   /* Le statut SUIT le constat : un bureau devenu complet ouvre sa livraison
      de lui-même, sans clic. Une seule écriture par bureau et par session. */
