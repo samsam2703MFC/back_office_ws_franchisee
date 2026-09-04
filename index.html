@@ -4399,6 +4399,7 @@ class Component extends DCLogic {
       return ()=>{ this.goTo('offices'); setTimeout(()=>this.openFormWith('bureauParam',{bureau:name,officeId:(o&&o.id!=null)?o.id:null})(),80); }; };
     const fixTour=(t)=>()=>{ this.goTo('tournees'); setTimeout(()=>this.twOpen(t.id),80); };
     const fixShop=()=>{ this.openForm('shop')(); };
+    const fixOfficeForm=(o)=>()=>{ this.goTo('offices'); setTimeout(()=>{ const rows=TB('ws_offices'); const i=rows.findIndex(x=>(o.id!=null&&String(x.id)===String(o.id))||(o.id==null&&x.name===o.name)); if(i>=0) this.editForm('office',rows[i],i)(); },80); };
     const lanes=[]; let tMin=Infinity,tMax=-Infinity;
     tours.forEach(x=>{ const t=x.t; const color=colors[x.i%colors.length]; const start=(t.start!=null&&t.start!=='')?+t.start:null; const ex=extra?extra(x):null;
       const cache=(C.legs||{})[x.key]; const legs=(cache&&cache.sig===x.sig)?cache.legs:null; const google=!!legs;
@@ -4423,7 +4424,13 @@ class Component extends DCLogic {
           // Un bureau dont l'adresse encodée n'est pas celle du site, sans
           // position Google : l'itinéraire ne passe PAS par lui. Dit, avec le
           // geste qui corrige — sans arrêter la ligne.
-          (s.offices||[]).filter(o=>o.adrDiff).forEach(o=>{ segs.push({t0:cur,t1:cur+0.01,cls:'',label:'',title:'« '+o.name+' » : adresse encodée différente du site ('+o.addrBrut+') mais position inconnue — trajet non compté ; choisissez son adresse dans la liste Google (fiche bureau)'}); });
+          // Sur un arrêt de SITE, chaque bureau sans position Google propre
+          // est compté à l'adresse du site : dit bureau par bureau, avec la
+          // fiche à ouvrir. Tant que les deux n'ont pas leur position, aucun
+          // trajet ne peut exister entre eux.
+          if(s.kind==='site') (s.offices||[]).filter(o=>o.name&&o.name.charAt(0)!=='—'&&(o.lat==null||o.lng==null)).forEach(o=>{
+            segs.push({t0:cur,t1:cur+0.01,cls:'',label:'',info:true,fix:fixOfficeForm(o),fixLbl:'Choisir l’adresse Google →',
+              title:'« '+o.name+' » : pas de position Google propre — compté à l’adresse du site'+(o.adrDiff?(' alors que son adresse encodée diffère ('+o.addrBrut+')'):'')+' ; aucun trajet ni accès à part tant qu’elle n’est pas choisie dans la liste Google (fiche bureau)'}); });
           let brk=false;
           for(const o of offs){ const f=this.chronoFen(o.name); const short=String(o.name).split(/\s+/).slice(0,2).join(' ');
             if(f){ const ko=cur>f.we; if(ko) late++; wins.push({t0:f.ws,t1:f.we,label:short+' '+f.txt,cls:ko?'ko':'',title:o.name+' — fenêtre '+f.txt+(ko?' — dépôt '+this.hhmm(cur)+' hors fenêtre':'')}); }
@@ -4438,7 +4445,7 @@ class Component extends DCLogic {
       // trajet, attente, accès, dépôt par bureau et sa fenêtre, retour.
       const openMap=this.state.chronoOpen||{}; const lk=x.key; const open=!!openMap[lk];
       const detail=[]; if(start!=null) detail.push({h:this.hhmm(start),txt:'Départ de la boutique',cls:'dep'});
-      segs.forEach(g=>detail.push({h:this.hhmm(g.t0)+' → '+this.hhmm(g.t1),txt:g.title,cls:g.cls||'',ko:g.cls==='ch-ko'}));
+      segs.forEach(g=>detail.push({h:g.info?'':(this.hhmm(g.t0)+' → '+this.hhmm(g.t1)),txt:(g.info?'ⓘ ':'')+g.title,cls:g.info?'warn':(g.cls||''),ko:g.cls==='ch-ko',hasFix:!!g.fix,fixGo:g.fix||(()=>{}),fixLbl:g.fixLbl||''}));
       if(fin!=null) detail.push({h:this.hhmm(fin),txt:'Fin de tournée'+(t.ret!==false?' — retour à la boutique':''),cls:'fin'});
       if(warn) detail.push({h:'',txt:'⚠ '+warn,cls:'warn',hasFix:!!fix,fixGo:fix||(()=>{}),fixLbl});
       const manqueGoogle=!google&&x.points.length>0&&x.points.every(s0=>s0.lat!=null&&s0.lng!=null)&&start!=null&&depOk;
