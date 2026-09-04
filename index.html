@@ -4295,7 +4295,7 @@ class Component extends DCLogic {
     const TB=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
     const fixSite=(s0)=>{ const rows=TB('ws_office_delivery_sites'); const i=rows.findIndex(r=>String(r.id)===String(s0.id)); if(i<0) return null;
       return ()=>{ this.goTo('sites'); setTimeout(()=>this.editForm('site',rows[i],i)(),80); }; };
-    const fixOffice=(name)=>{ const o=TB('ws_offices').find(x=>x&&x.name===name);
+    const fixOffice=(off)=>{ const name=off.name; const o=(off.id!=null)?{id:off.id}:TB('ws_offices').find(x=>x&&x.name===name);
       return ()=>{ this.goTo('offices'); setTimeout(()=>this.openFormWith('bureauParam',{bureau:name,officeId:(o&&o.id!=null)?o.id:null})(),80); }; };
     const fixTour=(t)=>()=>{ this.goTo('tournees'); setTimeout(()=>this.twOpen(t.id),80); };
     const fixShop=()=>{ this.openForm('shop')(); };
@@ -4314,6 +4314,7 @@ class Component extends DCLogic {
           segs.push({t0:cur,t1:cur+lg.min,cls:'ch-trj',label:(lg.g?'':'≈ ')+lg.min+' min',title:'Trajet vers '+s.name+' : '+lg.min+' min · '+lg.km.toFixed(1).replace('.',',')+' km'+(lg.g?' (Google)':' (≈ vol d’oiseau)')});
           cur+=lg.min; km+=lg.km; const arr=cur;
           const offs=(s.offices||[]).filter(o=>o.name&&o.name.charAt(0)!=='—');
+          if(!offs.length) segs.push({t0:cur,t1:cur+0.01,cls:'',label:'',title:'Site « '+s.name+' » sans bureau rattaché : aucun dépôt — rattachez un bureau depuis sa fiche'});
           const fens=offs.map(o=>({o,f:this.chronoFen(o.name)})).filter(z=>z.f);
           let wait=0; if(fens.length){ const wsMin=Math.min(...fens.map(z=>z.f.ws)); if(arr<wsMin) wait=wsMin-arr; }
           if(wait>0){ segs.push({t0:cur,t1:cur+wait,cls:'ch-att',label:'attente '+wait,title:'Attente avant l’ouverture de la fenêtre : '+wait+' min'}); cur+=wait; attente+=wait; }
@@ -4322,7 +4323,7 @@ class Component extends DCLogic {
           let brk=false;
           for(const o of offs){ const f=this.chronoFen(o.name); const short=String(o.name).split(/\s+/).slice(0,2).join(' ');
             if(f){ const ko=cur>f.we; if(ko) late++; wins.push({t0:f.ws,t1:f.we,label:short+' '+f.txt,cls:ko?'ko':'',title:o.name+' — fenêtre '+f.txt+(ko?' — dépôt '+this.hhmm(cur)+' hors fenêtre':'')}); }
-            if(o.drop==null){ segs.push({t0:cur,t1:cur+6,cls:'',style:'background:'+color+';opacity:.45',label:short+' ?',title:o.name+' : temps de dépôt non renseigné'}); warn='« '+o.name+' » : temps de dépôt à saisir (Paramètres livraison — bureau)'; fix=fixOffice(o.name); fixLbl='Saisir le temps de dépôt →'; brk=true; break; }
+            if(o.drop==null){ segs.push({t0:cur,t1:cur+6,cls:'',style:'background:'+color+';opacity:.45',label:short+' ?',title:o.name+' : temps de dépôt non renseigné'}); warn='« '+o.name+' » : temps de dépôt à saisir (Paramètres livraison — bureau)'; fix=fixOffice(o); fixLbl='Saisir le temps de dépôt →'; brk=true; break; }
             const ko=f?(cur>f.we):false; segs.push({t0:cur,t1:cur+o.drop,cls:ko?'ch-ko':'',style:'background:'+color,label:short,title:o.name+' : dépôt '+this.hhmm(cur)+' → '+this.hhmm(cur+o.drop)+(f?(' · fenêtre '+f.txt+(ko?' — HORS FENÊTRE':'')):' · pas de fenêtre d’engagement')}); cur+=o.drop; nbOff++; }
           if(brk){ fin=null; break; }
           if(s.lat!=null&&s.lng!=null) prev={lat:+s.lat,lng:+s.lng}; fin=cur; }
@@ -6266,12 +6267,16 @@ class Component extends DCLogic {
       // par le CP d'un autre bureau du même bâtiment.
       if(r.stop!=null&&(st.stop==null||+r.stop<st.stop)) st.stop=+r.stop;
       if(st.lat==null&&geo&&geo.idx){ const cp2=String(r.office_cp||'').trim(); const e2=geo.idx[cp2]; if(e2){ st.lat=e2.lat; st.lng=e2.lng; st.ville=e2.city; st.cp=cp2; } }
-      const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
+      // Un BUREAU, seulement s'il y en a un : sans bureau rattaché, le
+      // serveur renvoie le nom du site à la place — la chronologie réclamait
+      // alors un temps de dépôt pour un bureau qui n'existe pas, et rien ne
+      // pouvait l'enregistrer.
+      const b=(r.office&&r.office!=='—')?r.office:null;
       if(b&&!st.offices.some(o=>o.name===b)){
         const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
         // Temps de dépôt : celui paramétré pour CE bureau, ou inconnu — pas
         // 5 minutes décidées par la page et additionnées à chaque arrêt.
-        st.offices.push({name:b,addr:oAdr||'adresse non renseignée',drop:dropDe(b,r)});
+        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||'adresse non renseignée',drop:dropDe(b,r)});
       }
     });
     // Un site dont le CP n'est pas au référentiel n'est PAS placé au centre de
