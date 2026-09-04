@@ -558,6 +558,10 @@
           <sc-if value="{{ suiviOrdersEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:14px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune commande en livraison (ws_orders).</div></sc-if>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
+          <!-- Sans télémétrie (fr-live-table vide), la carte le DIT au lieu
+               d'afficher un en-tête sans nom ni chiffres. -->
+          <sc-if value="{{ selNoDriver }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);text-align:center;padding:6px 0">Aucun chauffeur en tournée — aucune position ni avancement reçus de la tablette.</div></sc-if>
+          <sc-if value="{{ selHasDriver }}" hint-placeholder-val="{{ true }}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px">
             <div><div class="t-section-title" style="font-size:15px">{{ selNom }} · livraisons</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Tournée {{ selTournee }} · {{ selVehicule }} · {{ selAvancement }} points</div></div>
             <div style="text-align:right;flex:none"><span style="{{ selStatutStyle }}">{{ selStatut }}</span><div style="font:600 13px var(--font-ui);color:var(--color-primary);margin-top:4px;display:inline-flex;align-items:center;gap:5px">ETA {{ selEta }} <span style="font-weight:400;font-size:10px;color:{{ selDriftColor }}">{{ selDrift }}</span><span class="bo-tiph"><span style="{{ etaInfoIcon }}">i</span><span class="bo-tip" style="{{ etaTipStyle }}">{{ etaTipTxt }}</span></span></div></div>
@@ -575,16 +579,51 @@
             </sc-for>
           </div>
           </sc-if>
+          </sc-if>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--color-background-secondary)">
             <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font:400 11px var(--font-ui);color:var(--color-text-muted)"><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#2e9e44;vertical-align:middle;margin-right:5px"></i>fluide</span><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#f2a900;vertical-align:middle;margin-right:5px"></i>ralenti</span><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#c62828;vertical-align:middle;margin-right:5px"></i>bouchon</span><span><i style="display:inline-block;width:16px;height:0;border-top:2px dashed #999;vertical-align:middle;margin-right:5px"></i>sans tracé Google (ligne droite)</span><span>{{ trEtat }}</span></div>
-            <button onClick="{{ trGo }}" class="btn-secondary" title="Tracé réel Google et trafic à l'instant (Routes API) — rafraîchi automatiquement toutes les 2 minutes" style="font-size:11.5px;padding:6px 11px;{{ trBtnStyle }}">{{ trBtn }}</button>
+            <div style="display:flex;align-items:center;gap:8px;flex:none"><span style="display:inline-flex;border:.5px solid var(--color-border-secondary);border-radius:9px;overflow:hidden;flex:none"><button onClick="{{ svMap }}" style="{{ svMapStyle }}">🗺 Carte</button><button onClick="{{ svChrono }}" style="{{ svChronoStyle }}">☰ Chronologie</button></span><button onClick="{{ trGo }}" class="btn-secondary" title="Tracé réel Google et trafic à l'instant (Routes API) — rafraîchi automatiquement toutes les 2 minutes" style="font-size:11.5px;padding:6px 11px;{{ trBtnStyle }}">{{ trBtn }}</button></div>
           </div>
         </div>
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+        <div id="map-suivi-wrap" style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div id="map-suivi" style="width:100%;height:480px;background:var(--color-background-secondary)"></div>
         </div>
+        <!-- CHRONOLOGIE DES TOURNÉES DU JOUR (même moteur que Tournées, filtré
+             sur les jours de passage ; fermetures du jour et chauffeurs en
+             tournée signalés). -->
+        <sc-if value="{{ suiviChrono }}" hint-placeholder-val="{{ false }}">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 18px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+            <div><div class="t-section-title" style="font-size:15px;display:inline-flex;align-items:center;gap:6px">Chronologie des tournées du jour <span class="bo-tiph"><span style="{{ etaInfoIcon }}">i</span><span class="bo-tip" style="{{ etaTipStyle }}">{{ etaTipTxt }}</span></span></div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ svTitre }} · {{ svSub }}</div></div>
+            <div style="display:flex;gap:8px;align-items:center"><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ svEtat }}</span><button onClick="{{ svRecalc }}" class="btn-secondary" style="font-size:12px;{{ svBtnStyle }}">Recalculer (Google)</button></div>
+          </div>
+          <div style="position:relative;height:22px;margin-left:230px;border-bottom:.5px solid var(--color-border-secondary)"><sc-for list="{{ svTicks }}" as="k" hint-placeholder-count="6"><span class="ch-tick" style="left:{{ k.left }}%">{{ k.label }}</span></sc-for></div>
+          <sc-for list="{{ svLanes }}" as="l" hint-placeholder-count="2">
+            <div class="ch-lane">
+              <div class="ch-nm"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:{{ l.color }}"></span>{{ l.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.sub }}">{{ l.sub }}</div><sc-if value="{{ l.hasLive }}" hint-placeholder-val="{{ false }}"><div style="font:600 10.5px var(--font-ui);color:#2d7a3e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.live }}">🚚 {{ l.live }}</div></sc-if><sc-if value="{{ l.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px var(--font-ui);color:var(--color-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.warn }}">{{ l.warn }}</div></sc-if></div>
+              <div class="ch-bar">
+                <sc-for list="{{ svTicks }}" as="k" hint-placeholder-count="6"><span class="ch-grid" style="left:{{ k.left }}%"></span></sc-for>
+                <sc-for list="{{ l.wins }}" as="w" hint-placeholder-count="2"><span class="ch-win {{ w.cls }}" style="left:{{ w.left }}%;width:{{ w.width }}%" title="{{ w.title }}">{{ w.label }}</span></sc-for>
+                <sc-for list="{{ l.segs }}" as="g" hint-placeholder-count="6"><span class="ch-seg {{ g.cls }}" style="left:{{ g.left }}%;width:{{ g.width }}%;{{ g.style }}" title="{{ g.title }}">{{ g.label }}</span></sc-for>
+                <sc-if value="{{ l.empty }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:16px;left:10px;font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ l.emptyTxt }}</span></sc-if>
+                <sc-if value="{{ svHasNow }}" hint-placeholder-val="{{ false }}"><span class="ch-now" style="left:{{ svNowLeft }}%"></span></sc-if>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ svEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 0;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée active avec des sites : la chronologie se construit depuis l'assistant tournée.</div></sc-if>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:12px;font:400 11px var(--font-ui);color:var(--color-text-muted)">
+            <span><i style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px;background:#c9c2b8"></i>trajet (Google, ≈ vol d'oiseau)</span>
+            <span><i class="ch-acc" style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px"></i>accès au site</span>
+            <span><i style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px;background:var(--color-primary)"></i>dépôt (couleur de la tournée)</span>
+            <span><i class="ch-att" style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px"></i>attente avant la fenêtre</span>
+            <span><i style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px;border:1.5px dashed rgba(34,34,34,.35);box-sizing:border-box"></i>fenêtre d'engagement du bureau (onboarding)</span>
+            <span><i style="display:inline-block;width:18px;height:12px;border-radius:3px;vertical-align:middle;margin-right:5px;outline:2px solid var(--color-primary);outline-offset:-2px"></i>dépôt hors fenêtre</span>
+            <span><i style="display:inline-block;width:2px;height:12px;vertical-align:middle;margin-right:5px;background:#2a5a9e"></i>maintenant</span>
+          </div>
+        </div>
+        </sc-if>
       </div>
       </sc-if>
 
@@ -3835,7 +3874,7 @@ class Component extends DCLogic {
     // Assistant tournée (tw), listes d'adresses Google par champ (geo), onboarding : recherche clients, VIES, bon choisi.
     tw: null, geo: {}, obSearchQ:'', obViesLocked:false, obViesMsg:'', obViesOk:null, obVSel:'',
     // Tournées : vue carte ou chronologie ; tronçons Google par tournée (clé = ordre des arrêts).
-    tourView:'map', chrono:{legs:{},busy:0,err:''},
+    tourView:'map', suiviView:'map', chrono:{legs:{},busy:0,err:''},
     // Tracés Google + trafic par tournée (clé = ordre des arrêts), rafraîchis toutes les 2 min sur Tournées / Suivi.
     trace:{byTour:{},busy:0,err:'',at:null},
     dsQuery: '', dsOpen: false, dsIdx: 0,
@@ -4065,8 +4104,8 @@ class Component extends DCLogic {
     return (this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false).map((t,i)=>{ const k=norm(t.name);
       const stops=sites.filter(s=>norm(s.zone)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       return {t,i,key:String(t.id),stops,sig:stops.map(s=>s.id).join(',')+'|'+(t.ret!==false?'r':'n')}; }); }
-  chronoRoutes(force){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
-    const jobs=this.chronoTours().filter(x=>x.stops.length&&x.stops.every(s=>s.lat!=null&&s.lng!=null)).filter(x=>{ const c=(this.state.chrono.legs||{})[x.key]; return force||!c||c.sig!==x.sig; });
+  chronoRoutes(force,list){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
+    const jobs=(list||this.chronoTours()).filter(x=>x.stops.length&&x.stops.every(s=>s.lat!=null&&s.lng!=null)).filter(x=>{ const c=(this.state.chrono.legs||{})[x.key]; return force||!c||c.sig!==x.sig; });
     if(!jobs.length) return;
     this.setState(s=>({chrono:{...s.chrono,busy:jobs.length,err:''}}));
     jobs.forEach(x=>{ fetch(fr.base+'/franchisee/tour-route'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
@@ -4084,13 +4123,20 @@ class Component extends DCLogic {
       tourMapOn:!on,chronoRecalc:()=>this.chronoRoutes(true),chronoBtnStyle:C.busy?'opacity:.6;pointer-events:none':'',
       chronoEtat:C.busy?('Google : '+C.busy+' tournée(s) en cours…'):(C.err||''),chronoTicks:[],chronoLanes:[],chronoEmpty:false,chronoHasNow:false,chronoNowLeft:0,chronoSub:''};
     if(!on) return base;
+    return {...base,...this.chronoBuild(this.chronoTours(),C,null)}; }
+  /* Construction des lignes de temps — partagée par Tournées (toutes les
+     tournées actives) et Suivi (celles qui passent aujourd'hui). `extra(x)`
+     rend, par tournée, {closed, live} : une fermeture du jour vide la ligne
+     et le dit ; un chauffeur en tournée (tablette) s'ajoute au sous-titre. */
+  chronoBuild(tours,C,extra){
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F']; const d=this.depot(); const depOk=!!(d&&d.lat!=null);
-    const tours=this.chronoTours(); const lanes=[]; let tMin=Infinity,tMax=-Infinity;
-    tours.forEach(x=>{ const t=x.t; const color=colors[x.i%colors.length]; const start=(t.start!=null&&t.start!=='')?+t.start:null;
+    const lanes=[]; let tMin=Infinity,tMax=-Infinity;
+    tours.forEach(x=>{ const t=x.t; const color=colors[x.i%colors.length]; const start=(t.start!=null&&t.start!=='')?+t.start:null; const ex=extra?extra(x):null;
       const cache=(C.legs||{})[x.key]; const legs=(cache&&cache.sig===x.sig)?cache.legs:null; const google=!!legs;
       const segs=[],wins=[]; let warn='',cur=start,prev=depOk?{lat:d.lat,lng:d.lng}:null,km=0,nbOff=0,late=0,attente=0,fin=null;
       const stopLegs=[];
-      if(start==null) warn='heure de départ à paramétrer — aucune heure annoncée';
+      if(ex&&ex.closed) warn=ex.closed;
+      else if(start==null) warn='heure de départ à paramétrer — aucune heure annoncée';
       else if(!x.stops.length) warn='aucun site sur cette tournée';
       else if(!depOk) warn='boutique non positionnée';
       else { for(let i=0;i<x.stops.length;i++){ const s=x.stops[i];
@@ -4115,15 +4161,41 @@ class Component extends DCLogic {
           segs.push({t0:cur,t1:cur+lg.min,cls:'ch-trj',label:(lg.g?'':'≈ ')+'retour '+lg.min,title:'Retour au dépôt : '+lg.min+' min'+(lg.g?' (Google)':' (≈)')}); cur+=lg.min; km+=lg.km; fin=cur; } }
       segs.forEach(g=>{ tMin=Math.min(tMin,g.t0); tMax=Math.max(tMax,g.t1); }); wins.forEach(w=>{ tMin=Math.min(tMin,w.t0); tMax=Math.max(tMax,w.t1); }); if(start!=null){ tMin=Math.min(tMin,start); tMax=Math.max(tMax,start+30); }
       lanes.push({name:t.name,color,start,fin,km,nbOff,late,attente,google,segs,wins,warn,hasWarn:!!warn,empty:!segs.length,emptyTxt:warn||'—',
-        sub:(start!=null?this.hhmm(start):'—')+(fin!=null?(' → '+this.hhmm(fin)):'')+(km?(' · '+(google?'':'≈ ')+km.toFixed(1).replace('.',',')+' km'):'')+' · '+nbOff+' dépôt(s)'+(late?(' · '+late+' hors fenêtre'):'')+(attente?(' · attente '+attente+' min'):'')}); });
-    if(!lanes.length||!isFinite(tMin)) return {...base,chronoEmpty:!lanes.length,chronoLanes:lanes.map(l=>({...l,segs:[],wins:[]})),chronoSub:'Aucune heure calculable.'};
+        sub:(start!=null?this.hhmm(start):'—')+(fin!=null?(' → '+this.hhmm(fin)):'')+(km?(' · '+(google?'':'≈ ')+km.toFixed(1).replace('.',',')+' km'):'')+' · '+nbOff+' dépôt(s)'+(late?(' · '+late+' hors fenêtre'):'')+(attente?(' · attente '+attente+' min'):''),live:(ex&&ex.live)||'',hasLive:!!(ex&&ex.live)}); });
+    if(!lanes.length||!isFinite(tMin)) return {chronoEmpty:!lanes.length,chronoLanes:lanes.map(l=>({...l,segs:[],wins:[]})),chronoSub:'Aucune heure calculable.'};
     let lo=Math.floor((tMin-30)/30)*30, hi=Math.ceil((tMax+30)/30)*30; if(hi-lo<120) hi=lo+120; const span=hi-lo;
     const pct=v=>Math.round(((v-lo)/span)*10000)/100; const ticks=[]; for(let m=lo;m<=hi;m+=(span>420?60:30)) ticks.push({left:pct(m),label:this.hhmm(m)});
     const now=new Date(); const nowMin=now.getHours()*60+now.getMinutes(); const hasNow=nowMin>=lo&&nowMin<=hi;
     const lanesV=lanes.map(l=>({...l,segs:l.segs.map(g=>({...g,left:pct(g.t0),width:Math.max(0.6,pct(g.t1)-pct(g.t0)),style:g.style||''})),wins:l.wins.map(w=>({...w,left:pct(w.t0),width:Math.max(1,pct(w.t1)-pct(w.t0))}))}));
     const tot=lanes.reduce((a,l)=>({off:a.off+l.nbOff,late:a.late+l.late,km:a.km+l.km,att:a.att+l.attente}),{off:0,late:0,km:0,att:0});
-    return {...base,chronoTicks:ticks,chronoLanes:lanesV,chronoEmpty:false,chronoHasNow:hasNow,chronoNowLeft:pct(nowMin),
+    return {chronoTicks:ticks,chronoLanes:lanesV,chronoEmpty:false,chronoHasNow:hasNow,chronoNowLeft:pct(nowMin),
       chronoSub:lanes.length+' tournée(s) · '+tot.off+' dépôt(s) · '+tot.km.toFixed(1).replace('.',',')+' km · '+(tot.late?(tot.late+' dépôt(s) hors fenêtre'):'toutes les fenêtres tenues')+(tot.att?(' · '+tot.att+' min d’attente'):'')+' · trajets '+(Object.keys(C.legs||{}).length?'Google':'à vol d’oiseau (≈) — « Recalculer (Google) »')}; }
+  /* ── CHRONOLOGIE SUR SUIVI : les tournées qui passent AUJOURD'HUI ─────
+     Jour de passage = `days` servi par ws-tours (ws_tour_availability) ; une
+     tournée sans jour ne passe pas. Les fermetures du jour (ws_tour_closures)
+     vident la ligne et le disent ; un chauffeur en tournée s'ajoute. */
+  suiviToday(){ const key=['D','L','Ma','Me','J','V','S'][new Date().getDay()]; return this.chronoTours().filter(x=>!!(x.t.days&&x.t.days[key]===true)); }
+  suiviMapShow(show){ const w=document.getElementById('map-suivi-wrap'); if(w) w.style.display=show?'':'none'; }
+  suiviToggle(v){ this.setState({suiviView:v},()=>{ this.suiviMapShow(v!=='chrono'); if(v==='chrono') this.chronoRoutes(false,this.suiviToday());
+      else setTimeout(()=>{ try{ if(this._suiviMap) this._suiviMap.invalidateSize(); }catch(e){} },60); }); }
+  suiviChronoVals(){ const S=this.state; const on=S.suiviView==='chrono'; const C=S.chrono||{legs:{},busy:0,err:''};
+    const seg=(a)=>'border:none;padding:8px 13px;font:600 12px var(--font-ui);cursor:pointer;'+(a?'background:var(--color-primary);color:#fff':'background:var(--color-surface);color:var(--color-text-muted)');
+    const base={suiviChrono:on,svMap:()=>this.suiviToggle('map'),svChrono:()=>this.suiviToggle('chrono'),svMapStyle:seg(!on),svChronoStyle:seg(on),suiviMapOn:!on,
+      svRecalc:()=>this.chronoRoutes(true,this.suiviToday()),svBtnStyle:C.busy?'opacity:.6;pointer-events:none':'',svEtat:C.busy?('Google : '+C.busy+' tournée(s) en cours…'):(C.err||''),
+      svTicks:[],svLanes:[],svEmpty:false,svHasNow:false,svNowLeft:0,svSub:'',svTitre:'',svEmptyTxt:''};
+    if(!on) return base;
+    const now=new Date(); const JL=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi']; const today=this.suiviToday();
+    const dstr=String(now.getDate()).padStart(2,'0')+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+now.getFullYear();
+    const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); const T=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
+    const clos=T('ws_tour_closures'), live=T('fr_live_drivers');
+    const extra=(x)=>{ const c=clos.find(r=>r&&r.date===dstr&&(r.tour==='Toutes les tournées'||norm(r.tour)===norm(x.t.name)));
+      const dv=live.find(r=>r&&(String(r.tourId)===String(x.t.id).replace(/^r/,'')||norm(r.tour)===norm(x.t.name)));
+      return {closed:c?('Fermée aujourd’hui'+(c.motif&&c.motif!=='—'?(' — '+c.motif):'')+(c.type&&c.type!=='Fermeture'?(' ('+c.type+')'):'')):'',
+              live:dv?('en tournée : '+(dv.nom||'chauffeur')+(dv.avancement?(' · '+dv.avancement):'')):''}; };
+    const b=this.chronoBuild(today,C,extra); const all=this.chronoTours().length;
+    return {...base,svTicks:b.chronoTicks,svLanes:b.chronoLanes,svEmpty:b.chronoEmpty,svHasNow:b.chronoHasNow,svNowLeft:b.chronoNowLeft,svSub:b.chronoSub,
+      svTitre:JL[now.getDay()]+' '+dstr+' · '+today.length+' tournée(s) prévue(s) sur '+all+' active(s)',
+      svEmptyTxt:all?('Aucune tournée ne passe le '+JL[now.getDay()]+' — jours de passage à régler dans l’assistant tournée.'):'Aucune tournée active.'}; }
   /* ── TRACÉ GOOGLE + TRAFIC (Routes API, TRAFFIC_ON_POLYLINE) ──────────────
      Par tournée dont tous les arrêts sont positionnés : tracé réel, portions
      colorées fluide / ralenti / bouchon, durée avec et sans trafic. Rafraîchi
@@ -6357,6 +6429,9 @@ class Component extends DCLogic {
     if(s==='offices'){ setTimeout(()=>{ this.bcRefreshOffices(); this.bpRefresh(); },0); }
     // Tournées / Suivi : tracé Google + trafic à l'arrivée (puis toutes les 2 min par le minuteur).
     if(s==='tournees'||s==='suivi') setTimeout(()=>this.traceRefresh(false),400);
+    // Le conteneur de la carte est recréé au rendu : la vue « Chronologie » le re-masque.
+    if(s==='tournees') setTimeout(()=>this.chronoMapShow(this.state.tourView!=='chrono'),0);
+    if(s==='suivi') setTimeout(()=>this.suiviMapShow(this.state.suiviView!=='chrono'),0);
     // Rentabilité : charge (une fois) les points réels (geo-clients).
     if(s==='rentabilite') setTimeout(()=>this.rentaEnsure(),0);
     // Écrans à données de commandes : refetch à l'ENTRÉE (une nouvelle
@@ -11052,6 +11127,7 @@ class Component extends DCLogic {
       openRouteForm:()=>this.setState({rfOpen:true,rfEditId:null,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,pricePerKm:'',driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),
       ...twVals,
       ...this.chronoVals(),
+      ...this.suiviChronoVals(),
       ...this.dcVals(),
       ...this.traceVals(),
       rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false,rfEditId:null}),
@@ -11095,7 +11171,7 @@ class Component extends DCLogic {
       zoneParentOpts,zfCanSubmit,zfSubmitExtra:zfCanSubmit?'':'opacity:.45;pointer-events:none',zfSubmit,
       publier:this.go('suivi'),publierLabel:'Publier vers la tablette',
       liveDrivers,liveEta,liveTable,suiviTours,suiviToursEmpty,suiviEmptyMsg,
-      selNom:selDrv.nom,selTournee:selDrv.tournee,selVehicule:selDrv.vehicule,selAvancement:selDrv.avancement,selEta:selDrv.eta,selDrift:selDrv.drift,selDriftColor:selDrv.driftColor,selStatut:selDrv.statut,selStatutStyle:selDrv.statutStyle,selColor:selDrv.color,selStops:selDrv.stops,selHasStops:(selDrv.stops||[]).length>0,
+      selHasDriver:liveTable.length>0,selNoDriver:liveTable.length===0,selNom:selDrv.nom,selTournee:selDrv.tournee,selVehicule:selDrv.vehicule,selAvancement:selDrv.avancement,selEta:selDrv.eta,selDrift:selDrv.drift,selDriftColor:selDrv.driftColor,selStatut:selDrv.statut,selStatutStyle:selDrv.statutStyle,selColor:selDrv.color,selStops:selDrv.stops,selHasStops:(selDrv.stops||[]).length>0,
       clients,sel,
       incidents,selInc,
       kpis,classement,nbPerte,rentaTree,perteOpen,pertePoints,perteBadgeStyle,togglePerte,
