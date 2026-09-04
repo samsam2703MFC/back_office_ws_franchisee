@@ -1018,6 +1018,19 @@ jobs:
                 else echo "  OK       toutes les migrations du serveur sont enregistrées"; fi
               fi
             fi
+            echo
+            echo "== Sites ↔ tournées ↔ bureaux (lecture seule, 12 derniers de chaque) =="
+            echo "  tournées : id · nom · active · shop_id"
+            dbq "SELECT CONCAT('    ', id, ' · ', name, ' · active=', IFNULL(active,'NULL'), ' · shop=', IFNULL(shop_id,'NULL')) FROM ws_tours ORDER BY id DESC LIMIT 12"
+            echo "  sites : id · nom · adresse · tournee_id · office_client_id · active · shop_id"
+            dbq "SELECT CONCAT('    ', id, ' · ', IFNULL(name,''), ' · ', IFNULL(address,''), ' · tour=', IFNULL(tournee_id,'NULL'), ' · office=', IFNULL(office_client_id,'NULL'), ' · active=', active, ' · shop=', IFNULL(shop_id,'NULL')) FROM ws_office_delivery_sites ORDER BY id DESC LIMIT 12"
+            if [ -n "$(dbq "SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='ws_office_delivery_sites' AND column_name='tournee_stop_id'")" ]; then
+              echo "  ordre d'arrêt (tournee_stop_id) des sites rattachés : id · stop"
+              dbq "SELECT CONCAT('    ', id, ' · stop=', IFNULL(tournee_stop_id,'NULL')) FROM ws_office_delivery_sites WHERE tournee_id IS NOT NULL AND active=1 ORDER BY tournee_id, tournee_stop_id LIMIT 20"
+            fi
+            echo "  bureaux : id · nom · status · active · tour_id · shop_id"
+            dbq "SELECT CONCAT('    ', id, ' · ', name, ' · ', IFNULL(status,''), ' · active=', active, ' · tour=', IFNULL(tour_id,'NULL'), ' · shop=', IFNULL(shop_id,'NULL')) FROM ws_offices ORDER BY id DESC LIMIT 12"
+            echo
             unset MYSQL_PWD DBW
           fi
           echo
