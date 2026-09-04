@@ -28,11 +28,15 @@ l'API ne sert pas reste vide et l'écran le dit.
 
 ## Deux QR, deux rôles
 
-- **Le QR de la tournée est imprimé sur le bon de livraison.** Le chauffeur le
-  scanne : c'est à la fois son entrée dans l'application et le choix de sa
-  tournée, en un geste, sans rien taper. Le QR porte la tournée, la date et la
-  boutique — un bon de la veille ou d'une autre boutique est refusé, il n'ouvre
-  rien.
+- **Le QR de la tournée est imprimé sur le bon de livraison, par l'ERP.** Le
+  chauffeur le scanne : c'est à la fois son entrée dans l'application et le
+  choix de sa tournée, en un geste, sans rien taper.
+  L'ERP n'étant pas ce dépôt, **l'application ne décode rien elle-même** : elle
+  envoie le texte scanné tel quel, et c'est le serveur qui le résout en
+  tournée + date + boutique, ou le refuse (bon de la veille, autre boutique,
+  tournée déjà prise). Le contrat le moins coûteux pour l'ERP est que le QR
+  porte le **numéro de bon qu'il imprime déjà en clair** — rien de nouveau à
+  fabriquer, et le chauffeur peut le taper si le QR est abîmé.
 - **Le QR du colis est sur l'étiquette de colis.** C'est lui qui sert au
   chargement (écran 2) et à la remise (écran 5).
 
@@ -69,6 +73,24 @@ La demande était « case à cocher **ou** QR — le QR est mieux », et surtout
 - Le bouton de sortie reste **inactif tant qu'il reste des colis** : on ne
   quitte pas l'écran par distraction, on le quitte parce que le compte y est.
 
+## Ce qui existe déjà côté serveur
+
+- **`POST /franchisee/driver-position {tourId, lat, lng, driver?}`** — la
+  position du chauffeur. C'est la **seule voie d'écriture déjà en place** pour
+  la PWA : elle alimente `ws_tour_tracking`, que `/franchisee/fr-live-drivers`
+  relit et que la carte **Livraison du jour** de la console dessine. L'écran 4
+  l'envoie pendant le trajet (≈ 30 s, mis en file et rejoué au retour du
+  réseau) et le dit au chauffeur — une position partagée en silence n'est pas
+  loyale.
+  Reste à savoir **quelle authentification** cet endpoint accepte : le bloc
+  `/franchisee/*` exige aujourd'hui le jeton admin (réseau) ou un jeton PIN, et
+  aucun des deux ne peut vivre sur le téléphone d'un chauffeur. S'il accepte un
+  jeton de session chauffeur, l'écran 4 est câblable tout de suite.
+- **`POST /franchisee/tour-dispatch {tour, driver}`** — l'envoi d'une tournée
+  au chauffeur, déjà déclenché par la console (bouton « 📲 Tablette »), et son
+  état relu par `tour-dispatch-status`. C'est là que se lit « qui roule », et
+  ce que la prise de tournée de l'écran 1 doit venir compléter.
+
 ## Ce qu'il faut décider avant de coder
 
 1. **Session chauffeur.** Le jeton admin de cette installation est *réseau*
@@ -77,10 +99,12 @@ La demande était « case à cocher **ou** QR — le QR est mieux », et surtout
    chauffeur côté API (code + PIN → jeton limité à *sa* tournée du jour, portée
    boutique décidée par le serveur). **C'est le préalable bloquant.**
 2. **Les deux QR à imprimer.** Aucun n'existe aujourd'hui :
-   - le **QR de tournée** sur le **bon de livraison** (tournée + date +
-     boutique). Ce bon n'est produit par aucun écran de cette console — à dire
-     où il est imprimé (ERP ? un écran à écrire ici ?), c'est là que le QR
-     s'ajoute ;
+   - le **QR de tournée** sur le **bon de livraison**, imprimé par l'**ERP** :
+     c'est donc côté ERP que le QR s'ajoute (idéalement le n° de bon déjà
+     imprimé), et côté API que ce code se résout en tournée du jour. Reste à
+     confirmer si l'ERP sort **un bon par tournée** ou **un bon par client** —
+     dans le second cas, chaque bon porte la même tournée, et le bon du client
+     peut aussi servir de preuve de remise à l'arrêt ;
    - le **QR de colis** sur l'étiquette de colis (commande + n° de colis) —
      l'écran *Préparation* imprime des étiquettes, il faut y mettre ce code,
      sinon l'écran 2 n'a rien à lire.
@@ -95,7 +119,8 @@ La demande était « case à cocher **ou** QR — le QR est mieux », et surtout
    `driver/tour/<id>/take`, `driver/scan` (chargement / remise),
    `driver/stop/<id>/arrive`, `driver/sms`, `driver/tour/<id>/close` (km, note,
    étoiles de la tournée), `driver/day/close` (étoiles de la journée),
-   `driver/incident`. Le suivi existant `ws_tour_tracking` (déjà lu par
+   `driver/incident`. La **position** ne figure pas dans cette liste : elle
+   existe déjà (`driver-position`, voir plus haut). Le suivi existant `ws_tour_tracking` (déjà lu par
    `fr-live-drivers`) reste la table de vérité de la tournée en cours.
 5. **Déploiement.** Nouveau dossier `driver/` dans ce dépôt, déployé vers
    `/var/www/html/webshop/driver` par `deploy.yml` (second `rsync`), avec
