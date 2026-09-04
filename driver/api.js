@@ -15,6 +15,34 @@
    ===================================================================== */
 (function () {
   var LS_SES = 'drv_session';
+  var LS_ADM = 'drv_admin_token';   // MODE TEST : jeton admin ERP (portée réseau)
+  var LS_SHOP = 'drv_shop';         // portée boutique OBLIGATOIRE dans ce mode
+
+  /* ── MODE TEST (« bypass ») ────────────────────────────────────────────
+     Tant qu'aucun profil chauffeur n'existe, l'app s'ouvre avec le jeton
+     admin passé dans l'URL :  /webshop/driver/?shop=<id>&token=<jeton>.
+
+     Ce jeton est RÉSEAU : il ouvre toutes les boutiques, les marges et les
+     réglages. Il n'a rien à faire durablement sur le téléphone d'un
+     chauffeur — l'application le dit à l'écran tant qu'il est là, et sait
+     l'oublier d'un bouton. Il est retiré de l'adresse dès qu'il est lu
+     (historique, logs serveur, lien recopié).
+
+     La PORTÉE BOUTIQUE est exigée dans ce mode : sans ?shop=, le bloc
+     /franchisee/* rend le RÉSEAU — un chauffeur verrait les tournées des
+     autres boutiques. L'application refuse de démarrer plutôt que de
+     montrer ça. */
+  (function readUrl() {
+    try {
+      var q = new URLSearchParams(location.search), dirty = false;
+      if (q.get('token')) { localStorage.setItem(LS_ADM, q.get('token')); q.delete('token'); dirty = true; }
+      var sh = q.get('shop');
+      if (sh && /^[0-9]+$/.test(sh)) localStorage.setItem(LS_SHOP, sh);
+      if (dirty) history.replaceState({}, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash);
+    } catch (e) {}
+  })();
+  function adminToken() { try { return localStorage.getItem(LS_ADM) || ''; } catch (e) { return ''; } }
+  function adminShop() { try { return localStorage.getItem(LS_SHOP) || ''; } catch (e) { return ''; } }
 
   function apiBase() {
     try {
@@ -37,9 +65,18 @@
 
   function headers(extra) {
     var h = extra ? Object.assign({}, extra) : {};
+    var adm = adminToken();
+    if (adm) { h['X-Admin-Token'] = adm; return h; }   // mode test : le jeton admin prime
     var s = readSession();
     if (s && s.token) h['X-Pin-Token'] = s.token;
     return h;
+  }
+  /* La portée boutique n'est ajoutée QUE dans le mode test : une session PIN
+     est déjà bornée par le serveur, qui ignore le ?shop= de l'URL. */
+  function scoped(path) {
+    if (!adminToken() || path.indexOf('/franchisee/') !== 0) return path;
+    var sh = adminShop(); if (!sh) return path;
+    return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'shop=' + encodeURIComponent(sh);
   }
 
   /* Erreur PARLANTE : le code HTTP seul ne dit rien au chauffeur. 401 =
@@ -57,14 +94,14 @@
   }
 
   function req(method, path, body) {
-    var url = apiBase() + path;
+    var url = apiBase() + scoped(path);
     var opt = { method: method, credentials: 'omit', headers: headers(body ? { 'Content-Type': 'application/json' } : null) };
     if (body) opt.body = JSON.stringify(body);
     return fetch(url, opt).then(function (r) {
       return r.text().then(function (t) {
         var j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
         if (!r.ok) {
-          if (r.status === 401) { writeSession(null); }
+          if (r.status === 401 && !adminToken()) { writeSession(null); }
           throw fail(r.status, path, j);
         }
         return j;
@@ -95,6 +132,17 @@
   window.DRV = {
     base: apiBase,
     session: readSession,
+    /* Mode test : présence du jeton admin, portée exigée, et sa sortie. */
+    isAdmin: function () { return !!adminToken(); },
+    adminShop: adminShop,
+    clearAdmin: function () { try { localStorage.removeItem(LS_ADM); } catch (e) {} },
+    /* Nom du chauffeur : donné par la session PIN, saisi à la main en mode
+       test — il part sur la prise de tournée et la position, donc il ne peut
+       pas être deviné. */
+    driverName: function (v) {
+      try { if (v != null) localStorage.setItem('drv_name', v); return localStorage.getItem('drv_name') || ''; }
+      catch (e) { return ''; }
+    },
     setSession: writeSession,
     get: function (path) { return req('GET', path, null); },
     post: function (path, body) { return req('POST', path, body); },

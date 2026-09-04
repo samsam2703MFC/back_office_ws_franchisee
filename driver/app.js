@@ -34,6 +34,11 @@
   // téléphone à l'autre et jure avec la charte.
   var CAM = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-2px"><path d="M3 8h3.5L8 5.5h8L17.5 8H21v12H3z"/><circle cx="12" cy="13.5" r="3.6"/></svg>';
 
+  /* Le nom qui part au dépôt : celui de la session PIN, ou celui saisi en
+     mode test. Jamais deviné — sans nom, la tournée s'afficherait au dépôt
+     sans savoir qui roule. */
+  function driverName() { return (DRV.session() || {}).nom || DRV.driverName() || ''; }
+
   function today() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function hhmm(d) { d = d || new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
@@ -69,11 +74,15 @@
       DRV.get('/franchisee/tour-dispatch-status').then(function (j) { S.dispatch = Array.isArray(j) ? j : []; }, err)
     ];
     var fails = [];
-    function err(e) { if (e.status === 401) { S.screen = 'login'; } else fails.push(e.message); }
+    function err(e) {
+      if (e.status === 401 && DRV.isAdmin()) fails.push('Jeton admin refusé (401) — vérifie le ?token= de l\'adresse.');
+      else if (e.status === 401) { S.screen = 'login'; }
+      else fails.push(e.message);
+    }
     return Promise.all(jobs).then(function () {
       S.busy = false;
       S.err = fails.length ? fails.join(' · ') : null;
-      if (S.screen === 'boot' || S.screen === 'login') S.screen = DRV.session() ? 'pick' : 'login';
+      if (S.screen === 'boot' || S.screen === 'login') S.screen = (DRV.session() || DRV.isAdmin()) ? 'pick' : 'login';
       render();
     });
   }
@@ -127,7 +136,7 @@
   /* ── écrans ───────────────────────────────────────────────────────── */
   function render() {
     var f = ({ boot: vBoot, login: vLogin, pick: vPick, load: vLoad, route: vRoute,
-               drive: vDrive, stop: vStop, close: vClose, day: vDay, sync: vSync })[S.screen] || vBoot;
+               drive: vDrive, stop: vStop, close: vClose, day: vDay, sync: vSync, noscope: vNoScope })[S.screen] || vBoot;
     app.innerHTML = f();
     var b = app.querySelector('[data-focus]'); if (b) b.focus();
     if (S.screen === 'load' || S.screen === 'stop') mountScanner();
@@ -145,6 +154,26 @@
       + '</div>';
   }
   function errBox() { return S.err ? '<div class="err">' + esc(S.err) + '</div>' : ''; }
+
+  /* MODE TEST : dit à l'écran, tout le temps. Un jeton réseau posé sur un
+     téléphone doit se voir — sinon il s'y installe et personne ne le sait. */
+  function adminStrip() {
+    if (!DRV.isAdmin()) return '';
+    return '<div class="card warn" style="padding:9px 11px"><div class="p" style="color:var(--color-text);font-size:10.5px">'
+      + '<b>Mode test — jeton admin réseau</b> sur ce téléphone, boutique ' + esc(DRV.adminShop() || '?')
+      + '. À remplacer par un PIN chauffeur avant de le confier. <b data-act="goSync">Quitter →</b></div></div>';
+  }
+
+  function vNoScope() {
+    return bar({ logo: 1, sub: 'Livraison — mode test' })
+      + '<div class="body"><div class="h1">Portée boutique manquante</div>'
+      + '<div class="card warn"><div class="p" style="color:var(--color-text)">Le jeton admin est <b>réseau</b> : sans <code>?shop=</code>, l\'API rend les tournées de <b>toutes</b> les boutiques. '
+      + 'L\'application ne les affiche pas — ouvre-la avec l\'adresse complète :</div>'
+      + '<div class="p" style="color:var(--color-text);margin-top:6px"><code>/webshop/driver/?shop=&lt;id&gt;&amp;token=&lt;jeton admin&gt;</code></div></div>'
+      + '<input class="field" inputmode="numeric" placeholder="id de la boutique" data-act="shopnum">'
+      + '</div><div class="foot"><button class="btn" data-act="setscope">Utiliser cette boutique</button>'
+      + '<button class="btn gh sm" data-act="quitadmin">Oublier le jeton admin</button></div>';
+  }
 
   function vBoot() {
     return bar({ logo: 1, sub: 'Livraison' })
@@ -171,6 +200,7 @@
           ? '<select class="field" data-act="shop">' + '<option value="">— choisir —</option>' + opts + '</select>'
           : '<input class="field" inputmode="numeric" placeholder="id de la boutique" value="' + esc(S.shopId) + '" data-act="shopnum">')
       + '<div class="dots">' + dots + '</div>'
+      + '<div class="p" style="font-size:10.5px">Pas encore de compte chauffeur ? Ouvre l\'app avec <code>?shop=&lt;id&gt;&amp;token=&lt;jeton admin&gt;</code> — mode test, annoncé à l\'écran.</div>'
       + '<div class="pad">' + keys + '</div>'
       + '</div>'
       + '<div class="foot"><button class="btn" data-act="dologin"' + (S.shopId && S.pin.length === 4 && !S.busy ? '' : ' disabled') + '>'
@@ -204,8 +234,12 @@
 
     return bar({ logo: 1, sub: (S.me ? S.me.name + ' · ' : '') + frDate(), rt: (DRV.session() || {}).nom || '', rtSub: 'PIN' })
       + '<div class="body">'
+      + adminStrip()
       + '<div class="h1">Scanne ton bon de livraison</div>'
       + errBox()
+      + (DRV.isAdmin()
+          ? '<div class="lbl">Chauffeur</div><input class="field" placeholder="ton nom (part au dépôt)" value="' + esc(DRV.driverName()) + '" data-act="drvname">'
+          : '')
       + '<div class="scan"><div class="vf" id="vf">' + corners()
         + '<div class="hint">' + esc(S.scanMsg || 'Le QR du bon de livraison (ERP) — 1 bon = 1 tournée') + '</div></div>'
         + '<div class="lg">' + (S.scanOn ? 'Scan en cours…' : 'Appuie sur « Scanner »') + '</div></div>'
@@ -223,7 +257,8 @@
         : '')
       + '</div>'
       + '<div class="foot">'
-      + '<button class="btn" data-act="take"' + (sel ? '' : ' disabled') + '>' + (sel ? 'Prendre ' + esc(sel.name) + ' →' : 'Choisis une tournée') + '</button>'
+      + '<button class="btn" data-act="take"' + (sel && driverName() ? '' : ' disabled') + '>'
+      + (!sel ? 'Choisis une tournée' : !driverName() ? 'Écris ton nom d\'abord' : 'Prendre ' + esc(sel.name) + ' →') + '</button>'
       + '<button class="btn gh sm" data-act="goSync">Ce que le dépôt reçoit</button>'
       + '</div>';
   }
@@ -458,9 +493,13 @@
       + '<div class="card warn"><div class="h3">Reste sur ce téléphone</div>'
       + '<div class="p" style="color:var(--color-text);margin-top:6px">Les <b>scans de colis</b> (chargement et remise), la <b>note</b>, les <b>étoiles</b> et les <b>incidents</b> sont enregistrés ici, et <b>pas encore</b> au dépôt : l\'API n\'a pas d\'endpoint pour eux.</div>'
       + '<div class="p" style="color:var(--color-text);margin-top:6px">À écrire côté API : <code>POST /franchisee/driver-scan</code> (colis chargé / remis), <code>POST /franchisee/driver-stop</code> (arrivée, incident), <code>POST /franchisee/driver-close</code> (km, note, étoiles), <code>POST /franchisee/driver-sms</code> (envoi tracé).</div></div>'
-      + '<div class="card soft"><div class="p" style="color:var(--color-text)">Session : ' + esc((DRV.session() || {}).nom || '—') + ' · boutique ' + esc((S.me && S.me.name) || (DRV.session() || {}).shopId || '—') + '</div></div>'
+      + '<div class="card soft"><div class="p" style="color:var(--color-text)">Session : '
+      + esc(driverName() || '—') + ' · boutique ' + esc((S.me && S.me.name) || DRV.adminShop() || (DRV.session() || {}).shopId || '—')
+      + ' · ' + (DRV.isAdmin() ? '<b>mode test (jeton admin réseau)</b>' : 'PIN chauffeur (12 h)') + '</div></div>'
       + '</div>'
-      + '<div class="foot"><button class="btn gh" data-act="logout">Se déconnecter</button></div>';
+      + '<div class="foot">' + (DRV.isAdmin()
+          ? '<button class="btn gh" data-act="quitadmin">Oublier le jeton admin</button>'
+          : '<button class="btn gh" data-act="logout">Se déconnecter</button>') + '</div>';
   }
 
   /* ── scanner QR (BarcodeDetector natif : aucune librairie, donc rien à
@@ -563,7 +602,7 @@
     if (!POS.last || !S.tourId) return;
     if (S.posState === 'refused') return;         // 403 : inutile de marteler
     DRV.post('/franchisee/driver-position', { tourId: Number(S.tourId), lat: POS.last.latitude, lng: POS.last.longitude,
-                                              driver: (DRV.session() || {}).nom || '' })
+                                              driver: driverName() })
       .then(function () { S.posState = 'ok'; S.posMsg = 'Envoyée à ' + hhmm() + ' — le dépôt te suit.'; touch(); },
             function (e) {
               if (e.status === 403) { S.posState = 'refused'; S.posMsg = 'Le dépôt ne reçoit pas ta position : l\'endpoint driver-position n\'est pas ouvert à un compte PIN (réglage serveur).'; }
@@ -589,6 +628,18 @@
       S.busy = true; S.err = null; render();
       return DRV.login(S.shopId, S.pin).then(function () { S.pin = ''; S.busy = false; return loadAll(); },
         function (er) { S.busy = false; S.pin = ''; S.err = er.message; render(); });
+    }
+    if (a === 'drvname') { return; }
+    if (a === 'setscope') {
+      if (!S.shopId) { toast('Écris l\'id de la boutique'); return; }
+      try { localStorage.setItem('drv_shop', S.shopId); } catch (er) {}
+      S.screen = 'boot'; render(); return loadAll();
+    }
+    if (a === 'quitadmin') {
+      DRV.clearAdmin(); S.me = null; S.tours = []; S.tree = []; S.dispatch = []; S.tourId = null;
+      S.screen = DRV.session() ? 'pick' : 'login';
+      if (S.screen === 'login') DRV.shops().then(function (l) { S.shops = Array.isArray(l) ? l : []; render(); });
+      toast('Jeton admin oublié sur ce téléphone'); return render();
     }
     if (a === 'logout') { return DRV.logout().then(function () { S.screen = 'login'; S.me = null; render(); }); }
 
@@ -674,6 +725,7 @@
     var loc = S.tourId ? tourLocal(S.tourId) : null;
     var s = loc ? tourStops(S.tourId)[S.stopIx] : null;
     if (a === 'shopnum') { S.shopId = v.replace(/\D/g, ''); return; }
+    if (a === 'drvname') { DRV.driverName(v); return; }
     if (a === 'km0' && loc) { loc.km0 = v.replace(/\D/g, ''); return saveDay(); }
     if (a === 'km1' && loc) { loc.km1 = v.replace(/\D/g, ''); return saveDay(); }
     if (a === 'notetour' && loc) { loc.note = v; return saveDay(); }
@@ -690,7 +742,7 @@
     var loc = tourLocal(S.tourId);
     loc.takenAt = hhmm(); loc.name = t.name; saveDay();
     S.screen = 'load'; S.stopIx = 0; S.err = null; render();
-    DRV.postQueued('/franchisee/tour-dispatch', { tour: t.name, driver: (DRV.session() || {}).nom || '' })
+    DRV.postQueued('/franchisee/tour-dispatch', { tour: t.name, driver: driverName() })
       .then(function (r) {
         loc.serverTake = !(r && r.queued); saveDay();
         toast(r && r.queued ? 'Hors réseau — prise de tournée en attente d\'envoi' : 'Tournée prise — le dépôt te voit dessus');
@@ -704,6 +756,10 @@
   function boot() {
     render();
     DRV.flush();
+    if (DRV.isAdmin()) {
+      if (!DRV.adminShop()) { S.screen = 'noscope'; return render(); }
+      return loadAll().then(reprise);
+    }
     if (!DRV.session()) {
       S.screen = 'login';
       DRV.shops().then(function (list) {
@@ -713,13 +769,16 @@
       });
       return;
     }
-    loadAll().then(function () {
-      // Reprise : si une tournée est ouverte aujourd'hui et pas clôturée, on
-      // y revient — un chauffeur qui rouvre l'app doit retrouver sa tournée.
-      var d = day();
-      var open = Object.keys(d.tours).find(function (i) { return d.tours[i].takenAt && !d.tours[i].closedAt; });
-      if (open) { S.tourId = Number(open); S.screen = 'route'; render(); }
-    });
+    loadAll().then(reprise);
   }
+  // Reprise : une tournée ouverte aujourd'hui et non clôturée est rouverte —
+  // un chauffeur qui relance l'app doit retomber sur sa tournée, pas sur la
+  // liste comme s'il n'avait rien fait.
+  function reprise() {
+    var d = day();
+    var open = Object.keys(d.tours).find(function (i) { return d.tours[i].takenAt && !d.tours[i].closedAt; });
+    if (open) { S.tourId = Number(open); S.screen = 'route'; render(); }
+  }
+
   boot();
 })();

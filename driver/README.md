@@ -17,6 +17,31 @@ place (`bo_users`), borné **par le serveur** à sa boutique et à ses sections.
 Le jeton admin ERP est réseau : il ouvre toutes les boutiques et n'a rien à
 faire sur le téléphone d'un chauffeur. Il n'est jamais utilisé ici.
 
+### Mode test — sans profil chauffeur (provisoire)
+
+Tant qu'aucun compte PIN n'existe, l'app s'ouvre avec le jeton admin dans
+l'adresse :
+
+```
+https://<hôte>/webshop/driver/?shop=<id>&token=<jeton admin>
+```
+
+Ce que fait l'application dans ce mode, et pourquoi :
+
+- elle **retire le jeton de l'adresse** dès qu'elle l'a lu (historique, logs
+  serveur, lien recopié) et le garde sur l'appareil ;
+- elle **exige `?shop=`** : le jeton admin est réseau, donc sans portée le bloc
+  `/franchisee/*` rend les tournées de **toutes** les boutiques. Sans elle,
+  l'app refuse d'afficher quoi que ce soit au lieu de montrer le réseau ;
+- elle **l'affiche en permanence** (« Mode test — jeton admin réseau sur ce
+  téléphone »), avec un bouton pour l'oublier ;
+- elle **demande le nom du chauffeur** : il n'y a pas de session pour le
+  donner, et c'est lui qui part sur la prise de tournée et la position.
+
+C'est un dépannage, pas une cible : ce jeton ouvre les marges, les coûts et
+les réglages réseau. Dès qu'un profil chauffeur existe, retire-le du téléphone
+(bouton « Oublier le jeton admin ») et connecte-toi au PIN.
+
 **Sections à donner au profil « chauffeur »** (console marque → profils) :
 `tournees` (tournées, prise de tournée), `tdb` (contenu des tournées du jour),
 `prep` (colis), `suivi` (lecture du direct). Sans elles, l'API répond 403 et
