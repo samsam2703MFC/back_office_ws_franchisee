@@ -7,7 +7,7 @@ input,textarea,select,button{font-family:var(--font-ui)}
 
 .app{height:100dvh;display:flex;flex-direction:column;background:var(--color-bg)}
 .sb{flex:none;height:env(safe-area-inset-top,0);background:var(--color-primary)}
-.bar{flex:none;background:var(--color-primary);color:#fff;padding:10px 14px 13px;display:flex;align-items:center;gap:10px}
+.bar{flex:none;background:var(--color-primary);color:#fff;padding:14px 14px 13px;display:flex;align-items:center;gap:10px}
 .bar .back{width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.16);color:#fff;font-size:17px;flex:none}
 .bar>div{min-width:0}
 .bar .ttl{font:600 16px var(--font-ui);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -15,8 +15,12 @@ input,textarea,select,button{font-family:var(--font-ui)}
 .bar .sub{font:400 11px var(--font-ui);opacity:.82;margin-top:1px}
 .bar .rt{margin-left:auto;text-align:right;font:600 11.5px var(--font-ui);opacity:.94;line-height:1.25}
 .bar .rt small{display:block;font-weight:400;opacity:.78;font-size:10.5px}
-.bar .logo{background:#fff;border-radius:8px;padding:5px 9px;display:inline-flex}
-.bar .logo img{height:17px;width:auto;display:block}
+/* Le logo est posé À MÊME la barre, sans pastille blanche. Son tracé est
+   sombre : passé en blanc plein (brightness(0) puis invert), il se lit sur le
+   rouge et garde son fond transparent. L'accent doré de l'apostrophe part avec
+   — c'est le prix d'un lockup monochrome, et il vaut mieux qu'un rectangle
+   blanc collé en haut de l'écran. */
+.bar .logo{height:19px;width:auto;display:block;filter:brightness(0) invert(1)}
 
 .body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 18px;display:flex;flex-direction:column;gap:10px}
 .foot{flex:none;background:var(--color-surface);border-top:.5px solid var(--color-border-tertiary);

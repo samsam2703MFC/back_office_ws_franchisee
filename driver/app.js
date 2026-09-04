@@ -150,7 +150,7 @@
   function bar(opts) {
     return '<div class="sb"></div><div class="bar">'
       + (opts.back ? '<button class="back" data-act="' + opts.back + '">‹</button>' : '')
-      + (opts.logo ? '<div><div class="logo"><img src="img/logo.png" alt="L\'Atelier"></div>'
+      + (opts.logo ? '<div><img class="logo" src="img/logo.png" alt="L\'Atelier">'
                      + '<div class="sub">' + esc(opts.sub || '') + '</div></div>'
                    : '<div><div class="ttl">' + esc(opts.ttl) + '</div><div class="sub">' + esc(opts.sub || '') + '</div></div>')
       + (opts.rt ? '<div class="rt">' + esc(opts.rt) + '<small>' + esc(opts.rtSub || '') + '</small></div>' : '')
