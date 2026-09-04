@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>PWA Chauffeur — maquettes</title>
+<link rel="stylesheet" href="../../_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css">
+<style>
+  html,body{background:#d9d2c8;margin:0;font-family:var(--font-ui)}
+  .board{padding:34px;display:flex;flex-wrap:wrap;gap:34px;justify-content:flex-start}
+  .slot{width:390px}
+  .slot h2{font:600 13px var(--font-ui);color:#3b3b3b;margin:0 0 10px 2px;letter-spacing:.02em}
+  .slot h2 b{color:var(--color-primary)}
+  .boardhead{padding:34px 34px 0;font:400 13px var(--font-ui);color:#4a4a4a}
+  .boardhead .t{font:400 30px var(--font-display);color:var(--color-text)}
+
+  /* ── téléphone ───────────────────────────────────────────── */
+  .phone{width:390px;height:844px;background:var(--color-bg);border-radius:40px;overflow:hidden;
+         box-shadow:0 18px 44px rgba(0,0,0,.22);position:relative;display:flex;flex-direction:column}
+  .sb{height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;
+      padding:0 26px 0 30px;font:600 13px var(--font-ui);color:#fff;background:var(--color-primary)}
+  .sb .r{display:flex;align-items:center;gap:5px;opacity:.9}
+  .bar{flex:none;background:var(--color-primary);color:#fff;padding:2px 16px 13px;display:flex;align-items:center;gap:10px}
+  .bar .back{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
+  .bar .ttl{font:600 16px var(--font-ui);line-height:1.15}
+  .bar .sub{font:400 11px var(--font-ui);opacity:.8;margin-top:1px}
+  .bar .rt{margin-left:auto;text-align:right;font:600 11px var(--font-ui);opacity:.92}
+  .body{flex:1;overflow:hidden;padding:14px 14px 0;display:flex;flex-direction:column;gap:10px}
+  .foot{flex:none;background:var(--color-surface);border-top:.5px solid var(--color-border-tertiary);
+        padding:11px 14px 22px;display:flex;flex-direction:column;gap:8px}
+
+  /* ── briques ─────────────────────────────────────────────── */
+  .card{background:var(--color-surface);border-radius:14px;padding:12px 13px;border:.5px solid var(--color-border-tertiary)}
+  .card.sel{border:2px solid var(--color-primary);padding:11px 12px}
+  .card.mut{opacity:.55}
+  .lbl{font:600 10px var(--font-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--color-text-muted)}
+  .h1{font:400 25px/1.15 var(--font-display);color:var(--color-text)}
+  .h2{font:600 14.5px var(--font-ui);color:var(--color-text)}
+  .h3{font:600 13px var(--font-ui);color:var(--color-text)}
+  .p{font:400 11.5px/1.45 var(--font-ui);color:var(--color-text-muted)}
+  .pin{font:400 11px/1.45 var(--font-ui);color:var(--color-text)}
+  .row{display:flex;align-items:center;gap:8px}
+  .btn{height:52px;border-radius:13px;background:var(--color-primary);color:#fff;border:none;
+       font:600 15px var(--font-ui);display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+  .btn.gh{background:var(--color-surface);color:var(--color-primary);border:1.5px solid var(--color-primary)}
+  .btn.off{background:#cfc7bd;color:#fff}
+  .btn.sm{height:42px;font-size:13px;border-radius:11px}
+  .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font:600 10px var(--font-ui)}
+  .pill.ok{background:#eaf5ec;color:#2d7a3e}
+  .pill.wait{background:#fdf3e7;color:#b26a00}
+  .pill.grey{background:var(--color-background-secondary);color:var(--color-text-muted)}
+  .pill.ruby{background:var(--color-primary);color:#fff}
+  .pill.abr{background:var(--color-secondary);color:var(--color-on-abricot)}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;
+        font:600 11.5px var(--font-ui);background:var(--color-surface);color:var(--color-text);
+        border:.5px solid var(--color-border-secondary)}
+  .chip.on{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+  .chip.abr{background:var(--color-secondary);color:var(--color-on-abricot);border-color:#e2b283}
+  .bar-p{height:7px;border-radius:999px;background:#ddd5cb;overflow:hidden}
+  .bar-p i{display:block;height:100%;background:var(--color-primary);border-radius:999px}
+  .field{height:44px;border-radius:11px;background:var(--color-background-secondary);
+         border:.5px solid var(--color-border-secondary);display:flex;align-items:center;
+         padding:0 12px;font:600 14px var(--font-ui);color:var(--color-text)}
+  .box{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--color-border-secondary);
+       background:var(--color-surface);flex:none;display:flex;align-items:center;justify-content:center;
+       font:700 12px var(--font-ui);color:#fff}
+  .box.done{background:#2d7a3e;border-color:#2d7a3e}
+  .sep{height:.5px;background:var(--color-border-tertiary);margin:8px 0}
+  .note{font:400 10px/1.35 var(--font-ui);color:var(--color-text-muted);text-align:center}
+  .zone{font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-primary);
+        display:flex;align-items:center;gap:6px;margin:2px 0 4px}
+  .zone i{flex:1;height:.5px;background:var(--color-border-tertiary);display:block}
+  .scan{border-radius:14px;background:#241a1c;padding:12px;position:relative;overflow:hidden}
+  .vf{height:112px;border-radius:10px;background:#0f0b0c;position:relative;display:flex;align-items:center;justify-content:center}
+  .vf .c{position:absolute;width:26px;height:26px;border:3px solid var(--color-secondary)}
+  .vf .c1{top:10px;left:10px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
+  .vf .c2{top:10px;right:10px;border-left:0;border-bottom:0;border-radius:0 6px 0 0}
+  .vf .c3{bottom:10px;left:10px;border-right:0;border-top:0;border-radius:0 0 0 6px}
+  .vf .c4{bottom:10px;right:10px;border-left:0;border-top:0;border-radius:0 0 6px 0}
+  .vf .laser{position:absolute;left:16px;right:16px;height:2px;background:var(--color-primary);box-shadow:0 0 12px 2px rgba(141,29,44,.9)}
+  .toast{background:#eaf5ec;color:#2d7a3e;border-radius:10px;padding:8px 10px;font:600 11.5px var(--font-ui);display:flex;align-items:center;gap:7px}
+  .stop{display:flex;gap:10px;align-items:flex-start;padding:7.5px 0}
+  .num{width:26px;height:26px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;
+       font:700 12px var(--font-ui);background:var(--color-background-secondary);color:var(--color-text-muted)}
+  .num.done{background:#eaf5ec;color:#2d7a3e}
+  .num.now{background:var(--color-primary);color:#fff}
+  .sms{background:var(--color-secondary);border-radius:14px;padding:12px 13px}
+  .bub{background:#fff;border-radius:12px 12px 12px 4px;padding:10px 12px;font:400 12.5px/1.5 var(--font-ui);color:var(--color-text)}
+  .star{font-size:27px;letter-spacing:3px}
+  .kpi{flex:1;background:var(--color-surface);border-radius:12px;padding:9px 10px;border:.5px solid var(--color-border-tertiary)}
+  .kpi b{display:block;font:600 19px var(--font-ui);color:var(--color-primary);line-height:1.2}
+  .kpi span{font:400 9.5px var(--font-ui);color:var(--color-text-muted)}
+  .ta{background:var(--color-background-secondary);border:.5px solid var(--color-border-secondary);
+      border-radius:11px;padding:10px 12px;font:400 12.5px/1.5 var(--font-ui);color:var(--color-text);min-height:88px}
+  .switch{width:40px;height:23px;border-radius:999px;background:var(--color-primary);position:relative;flex:none}
+  .switch i{position:absolute;top:3px;right:3px;width:17px;height:17px;border-radius:50%;background:#fff;display:block}
+</style>
+</head>
+<body>
+<div class="boardhead">
+  <div class="t">PWA Chauffeur — <b style="color:var(--color-primary)">/webshop/driver</b></div>
+  <div style="margin-top:4px">Maquettes à valider · 390 × 844 · design system L'Atelier By · <b>contenus d'exemple</b> (l'app ne lira que l'API)</div>
+</div>
+<div class="board">
+
+<!-- ════════ 1 · CHOISIR SA TOURNÉE ════════ -->
+<div class="slot"><h2>1 · <b>Choisir sa tournée</b> — le chauffeur se déclare</h2>
+<div class="phone" id="s1">
+  <div class="sb"><span>08:12</span><span class="r">4G ▮▮▮ 87%</span></div>
+  <div class="bar">
+    <div class="back">☰</div>
+    <div><div class="ttl">L'Atelier By · Livraison</div><div class="sub">Anderlecht · jeudi 4 septembre</div></div>
+    <div class="rt">Karim B.<br><span style="opacity:.75;font-weight:400">changer</span></div>
+  </div>
+  <div class="body">
+    <div class="h1">Quelle tournée<br>tu prends ?</div>
+    <div class="p" style="margin-top:-4px">3 tournées préparées par le dépôt pour aujourd'hui.</div>
+
+    <div class="card sel">
+      <div class="row"><div class="h2">Tournée Nord</div><span class="pill ok">✓ prête</span>
+        <span class="pill ruby" style="margin-left:auto">choisie</span></div>
+      <div class="p" style="margin-top:3px">Départ 06:30 · retour prévu 11:15</div>
+      <div class="sep"></div>
+      <div class="row" style="gap:14px">
+        <div><div class="h3">9</div><div class="lbl">arrêts</div></div>
+        <div><div class="h3">24</div><div class="lbl">colis</div></div>
+        <div><div class="h3">6</div><div class="lbl">bureaux</div></div>
+        <div><div class="h3">38 km</div><div class="lbl">estimés</div></div>
+      </div>
+      <div class="row" style="gap:5px;margin-top:9px;flex-wrap:wrap">
+        <span class="pill abr">1000</span><span class="pill abr">1030</span><span class="pill abr">1140</span>
+        <span class="p" style="font-size:10.5px">zones desservies</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row"><div class="h2">Tournée Sud</div><span class="pill grey" style="margin-left:auto">prise par Ana M.</span></div>
+      <div class="p" style="margin-top:3px">Départ 07:00 · 7 arrêts · 19 colis · 26 km</div>
+    </div>
+
+    <div class="card">
+      <div class="row"><div class="h2">Tournée Est</div><span class="pill wait" style="margin-left:auto">libre</span></div>
+      <div class="p" style="margin-top:3px">Départ 07:15 · 6 arrêts · 12 colis · 31 km</div>
+    </div>
+
+    <div class="lbl" style="margin-top:2px">Véhicule</div>
+    <div class="row" style="gap:7px;flex-wrap:wrap">
+      <span class="chip on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 9h4l3 3v5h-7z"/><circle cx="6" cy="19" r="1.8"/><circle cx="18" cy="19" r="1.8"/></svg> 1-ABC-123</span><span class="chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 9h4l3 3v5h-7z"/><circle cx="6" cy="19" r="1.8"/><circle cx="18" cy="19" r="1.8"/></svg> 2-DEF-456</span><span class="chip">＋ autre</span>
+    </div>
+
+    <div class="lbl" style="margin-top:2px">Kilométrage au départ</div>
+    <div class="field">84 210 <span class="p" style="margin-left:auto">km</span></div>
+
+    <div class="card" style="background:var(--color-background-secondary);border:none">
+      <div class="row"><div class="lbl">Consigne du dépôt</div><span class="pill grey" style="margin-left:auto">07:58</span></div>
+      <div class="pin" style="margin-top:5px">Ste-Anne : entrée livraisons à l'arrière. Lex &amp; Co ferme à 08:00 — passer en premier si possible.</div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="btn">Prendre la tournée Nord →</div>
+    <div class="note">Le dépôt voit aussitôt « en cours · Karim B. » dans <b>Livraison du jour</b>.</div>
+  </div>
+</div></div>
+
+<!-- ════════ 2 · CHARGEMENT / VALIDATION QR ════════ -->
+<div class="slot"><h2>2 · <b>Valider le chargement</b> — QR colis par colis</h2>
+<div class="phone" id="s2">
+  <div class="sb"><span>08:21</span><span class="r">4G ▮▮▮ 86%</span></div>
+  <div class="bar">
+    <div class="back">‹</div>
+    <div><div class="ttl">Chargement</div><div class="sub">Tournée Nord · 24 colis</div></div>
+    <div class="rt">18/24<br><span style="opacity:.75;font-weight:400">validés</span></div>
+  </div>
+  <div class="body">
+    <div class="bar-p"><i style="width:75%"></i></div>
+
+    <div class="scan">
+      <div class="vf">
+        <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+        <span class="laser" style="top:54px"></span>
+        <div style="font:600 11.5px var(--font-ui);color:#fff;opacity:.75;margin-top:52px">Vise le QR de l'étiquette</div>
+      </div>
+      <div style="font:600 11.5px var(--font-ui);color:#fff;margin-top:9px;display:flex;align-items:center;gap:6px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h3.5L8 5.5h8L17.5 8H21v12H3z"/><circle cx="12" cy="13.5" r="3.6"/></svg> Scan continu — enchaîne les colis
+        <span class="pill abr" style="margin-left:auto">bip ✓</span>
+      </div>
+    </div>
+
+    <div class="toast">✓ Colis 0247 — Bureau Solvay · 3 sur 4</div>
+
+    <div class="card" style="flex:1;overflow:hidden">
+      <div class="row"><div class="h3">Reste à valider</div><span class="pill wait" style="margin-left:auto">6 colis</span></div>
+
+      <div class="zone" style="margin-top:9px">1000 Bruxelles Centre <i></i></div>
+      <div class="row" style="gap:9px">
+        <div class="box done">✓</div>
+        <div style="flex:1"><div class="pin" style="font-weight:600">Bureau Solvay · Étage 3</div>
+          <div class="p" style="font-size:10.5px">Solvay Partners SA · 3 sur 4 colis</div></div>
+        <span class="pill wait">1 restant</span>
+      </div>
+      <div class="sep"></div>
+      <div class="row" style="gap:9px">
+        <div class="box"></div>
+        <div style="flex:1"><div class="pin" style="font-weight:600">Cabinet Lex &amp; Co · Réception</div>
+          <div class="p" style="font-size:10.5px">Lex &amp; Co SRL · 0 sur 2 colis</div></div>
+        <span class="pill grey">2 restants</span>
+      </div>
+
+      <div class="zone" style="margin-top:11px">1050 Ixelles <i></i></div>
+      <div class="pin" style="font-weight:600">Clinique Ste-Anne · Cafétéria <span class="p" style="font-size:10.5px">— 0 sur 3</span></div>
+      <div class="row" style="gap:7px;margin-top:7px">
+        <div class="box"></div><span class="pin">Colis 0311</span>
+        <div class="box" style="margin-left:6px"></div><span class="pin">0312</span>
+        <div class="box" style="margin-left:6px"></div><span class="pin">0313</span>
+      </div>
+      <div class="p" style="font-size:10.5px;margin-top:8px">↳ pas de QR lisible ? <b style="color:var(--color-primary)">Valider à la main</b> — une case, un colis, avec le motif.</div>
+    </div>
+
+    <div class="card" style="background:var(--color-background-secondary);border:none;padding:9px 11px">
+      <div class="p" style="font-size:10.5px;color:var(--color-text)"><b>Aucun « tout cocher ».</b> Chaque colis passe par le scan ou par une case unique : c'est ce qui évite de partir sans un carton.</div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="btn off">Terminer le chargement · 6 restants</div>
+    <div class="row" style="gap:8px"><div class="btn gh sm" style="flex:1">Colis manquant</div><div class="btn gh sm" style="flex:1">Appeler le dépôt</div></div>
+  </div>
+</div></div>
+
+<!-- ════════ 3 · FEUILLE DE ROUTE ════════ -->
+<div class="slot"><h2>3 · <b>Sens de livraison</b> — la feuille de route</h2>
+<div class="phone" id="s3">
+  <div class="sb"><span>08:44</span><span class="r">4G ▮▮▮ 84%</span></div>
+  <div class="bar">
+    <div class="back">‹</div>
+    <div><div class="ttl">Feuille de route</div><div class="sub">Tournée Nord · 9 arrêts · 24 colis</div></div>
+    <div class="rt">2/9<br><span style="opacity:.75;font-weight:400">livrés</span></div>
+  </div>
+  <div class="body">
+    <div style="border-radius:14px;overflow:hidden;border:.5px solid var(--color-border-tertiary);flex:none">
+      <svg width="362" height="116" viewBox="0 0 362 132" preserveAspectRatio="xMidYMid slice">
+        <rect width="362" height="132" fill="#EFE9E1"/>
+        <g stroke="#ded5c9" stroke-width="9" stroke-linecap="round">
+          <path d="M-10 34 H372"/><path d="M-10 96 H372"/><path d="M64 -10 V142"/><path d="M212 -10 V142"/><path d="M300 -10 V142"/>
+        </g>
+        <g stroke="#e6ded3" stroke-width="4"><path d="M-10 66 H372"/><path d="M140 -10 V142"/></g>
+        <path d="M40 112 L64 96 L140 96 L140 66 L212 66 L212 34 L300 34 L326 22" fill="none" stroke="#8D1D2C" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0"/>
+        <g fill="#2d7a3e"><circle cx="64" cy="96" r="7"/><circle cx="140" cy="96" r="7"/></g>
+        <circle cx="140" cy="66" r="10" fill="#8D1D2C"/><circle cx="140" cy="66" r="4" fill="#fff"/>
+        <g fill="#fff" stroke="#8D1D2C" stroke-width="3"><circle cx="212" cy="66" r="6"/><circle cx="212" cy="34" r="6"/><circle cx="300" cy="34" r="6"/></g>
+        <g transform="translate(40,110)"><circle r="11" fill="#78554B"/><path d="M-5 0 0 -5 5 0" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M-3.4 -1V5h6.8V-1" fill="none" stroke="#fff" stroke-width="1.8"/></g>
+      </svg>
+    </div>
+
+    <div class="card" style="flex:1;overflow:hidden;padding:6px 13px">
+      <div class="stop"><div class="num done">✓</div>
+        <div style="flex:1"><div class="h3">Bureau Solvay · Étage 3</div>
+          <div class="p" style="font-size:10.5px">1000 Bruxelles · 4 colis · livré 07:12 · SMS ✓</div></div></div>
+      <div class="sep" style="margin:0"></div>
+      <div class="stop"><div class="num done">✓</div>
+        <div style="flex:1"><div class="h3">Cabinet Lex &amp; Co</div>
+          <div class="p" style="font-size:10.5px">1000 Bruxelles · 2 colis · livré 07:35 · SMS ✓</div></div></div>
+      <div class="sep" style="margin:0"></div>
+      <div class="stop" style="background:#fbf4f5;border-radius:11px;padding:9px 8px;margin:2px -8px">
+        <div class="num now">3</div>
+        <div style="flex:1"><div class="h3">Clinique Ste-Anne</div>
+          <div class="p" style="font-size:10.5px">Rue du Trône 42 · 1050 Ixelles</div>
+          <div class="row" style="gap:5px;margin-top:5px"><span class="pill ruby">à livrer</span><span class="pill grey">4 colis · 2 bureaux</span><span class="pill grey">08:00–08:30</span></div></div></div>
+      <div class="sep" style="margin:0"></div>
+      <div class="stop"><div class="num">4</div>
+        <div style="flex:1"><div class="h3">Résidence Les Tilleuls</div>
+          <div class="p" style="font-size:10.5px">1050 Ixelles · 3 colis · 08:30–09:00</div></div></div>
+      <div class="sep" style="margin:0"></div>
+      <div class="stop"><div class="num">5</div>
+        <div style="flex:1"><div class="h3">Atelier Kessel</div>
+          <div class="p" style="font-size:10.5px">1030 Schaerbeek · 2 colis · 09:10–09:40</div></div></div>
+      <div class="sep" style="margin:0"></div>
+      <div class="stop"><div class="num">6</div>
+        <div style="flex:1"><div class="h3">Groupe Verhoeven — Accueil</div>
+          <div class="p" style="font-size:10.5px">1030 Schaerbeek · 5 colis · 09:40–10:10</div></div></div>
+      <div class="sep" style="margin:0"></div>
+      <div class="stop"><div class="num">7</div>
+        <div style="flex:1"><div class="h3">Étude Notariale Dumont</div>
+          <div class="p" style="font-size:10.5px">1140 Evere · 2 colis · 10:10–10:35</div></div></div>
+      <div class="sep" style="margin:0"></div>
+      <div class="stop"><div class="num">8</div>
+        <div style="flex:1"><div class="h3">Bureau Nord Park — Accueil</div>
+          <div class="p" style="font-size:10.5px">1140 Evere · 3 colis · 10:35–11:00</div></div></div>
+      <div class="sep" style="margin:0"></div>
+      <div class="stop" style="opacity:.6"><div class="num"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 3l9 8"/><path d="M5.5 9.5V21h13V9.5"/></svg></div>
+        <div style="flex:1"><div class="h3">Retour dépôt · Anderlecht</div>
+          <div class="p" style="font-size:10.5px">arrivée prévue 11:15 · 38 km</div></div></div>
+    </div>
+    <div class="note" style="text-align:left">L'ordre vient du dépôt (optimisation Google). Tu peux <b>décaler un arrêt</b> — le dépôt en est averti.</div>
+  </div>
+  <div class="foot">
+    <div class="btn">Aller à l'arrêt 3 · Ste-Anne →</div>
+  </div>
+</div></div>
+
+<!-- ════════ 4 · EN ROUTE ════════ -->
+<div class="slot"><h2>4 · <b>En route</b> — navigation Maps</h2>
+<div class="phone" id="s4">
+  <div class="sb"><span>08:52</span><span class="r">4G ▮▮▮ 82%</span></div>
+  <div class="bar">
+    <div class="back">‹</div>
+    <div><div class="ttl">Arrêt 3 sur 9</div><div class="sub">Tournée Nord · en route</div></div>
+    <div class="rt">ETA 09:01<br><span style="opacity:.75;font-weight:400">dans 9 min</span></div>
+  </div>
+  <div class="body" style="padding:0;gap:0">
+    <div style="flex:1;position:relative;overflow:hidden">
+      <svg width="390" height="470" viewBox="0 0 390 470" style="display:block">
+        <rect width="390" height="470" fill="#EFE9E1"/>
+        <g fill="#e7dfd4"><rect x="20" y="34" width="86" height="70" rx="4"/><rect x="150" y="24" width="104" height="58" rx="4"/>
+          <rect x="292" y="44" width="82" height="76" rx="4"/><rect x="24" y="196" width="80" height="92" rx="4"/>
+          <rect x="152" y="200" width="106" height="86" rx="4"/><rect x="296" y="196" width="78" height="72" rx="4"/>
+          <rect x="26" y="366" width="80" height="72" rx="4"/><rect x="152" y="372" width="106" height="66" rx="4"/>
+          <rect x="296" y="360" width="78" height="84" rx="4"/></g>
+        <g stroke="#ded5c9" stroke-width="17" stroke-linecap="round">
+          <path d="M-10 150 H400"/><path d="M-10 330 H400"/><path d="M128 -10 V480"/><path d="M276 -10 V480"/></g>
+        <g stroke="#e6ded3" stroke-width="7"><path d="M-10 240 H400"/><path d="M-10 452 H400"/><path d="M60 150 V480"/></g>
+        <path d="M128 448 L128 330 L276 330 L276 240 L214 240 L214 150" fill="none" stroke="#8D1D2C" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="128" cy="448" r="13" fill="#fff" stroke="#8D1D2C" stroke-width="4"/>
+        <circle cx="128" cy="448" r="5.5" fill="#8D1D2C"/>
+        <g transform="translate(214,150)"><path d="M0 6 C-17 -15 -14 -36 0 -36 C14 -36 17 -15 0 6 Z" fill="#8D1D2C"/><circle cy="-21" r="7" fill="#fff"/></g>
+        <g transform="translate(214,104)"><rect x="-66" y="-24" width="132" height="27" rx="8" fill="#fff" stroke="rgba(34,34,34,.12)"/>
+          <text x="0" y="-5" text-anchor="middle" font-family="Gotham" font-size="12.5" font-weight="600" fill="#222">Clinique Ste-Anne</text></g>
+      </svg>
+      <div style="position:absolute;left:14px;right:14px;top:12px;background:rgba(255,255,255,.95);border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:10px">
+        <div style="font:700 22px var(--font-ui);color:var(--color-primary)">↰</div>
+        <div style="flex:1"><div class="h3">Rue du Trône</div><div class="p" style="font-size:10.5px">à gauche dans 400 m · 3,4 km restants</div></div>
+        <span class="pill grey">trafic ok</span>
+      </div>
+    </div>
+
+    <div style="background:var(--color-surface);border-radius:18px 18px 0 0;padding:13px 14px 0;margin-top:-16px;position:relative">
+      <div class="row"><div class="h2">Clinique Ste-Anne</div><span class="pill abr" style="margin-left:auto">08:00–08:30</span></div>
+      <div class="p" style="margin-top:2px">Rue du Trône 42 · 1050 Ixelles — entrée livraisons à l'arrière</div>
+      <div class="row" style="gap:5px;margin-top:8px">
+        <span class="pill grey">4 colis</span><span class="pill grey">Cafétéria · Secrétariat</span><span class="pill grey">Marie D. · 0470 00 00 00</span>
+      </div>
+      <div class="row" style="gap:9px;margin-top:11px">
+        <div class="btn gh sm" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 22s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.6"/></svg> Google Maps</div>
+        <div class="btn gh sm" style="flex:1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 11 21 3l-8 18-2.2-7.8Z"/></svg> Waze</div>
+        <div class="btn gh sm" style="width:52px">📞</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="btn">Je suis arrivé</div>
+    <div class="row" style="gap:8px"><div class="btn gh sm" style="flex:1">Accès fermé</div><div class="btn gh sm" style="flex:1">Client absent</div><div class="btn gh sm" style="flex:1">Retard</div></div>
+  </div>
+</div></div>
+
+<!-- ════════ 5 · ARRIVÉ SUR PLACE ════════ -->
+<div class="slot"><h2>5 · <b>Sur place</b> — remise scannée + SMS au client</h2>
+<div class="phone" id="s5">
+  <div class="sb"><span>09:03</span><span class="r">4G ▮▮▮ 81%</span></div>
+  <div class="bar">
+    <div class="back">‹</div>
+    <div><div class="ttl">Arrivé · Ste-Anne</div><div class="sub">09:03 · arrêt 3 sur 9</div></div>
+    <div class="rt">1/4<br><span style="opacity:.75;font-weight:400">remis</span></div>
+  </div>
+  <div class="body">
+    <div class="bar-p"><i style="width:25%"></i></div>
+
+    <div class="scan" style="padding:10px">
+      <div class="vf" style="height:78px">
+        <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+        <span class="laser" style="top:38px"></span>
+      </div>
+      <div style="font:600 11px var(--font-ui);color:#fff;margin-top:8px;display:flex;align-items:center;gap:6px">
+        Scanne chaque colis remis <span class="pill abr" style="margin-left:auto">✓ 0311 remis</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row"><div class="h3">À remettre ici</div><span class="pill wait" style="margin-left:auto">3 restants</span></div>
+
+      <div class="zone" style="margin-top:8px">Cafétéria — Clinique Ste-Anne SA <i></i></div>
+      <div class="row" style="gap:9px"><div class="box done">✓</div>
+        <div style="flex:1"><div class="pin" style="font-weight:600">Colis 0311 · plateau sandwichs ×12</div>
+          <div class="p" style="font-size:10.5px">remis 09:04 — scan QR</div></div></div>
+      <div class="row" style="gap:9px;margin-top:8px"><div class="box"></div>
+        <div style="flex:1"><div class="pin" style="font-weight:600">Colis 0312 · boissons ×6</div>
+          <div class="p" style="font-size:10.5px">en attente de scan</div></div>
+        <span class="pill grey">scanner</span></div>
+
+      <div class="zone" style="margin-top:11px">Secrétariat — Clinique Ste-Anne SA <i></i></div>
+      <div class="row" style="gap:9px"><div class="box"></div>
+        <div style="flex:1"><div class="pin" style="font-weight:600">Colis 0313 · lunchs ×4</div></div>
+        <span class="pill grey">scanner</span></div>
+      <div class="row" style="gap:9px;margin-top:8px"><div class="box"></div>
+        <div style="flex:1"><div class="pin" style="font-weight:600">Colis 0314 · desserts ×4</div></div>
+        <span class="pill grey">scanner</span></div>
+      <div class="p" style="font-size:10.5px;margin-top:9px">↳ QR abîmé ? <b style="color:var(--color-primary)">Cocher ce colis</b> (motif obligatoire, tracé au dépôt).</div>
+    </div>
+
+    <div class="sms">
+      <div class="row"><div class="h3">SMS d'arrivée</div>
+        <span class="p" style="margin-left:auto;color:var(--color-on-abricot);font-weight:600;font-size:10.5px">auto à la remise</span>
+        <div class="switch"><i></i></div></div>
+      <div class="bub" style="margin-top:9px">Bonjour <b>Marie</b> ! Ta commande est là : bon appétit !<br>
+        <span style="color:var(--color-text-muted);font-size:11px">— L'Atelier By Anderlecht</span></div>
+      <div class="p" style="color:var(--color-on-abricot);margin-top:7px;font-size:10.5px">Modèle réglé par la boutique · 2 destinataires (Marie D., accueil)</div>
+      <div class="row" style="gap:8px;margin-top:9px">
+        <div class="btn sm" style="flex:1;background:#fff;color:var(--color-primary)">Envoyer maintenant</div>
+        <div class="btn sm" style="flex:none;width:120px;background:transparent;border:1.5px solid var(--color-on-abricot);color:var(--color-on-abricot)">Modifier</div></div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="btn off">Arrêt terminé · 3 colis à scanner</div>
+    <div class="row" style="gap:8px"><div class="btn gh sm" style="flex:1"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8h3.5L8 5.5h8L17.5 8H21v12H3z"/><circle cx="12" cy="13.5" r="3.6"/></svg> Photo de remise</div><div class="btn gh sm" style="flex:1">Signaler un litige</div></div>
+  </div>
+</div></div>
+
+<!-- ════════ 6 · RETOUR À LA BASE ════════ -->
+<div class="slot"><h2>6 · <b>Retour au dépôt</b> — note et ressenti du chauffeur</h2>
+<div class="phone" id="s6">
+  <div class="sb"><span>11:09</span><span class="r">4G ▮▮▮ 74%</span></div>
+  <div class="bar">
+    <div class="back">‹</div>
+    <div><div class="ttl">Retour au dépôt</div><div class="sub">Tournée Nord · 06:30 → 11:09</div></div>
+    <div class="rt">9/9<br><span style="opacity:.75;font-weight:400">arrêts</span></div>
+  </div>
+  <div class="body">
+    <div class="row" style="gap:8px">
+      <div class="kpi"><b>24</b><span>colis remis</span></div>
+      <div class="kpi"><b>9</b><span>arrêts</span></div>
+      <div class="kpi"><b>41</b><span>km</span></div>
+      <div class="kpi"><b>4h39</b><span>en route</span></div>
+    </div>
+
+    <div class="card">
+      <div class="row"><div class="h3">Kilométrage au retour</div></div>
+      <div class="field" style="margin-top:7px">84 251 <span class="p" style="margin-left:auto">km · +41</span></div>
+    </div>
+
+    <div class="card">
+      <div class="h3">Ma journée</div>
+      <div class="row" style="margin-top:6px">
+        <div class="star" style="color:var(--color-primary)">★★★★<span style="color:#d6cec3">★</span></div>
+        <div class="p" style="margin-left:auto">Bonne journée</div>
+      </div>
+      <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap">
+        <span class="chip on">Trafic</span><span class="chip">Attente client</span><span class="chip">Véhicule</span>
+        <span class="chip on">Accès livraison</span><span class="chip">Colis manquant</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row"><div class="h3">Note du chauffeur</div><span class="pill grey" style="margin-left:auto">visible au dépôt</span></div>
+      <div class="ta" style="margin-top:7px">Accès livraison fermé chez Lex &amp; Co avant 08:00 — passer par la rue arrière.
+      Ste-Anne : prévenir la cafétéria, l'ascenseur était bloqué (environ 10 min perdues).</div>
+    </div>
+
+    <div class="card" style="background:#fbf4f5;border:.5px solid rgba(141,29,44,.25)">
+      <div class="row" style="gap:8px"><span style="font-size:15px">⚠</span>
+        <div class="p" style="color:var(--color-text);font-size:11px"><b>1 incident ouvert</b> — Résidence Les Tilleuls : 1 colis refusé (adresse fermée). Il part en incident au dépôt.</div></div>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="btn">Clôturer la tournée</div>
+    <div class="note">Note, ressenti et incidents remontent dans <b>Livraison du jour</b> et <b>Incidents</b> de la console franchisé.</div>
+  </div>
+</div></div>
+
+</div>
+</body>
+</html>
