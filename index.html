@@ -4327,13 +4327,32 @@ class Component extends DCLogic {
   chronoFen(officeName){ const T=(window.BOServer?window.BOServer.table('fr_clients'):[])||[]; const c=T.find(x=>x&&x.raison===officeName);
     const pt=(c&&Array.isArray(c.points)&&c.points.length)?c.points[0]:null; const f=pt&&pt.fenetre?String(pt.fenetre):'';
     const m=f.match(/(\d{1,2}):(\d{2})\s*[–\-—]\s*(\d{1,2}):(\d{2})/); return m?{ws:(+m[1])*60+(+m[2]),we:(+m[3])*60+(+m[4]),txt:m[1].padStart(2,'0')+':'+m[2]+'–'+m[3].padStart(2,'0')+':'+m[4]}:null; }
+  /* Les ARRÊTS RÉELS d'une tournée : un site, puis chaque bureau de ce site
+     qui a sa propre position Google à plus de 60 m — un trajet et un temps
+     d'accès chacun. Les bureaux sans position, ou dans le même bâtiment,
+     restent sur l'arrêt du site. Un bureau dont l'adresse encodée diffère
+     de celle du site mais sans position est SIGNALÉ (adrDiff) : il faut la
+     choisir dans la liste Google pour que l'itinéraire passe par lui. */
+  tourPoints(stops){ const pts=[]; const normA=v=>String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    (stops||[]).forEach(s=>{ const base={id:s.id,siteId:s.id,site:s,name:s.name,lat:s.lat,lng:s.lng,access:s.access,offices:[],kind:'site',stop:s.stop,zone:s.zone,adr:s.adr};
+      const extra=[]; const sAdr=normA(s.adr);
+      (s.offices||[]).forEach(o=>{ if(!o.name||o.name.charAt(0)==='—'){ base.offices.push(o); return; }
+        const own=(o.lat!=null&&o.lng!=null);
+        const loin=own&&s.lat!=null&&this.travelMin({lat:s.lat,lng:s.lng},{lat:o.lat,lng:o.lng}).km>0.06;
+        const oAdr=normA(o.addrBrut); o.adrDiff=!own&&!!oAdr&&!!sAdr&&oAdr!==sAdr&&sAdr.indexOf(oAdr)<0&&oAdr.indexOf(sAdr)<0;
+        if(loin) extra.push({id:'o'+(o.id!=null?o.id:o.name),siteId:s.id,site:s,name:o.name,lat:o.lat,lng:o.lng,access:s.access,offices:[o],kind:'office',stop:s.stop,zone:s.zone,adr:o.addr});
+        else base.offices.push(o); });
+      if(base.offices.length||!extra.length) pts.push(base);
+      extra.forEach(e=>pts.push(e)); });
+    return pts; }
   chronoTours(){ const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); const sites=this.sitesData();
     return (this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false).map((t,i)=>{ const k=norm(t.name);
       const stops=sites.filter(s=>norm(s.zone)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       // La signature porte la POSITION de chaque arrêt, pas seulement son
       // identifiant : un site dont l'adresse change garde son id, et les
       // trajets mémorisés seraient resservis tels quels.
-      return {t,i,key:String(t.id),stops,sig:this.traceSig(t,stops)}; }); }
+      const points=this.tourPoints(stops);
+      return {t,i,key:String(t.id),stops,points,sig:this.traceSig(t,points)}; }); }
   /* Demande différée des trajets Google de la chronologie : dès qu'une ligne
      se calcule à vol d'oiseau alors que ses arrêts sont positionnés. Un refus
      ne se retente pas avant 60 s. */
@@ -4341,11 +4360,11 @@ class Component extends DCLogic {
     this._chronoAskT=setTimeout(()=>{ this._chronoAskT=null; const C=this.state.chrono||{}; if(C.busy) return; this.chronoRoutes(false,list); },350); }
   chronoRoutes(force,list){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
     const fails=this._chronoFail||(this._chronoFail={}); const now=Date.now();
-    const jobs=(list||this.chronoTours()).filter(x=>x.stops.length&&x.stops.every(s=>s.lat!=null&&s.lng!=null)).filter(x=>{ const c=(this.state.chrono.legs||{})[x.key]; return (force||!c||c.sig!==x.sig)&&(force||!fails[x.sig]||now-fails[x.sig]>60000); });
+    const jobs=(list||this.chronoTours()).filter(x=>x.points.length&&x.points.every(s=>s.lat!=null&&s.lng!=null)).filter(x=>{ const c=(this.state.chrono.legs||{})[x.key]; return (force||!c||c.sig!==x.sig)&&(force||!fails[x.sig]||now-fails[x.sig]>60000); });
     if(!jobs.length) return;
     this.setState(s=>({chrono:{...s.chrono,busy:jobs.length,err:''}}));
     jobs.forEach(x=>{ fetch(fr.base+'/franchisee/tour-route'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
-        body:JSON.stringify({tourId:+String(x.t.id).replace(/^r/,'')||null,returnToDepot:x.t.ret!==false,stops:x.stops.map(s=>({lat:s.lat,lng:s.lng,label:s.name}))})})
+        body:JSON.stringify({tourId:+String(x.t.id).replace(/^r/,'')||null,returnToDepot:x.t.ret!==false,stops:x.points.map(s=>({lat:s.lat,lng:s.lng,label:s.name}))})})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
         this.setState(s=>{ const legs={...(s.chrono.legs||{})}; let err=s.chrono.err;
           if(st===200&&j&&j.ok){ legs[x.key]={sig:x.sig,legs:Array.isArray(j.legs)?j.legs:[],km:+j.km,minutes:+j.minutes,at:new Date().toISOString()}; delete fails[x.sig]; }
@@ -4374,7 +4393,7 @@ class Component extends DCLogic {
     // fiche du site, les paramètres du bureau, l'assistant de la tournée, la
     // fiche de la boutique — un clic, pas une recherche.
     const TB=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
-    const fixSite=(s0)=>{ const rows=TB('ws_office_delivery_sites'); const i=rows.findIndex(r=>String(r.id)===String(s0.id)); if(i<0) return null;
+    const fixSite=(s0)=>{ const rows=TB('ws_office_delivery_sites'); const sid=(s0.siteId!=null?s0.siteId:s0.id); const i=rows.findIndex(r=>String(r.id)===String(sid)); if(i<0) return null;
       return ()=>{ this.goTo('sites'); setTimeout(()=>this.editForm('site',rows[i],i)(),80); }; };
     const fixOffice=(off)=>{ const name=off.name; const o=(off.id!=null)?{id:off.id}:TB('ws_offices').find(x=>x&&x.name===name);
       return ()=>{ this.goTo('offices'); setTimeout(()=>this.openFormWith('bureauParam',{bureau:name,officeId:(o&&o.id!=null)?o.id:null})(),80); }; };
@@ -4387,9 +4406,9 @@ class Component extends DCLogic {
       const stopLegs=[]; let fix=null,fixLbl='';
       if(ex&&ex.closed) warn=ex.closed;
       else if(start==null){ warn='heure de départ à paramétrer — aucune heure annoncée'; fix=fixTour(t); fixLbl='Fixer le départ →'; }
-      else if(!x.stops.length){ warn='aucun site sur cette tournée'; fix=fixTour(t); fixLbl='Ajouter des sites →'; }
+      else if(!x.points.length){ warn='aucun site sur cette tournée'; fix=fixTour(t); fixLbl='Ajouter des sites →'; }
       else if(!depOk){ warn='boutique non positionnée'; fix=fixShop; fixLbl='Positionner la boutique →'; }
-      else { for(let i=0;i<x.stops.length;i++){ const s=x.stops[i];
+      else { for(let i=0;i<x.points.length;i++){ const s=x.points[i];
           let lg=null; if(legs&&legs[i]) lg={min:+legs[i].min||0,km:+legs[i].km||0,g:true}; else if(prev&&s.lat!=null&&s.lng!=null){ const h=this.travelMin(prev,{lat:+s.lat,lng:+s.lng}); lg={min:h.min,km:h.km,g:false}; }
           if(!lg){ warn='« '+s.name+' » : adresse non positionnée — la ligne s’arrête là'; fix=fixSite(s); fixLbl='Choisir l’adresse Google →'; break; }
           segs.push({t0:cur,t1:cur+lg.min,cls:'ch-trj',label:(lg.g?'':'≈ ')+lg.min+' min',title:'Trajet vers '+s.name+' : '+lg.min+' min · '+lg.km.toFixed(1).replace('.',',')+' km'+(lg.g?' (Google)':' (≈ vol d’oiseau)')});
@@ -4400,7 +4419,11 @@ class Component extends DCLogic {
           let wait=0; if(fens.length){ const wsMin=Math.min(...fens.map(z=>z.f.ws)); if(arr<wsMin) wait=wsMin-arr; }
           if(wait>0){ segs.push({t0:cur,t1:cur+wait,cls:'ch-att',label:'attente '+wait,title:'Attente avant l’ouverture de la fenêtre : '+wait+' min'}); cur+=wait; attente+=wait; }
           if(s.access==null){ segs.push({t0:cur,t1:cur+8,cls:'ch-acc',label:'?',title:'Temps d’accès du site non renseigné'}); warn='« '+s.name+' » : temps d’accès à saisir — les heures suivantes ne sont pas annoncées'; fix=fixSite(s); fixLbl='Saisir le temps d’accès →'; fin=null; break; }
-          segs.push({t0:cur,t1:cur+s.access,cls:'ch-acc',label:'',title:'Accès au site '+s.name+' : '+s.access+' min'}); cur+=s.access;
+          segs.push({t0:cur,t1:cur+s.access,cls:'ch-acc',label:'',title:(s.kind==='office'?'Accès chez '+s.name+' (sa propre adresse) : ':'Accès au site '+s.name+' : ')+s.access+' min'}); cur+=s.access;
+          // Un bureau dont l'adresse encodée n'est pas celle du site, sans
+          // position Google : l'itinéraire ne passe PAS par lui. Dit, avec le
+          // geste qui corrige — sans arrêter la ligne.
+          (s.offices||[]).filter(o=>o.adrDiff).forEach(o=>{ segs.push({t0:cur,t1:cur+0.01,cls:'',label:'',title:'« '+o.name+' » : adresse encodée différente du site ('+o.addrBrut+') mais position inconnue — trajet non compté ; choisissez son adresse dans la liste Google (fiche bureau)'}); });
           let brk=false;
           for(const o of offs){ const f=this.chronoFen(o.name); const short=String(o.name).split(/\s+/).slice(0,2).join(' ');
             if(f){ const ko=cur>f.we; if(ko) late++; wins.push({t0:f.ws,t1:f.we,label:short+' '+f.txt,cls:ko?'ko':'',title:o.name+' — fenêtre '+f.txt+(ko?' — dépôt '+this.hhmm(cur)+' hors fenêtre':'')}); }
@@ -4408,7 +4431,7 @@ class Component extends DCLogic {
             const ko=f?(cur>f.we):false; segs.push({t0:cur,t1:cur+o.drop,cls:ko?'ch-ko':'',style:'background:'+color,label:short,title:o.name+' : dépôt '+this.hhmm(cur)+' → '+this.hhmm(cur+o.drop)+(f?(' · fenêtre '+f.txt+(ko?' — HORS FENÊTRE':'')):' · pas de fenêtre d’engagement')}); cur+=o.drop; nbOff++; }
           if(brk){ fin=null; break; }
           if(s.lat!=null&&s.lng!=null) prev={lat:+s.lat,lng:+s.lng}; fin=cur; }
-        if(fin!=null&&t.ret!==false&&prev){ let lg=null; const n=x.stops.length; if(legs&&legs[n]) lg={min:+legs[n].min||0,km:+legs[n].km||0,g:true}; else { const h=this.travelMin(prev,{lat:d.lat,lng:d.lng}); lg={min:h.min,km:h.km,g:false}; }
+        if(fin!=null&&t.ret!==false&&prev){ let lg=null; const n=x.points.length; if(legs&&legs[n]) lg={min:+legs[n].min||0,km:+legs[n].km||0,g:true}; else { const h=this.travelMin(prev,{lat:d.lat,lng:d.lng}); lg={min:h.min,km:h.km,g:false}; }
           segs.push({t0:cur,t1:cur+lg.min,cls:'ch-trj',label:(lg.g?'':'≈ ')+'retour '+lg.min,title:'Retour au dépôt : '+lg.min+' min'+(lg.g?' (Google)':' (≈)')}); cur+=lg.min; km+=lg.km; fin=cur; } }
       segs.forEach(g=>{ tMin=Math.min(tMin,g.t0); tMax=Math.max(tMax,g.t1); }); wins.forEach(w=>{ tMin=Math.min(tMin,w.t0); tMax=Math.max(tMax,w.t1); }); if(start!=null){ tMin=Math.min(tMin,start); tMax=Math.max(tMax,start+30); }
       // Le DÉTAIL, dépliable : chaque étape dans l'ordre avec son heure —
@@ -4418,7 +4441,7 @@ class Component extends DCLogic {
       segs.forEach(g=>detail.push({h:this.hhmm(g.t0)+' → '+this.hhmm(g.t1),txt:g.title,cls:g.cls||'',ko:g.cls==='ch-ko'}));
       if(fin!=null) detail.push({h:this.hhmm(fin),txt:'Fin de tournée'+(t.ret!==false?' — retour à la boutique':''),cls:'fin'});
       if(warn) detail.push({h:'',txt:'⚠ '+warn,cls:'warn',hasFix:!!fix,fixGo:fix||(()=>{}),fixLbl});
-      const manqueGoogle=!google&&x.stops.length>0&&x.stops.every(s0=>s0.lat!=null&&s0.lng!=null)&&start!=null&&depOk;
+      const manqueGoogle=!google&&x.points.length>0&&x.points.every(s0=>s0.lat!=null&&s0.lng!=null)&&start!=null&&depOk;
       lanes.push({key:lk,open,chev:open?'▾':'▸',toggle:()=>this.setState(s0=>({chronoOpen:{...(s0.chronoOpen||{}),[lk]:!((s0.chronoOpen||{})[lk])}})),detail,hasDetail:detail.length>0,manqueGoogle,
         hasFix:!!fix,fixGo:fix||(()=>{}),fixLbl,
         name:t.name,color,start,fin,km,nbOff,late,attente,google,segs,wins,warn,hasWarn:!!warn,empty:!segs.length,emptyTxt:warn||'—',
@@ -4463,7 +4486,7 @@ class Component extends DCLogic {
      colorées fluide / ralenti / bouchon, durée avec et sans trafic. Rafraîchi
      à l'arrivée sur Tournées / Suivi puis toutes les 2 minutes ; sans tracé,
      la carte garde ses lignes droites (pointillées) et le dit. */
-  traceSig(t,pts){ const c=v=>(v==null||isNaN(+v))?'?':(+v).toFixed(5); return pts.map(p=>p.id+'@'+c(p.lat)+','+c(p.lng)).join(',')+'|'+(t.ret!==false?'r':'n'); }
+  traceSig(t,pts){ const c=v=>(v==null||isNaN(+v))?'?':(+v).toFixed(5); const P=(pts||[]).some(p=>p.kind)?pts:this.tourPoints(pts); return P.map(p=>p.id+'@'+c(p.lat)+','+c(p.lng)).join(',')+'|'+(t.ret!==false?'r':'n'); }
   traceFor(t,pts){ const c=((this.state.trace||{}).byTour||{})[String(t.id)]; return (c&&c.sig===this.traceSig(t,pts)&&Array.isArray(c.points)&&c.points.length>1)?c:null; }
   /* Demande DIFFÉRÉE du tracé : appelée par les cartes chaque fois qu'une
      tournée se dessine à vol d'oiseau. Regroupée à 350 ms, jamais pendant
@@ -4477,11 +4500,12 @@ class Component extends DCLogic {
     // délai, chaque redessin de la carte relancerait l'appel en boucle.
     const fails=this._traceFail||(this._traceFail={}); const now=Date.now();
     const jobs=(this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false).map(t=>{ const pts=sites.filter(s=>norm(s.zone)===norm(t.name)&&s.lat!=null).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))); return {t,pts,sig:this.traceSig(t,pts)}; })
-      .filter(x=>x.pts.length&&(force||!this.traceFor(x.t,x.pts))&&(force||!fails[x.sig]||now-fails[x.sig]>60000));
+      .map(x=>({...x,points:this.tourPoints(x.pts)}))
+      .filter(x=>x.points.length&&(force||!this.traceFor(x.t,x.pts))&&(force||!fails[x.sig]||now-fails[x.sig]>60000));
     if(!jobs.length) return;
     this.setState(s=>({trace:{...s.trace,busy:jobs.length,err:''}}));
     jobs.forEach(x=>{ fetch(fr.base+'/franchisee/tour-trace'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
-        body:JSON.stringify({returnToDepot:x.t.ret!==false,stops:x.pts.map(p=>({lat:p.lat,lng:p.lng,label:p.name}))})})
+        body:JSON.stringify({returnToDepot:x.t.ret!==false,stops:x.points.map(p=>({lat:p.lat,lng:p.lng,label:p.name}))})})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
         this.setState(s=>{ const byTour={...(s.trace.byTour||{})}; let err=s.trace.err;
           if(st===200&&j&&j.ok){ byTour[String(x.t.id)]={sig:x.sig,points:j.points||[],intervals:j.intervals||[],legs:j.legs||[],km:+j.km,minutes:+j.minutes,minutesSans:+j.minutesSans,trafic:j.trafic||null,at:new Date()}; delete fails[x.sig]; }
@@ -4542,6 +4566,11 @@ class Component extends DCLogic {
     // Heures d'arrivée : adresses non vérifiées, temps d'accès, temps de dépôt, fenêtres.
     sites.filter(r=>r.tour&&r.tour!=='—'&&(r.lat==null||r.lng==null)).forEach(r=>H.push({what:r.name||'Site',why:'Adresse non vérifiée par Google — hors itinéraire, trajet estimé à vol d’oiseau',ctx:(r.adr&&r.adr!=='—'?r.adr:'adresse absente'),lien:'Choisir l’adresse Google → fiche site',go:goSite(r)}));
     sites.filter(r=>r.tour&&r.tour!=='—'&&(r.acc==null||r.acc==='')).forEach(r=>H.push({what:r.name||'Site',why:'Temps d’accès au site non mesuré — les arrêts suivants perdent leur heure',ctx:'Tournée '+r.tour,lien:'Saisir → fiche site',go:goSite(r)}));
+    // Chaque bureau, comme chaque site, doit être VALIDÉ PAR GOOGLE : sans
+    // position, l'itinéraire ne peut pas passer par lui — il est livré « au
+    // site », quelle que soit son adresse réelle.
+    const goOffice=(o)=>()=>{ this.dcClose(); this.goTo('offices'); setTimeout(()=>{ const rows=T('ws_offices'); const i=rows.findIndex(x=>String(x.id)===String(o.id)); if(i>=0) this.editForm('office',rows[i],i)(); },80); };
+    offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&(o.lat==null||o.lng==null)).forEach(o=>H.push({what:o.name,why:'Adresse du bureau non vérifiée par Google — l’itinéraire ne passe pas par lui, il est compté à l’adresse de son site',ctx:(o.address||'adresse absente')+(o.postal_code?(' · '+o.postal_code):''),lien:'Choisir l’adresse Google → fiche bureau',go:goOffice(o)}));
     offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—').forEach(o=>{ const d=dset[String(o.id)]; if(!d||d.drop==null||d.drop===''){ H.push({what:o.name,why:'Temps de dépôt du bureau non renseigné — l’heure de départ de l’arrêt est inconnue',ctx:'Tournée '+o.tour,lien:'Saisir → paramètres du bureau',go:goParam(o)}); } });
     offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&!fen(o.name)).forEach(o=>H.push({what:o.name,why:'Pas de fenêtre d’engagement — impossible de dire si la livraison est à l’heure',ctx:'Bureau validé · tournée '+o.tour,lien:'Voir la fiche → Clients',go:goScreen('clients')}));
     // Coûts et validation : taux horaire, prix au km, doublons de sites.
@@ -6464,7 +6493,12 @@ class Component extends DCLogic {
         const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
         // Temps de dépôt : celui paramétré pour CE bureau, ou inconnu — pas
         // 5 minutes décidées par la page et additionnées à chaque arrêt.
-        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||'adresse non renseignée',drop:dropDe(b,r)});
+        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||'adresse non renseignée',drop:dropDe(b,r),
+          // Position Google du bureau (ws_offices, 0123) : avec elle, un bureau à
+          // une autre adresse que son site devient un ARRÊT à part entière.
+          lat:(r.office_lat!=null&&!isNaN(parseFloat(r.office_lat)))?parseFloat(r.office_lat):null,
+          lng:(r.office_lng!=null&&!isNaN(parseFloat(r.office_lng)))?parseFloat(r.office_lng):null,
+          addrBrut:String(r.office_address||'').trim()});
       }
     });
     // Un site dont le CP n'est pas au référentiel n'est PAS placé au centre de
@@ -7666,7 +7700,7 @@ class Component extends DCLogic {
       const dep=depOf[k]; if(!dep) return;
       let cur=this.toMin(dep); let prev=d; const stops={};
       let nbOff=0, manque=false;
-      pts.forEach(p=>{ cur+=this.travelMin(prev,p).min; stops[p.id]=this.hhmm(cur);
+      this.tourPoints(pts).forEach(p=>{ cur+=this.travelMin(prev,p).min; if(!stops[p.siteId]) stops[p.siteId]=this.hhmm(cur);
         const no=p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').length; nbOff+=no;
         // Temps d'accès inconnu : il n'est pas remplacé par 10 minutes. Toutes
         // les heures suivantes en dépendent, donc la tournée entière perd son
