@@ -101,10 +101,13 @@ La demande était « case à cocher **ou** QR — le QR est mieux », et surtout
 2. **Les deux QR à imprimer.** Aucun n'existe aujourd'hui :
    - le **QR de tournée** sur le **bon de livraison**, imprimé par l'**ERP** :
      c'est donc côté ERP que le QR s'ajoute (idéalement le n° de bon déjà
-     imprimé), et côté API que ce code se résout en tournée du jour. Reste à
-     confirmer si l'ERP sort **un bon par tournée** ou **un bon par client** —
-     dans le second cas, chaque bon porte la même tournée, et le bon du client
-     peut aussi servir de preuve de remise à l'arrêt ;
+     imprimé), et côté API que ce code se résout en tournée du jour. Un bon par
+     tournée : le bon ne peut donc pas servir de preuve de remise chez un
+     client — la remise reste au **QR de colis**, comme sur l'écran 5. Reste à
+     établir **comment le n° de bon de l'ERP se résout en tournée** : l'ERP et
+     `ws_tours` partagent-ils un code de tournée, ou faut-il que l'ERP dépose
+     le n° du bon sur la tournée du jour ? Sans cette correspondance, le scan
+     n'ouvre rien ;
    - le **QR de colis** sur l'étiquette de colis (commande + n° de colis) —
      l'écran *Préparation* imprime des étiquettes, il faut y mettre ce code,
      sinon l'écran 2 n'a rien à lire.
