@@ -2713,8 +2713,15 @@
           <div style="margin-top:16px;background:var(--color-background-secondary);border-radius:12px;padding:14px 16px">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
               <div><div class="tw-lbl" style="margin-bottom:2px">Itinéraire Google — dépôt → arrêts{{ twRetTxt }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Calculé par Google depuis la position de la boutique, dans l'ordre des arrêts de l'étape 2. Coût = km × prix au km.</div></div>
-              <button type="button" onClick="{{ twRouteGo }}" class="btn-secondary" style="font-size:12px;flex:none;{{ twRouteBtnStyle }}">{{ twRouteBtn }}</button>
+              <div style="display:flex;gap:8px;flex:none"><button type="button" onClick="{{ twOptGo }}" class="btn-secondary" title="Google Routes API (optimizeWaypointOrder) : l'ordre d'arrêts le plus court pour un véhicule" style="font-size:12px;{{ twOptBtnStyle }}">{{ twOptBtn }}</button><button type="button" onClick="{{ twRouteGo }}" class="btn-secondary" style="font-size:12px;{{ twRouteBtnStyle }}">{{ twRouteBtn }}</button></div>
             </div>
+            <sc-if value="{{ twOptHas }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:12px;background:var(--color-surface);border:1.5px solid {{ twOptColor }};border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+                <div><div style="font:600 12.5px var(--font-ui);color:{{ twOptColor }}">{{ twOptTitre }}</div><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ twOptDetail }}</div></div>
+                <sc-if value="{{ twOptApplicable }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ twOptApply }}" class="btn-primary" style="font-size:12px;flex:none">Appliquer cet ordre</button></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ twOptHasErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font:500 12px var(--font-ui);color:var(--color-primary)">{{ twOptErr }}</div></sc-if>
             <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px">
               <div style="background:var(--color-surface);border-radius:10px;padding:10px 12px"><div class="tw-lbl">Distance</div><div style="font:600 18px var(--font-ui);color:var(--color-text)">{{ twRouteKm }}</div></div>
               <div style="background:var(--color-surface);border-radius:10px;padding:10px 12px"><div class="tw-lbl">Durée de route</div><div style="font:600 18px var(--font-ui);color:var(--color-text)">{{ twRouteMin }}</div></div>
@@ -3899,7 +3906,7 @@ class Component extends DCLogic {
      un brouillon : rien n'est écrit avant « Enregistrer », et après, les
      tables sont RELUES depuis l'API — jamais mises à jour de mémoire. */
   twVide(){ return {open:false,tourId:null,name:'',start:'06:00',max:'',vehicule:'',ret:true,forfait:'',pricePerKm:'',
-    days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false},postcodes:[],cpQ:'',sites:[],removed:[],route:null,routeBusy:false,routeErr:'',saving:false,err:'',exist:''}; }
+    days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false},postcodes:[],cpQ:'',sites:[],removed:[],route:null,routeBusy:false,routeErr:'',saving:false,err:'',exist:'',opt:null,optBusy:false,optErr:''}; }
   twSiteDe(r){ return {key:'s'+(r.id!=null?r.id:Math.random().toString(36).slice(2)),id:(r.id!=null?r.id:null),
     name:(r.name&&r.name!=='—')?r.name:'',address:(r.adr&&r.adr!=='—')?r.adr:'',acc:(r.acc!=null?String(r.acc):''),
     officeId:(r.office_client_id!=null?String(r.office_client_id):''),lat:(r.lat!=null?+r.lat:null),lng:(r.lng!=null?+r.lng:null),
@@ -3945,6 +3952,25 @@ class Component extends DCLogic {
         if(st===200&&j&&j.ok) this.twPatch({routeBusy:false,route:{km:+j.km,minutes:+j.minutes,legs:(Array.isArray(j.legs)?j.legs:[]),at:new Date().toISOString()}});
         else this.twPatch({routeBusy:false,routeErr:(j&&j.error)||('Itinéraire indisponible (HTTP '+st+')')}); })
       .catch(()=>this.twPatch({routeBusy:false,routeErr:'Réseau indisponible'})); }
+  /* ORDRE OPTIMAL (Google Routes API) : proposé, jamais imposé — « Appliquer »
+     réordonne les sites de l'assistant et reprend les tronçons rendus. */
+  twOptimise(){ const T=this.state.tw||this.twVide(); const fr=window.__FR||{};
+    const manq=T.sites.map((x,i)=>(x.lat==null||x.lng==null)?(x.name||x.address||('site '+(i+1))):null).filter(Boolean);
+    if(T.sites.length<2){ this.twPatch({optErr:'Au moins deux sites pour proposer un ordre.',opt:null}); return; }
+    if(manq.length){ this.twPatch({optErr:'Adresse non vérifiée — à choisir dans la liste Google : '+manq.join(', '),opt:null}); return; }
+    if(!fr.base){ this.twPatch({optErr:'API non configurée.'}); return; }
+    this.twPatch({optBusy:true,optErr:'',opt:null});
+    fetch(fr.base+'/franchisee/tour-optimise'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+      body:JSON.stringify({tourId:(T.tourId?+T.tourId:null),returnToDepot:!!T.ret,stops:T.sites.map(x=>({id:x.key,lat:x.lat,lng:x.lng,label:x.name||x.address}))})})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        if(st===200&&j&&j.ok) this.twPatch({optBusy:false,opt:{order:j.order||[],labels:j.labels||[],km:+j.km,minutes:+j.minutes,legs:Array.isArray(j.legs)?j.legs:[],current:j.current||null,saving:j.saving||null,same:!!j.same}});
+        else this.twPatch({optBusy:false,optErr:(j&&j.error)||('Proposition indisponible (HTTP '+st+')')}); })
+      .catch(()=>this.twPatch({optBusy:false,optErr:'Réseau indisponible'})); }
+  twOptApply(){ this.twPatch(t=>{ const o=t.opt; if(!o||!o.order||!o.order.length) return {};
+      const byKey={}; t.sites.forEach(x=>{ byKey[x.key]=x; }); const ordered=o.order.map(k=>byKey[k]).filter(Boolean);
+      if(ordered.length!==t.sites.length) return {optErr:'Les sites ont changé depuis la proposition — redemandez un ordre.'};
+      return {sites:ordered,route:{km:o.km,minutes:o.minutes,legs:o.legs,at:new Date().toISOString()},opt:null,optErr:''}; });
+    this.printJob('✓ Ordre d’arrêts appliqué — enregistrez la tournée pour le conserver'); }
   twSave(){ const T=this.state.tw||this.twVide(); const fr=window.__FR||{};
     if(!String(T.name||'').trim()){ this.twPatch({err:'Nom de tournée requis.'}); return; }
     if(!/^\d{1,2}:\d{2}$/.test(String(T.start||''))){ this.twPatch({err:'Heure de départ requise : toutes les heures d’arrivée en découlent.'}); return; }
@@ -7629,6 +7655,13 @@ class Component extends DCLogic {
       twRouteBtn:(T.routeBusy?'Calcul en cours…':(T.route?'Recalculer l’itinéraire (Google)':'Calculer l’itinéraire (Google)')), twRouteBtnStyle:(T.routeBusy?'opacity:.6;pointer-events:none':''),
       twRouteKm:twKmTxt, twRouteMin:(T.route&&T.route.minutes!=null?this.fmtMin(T.route.minutes):'—'), twRouteCost,
       twRouteHasErr:!!T.routeErr, twRouteErr:T.routeErr||'',
+      // Ordre optimal (Google Routes API)
+      twOptGo:()=>this.twOptimise(), twOptApply:()=>this.twOptApply(), twOptBtn:(T.optBusy?'Google réfléchit…':'Proposer un ordre (Google)'), twOptBtnStyle:(T.optBusy||(T.sites||[]).length<2?'opacity:.6':''),
+      twOptHas:!!T.opt, twOptHasErr:!!T.optErr, twOptErr:T.optErr||'',
+      twOptApplicable:!!(T.opt&&!T.opt.same),
+      twOptColor:(T.opt&&!T.opt.same)?'#2d7a3e':'var(--color-border-secondary)',
+      twOptTitre:!T.opt?'':(T.opt.same?'L’ordre actuel est déjà le plus court selon Google.':('Ordre proposé : '+(T.opt.labels||[]).map((l,i)=>(i+1)+'. '+l).join(' → '))),
+      twOptDetail:!T.opt?'':((String(T.opt.km).replace('.',',')+' km · '+this.fmtMin(T.opt.minutes))+(T.opt.current?(' au lieu de '+String(T.opt.current.km).replace('.',',')+' km · '+this.fmtMin(T.opt.current.minutes)):'')+(T.opt.saving&&!T.opt.same?(' — '+(T.opt.saving.km>=0?'−':'+')+String(Math.abs(T.opt.saving.km)).replace('.',',')+' km, '+(T.opt.saving.minutes>=0?'−':'+')+Math.abs(T.opt.saving.minutes)+' min'):'')+' · Google Routes API, un véhicule, retour dépôt '+(T.ret?'inclus':'exclu (dernier arrêt fixe)')),
       twRouteAt:(T.route?(T.route.legs?'Itinéraire calculé à l’instant par Google Directions — il est mémorisé sur la tournée à l’enregistrement.':('Dernier itinéraire mémorisé'+(T.route.at?(' le '+String(T.route.at).slice(0,16).replace('T',' ')):'')+' — recalculez après un changement d’arrêts.')):(isNaN(twPpk)?'Renseignez le prix au km pour obtenir le coût de la tournée.':'Pas encore calculé.')),
       twStops, twRetShow:!!T.ret&&(T.sites||[]).length>0, twRetEta, twRetWhy,
       twSites:twSitesView, twSitesEmpty:!(T.sites||[]).length, twAddSite:()=>this.twAddSite(),
