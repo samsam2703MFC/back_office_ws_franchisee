@@ -2939,8 +2939,8 @@
         </sc-for>
       </div>
       <div style="padding:12px 26px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted)">Revient à l'ouverture de la console tant qu'il reste un point bloquant ; la bulle « Données à compléter » reste visible dans le rail.</div>
-        <div style="display:flex;gap:8px"><button onClick="{{ dcLater }}" class="btn-secondary" style="font-size:12.5px">Plus tard</button><button onClick="{{ dcFirst }}" class="btn-primary" style="font-size:12.5px">Commencer par le premier point</button></div>
+        <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted)">Revient à l'ouverture de la console tant qu'il reste un point bloquant ; la bulle « Données à compléter » reste visible dans le rail.<sc-if value="{{ dcGeoTxt }}" hint-placeholder-val="{{ false }}"><br><b>{{ dcGeoTxt }}</b></sc-if></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ dcGeo }}" class="btn-secondary" title="Google situe d'un coup chaque bureau, site et client qui a une adresse mais pas de position ; ce qu'il ne situe qu'à la rue ou à la localité reste à choisir à la main" style="font-size:12.5px;{{ dcGeoStyle }}">Situer les adresses manquantes (Google)</button><button onClick="{{ dcLater }}" class="btn-secondary" style="font-size:12.5px">Plus tard</button><button onClick="{{ dcFirst }}" class="btn-primary" style="font-size:12.5px">Commencer par le premier point</button></div>
       </div>
     </div>
   </div>
@@ -4578,6 +4578,11 @@ class Component extends DCLogic {
     // site », quelle que soit son adresse réelle.
     const goOffice=(o)=>()=>{ this.dcClose(); this.goTo('offices'); setTimeout(()=>{ const rows=T('ws_offices'); const i=rows.findIndex(x=>String(x.id)===String(o.id)); if(i>=0) this.editForm('office',rows[i],i)(); },80); };
     offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&(o.lat==null||o.lng==null)).forEach(o=>H.push({what:o.name,why:'Adresse du bureau non vérifiée par Google — l’itinéraire ne passe pas par lui, il est compté à l’adresse de son site',ctx:(o.address||'adresse absente')+(o.postal_code?(' · '+o.postal_code):''),lien:'Choisir l’adresse Google → fiche bureau',go:goOffice(o)}));
+    // Clients B2B : même règle. La fiche s'ouvre par la raison sociale.
+    const goClient=(c)=>()=>{ this.dcClose(); const nm=c.company_name||c.name||''; const cls=T('fr_clients'); const i2=cls.findIndex(x=>x&&x.raison===nm);
+      this.goTo('clients'); if(i2>=0) setTimeout(()=>this.editForm('clientEdit',{...cls[i2]},i2)(),80); };
+    T('b2b_clients').filter(c=>c&&(c.street||c.zip)&&(c.lat==null||c.lng==null)).forEach(c=>H.push({what:c.company_name||c.name||'Client',why:'Adresse du client non vérifiée par Google — aucune position en base',
+      ctx:[c.street,[c.zip,c.city||c.locality].filter(Boolean).join(' ')].filter(Boolean).join(', ')||'adresse absente',lien:'Choisir l’adresse Google → fiche client',go:goClient(c)}));
     offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—').forEach(o=>{ const d=dset[String(o.id)]; if(!d||d.drop==null||d.drop===''){ H.push({what:o.name,why:'Temps de dépôt du bureau non renseigné — l’heure de départ de l’arrêt est inconnue',ctx:'Tournée '+o.tour,lien:'Saisir → paramètres du bureau',go:goParam(o)}); } });
     offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&!fen(o.name)).forEach(o=>H.push({what:o.name,why:'Pas de fenêtre d’engagement — impossible de dire si la livraison est à l’heure',ctx:'Bureau validé · tournée '+o.tour,lien:'Voir la fiche → Clients',go:goScreen('clients')}));
     // Coûts et validation : taux horaire, prix au km, doublons de sites.
@@ -4591,12 +4596,31 @@ class Component extends DCLogic {
     if(C.length) out.push({key:'c',label:'Coûts et validation',color:'#2a5a9e',sub:String(C.length),items:C});
     return out; }
   dcClose(){ this.setState({dcOpen:false}); }
+  /* GÉOCODAGE AUTOMATIQUE de tout ce qui a une adresse mais pas de position
+     (bureaux, sites, clients) : POST geo-backfill par passes, jusqu'à ce que
+     rien ne reste, puis relecture des tables. Ce que Google ne situe qu'à la
+     rue ou à la localité n'est PAS gardé et reste dans la liste, à choisir
+     à la main dans la liste Google. */
+  dcGeocode(){ const fr=window.__FR||{}; if(!fr.base||this._dcGeoBusy) return; this._dcGeoBusy=true;
+    let fait=0, manques=[]; this.setState({dcGeoTxt:'Google situe les adresses…'});
+    const passe=(n)=>fetch(fr.base+'/franchisee/geo-backfill'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({budget:20})})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        if(!(st===200&&j&&j.ok)){ this._dcGeoBusy=false; this.setState({dcGeoTxt:'⚠ '+((j&&j.error)||('Géocodage indisponible (HTTP '+st+')'))}); return; }
+        fait+=j.fait||0; (j.rapport||[]).filter(x=>!x.ok).forEach(x=>manques.push(x));
+        this.setState({dcGeoTxt:'Google situe les adresses… '+fait+' posée(s)'+(j.restant?(' · '+j.restant+' à venir'):'')});
+        if(j.restant>0&&n>0) return passe(n-1);
+        this._dcGeoBusy=false;
+        this.setState({dcGeoTxt:'✓ '+fait+' position(s) posée(s)'+(manques.length?(' · '+manques.length+' à choisir à la main : '+manques.slice(0,4).map(x=>x.nom+' ('+x.detail+')').join(' ; ')+(manques.length>4?' …':'')):' — tout est situé')});
+        this.bcRefreshOffices(); })
+      .catch(()=>{ this._dcGeoBusy=false; this.setState({dcGeoTxt:'⚠ Réseau indisponible'}); });
+    passe(30); }
   dcLater(){ try{ sessionStorage.setItem('bo_dc_later','1'); }catch(e){} this.setState({dcOpen:false}); }
   dcVals(){ const S=this.state; const groups=this.dcGroups(); const n=groups.reduce((a,g)=>a+g.items.length,0); const bloquant=(groups.find(g=>g.key==='b')||{items:[]}).items.length;
     let later=false; try{ later=sessionStorage.getItem('bo_dc_later')==='1'; }catch(e){}
     const open=(S.dcOpen!==undefined)?!!S.dcOpen:(bloquant>0&&!later&&n>0);
     const first=groups.length?groups[0].items[0]:null;
     return {dcHas:n>0,dcCount:String(n),dcOpen:open&&n>0,dcGroups:groups,dcOpenFn:()=>this.setState({dcOpen:true}),dcLater:()=>this.dcLater(),
+      dcGeo:()=>this.dcGeocode(),dcGeoTxt:S.dcGeoTxt||'',dcGeoStyle:this._dcGeoBusy?'opacity:.6;pointer-events:none':'',
       dcFirst:()=>{ if(first) first.go(); else this.dcClose(); },
       dcTitre:n+' donnée'+(n>1?'s':'')+' à compléter',
       dcBadgeTitle:n+' donnée(s) à compléter'+(bloquant?(' — '+bloquant+' bloquante(s) pour la livraison'):''),
