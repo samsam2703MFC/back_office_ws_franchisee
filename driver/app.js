@@ -33,7 +33,7 @@
   /* Numéro de version AFFICHÉ (écran « Ce que le dépôt reçoit »). Sans lui,
      impossible de savoir si un téléphone tourne la version qu'on vient de
      déployer — on a cherché des bugs déjà corrigés pour cette seule raison. */
-  var BUILD = 'v6 · 04/09';
+  var BUILD = 'v7 · 04/09';
 
   /* Installation sur l'écran d'accueil. Android donne un événement qu'on
      déclenche à la demande ; iOS n'en donne aucun — on y explique le geste au

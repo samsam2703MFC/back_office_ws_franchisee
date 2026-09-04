@@ -5,7 +5,7 @@
    • les appels API ne sont JAMAIS servis depuis le cache. Une donnée de tournée
      périmée présentée comme fraîche est pire que pas de donnée : l'application
      affiche l'échec réseau et ce qu'elle avait en mémoire, en le disant. */
-var CACHE = 'drv-shell-v6';   // v6 : coque réseau-d'abord, PWA complète (icônes, install, hors-ligne)
+var CACHE = 'drv-shell-v7';   // v7 : icône maskable avec le camion
 var SHELL = [
   './', 'index.html', 'app.css', 'app.js', 'api.js', 'manifest.webmanifest',
   'vendor/jsqr.js',
