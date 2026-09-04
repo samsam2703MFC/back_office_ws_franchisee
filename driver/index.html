@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>Livraison — L'Atelier By</title>
+<meta name="theme-color" content="#8D1D2C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <!-- L'application est rendue par app.js. Rien n'est écrit en dur ici : un
+       écran sans donnée doit rester vide et le dire, jamais afficher un
+       exemple qui ressemblerait à une vraie tournée. -->
+  <div id="app" class="app"></div>
+  <div id="toast" class="toast-host" hidden></div>
+  <!-- Décodeur QR embarqué (jsQR 1.4.0, Apache-2.0). Il est là parce que
+       BarcodeDetector, le lecteur natif, n'existe ni sur iPhone ni sous
+       Firefox : sans lui, l'appareil photo ne s'allumait pas du tout sur ces
+       téléphones. Vendu avec l'app, jamais chargé d'un CDN — le scan doit
+       marcher dans un sous-sol sans réseau. -->
+  <script src="vendor/jsqr.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      /* Quand un nouveau service worker prend la main, la page tourne encore
+         l'ANCIEN code : on recharge une fois, sinon on croit essayer la
+         nouvelle version alors qu'on garde l'ancienne à l'écran. */
+      var rechargé = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (rechargé) return; rechargé = true; location.reload();
+      });
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          try { reg.update(); } catch (e) {}
+        }).catch(function (e) {
+          // Un service worker refusé (http, navigateur ancien) n'empêche PAS
+          // l'application de tourner : elle perd l'hors-ligne, rien d'autre.
+          console.warn('service worker non enregistré :', e && e.message);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

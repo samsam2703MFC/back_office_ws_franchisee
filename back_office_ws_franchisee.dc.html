@@ -408,6 +408,52 @@
       <!-- ===================== CONSTRUCTEUR TOURNÉES ===================== -->
       <sc-if value="{{ isTournees }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- APPLICATION CHAUFFEUR — ici, en tête des Tournées, parce que c'est
+             l'écran qu'on ouvre quand on s'occupe des tournées. La même carte
+             existe dans la modale « Envoi vers la tablette », mais celle-ci ne
+             s'affiche que s'il y a des commandes du jour : l'adresse, elle,
+             doit être trouvable même un jour sans livraison. -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 18px">
+          <div style="display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap">
+            <div style="flex:1;min-width:260px">
+              <div class="t-section-title" style="font-size:15px">Application chauffeur (téléphone)</div>
+              <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">Le chauffeur ouvre cette adresse et l'ajoute à son écran d'accueil. {{ pwaScopeTxt }}</div>
+              <div style="font:600 12.5px var(--font-ui);color:var(--color-text);word-break:break-all;margin-top:8px">{{ pwaUrl }}</div>
+              <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+                <button onClick="{{ pwaCopy }}" class="btn-secondary" style="padding:9px 14px;font-size:12px">Copier l'adresse</button>
+                <button onClick="{{ pwaQrToggle }}" class="btn-secondary" style="padding:9px 14px;font-size:12px">{{ pwaQrLabel }}</button>
+                <button onClick="{{ pwaTokToggle }}" class="btn-secondary" style="padding:9px 14px;font-size:12px">{{ pwaTokLabel }}</button>
+              </div>
+              <sc-if value="{{ pwaTokOn }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#fbe9eb;border:.5px solid #f0c4ca;border-radius:9px;padding:10px 12px;font:500 11px/1.5 var(--font-ui);color:var(--color-primary);margin-top:10px">⚠ Le QR porte le <b>jeton admin</b> — mode test, en attendant les comptes chauffeur. Il ouvre TOUTES les boutiques : ne l'affichez pas devant n'importe qui, et retirez-le du téléphone (bouton « Oublier le jeton » dans l'app) dès qu'un PIN existe.</div>
+              </sc-if>
+
+              <!-- Feuille d'essai : le vrai bon vient de l'ERP et n'a pas encore
+                   de QR — celle-ci permet de dérouler tout le parcours de scan
+                   en attendant, sans rien inventer (contenu = commandes du jour). -->
+              <div class="t-admin-label" style="margin:16px 0 6px">Liste de livraison à imprimer (essai du scan)</div>
+              <sc-if value="{{ pwaListesHas }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <sc-for list="{{ pwaListes }}" as="l" hint-placeholder-count="2">
+                  <button onClick="{{ l.print }}" class="btn-secondary" style="padding:9px 14px;font-size:12px">🖨 {{ l.nom }}</button>
+                </sc-for>
+              </div>
+              <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:6px">Feuille A4 : le QR de la tournée en tête, puis <b>un QR par colis</b> — de quoi essayer la prise de tournée, le chargement et la remise sans attendre que l'ERP mette des QR sur ses bons.</div>
+              </sc-if>
+              <sc-if value="{{ pwaListesVide }}" hint-placeholder-val="{{ false }}">
+              <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted)">Aucune tournée avec des commandes aujourd'hui : il n'y a rien à imprimer, et rien n'est inventé pour combler.</div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ pwaQrOn }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:12px;align-items:center;flex:none">
+              <img src="{{ pwaQrSrc }}" alt="QR — application chauffeur" style="width:148px;height:148px;border-radius:8px;background:#fff"/>
+              <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);max-width:190px">{{ pwaQrNote }}</div>
+            </div>
+            </sc-if>
+          </div>
+        </div>
+
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 18px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px"><div><div class="t-section-title" style="font-size:15px">Sites non assignés</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">« Ajouter » → tournée surlignée</div></div><div style="display:flex;align-items:center;gap:8px;flex:none"><button onClick="{{ goParams }}" title="Coûts · temps · frais — paramètres de coût des tournées" style="width:34px;height:34px;border-radius:8px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#b26a00;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><span style="display:inline-flex;border:.5px solid var(--color-border-secondary);border-radius:9px;overflow:hidden;flex:none"><button onClick="{{ tvMap }}" style="{{ tvMapStyle }}">🗺 Carte</button><button onClick="{{ tvChrono }}" style="{{ tvChronoStyle }}">☰ Chronologie</button></span><button onClick="{{ openRouteForm }}" class="btn-secondary" title="Formulaire court : nom, départ, capacité, codes postaux" style="padding:9px 14px;font-size:12px;flex:none">Formulaire rapide</button><button onClick="{{ twNew }}" class="btn-primary" title="Assistant : tournée → sites → bureaux, itinéraire Google, prix au km" style="padding:9px 16px;font-size:12px;flex:none">+ Nouvelle tournée (assistant)</button></div></div>
           <div style="display:flex;flex-wrap:wrap;gap:10px">
@@ -2990,6 +3036,28 @@
         <div class="t-admin-label" style="margin:16px 0 6px">Validation de la tournée par le chauffeur</div>
         <span style="{{ tabStatusPill }}">{{ tabStatusTxt }}</span>
         <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:10px">Chaque envoi remet la validation à zéro : le chauffeur reçoit la tournée sur sa tablette et la valide — le statut passe alors en « ✓ Validée ».</div>
+
+        <!-- APPLICATION CHAUFFEUR : l'adresse se CALCULE sur l'hôte servi, elle
+             ne se retient pas. Le QR évite de la taper sur un téléphone. -->
+        <div class="t-admin-label" style="margin:16px 0 6px">Application chauffeur (téléphone)</div>
+        <div style="background:var(--color-background-secondary);border-radius:10px;padding:12px 14px">
+          <div style="font:600 12px var(--font-ui);color:var(--color-text);word-break:break-all">{{ pwaUrl }}</div>
+          <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:6px">Le chauffeur ouvre cette adresse et l'ajoute à son écran d'accueil. {{ pwaScopeTxt }}</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button onClick="{{ pwaCopy }}" class="btn-secondary" style="flex:1;font-size:12px">Copier l'adresse</button>
+            <button onClick="{{ pwaQrToggle }}" class="btn-secondary" style="flex:1;font-size:12px">{{ pwaQrLabel }}</button>
+          </div>
+          <sc-if value="{{ pwaQrOn }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+            <img src="{{ pwaQrSrc }}" alt="QR — application chauffeur" style="width:132px;height:132px;border-radius:8px;background:#fff;flex:none"/>
+            <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted)">{{ pwaQrNote }}</div>
+          </div>
+          </sc-if>
+          <sc-if value="{{ pwaTokOn }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fbe9eb;border:.5px solid #f0c4ca;border-radius:9px;padding:10px 12px;font:500 11px/1.5 var(--font-ui);color:var(--color-primary);margin-top:10px">⚠ Ce QR porte le <b>jeton admin</b> — mode test, en attendant les comptes chauffeur. Il ouvre TOUTES les boutiques : ne l'affichez pas devant n'importe qui, et retirez-le du téléphone (bouton « Oublier le jeton » dans l'app) dès qu'un PIN existe.</div>
+          </sc-if>
+          <button onClick="{{ pwaTokToggle }}" style="background:none;border:none;padding:8px 0 0;font:600 11px var(--font-ui);color:var(--color-primary);cursor:pointer">{{ pwaTokLabel }}</button>
+        </div>
       </div>
       <div style="padding:0 26px 20px;display:flex;gap:10px">
         <button onClick="{{ tabClose }}" class="btn-secondary" style="flex:1;font-size:13px">Fermer</button>
@@ -5441,6 +5509,113 @@ class Component extends DCLogic {
      qu'une navigation directe n'emporte pas — le franchisé recevrait un 401 en
      guise d'affiche. L'onglet, lui, est ouvert TOUT DE SUITE au clic : ouvert
      depuis la réponse du fetch, il serait bloqué comme popup. */
+  /* LISTE DE LIVRAISON IMPRIMABLE — pour ESSAYER le scan de bout en bout.
+     Une feuille A4 par tournée : en tête le QR de la TOURNÉE (celui que l'app
+     chauffeur lit pour la prendre), puis les arrêts, et un QR par COLIS (la
+     référence de commande, exactement ce que l'app compare).
+
+     Pourquoi elle existe : le vrai bon de livraison vient de l'ERP et ne porte
+     pas encore de QR. Cette feuille permet de dérouler tout le parcours —
+     prendre la tournée, valider le chargement, remettre les colis — sans
+     attendre ce changement. Ce n'est PAS le bon officiel, et l'en-tête le dit
+     pour que personne ne la confonde avec un document de livraison.
+
+     Les QR viennent du serveur (/franchisee/tour-qr) : aucune URL, aucune
+     référence de commande ne part chez un tiers. */
+  listeLivraison(tourName){
+    const fr=window.__FR||{}; if(!fr.base){ this.printJob('⚠ API indisponible — impression impossible'); return; }
+    const esc=(v)=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const arbre=(window.BOServer?window.BOServer.table('fr_tdb_tree'):[])||[];
+    const t=arbre.find(x=>x&&x.nom===tourName);
+    if(!t){ this.printJob('⚠ « '+tourName+' » : rien de servi pour aujourd’hui'); return; }
+    // Même lecture que l'app chauffeur : « Client · #REF » = aujourd'hui ;
+    // « … · Ven 05/09 » = jour à venir, donc pas sur cette feuille.
+    const parse=(u)=>{ const nom=String((u&&u.nom)||'');
+      const m=nom.match(/^(.*?)\s*·\s*#([^\s·]+)(?:\s*·\s*(.+))?$/);
+      return {client:m?m[1]:nom, ref:m?m[2]:nom, later:m?(m[3]||''):'', pieces:(u&&u.cmd)||0}; };
+    const arrets=[];
+    (t.zones||[]).forEach(z=>(z.sites||[]).forEach(s=>{
+      const cmds=(s.users||[]).map(parse).filter(o=>!o.later);
+      if(cmds.length) arrets.push({zone:z.nom||'—',libelle:s.libelle||'—',adresse:s.ville||'',office:s.office||'—',cmds});
+    }));
+    if(!arrets.length){ this.printJob('⚠ « '+tourName+' » : aucun colis à livrer aujourd’hui'); return; }
+    const refs=[]; arrets.forEach(a=>a.cmds.forEach(c=>refs.push(c.ref)));
+    // Garde-fou : une feuille, c'est une tournée — pas un annuaire. Au-delà,
+    // les QR manquants sont DITS sur la feuille, jamais omis en silence.
+    const MAX=60, refsQr=refs.slice(0,MAX);
+    const onglet=window.open('','_blank');
+    this.printJob('Préparation de la liste de livraison — '+tourName+'…');
+    const qs=fr.shop?('&shop='+encodeURIComponent(fr.shop)):'';
+    const qr=(d)=>fetch(fr.base+'/franchisee/tour-qr?d='+encodeURIComponent(d)+qs,{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.blob():Promise.reject(new Error('HTTP '+r.status)))
+      .then(b=>new Promise(res=>{ const f=new FileReader(); f.onload=()=>res(f.result); f.readAsDataURL(b); }));
+    const dateFR=new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const consoleBase=location.origin+location.pathname.replace(/[^/]*$/,'');
+    const dsFonts=consoleBase+'_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/fonts/';
+    const shopNom=this.shopField('name','')||'L’Atelier By';
+    Promise.all([qr(tourName)].concat(refsQr.map(r=>qr(r).catch(()=>null))))
+      .then(imgs=>{
+        const qrTour=imgs[0], parRef={}; refsQr.forEach((r,i)=>{ parRef[r]=imgs[i+1]; });
+        const bloc=arrets.map((a,i)=>'<section class="arret">'
+          +'<div class="ah"><span class="num">'+(i+1)+'</span><div><div class="nom">'+esc(a.libelle)+'</div>'
+          +'<div class="meta">'+esc(a.office)+(a.adresse?(' · '+esc(a.adresse)):'')+' · '+esc(a.zone)+'</div></div>'
+          +'<div class="cnt">'+a.cmds.length+' colis</div></div>'
+          +'<div class="colis">'+a.cmds.map(c=>'<div class="c">'
+            +(parRef[c.ref]?('<img src="'+parRef[c.ref]+'" alt="">'):'<div class="noqr">QR non produit</div>')
+            +'<div class="cr">'+esc(c.ref)+'</div><div class="cc">'+esc(c.client)+' · '+c.pieces+' pièce(s)</div>'
+            +'<div class="cochage"></div></div>').join('')+'</div></section>').join('');
+        const html='<!doctype html><html lang="fr"><head><meta charset="utf-8">'
+          +'<title>Liste de livraison — '+esc(tourName)+'</title><style>'
+          +'@font-face{font-family:"Gotham";src:url("'+dsFonts+'Gotham_Regular_New.otf") format("opentype");font-weight:400}'
+          +'@font-face{font-family:"Gotham";src:url("'+dsFonts+'Gotham_Medium.otf") format("opentype");font-weight:600}'
+          +'@page{size:A4;margin:12mm}'
+          +'body{margin:0;font-family:"Gotham",system-ui,sans-serif;color:#222}'
+          +'.head{display:flex;gap:16px;align-items:flex-start;border-bottom:2px solid #8D1D2C;padding-bottom:12px}'
+          +'.head .t{flex:1}.head h1{font:600 20px/1.2 "Gotham",sans-serif;margin:0 0 4px}'
+          +'.head .s{font:400 11px/1.5 "Gotham",sans-serif;color:#666}'
+          +'.head img{width:132px;height:132px;flex:none}'
+          +'.essai{background:#fbe9eb;border:.5px solid #f0c4ca;color:#8D1D2C;border-radius:6px;padding:8px 10px;'
+          +'font:600 10.5px/1.4 "Gotham",sans-serif;margin-top:10px}'
+          +'.arret{margin-top:14px;break-inside:avoid}'
+          +'.ah{display:flex;align-items:center;gap:10px;background:#F4EFE8;border-radius:8px;padding:8px 10px}'
+          +'.ah .num{width:24px;height:24px;border-radius:6px;background:#8D1D2C;color:#fff;display:flex;'
+          +'align-items:center;justify-content:center;font:600 12px "Gotham",sans-serif;flex:none}'
+          +'.ah .nom{font:600 13px "Gotham",sans-serif}.ah .meta{font:400 10px "Gotham",sans-serif;color:#666}'
+          +'.ah .cnt{margin-left:auto;font:600 11px "Gotham",sans-serif;color:#8D1D2C}'
+          +'.colis{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}'
+          +'.c{width:118px;border:.5px solid rgba(34,34,34,.18);border-radius:8px;padding:8px;text-align:center;break-inside:avoid}'
+          +'.c img{width:100px;height:100px;display:block;margin:0 auto}'
+          +'.c .noqr{height:100px;display:flex;align-items:center;justify-content:center;font:600 9px "Gotham",sans-serif;color:#8D1D2C}'
+          +'.cr{font:600 11px "Gotham",sans-serif;margin-top:4px}'
+          +'.cc{font:400 9px/1.3 "Gotham",sans-serif;color:#666}'
+          +'.cochage{width:16px;height:16px;border:1.2px solid #222;border-radius:3px;margin:6px auto 0}'
+          +'.pied{margin-top:18px;border-top:.5px solid rgba(34,34,34,.18);padding-top:8px;'
+          +'font:400 9.5px/1.5 "Gotham",sans-serif;color:#666}'
+          +'@media print{.noprint{display:none}}'
+          +'.noprint{position:fixed;top:10px;right:10px;background:#8D1D2C;color:#fff;border:none;border-radius:8px;'
+          +'padding:10px 16px;font:600 12px "Gotham",sans-serif;cursor:pointer}'
+          +'</style></head><body>'
+          +'<button class="noprint" onclick="window.print()">Imprimer</button>'
+          +'<div class="head">'+(qrTour?('<img src="'+qrTour+'" alt="QR de la tournée">'):'')
+          +'<div class="t"><h1>'+esc(tourName)+'</h1><div class="s">'+esc(shopNom)+' · '+esc(dateFR)+'<br>'
+          +arrets.length+' arrêt(s) · '+refs.length+' colis</div>'
+          +'<div class="essai">FEUILLE D’ESSAI — pas le bon de livraison officiel. '
+          +'Scanne le grand QR pour prendre la tournée dans l’app chauffeur, puis les petits, un par colis.'
+          +(refs.length>MAX?(' ⚠ '+(refs.length-MAX)+' colis au-delà du '+MAX+'ᵉ sont listés SANS QR.'):'')
+          +'</div></div></div>'
+          +bloc
+          +'<div class="pied">Contenu lu sur /franchisee/fr-tdb-tree (commandes du jour). QR produits par le serveur '
+          +'(/franchisee/tour-qr) : aucune référence ne sort de l’installation.</div>'
+          +'</body></html>';
+        const u=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+        if(onglet){ onglet.location=u; setTimeout(()=>URL.revokeObjectURL(u),60000);
+          this.printJob('✔ Liste ouverte — le bouton « Imprimer » la sort en A4'); }
+        else { const a=document.createElement('a'); a.href=u; a.download='liste-livraison-'+String(tourName).replace(/[^A-Za-z0-9]+/g,'-')+'.html';
+          document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+          this.printJob('✔ Liste téléchargée (onglet bloqué)'); } })
+      .catch(e=>{ if(onglet) onglet.close(); this.printJob('⚠ Liste non produite : '+((e&&e.message)||e)); });
+  }
+
   invAffiche(){ const S=this.state.inv; if(!S||S.office==null) return; const fr=window.__FR||{}; if(!fr.base) return;
     const qs=fr.shop?('&shop='+encodeURIComponent(fr.shop)):'';
     const onglet=window.open('','_blank');
@@ -7622,6 +7797,49 @@ class Component extends DCLogic {
       if(v==='__new') this.setState({tabDriverNew:true,tabDriver:''});
       else this.setState({tabDriver:v,tabDriverNew:false}); };
     const tabClose=()=>this.setState({tabModal:null,tabDriver:null,tabDriverNew:null});
+
+    /* ── APPLICATION CHAUFFEUR (/webshop/driver) ────────────────────────────
+       L'adresse est CALCULÉE depuis celle de la console : même origine, dossier
+       voisin. Rien à retenir ni à saisir, et elle reste juste sur n'importe quel
+       hôte (production, préproduction, poste local).
+
+       Le QR vient de l'API (/franchisee/tour-qr, encodeur autonome du serveur)
+       et se télécharge AVEC le jeton — un <img src> n'emporte pas d'en-tête,
+       d'où le fetch puis l'incrustation en data:.
+
+       Le jeton n'est JAMAIS écrit dans le texte affiché : il n'entre que dans
+       le QR, et seulement si on le demande explicitement. */
+    const frPwa=window.__FR||{};
+    const pwaBase=(()=>{ const p=location.pathname;
+      return location.origin+(/backoffice_franchisee/.test(p) ? p.replace(/backoffice_franchisee\/.*$/,'driver/') : p.replace(/[^/]*$/,'')+'driver/'); })();
+    const pwaShopQs=frPwa.shop?('?shop='+encodeURIComponent(frPwa.shop)):'';
+    const pwaUrl=pwaBase+pwaShopQs;
+    const pwaTokOn=!!S.pwaTok&&!!frPwa.token;
+    const pwaQrData=pwaUrl+(pwaTokOn?((pwaShopQs?'&':'?')+'token='+encodeURIComponent(frPwa.token)):'');
+    const pwaScopeTxt=frPwa.shop?('Portée : boutique '+frPwa.shop+'.')
+      :'⚠ Aucune boutique dans l\'adresse de la console : rouvrez-la avec ?shop=<id>, sinon l\'app n\'a pas de portée.';
+    const pwaQrOn=!!S.pwaQr;
+    const pwaQrNote=(pwaTokOn?'QR avec jeton : le téléphone entre directement, sans PIN.':'QR sans jeton : le chauffeur se connecte avec son PIN.')
+      +' Le jeton n\'apparaît jamais en clair à l\'écran.';
+    const pwaQrLabel=pwaQrOn?'Masquer le QR':'Afficher le QR';
+    const pwaTokLabel=pwaTokOn?'Retirer le jeton du QR':'Inclure le jeton admin (mode test)';
+    const pwaFetchQr=(data)=>{ const b=frPwa.base; if(!b){ this.printJob('⚠ API indisponible — QR impossible'); return; }
+      fetch(b+'/franchisee/tour-qr?d='+encodeURIComponent(data),{headers:FRH(),credentials:'omit'})
+        .then(r=>r.ok?r.blob():Promise.reject(new Error('HTTP '+r.status)))
+        .then(bl=>new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.readAsDataURL(bl); }))
+        .then(src=>this.setState({pwaQrSrc:src}))
+        .catch(e=>{ this.setState({pwaQr:false}); this.printJob('⚠ QR non généré : '+(e&&e.message||e)); }); };
+    const pwaQrToggle=()=>{ const on=!S.pwaQr; this.setState({pwaQr:on,pwaQrSrc:null}); if(on) pwaFetchQr(pwaQrData); };
+    const pwaTokToggle=()=>{ const on=!S.pwaTok;
+      if(on&&!frPwa.token){ this.printJob('⚠ Aucun jeton admin dans cette session'); return; }
+      this.setState({pwaTok:on,pwaQrSrc:null});
+      if(S.pwaQr) pwaFetchQr(pwaUrl+(on?((pwaShopQs?'&':'?')+'token='+encodeURIComponent(frPwa.token)):'')); };
+    const pwaCopy=()=>{ try{ navigator.clipboard.writeText(pwaUrl).then(()=>this.printJob('✓ Adresse copiée : '+pwaUrl),
+      ()=>this.printJob('Adresse : '+pwaUrl)); }catch(e){ this.printJob('Adresse : '+pwaUrl); } };
+    // Feuille d'essai par tournée : QR de la tournée + un QR par colis.
+    const pwaListes=SRV('fr_tdb_tree').filter(t=>t&&t.nom&&!/^⚠/.test(t.nom))
+      .map(t=>({nom:t.nom, print:()=>this.listeLivraison(t.nom)}));
+    const pwaListesHas=pwaListes.length>0, pwaListesVide=!pwaListesHas;
     const tabSend=()=>{ const fr=window.__FR||{}; if(!fr.base){ this.printJob('⚠ API indisponible — envoi impossible'); return; }
       const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2=FRH({'Content-Type':'application/json'});
       fetch(fr.base+'/franchisee/tour-dispatch'+qs2,{method:'POST',headers:H2,credentials:'omit',body:JSON.stringify({tour:tabTour,driver:String(tabDriver).trim()})})
@@ -10658,6 +10876,8 @@ class Component extends DCLogic {
       ordListTitle:tdbView==='collect'?'Commandes Collect':'Commandes',
       ordRangeChips,prepDayBadges,prepDayOrders,prepDayEmpty,prepProdLines,prepProdEmpty,
       tabModalOn,tabTour,tabDriver,tabDriverSet,tabClose,tabSend,tabStatusTxt,tabStatusPill,tabCanSend,tabInfo,
+      pwaUrl,pwaScopeTxt,pwaQrOn,pwaQrSrc:(S.pwaQrSrc||''),pwaQrLabel,pwaQrNote,pwaTokOn,pwaTokLabel,pwaQrToggle,pwaTokToggle,pwaCopy,
+      pwaListes,pwaListesHas,pwaListesVide,
       tabHasList,tabNewMode,tabDriverOpts,tabDriverVal,tabDriverPick,
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,
       // (i) de la colonne « Min. » : la regle de calcul du seuil doit etre

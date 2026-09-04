@@ -1,0 +1,121 @@
+/* app.css — PWA chauffeur. Tout est pris aux jetons du design system
+   (_ds/…/global.css) : aucune couleur ni police en dur, comme partout ailleurs. */
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--color-primary);overscroll-behavior:none}
+body{font-family:var(--font-ui);color:var(--color-text);-webkit-tap-highlight-color:transparent}
+input,textarea,select,button{font-family:var(--font-ui)}
+
+.app{height:100dvh;display:flex;flex-direction:column;background:var(--color-bg)}
+.sb{flex:none;height:env(safe-area-inset-top,0);background:var(--color-primary)}
+.bar{flex:none;background:var(--color-primary);color:#fff;padding:14px 14px 13px;display:flex;align-items:center;gap:10px}
+.bar .back{width:32px;height:32px;border:none;border-radius:9px;background:rgba(255,255,255,.16);color:#fff;font-size:17px;flex:none}
+.bar>div{min-width:0}
+.bar .ttl{font:600 16px var(--font-ui);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .sub{font:400 11px var(--font-ui);opacity:.82;margin-top:1px}
+.bar .rt{margin-left:auto;text-align:right;font:600 11.5px var(--font-ui);opacity:.94;line-height:1.25}
+.bar .rt small{display:block;font-weight:400;opacity:.78;font-size:10.5px}
+/* Le logo est posé À MÊME la barre, sans pastille blanche. Son tracé est
+   sombre : passé en blanc plein (brightness(0) puis invert), il se lit sur le
+   rouge et garde son fond transparent. L'accent doré de l'apostrophe part avec
+   — c'est le prix d'un lockup monochrome, et il vaut mieux qu'un rectangle
+   blanc collé en haut de l'écran. */
+.bar .logo{height:19px;width:auto;display:block;filter:brightness(0) invert(1)}
+
+.body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 14px 18px;display:flex;flex-direction:column;gap:10px}
+.foot{flex:none;background:var(--color-surface);border-top:.5px solid var(--color-border-tertiary);
+      padding:11px 14px calc(14px + env(safe-area-inset-bottom,8px));display:flex;flex-direction:column;gap:8px}
+
+.card{background:var(--color-surface);border-radius:14px;padding:12px 13px;border:.5px solid var(--color-border-tertiary)}
+.card.sel{border:2px solid var(--color-primary);padding:11px 12px}
+.card.soft{background:var(--color-background-secondary);border:none}
+.card.warn{background:#fbf4f5;border:.5px solid rgba(141,29,44,.25)}
+.lbl{font:600 10px var(--font-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--color-text-muted)}
+.h1{font:400 22px/1.15 var(--font-display);color:var(--color-text)}
+.h2{font:600 14.5px var(--font-ui)}
+.h3{font:600 13px var(--font-ui)}
+.p{font:400 11.5px/1.45 var(--font-ui);color:var(--color-text-muted)}
+.pin{font:400 11px/1.45 var(--font-ui);color:var(--color-text)}
+.row{display:flex;align-items:center;gap:8px}
+.wrap{flex-wrap:wrap}
+.sep{height:.5px;background:var(--color-border-tertiary);margin:8px 0}
+.grow{flex:1;min-width:0}
+.mut{opacity:.55}
+
+.btn{text-decoration:none;height:52px;border-radius:13px;background:var(--color-primary);color:#fff;border:none;
+     font:600 15px var(--font-ui);display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.btn:active{filter:brightness(.92)}
+.btn.gh{background:var(--color-surface);color:var(--color-primary);border:1.5px solid var(--color-primary)}
+.btn[disabled]{background:#cfc7bd;color:#fff;border-color:#cfc7bd}
+.btn.gh[disabled]{background:var(--color-surface);color:var(--color-text-muted);border-color:var(--color-border-secondary)}
+.btn.sm{height:42px;font-size:13px;border-radius:11px}
+.btn.xs{height:34px;font-size:11.5px;border-radius:9px;padding:0 12px;width:auto}
+
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font:600 10px var(--font-ui)}
+.pill.ok{background:#eaf5ec;color:#2d7a3e}
+.pill.wait{background:#fdf3e7;color:#b26a00}
+.pill.grey{background:var(--color-background-secondary);color:var(--color-text-muted)}
+.pill.ruby{background:var(--color-primary);color:#fff}
+.pill.abr{background:var(--color-secondary);color:var(--color-on-abricot)}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:999px;
+      font:600 11.5px var(--font-ui);background:var(--color-surface);color:var(--color-text);
+      border:.5px solid var(--color-border-secondary)}
+.chip.on{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+
+.field,input.field{width:100%;height:46px;border-radius:11px;background:var(--color-background-secondary);
+       border:.5px solid var(--color-border-secondary);display:flex;align-items:center;
+       padding:0 13px;font:600 15px var(--font-ui);color:var(--color-text)}
+textarea.field{height:auto;min-height:84px;padding:11px 13px;font:400 13px/1.5 var(--font-ui);display:block;resize:vertical}
+input.field:focus,textarea.field:focus{outline:2px solid var(--color-primary);outline-offset:-2px}
+.bar-p{height:7px;border-radius:999px;background:#ddd5cb;overflow:hidden;flex:none}
+.bar-p i{display:block;height:100%;background:var(--color-primary);border-radius:999px;transition:width .25s}
+
+.box{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--color-border-secondary);
+     background:var(--color-surface);flex:none;display:flex;align-items:center;justify-content:center;
+     font:700 13px var(--font-ui);color:#fff;padding:0}
+.box.done{background:#2d7a3e;border-color:#2d7a3e}
+.zone{font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-primary);
+      display:flex;align-items:center;gap:6px;margin:10px 0 5px}
+.zone i{flex:1;height:.5px;background:var(--color-border-tertiary);display:block}
+
+.scan{border-radius:14px;background:#241a1c;padding:11px;position:relative;overflow:hidden;flex:none}
+.vf{height:210px;border-radius:10px;background:#0f0b0c;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vf .c{position:absolute;width:26px;height:26px;border:3px solid var(--color-secondary);z-index:2}
+.vf .c1{top:10px;left:10px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
+.vf .c2{top:10px;right:10px;border-left:0;border-bottom:0;border-radius:0 6px 0 0}
+.vf .c3{bottom:10px;left:10px;border-right:0;border-top:0;border-radius:0 0 0 6px}
+.vf .c4{bottom:10px;right:10px;border-left:0;border-top:0;border-radius:0 0 6px 0}
+/* Le message se lit PAR-DESSUS l'image : posé au centre, il devenait blanc sur
+   blanc dès qu'un QR remplissait le viseur. En bas, sur un fond sombre. */
+.vf .hint{position:absolute;left:8px;right:8px;bottom:8px;z-index:2;font:600 11.5px/1.35 var(--font-ui);
+          color:#fff;text-align:center;padding:7px 9px;background:rgba(20,12,13,.74);border-radius:9px}
+.scan .lg{font:600 11px var(--font-ui);color:#fff;margin-top:8px;display:flex;align-items:center;gap:6px}
+
+.stop{display:flex;gap:10px;align-items:flex-start;padding:8px 0;width:100%;background:none;border:none;text-align:left}
+.num{width:26px;height:26px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;
+     font:700 12px var(--font-ui);background:var(--color-background-secondary);color:var(--color-text-muted)}
+.num.done{background:#eaf5ec;color:#2d7a3e}
+.num.now{background:var(--color-primary);color:#fff}
+.num.tag{width:auto;min-width:26px;padding:0 8px;font-size:10.5px;letter-spacing:.02em}
+.sms{background:var(--color-secondary);border-radius:14px;padding:12px 13px}
+.bub{background:#fff;border-radius:12px 12px 12px 4px;padding:10px 12px;font:400 12.5px/1.5 var(--font-ui)}
+.star{font-size:30px;letter-spacing:4px;color:var(--color-primary);background:none;border:none;padding:0}
+.star .off{color:#d6cec3}
+.kpi{flex:1;background:var(--color-surface);border-radius:12px;padding:9px 10px;border:.5px solid var(--color-border-tertiary)}
+.kpi b{display:block;font:600 19px var(--font-ui);color:var(--color-primary);line-height:1.2}
+.kpi span{font:400 9.5px var(--font-ui);color:var(--color-text-muted)}
+
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pad button{height:58px;border-radius:12px;border:.5px solid var(--color-border-secondary);
+            background:var(--color-surface);font:600 21px var(--font-ui);color:var(--color-text)}
+.dots{display:flex;gap:10px;justify-content:center;margin:4px 0 2px}
+.dots i{width:14px;height:14px;border-radius:50%;background:var(--color-background-secondary);
+        border:1.5px solid var(--color-border-secondary);display:block}
+.dots i.on{background:var(--color-primary);border-color:var(--color-primary)}
+
+.err{background:#fbf4f5;border:.5px solid rgba(141,29,44,.3);border-radius:12px;padding:10px 12px;
+     font:500 11.5px/1.5 var(--font-ui);color:var(--color-primary)}
+.toast-host{position:fixed;left:14px;right:14px;bottom:calc(96px + env(safe-area-inset-bottom,8px));z-index:50;
+            background:#241a1c;color:#fff;border-radius:12px;padding:11px 13px;font:600 12.5px var(--font-ui);
+            box-shadow:0 10px 26px rgba(0,0,0,.3)}
