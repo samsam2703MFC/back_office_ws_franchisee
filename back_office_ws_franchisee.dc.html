@@ -1424,7 +1424,11 @@
             </div>
             <div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Assortiment et affichage des prix pour ce bureau — les collaborateurs rattachés ne voient que ce qui est réglé ici</div>
           </div>
-          <button onClick="{{ baPreview }}" class="btn-secondary" style="font-size:12px;flex:none">Voir ce que ce bureau verra</button>
+          <div style="display:flex;gap:8px;flex:none;flex-wrap:wrap;align-items:center">
+            <button onClick="{{ baPreview }}" class="btn-secondary" style="font-size:12px">Voir ce que ce bureau verra</button>
+            <button onClick="{{ baReload }}" class="btn-secondary" style="font-size:12px">Annuler</button>
+            <button onClick="{{ baSave }}" class="btn-primary" style="font-size:12px">Enregistrer pour ce bureau</button>
+          </div>
         </div>
         <sc-if value="{{ ba.err }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 14px;border-radius:12px;background:#fbeaec;font:500 12px var(--font-ui);color:#8D1D2C">{{ ba.err }}</div></sc-if>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px">
@@ -1461,7 +1465,7 @@
                 <div style="display:flex;gap:12px;font:500 11px var(--font-ui)"><button onClick="{{ c.all }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-primary);font:inherit">Tout</button><button onClick="{{ c.none }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-text-muted);font:inherit">Aucun</button></div>
               </div>
               <sc-for list="{{ c.subs }}" as="sc" hint-placeholder-count="2">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px 2px"><span style="font:600 11px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">{{ sc.name }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ sc.n }} sur {{ sc.total }}</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px 2px"><span style="font:600 11px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">{{ sc.name }}</span><span style="display:flex;align-items:center;gap:12px"><span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ sc.n }} sur {{ sc.total }}</span><button onClick="{{ sc.all }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-primary);font:500 11px var(--font-ui)">Tout</button><button onClick="{{ sc.none }}" style="background:none;border:none;padding:0;cursor:pointer;color:var(--color-primary);font:500 11px var(--font-ui)">Aucun</button></span></div>
               <div style="display:flex;flex-direction:column;gap:3px">
                 <sc-for list="{{ sc.products }}" as="p" hint-placeholder-count="4">
                   <div onClick="{{ p.toggle }}" style="{{ p.rowStyle }}">
@@ -1478,7 +1482,6 @@
           </sc-for>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:4px;padding:12px 14px;border-top:.5px solid var(--color-border-tertiary)">
             <div style="font:400 12px var(--font-ui);color:var(--color-text-muted)"><strong style="color:var(--color-text)">{{ ba.checked }} produits</strong> proposés sur {{ ba.total }}{{ ba.dirtyTxt }}</div>
-            <div style="display:flex;gap:8px"><button onClick="{{ baReload }}" class="btn-secondary" style="font-size:12px">Annuler</button><button onClick="{{ baSave }}" class="btn-primary" style="font-size:12px">Enregistrer pour ce bureau</button></div>
           </div>
         </div>
         <sc-if value="{{ ba.preview }}" hint-placeholder-val="{{ false }}">
@@ -4504,7 +4507,7 @@ class Component extends DCLogic {
     fetch(fr.base+'/franchisee/office-assortment'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
       body:JSON.stringify({officeId:ba.officeId,mode:ba.mode,showPrices:ba.show,productIds})})
       .then(r=>r.json().catch(()=>null))
-      .then(j=>{ if(j&&j.ok){ this.printJob('✔ Assortiment enregistré — '+(j.mode==='custom'?(j.count+' produit(s) proposé(s)'):'catalogue complet')+(j.showPrices===false?' · prix masqués':'')); this.setState({ba:{...this.state.ba,dirty:false,err:''}}); this.bpRefresh(); }
+      .then(j=>{ if(j&&j.ok){ this.printJob('✔ Assortiment enregistré — '+(j.mode==='custom'?(j.count+' produit(s) proposé(s)'):'catalogue complet')+(j.showPrices===false?' · prix masqués':'')); /* Retour à la liste des bureaux : l'enregistrement clôt l'édition. */ this.setState({ba:null,_rev:(this.state._rev||0)+1}); if(window.BOServer&&typeof window.BOServer.refresh==='function'){ try{ window.BOServer.refresh(); }catch(e){} }  this.bpRefresh(); }
         else this.setState({ba:{...this.state.ba,err:(j&&j.error)||'refus du serveur'}}); })
       .catch(e=>this.setState({ba:{...this.state.ba,err:(e&&e.message)||'réseau indisponible'}})); }
   baPreview(){ const fr=window.__FR||{}; const ba=this.state.ba; if(!ba||!fr.base) return;
@@ -4531,6 +4534,7 @@ class Component extends DCLogic {
       // par sous-catégorie puis nom) ; sans sous-catégorie → « Autres ».
       const subs=[]; const byId={};
       prods.forEach(p=>{ const k=p.subCatId!=null?String(p.subCatId):'_'; if(!byId[k]){ byId[k]={id:k,name:p.subCatName||'Autres',products:[],n:0,total:0}; subs.push(byId[k]); } byId[k].products.push(p); byId[k].total++; if(p.checked) byId[k].n++; });
+      subs.forEach(sg=>{ sg.all=()=>this.baBulk(sg,true); sg.none=()=>this.baBulk(sg,false); });
       return {...c,products:prods,subs,n:(c.products||[]).filter(p=>ba.ids[p.id]).length,total:(c.products||[]).length,all:()=>this.baBulk(c,true),none:()=>this.baBulk(c,false)}; }).filter(c=>!q||c.products.length);
     const custom=ba.mode==='custom';
     return {ba:{...ba,checked,
