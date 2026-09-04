@@ -330,6 +330,15 @@
     <!-- CONTENT -->
     <main class="lz" style="flex:1;overflow-y:auto;padding:24px 26px 60px">
 
+      <sc-if value="{{ grpTabsOn }}" hint-placeholder-val="{{ false }}">
+      <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:10px 14px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);flex:none">{{ grpTabsTitre }}</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <sc-for list="{{ grpTabs }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.go }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+        </div>
+      </div>
+      </sc-if>
+
       <sc-if value="{{ isLivProcess }}" hint-placeholder-val="{{ false }}">
       <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:14px 20px;margin-bottom:18px">
         <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:10px">Sens de paramétrage — livraison</div>
@@ -7045,21 +7054,32 @@ class Component extends DCLogic {
   // rendu ; elles remontent ici pour être lues AUSSI par les adresses — une
   // seule définition, sinon un écran ajouté au menu n'aurait pas d'adresse.
   NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis'];
-  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams'];
+  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','tabletteKitchen'];
 
   // Groupes dépliants du menu « Paramétrage ». Définis ici et non dans le rendu,
   // parce que l'adresse doit savoir quel groupe déplier à l'arrivée sur un de
   // ses écrans.
+  /* LES FAMILLES DU PARAMÉTRAGE. Chaque famille est UNE entrée de menu et
+     UNE barre d'onglets en tête d'écran : le menu ne se déplie plus, et les
+     écrans voisins sont à un clic au lieu de deux. La livraison garde son
+     fil d'ariane numéroté — c'est une SUITE d'étapes, pas des onglets. */
+  PARAM_FAMILLES(){ return [
+    {id:'boutique', titre:'Boutique', ecrans:[['reglesBoutique','Disponibilité & créneaux'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
+    {id:'maison', titre:'Ma boutique', ecrans:[['shopParams','Fiche & horaires'],['tabletteKitchen','Tablette Kitchen']]},
+  ]; }
   navGroupsDef(){ return [
       // « Coûts · temps · frais » sort du menu : accessible via l'ENGRENAGE de
       // l'écran Tournées (l'entrée de menu se réduit au mot « Tournées »).
-      {id:'g_liv',label:'Livraison',items:[['atelierLiv','Atelier (assistant)'],['tournees','Tournées']]},
+      {id:'g_liv',label:'Livraison',items:[['atelierLiv','Livraison']]},
       // « Bureaux & sites » (écran clients) et « Contacts email » (emailsBureau)
       // sortent du menu : doublons — la création B2B vit dans Clients, les
       // contacts email dans le formulaire d'édition de l'Office (engrenage).
       // « Zone de chalandise » retirée du menu : double emploi avec l'Analyse
       // géographique (l'écran reste dans le code, réversible).
-      {id:'g_b2b',label:'Clients B2B',items:[['sites','Sites de livraison'],['offices','Offices'],['b2bClients','Clients']]},
+      // Sites, Bureaux et Clients ne sont plus des entrées de menu : ils sont
+      // les étapes 3, 4 et 5 du fil d'ariane de la livraison, affiché en tête
+      // de chacun d'eux. Deux façons d'atteindre le même écran, c'était une de
+      // trop. Les adresses (#sites, #offices, #b2bClients) restent valides.
       // « Assortiment » sort du menu : ses trois onglets se CONSULTENT, ils ne
       // se règlent pas — l'assortiment est décidé par la marque pour tout le
       // réseau (/franchisee/assortiment-toggle répond 403). Un écran en lecture
@@ -7067,9 +7087,9 @@ class Component extends DCLogic {
       // du franchisé est la quantité fabriquée, dans « Stock du jour ». L'écran
       // reste dans le code, dans la recherche et à son adresse (#assortiment) —
       // réversible, comme « Zone de chalandise » et « Contacts email ».
-      {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Disponibilité & créneaux'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
-      // Réglages : administration de la boutique, pas exploitation quotidienne.
-      {id:'g_reglages',label:'Réglages',items:[['shopParams','Paramètres du shop'],['tabletteKitchen','Tablette Kitchen']]},
+      // Boutique et Ma boutique : une entrée chacune, leurs écrans en onglets.
+      {id:'g_boutique',label:'Boutique',items:[['reglesBoutique','Boutique']]},
+      {id:'g_reglages',label:'Ma boutique',items:[['shopParams','Ma boutique']]},
     ]; }
 
   /* Écrans qui ACCEPTENT d'être ouverts par leur adresse. Aucune liste de plus :
@@ -8051,6 +8071,7 @@ class Component extends DCLogic {
     // (assignés aux sites) → 3 · Clients (la page Clients). Stepper graphique :
     // pastille 30px, ✓ vert quand l'étape est franchie, sous-titre, connecteurs.
     const livFlow=[
+      ['atelierLiv','Atelier','Le pas-à-pas guidé'],
       ['tournees','Tournées · horaires','Circuits, horaires & fermetures'],
       ['sites','Sites (buildings)','Bâtiments · rattachés aux tournées'],
       ['offices','Bureaux (offices)','Bureaux validés · assignés aux sites'],
@@ -8067,6 +8088,14 @@ class Component extends DCLogic {
         labelStyle:'font:'+(active?'700':'500')+' 12.5px/1.25 var(--font-ui);white-space:nowrap;color:'+(active?'var(--color-primary)':'var(--color-text)'),
         subStyle:'font:400 10px/1.3 var(--font-ui);white-space:nowrap;color:var(--color-text-muted)' };
     });
+    /* Onglets de la famille en cours : les écrans voisins sans repasser par
+       le menu. Rien pour un écran qui n'appartient à aucune famille. */
+    const famille=this.PARAM_FAMILLES().find(f=>f.ecrans.some(([k])=>k===S.screen))||null;
+    const grpTabsOn=!!famille;
+    const grpTabsTitre=famille?famille.titre:'';
+    const grpTabs=famille?famille.ecrans.map(([k,label])=>{ const on=k===S.screen;
+      return { label, go:this.go(k),
+        style:'border:none;border-radius:9px;padding:8px 15px;font:'+(on?'700':'500')+' 12.5px var(--font-ui);cursor:pointer;white-space:nowrap;background:'+(on?'var(--color-primary)':'transparent')+';color:'+(on?'#fff':'var(--color-text-muted)') }; }):[];
     const paramsOpen=S.paramsOpen!==undefined?S.paramsOpen:paramsActive;
     const toggleParams=()=>{ const cur=S.paramsOpen!==undefined?S.paramsOpen:paramsActive; this.setState({paramsOpen:!cur}); };
     const paramsHeadStyle='display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;margin:14px 0 2px;border:none;border-radius:8px;cursor:pointer;text-align:left;background:transparent;color:'+(paramsActive?'var(--color-primary)':'var(--color-text-muted)');
@@ -10902,7 +10931,7 @@ class Component extends DCLogic {
                  kTdbCutTxt:'clôture saisie à '+co }; })(),
       ...obVals,
       ...profileVals,
-      isLivProcess,livSteps,
+      isLivProcess,livSteps,grpTabsOn,grpTabs,grpTabsTitre,
       pencilStyle:'background:transparent;border:.5px solid var(--color-border-tertiary);border-radius:7px;cursor:pointer;color:var(--color-text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none',
       paramsOpen,toggleParams,paramsHeadStyle,paramsChevStyle,
       formOpen:!!fCfg, formTitle:fCfg?fCfg.title:'', formTable:fCfg?fCfg.table:'', formSaveLabel:fCfg?fCfg.save:'', formFields,
