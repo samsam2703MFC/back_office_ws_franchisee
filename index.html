@@ -2942,8 +2942,8 @@
         </sc-for>
       </div>
       <div style="padding:12px 26px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted)">Revient à l'ouverture de la console tant qu'il reste un point bloquant ; la bulle « Données à compléter » reste visible dans le rail.<sc-if value="{{ dcGeoTxt }}" hint-placeholder-val="{{ false }}"><br><b>{{ dcGeoTxt }}</b></sc-if></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ dcGeo }}" class="btn-secondary" title="Google situe d'un coup chaque bureau, site et client qui a une adresse mais pas de position ; ce qu'il ne situe qu'à la rue ou à la localité reste à choisir à la main" style="font-size:12.5px;{{ dcGeoStyle }}">Situer les adresses manquantes (Google)</button><button onClick="{{ dcLater }}" class="btn-secondary" style="font-size:12.5px">Plus tard</button><button onClick="{{ dcFirst }}" class="btn-primary" style="font-size:12.5px">Commencer par le premier point</button></div>
+        <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted)">Revient à l'ouverture de la console tant qu'il reste un point bloquant ; la bulle « Données à compléter » reste visible dans le rail.<sc-if value="{{ dcGeoTxt }}" hint-placeholder-val="{{ false }}"><br><b>{{ dcGeoTxt }}</b></sc-if><sc-if value="{{ dcDropTxt }}" hint-placeholder-val="{{ false }}"><br><b>{{ dcDropTxt }}</b></sc-if></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ dcDrop }}" class="btn-secondary" title="Pose le standard de 5 minutes sur place à chaque bureau qui n'a pas de temps de dépôt — à ajuster ensuite à 10 ou 15 min sur les fiches concernées" style="font-size:12.5px;{{ dcDropStyle }}">5 min de dépôt partout (standard)</button><button onClick="{{ dcGeo }}" class="btn-secondary" title="Google situe d'un coup chaque bureau, site et client qui a une adresse mais pas de position ; ce qu'il ne situe qu'à la rue ou à la localité reste à choisir à la main" style="font-size:12.5px;{{ dcGeoStyle }}">Situer les adresses manquantes (Google)</button><button onClick="{{ dcLater }}" class="btn-secondary" style="font-size:12.5px">Plus tard</button><button onClick="{{ dcFirst }}" class="btn-primary" style="font-size:12.5px">Commencer par le premier point</button></div>
       </div>
     </div>
   </div>
@@ -4605,6 +4605,25 @@ class Component extends DCLogic {
     if(C.length) out.push({key:'c',label:'Coûts et validation',color:'#2a5a9e',sub:String(C.length),items:C});
     return out; }
   dcClose(){ this.setState({dcOpen:false}); }
+  /* LE STANDARD SUR TOUS LES BUREAUX : cinq minutes sur place pour chaque
+     bureau qui n'a pas de temps de dépôt mesuré. Ce n'est pas une mesure,
+     c'est une base de départ — chaque bureau se corrige ensuite d'un clic
+     sur sa fiche (5 / 10 / 15). Sans elle, aucune heure d'arrivée. */
+  dcDropStandard(){
+    const fr=window.__FR||{}; if(!fr.base||this._dcDropBusy) return;
+    const SRV=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
+    const bp={}; SRV('ws_office_delivery_settings').forEach(b=>{ if(b&&b.officeId!=null) bp[String(b.officeId)]=b; });
+    const cibles=SRV('ws_offices').filter(o=>o&&o.id!=null&&(!bp[String(o.id)]||!(+bp[String(o.id)].drop>0)));
+    if(!cibles.length){ this.setState({dcDropTxt:'Tous les bureaux ont déjà un temps de dépôt.'}); return; }
+    this._dcDropBusy=true; this.setState({dcDropTxt:'Pose de 5 min sur '+cibles.length+' bureau(x)…'});
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; let ok=0, ko=0;
+    Promise.all(cibles.map(o=>{ const b=bp[String(o.id)]||{};
+      return fetch(fr.base+'/franchisee/office-delivery-setting'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+        body:JSON.stringify({officeId:o.id,cutHeure:b.cutHeure||'',cutDecal:b.cutDecal!=null?b.cutDecal:1,drop:5})})
+        .then(r=>r.json().catch(()=>null)).then(j=>{ if(j&&j.ok) ok++; else ko++; }).catch(()=>{ ko++; }); }))
+      .then(()=>{ this._dcDropBusy=false;
+        this.setState({dcDropTxt:'✓ 5 min posées sur '+ok+' bureau(x)'+(ko?(' · '+ko+' refus'):'')+' — ajustez à 10 ou 15 min sur les fiches concernées'});
+        this.bcRefreshOffices(); }); }
   /* GÉOCODAGE AUTOMATIQUE de tout ce qui a une adresse mais pas de position
      (bureaux, sites, clients) : POST geo-backfill par passes, jusqu'à ce que
      rien ne reste, puis relecture des tables. Ce que Google ne situe qu'à la
@@ -4630,6 +4649,7 @@ class Component extends DCLogic {
     const first=groups.length?groups[0].items[0]:null;
     return {dcHas:n>0,dcCount:String(n),dcOpen:open&&n>0,dcGroups:groups,dcOpenFn:()=>this.setState({dcOpen:true}),dcLater:()=>this.dcLater(),
       dcGeo:()=>this.dcGeocode(),dcGeoTxt:S.dcGeoTxt||'',dcGeoStyle:this._dcGeoBusy?'opacity:.6;pointer-events:none':'',
+      dcDrop:()=>this.dcDropStandard(),dcDropTxt:S.dcDropTxt||'',dcDropStyle:this._dcDropBusy?'opacity:.6;pointer-events:none':'',
       dcFirst:()=>{ if(first) first.go(); else this.dcClose(); },
       dcTitre:n+' donnée'+(n>1?'s':'')+' à compléter',
       dcBadgeTitle:n+' donnée(s) à compléter'+(bloquant?(' — '+bloquant+' bloquante(s) pour la livraison'):''),
@@ -5256,8 +5276,12 @@ class Component extends DCLogic {
            info:'Laisser vide = ce bureau suit l’horaire de sa tournée.'},
           {k:'cutDecal',label:'… combien de jours avant',type:'select',half:true,def:1,
            options:[{value:0,label:'Le jour même'},{value:1,label:'La veille (J-1)'},{value:2,label:'L’avant-veille (J-2)'},{value:3,label:'3 jours avant (J-3)'}]},
-          {k:'drop',label:'Temps de dépôt (minutes)',type:'number',
-           info:'Durée sur place : accès, badge, étage. Elle entre dans l’heure d’arrivée annoncée aux bureaux suivants de la tournée.'},
+          /* Trois durées, pas un champ libre : le temps sur place se choisit
+             d'un clic, et il ne peut pas être vide ni nul — une heure
+             d'arrivée se calcule dessus. Cinq minutes est le standard. */
+          {k:'drop',label:'Temps de dépôt sur place',type:'toggle',def:5,
+           options:[{value:5,label:'5 min'},{value:10,label:'10 min'},{value:15,label:'15 min'}],
+           info:'Durée sur place : accès, badge, étage. Elle entre dans l’heure d’arrivée annoncée aux bureaux suivants de la tournée. Minimum 5 minutes — un dépôt à zéro n’est pas une mesure.'},
         ]},
       /* PAS DE FORMULAIRE « disponibilité d'un produit » — la marque décide.
          Il en a existé deux versions, fausses toutes les deux : la première
@@ -5353,7 +5377,12 @@ class Component extends DCLogic {
      bureau ») et les écritures (bpWrite lit officeId) le lisent. Sans lui, un
      formulaire ouvert par ce chemin gardait le formRow PÉRIMÉ du formulaire
      précédent — renvoi vers « » et « bureau inconnu » à l'enregistrement. */
-  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure(); this.setState({formKey:key,formVals:v,formRow:(extra||null),formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
+  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure();
+    /* Paramètres d'un bureau ouverts depuis un raccourci : les réglages DÉJÀ
+       enregistrés sont relus. Sans cela, un bureau à 15 min de dépôt rouvrait
+       sur le standard de 5 et repartait à 5 au premier enregistrement. */
+    if(key==='bureauParam'&&v.officeId!=null){ const b=((window.BOServer?window.BOServer.table('ws_office_delivery_settings'):[])||[]).find(x=>x&&x.officeId!=null&&String(x.officeId)===String(v.officeId));
+      if(b){ if(+b.drop>0) v.drop=+b.drop; if(b.cutHeure) v.cutHeure=b.cutHeure; if(b.cutDecal!=null&&b.cutDecal!=='') v.cutDecal=b.cutDecal; if(b.tour) v.tour=b.tour; } } this.setState({formKey:key,formVals:v,formRow:(extra||null),formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   editForm(key,vals,idx){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(vals&&vals[f.k]!==undefined&&vals[f.k]!=='')?vals[f.k]:(f.def!==undefined?f.def:''); });
     // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
     // Le statut ne se remet plus « en attente » à chaque modification : il se
@@ -5640,6 +5669,8 @@ class Component extends DCLogic {
       const hit=nm2?(window.BOServer?window.BOServer.table('ws_offices'):[]).find(o=>String(o.name||'').trim().toLowerCase()===nm2):null;
       if(hit&&hit.id!=null) oid=hit.id; }
     if(oid==null){ this.printJob('⚠ Paramètres non enregistrés — bureau inconnu'); return; }
+    // Le temps de dépôt commande les heures d'arrivée : il ne part jamais vide.
+    if(!(+v.drop>0)){ this.printJob('⚠ Choisissez un temps de dépôt (5, 10 ou 15 min) — les heures d’arrivée en dépendent'); return; }
     if(!fr.base){ this.printJob('⚠ Paramètres non enregistrés — API non configurée'); return; }
     const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
     fetch(fr.base+'/franchisee/office-delivery-setting'+qs,{method:'POST',headers:FRH({'Content-Type':'application/json'}),
