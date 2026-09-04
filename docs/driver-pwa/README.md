@@ -1,6 +1,10 @@
 # PWA Chauffeur — `/webshop/driver`
 
-Maquettes à valider **avant** d'écrire une ligne d'application. Les sept écrans
+> **L'application est écrite** : elle vit dans `../../driver/` et se déploie
+> sur `/webshop/driver`. Ce document reste la note de conception — les
+> maquettes ci-dessous ont servi à valider le parcours, l'application les suit.
+
+Maquettes du parcours. Les sept écrans
 sont dans `shots/` (`ecran-1.png` … `ecran-7.png`, planche complète
 `planche.png`) et la source qui les produit est `mock.html` — ouvrez-la avec le
 dépôt servi en HTTP :

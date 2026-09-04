@@ -81,3 +81,55 @@ jobs:
           done
           if [ "$fail" = "0" ]; then echo "ALL ASSETS OK"; else echo "ASSET CHECK FAILED"; exit 1; fi
           REMOTE
+
+      # ── PWA CHAUFFEUR (/webshop/driver) ────────────────────────────────
+      # Application distincte, déployée à CÔTÉ de la console : elle a sa propre
+      # copie du design system et du logo pour que son service worker puisse
+      # les mettre en cache — une feuille de route doit rester lisible dans un
+      # sous-sol sans réseau, sans dépendre du dossier de la console.
+      - name: Assemble driver PWA
+        run: |
+          rm -rf site-driver && mkdir -p site-driver
+          cp -RL driver/. site-driver/
+          cp -r _ds img site-driver/
+          test -f site-driver/index.html && test -f site-driver/sw.js
+          echo "driver payload:"; ls site-driver
+
+      - name: Deploy driver PWA → <parent de DEPLOY_DIR>/driver
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          BO_DIR='${{ vars.DEPLOY_DIR || '/var/www/html/webshop/backoffice_franchisee' }}'
+          DRIVER_DIR='${{ vars.DRIVER_DEPLOY_DIR }}'
+          [ -n "$DRIVER_DIR" ] || DRIVER_DIR="$(dirname "$BO_DIR")/driver"
+          echo "cible : $DRIVER_DIR"
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "mkdir -p '$DRIVER_DIR'"
+          sshpass -e rsync -rltDz --omit-dir-times \
+            -e "ssh -p ${{ vars.SSH_PORT || '22' }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+            site-driver/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:$DRIVER_DIR/"
+
+      - name: Verify the driver PWA on the server
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s << 'REMOTE'
+          BASE="http://localhost/webshop/driver"
+          fail=0
+          for f in "" index.html app.js api.js app.css sw.js manifest.webmanifest icon-192.png \
+                   _ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css img/logo.png; do
+            out=$(curl -s -o /dev/null -w "%{http_code} %{size_download}" "$BASE/$f")
+            set -- $out; code=$1; size=$2
+            echo "  $code  ${size}b  /webshop/driver/$f"
+            if [ "$code" != "200" ]; then echo "  ^ PWA ASSET NOT OK"; fail=1; fi
+          done
+          # Le service worker doit être servi en JS : servi en text/html (page
+          # d'erreur), le navigateur refuse de l'enregistrer et l'app perd
+          # l'hors-ligne sans rien dire.
+          ct=$(curl -s -o /dev/null -w "%{content_type}" "$BASE/sw.js"); echo "  sw.js content-type : $ct"
+          case "$ct" in *javascript*) ;; *) echo "  ^ sw.js n'est pas servi en JavaScript"; fail=1 ;; esac
+          if [ "$fail" = "0" ]; then echo "DRIVER PWA OK"; else echo "DRIVER PWA CHECK FAILED"; exit 1; fi
+          REMOTE

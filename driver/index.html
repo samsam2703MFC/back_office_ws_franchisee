@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>Livraison — L'Atelier By</title>
+<meta name="theme-color" content="#8D1D2C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <!-- L'application est rendue par app.js. Rien n'est écrit en dur ici : un
+       écran sans donnée doit rester vide et le dire, jamais afficher un
+       exemple qui ressemblerait à une vraie tournée. -->
+  <div id="app" class="app"></div>
+  <div id="toast" class="toast-host" hidden></div>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function (e) {
+          // Un service worker refusé (http, navigateur ancien) n'empêche PAS
+          // l'application de tourner : elle perd l'hors-ligne, rien d'autre.
+          console.warn('service worker non enregistré :', e && e.message);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
