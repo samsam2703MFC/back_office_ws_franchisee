@@ -55,7 +55,21 @@ l'écran le dit.
 | En route | `POST /franchisee/driver-position` | position dans `ws_tour_tracking` → carte **Livraison du jour** |
 
 Lectures : `/franchisee/me`, `/franchisee/ws-tours`, `/franchisee/fr-tdb-tree`
-(arrêts et commandes du jour), `/franchisee/tour-dispatch-status`.
+(arrêts et commandes du jour), `/franchisee/tour-dispatch-status`, et
+`/franchisee/ws-office-delivery-sites`.
+
+**Deux sources d'arrêts, dans cet ordre.** `fr-tdb-tree` donne les arrêts ET
+les colis du jour, mais dépend de la section `tdb` : refusée, l'écran restait
+sans aucun bureau alors que la tournée était prise. Les **sites de livraison**
+(section `sites`) prennent alors le relais et donnent la route — bureau,
+adresse, étage, contact — avec la mention « colis non servis » et la raison.
+Une feuille de route sans compte de colis vaut mieux que pas de feuille de
+route ; ce qui manque est dit, jamais comblé.
+
+**La coque est servie RÉSEAU D'ABORD** (html, js, css), cache en secours hors
+ligne, et la page se recharge une fois quand un nouveau service worker prend
+la main. Le « cache d'abord » a fait tourner un téléphone sur la version de la
+veille pendant qu'on croyait tester la nouvelle.
 
 ## Ce qui reste sur le téléphone, faute d'endpoint
 

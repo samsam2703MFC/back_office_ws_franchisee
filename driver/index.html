@@ -29,8 +29,17 @@
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
+      /* Quand un nouveau service worker prend la main, la page tourne encore
+         l'ANCIEN code : on recharge une fois, sinon on croit essayer la
+         nouvelle version alors qu'on garde l'ancienne à l'écran. */
+      var rechargé = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (rechargé) return; rechargé = true; location.reload();
+      });
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sw.js').catch(function (e) {
+        navigator.serviceWorker.register('sw.js').then(function (reg) {
+          try { reg.update(); } catch (e) {}
+        }).catch(function (e) {
           // Un service worker refusé (http, navigateur ancien) n'empêche PAS
           // l'application de tourner : elle perd l'hors-ligne, rien d'autre.
           console.warn('service worker non enregistré :', e && e.message);

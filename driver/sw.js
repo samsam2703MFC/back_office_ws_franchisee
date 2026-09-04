@@ -5,7 +5,7 @@
    • les appels API ne sont JAMAIS servis depuis le cache. Une donnée de tournée
      périmée présentée comme fraîche est pire que pas de donnée : l'application
      affiche l'échec réseau et ce qu'elle avait en mémoire, en le disant. */
-var CACHE = 'drv-shell-v5';   // v5 : configuration par scan du QR de la console
+var CACHE = 'drv-shell-v6';   // v6 : coque réseau-d'abord + arrêts de secours (sites)
 var SHELL = [
   './', 'index.html', 'app.css', 'app.js', 'api.js', 'manifest.webmanifest',
   'vendor/jsqr.js',
@@ -33,6 +33,25 @@ self.addEventListener('fetch', function (e) {
   var u = new URL(r.url);
   if (u.origin !== location.origin) return;             // tuiles, cartes : au réseau
   if (u.pathname.indexOf('/api/') >= 0) return;         // API : au réseau, toujours
+
+  /* LE CODE DE L'APPLICATION : RÉSEAU D'ABORD, cache en secours.
+     Le « cache d'abord » a coûté cher : le téléphone continuait de tourner une
+     version corrigée la veille, on croyait tester la nouvelle, et on cherchait
+     des bugs déjà réparés. Une coque vieille d'un jour est pire qu'un
+     chargement un peu plus lent. Hors réseau, le cache prend le relais — c'est
+     à ça qu'il sert.
+     Le RESTE (polices, logo, décodeur QR) ne bouge jamais : cache d'abord. */
+  var shell = /\.(html|js|css|webmanifest)$/.test(u.pathname)
+           || /\/(driver\/)?$/.test(u.pathname);
+  if (shell) {
+    e.respondWith(
+      fetch(r).then(function (res) {
+        if (res && res.ok) { var copy = res.clone(); caches.open(CACHE).then(function (c) { c.put(r, copy); }); }
+        return res;
+      }).catch(function () { return caches.match(r); })
+    );
+    return;
+  }
   e.respondWith(
     caches.match(r).then(function (hit) {
       var net = fetch(r).then(function (res) {

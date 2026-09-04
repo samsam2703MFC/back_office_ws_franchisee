@@ -71,7 +71,15 @@
       DRV.get('/franchisee/me').then(function (j) { S.me = (j && j.shop) || null; }, err),
       DRV.get('/franchisee/ws-tours').then(function (j) { S.tours = Array.isArray(j) ? j : []; }, err),
       DRV.get('/franchisee/fr-tdb-tree').then(function (j) { S.tree = Array.isArray(j) ? j : []; }, err),
-      DRV.get('/franchisee/tour-dispatch-status').then(function (j) { S.dispatch = Array.isArray(j) ? j : []; }, err)
+      DRV.get('/franchisee/tour-dispatch-status').then(function (j) { S.dispatch = Array.isArray(j) ? j : []; }, err),
+      /* SOURCE DE SECOURS des arrêts. L'arbre du tableau de bord (fr-tdb-tree)
+         donne les arrêts ET les colis du jour, mais il dépend de la section
+         « tdb » — refusée à certains comptes, et l'écran restait alors sans
+         aucun bureau alors que la tournée était prise. Les sites de livraison
+         (section « sites ») donnent au moins la ROUTE : bureau, adresse,
+         étage, contact. Mieux vaut une feuille de route sans compte de colis
+         que pas de feuille de route. */
+      DRV.get('/franchisee/ws-office-delivery-sites').then(function (j) { S.sites = Array.isArray(j) ? j : []; }, err)
     ];
     var fails = [], sections = [];
     function err(e) {
@@ -114,11 +122,42 @@
 
   function dispatchOf(name) { return S.dispatch.find(function (r) { return r.tour === name; }) || null; }
 
+  /* Pourquoi il n'y a pas de colis : la cause exacte, pas un haussement
+     d'épaules. Elle change ce qu'il y a à faire — un réglage de profil, ou
+     simplement une journée sans commande. */
+  function raisonSansColis() {
+    if ((S.sections || []).indexOf('tdb') >= 0)
+      return 'Le serveur refuse la section « tdb » à ce compte : les commandes du jour ne sont pas servies.';
+    if (!S.tree.length) return 'Le serveur ne sert aucune commande pour aujourd\'hui.';
+    return '';
+  }
+
   /* Contenu d'une tournée : arrêts (sites) et colis (commandes du jour).
      Le tri suit l'arbre servi par le dépôt — c'est le sens de livraison. */
-  function stopsOf(tourName) {
+  /* Arrêts d'une tournée quand l'arbre du jour n'est pas servi : on prend les
+     sites de livraison rattachés à cette tournée, dans l'ordre paramétré. Pas
+     de colis — et l'écran le dit, il ne fait pas semblant d'en compter. */
+  function stopsFromSites(tourName, tourId) {
+    return (S.sites || [])
+      .filter(function (s) {
+        if (s.active === false) return false;
+        return (s.tour && s.tour === tourName) || (tourId != null && Number(s.tournee_id) === Number(tourId));
+      })
+      .sort(function (a, b) { return (a.stop == null ? 999 : a.stop) - (b.stop == null ? 999 : b.stop); })
+      .map(function (s, i) {
+        var adr = [s.adr || s.address, s.etage && s.etage !== '—' ? s.etage : ''].filter(Boolean).join(' · ');
+        return { key: 'site' + (s.id != null ? s.id : i), zone: (s.office_cp || '') + ' ' + (s.office_city || ''),
+                 libelle: s.name && s.name !== '—' ? s.name : (s.office || '—'),
+                 adresse: adr && adr !== '—' ? adr : '',
+                 office: s.office || '—', tel: (s.contact_phone && s.contact_phone !== '—') ? s.contact_phone : '',
+                 contact: (s.contact_name && s.contact_name !== '—') ? s.contact_name : '',
+                 orders: [], sansColis: true };
+      });
+  }
+
+  function stopsOf(tourName, tourId) {
     var e = S.tree.find(function (x) { return x.nom === tourName; });
-    if (!e) return [];
+    if (!e) return stopsFromSites(tourName, tourId);
     var out = [];
     (e.zones || []).forEach(function (z) {
       (z.sites || []).forEach(function (s, i) {
@@ -139,7 +178,7 @@
   function tourById(id) {
     return S.tours.find(function (t) { return numId(t.id) === Number(id); }) || null;
   }
-  function tourStops(id) { var t = tourById(id); return t ? stopsOf(t.name) : []; }
+  function tourStops(id) { var t = tourById(id); return t ? stopsOf(t.name, numId(t.id)) : []; }
   function allOrders(id) { return tourStops(id).reduce(function (a, s) { return a.concat(s.orders.map(function (o) { return { stop: s, o: o }; })); }, []); }
 
   /* ── écrans ───────────────────────────────────────────────────────── */
@@ -236,7 +275,7 @@
     var vehicles = [];
     ts.forEach(function (t) { if (t.vehicule && vehicles.indexOf(t.vehicule) < 0) vehicles.push(t.vehicule); });
     var list = ts.map(function (t) {
-      var id = numId(t.id), st = stopsOf(t.name), colis = st.reduce(function (a, s) { return a + s.orders.length; }, 0);
+      var id = numId(t.id), st = stopsOf(t.name, id), colis = st.reduce(function (a, s) { return a + s.orders.length; }, 0);
       var dp = dispatchOf(t.name);
       var mine = d.tours[String(id)] && d.tours[String(id)].takenAt;
       var taken = dp && dp.chauffeur && dp.chauffeur !== '—';
@@ -335,13 +374,17 @@
       + '<div class="row" style="gap:8px"><button class="btn gh sm grow" data-act="scanon">' + (S.scanOn ? 'Arrêter' : CAM + ' Scanner') + '</button>'
       + '<button class="btn gh sm grow" data-act="manualref">Saisir un n°</button></div>'
       + '<div class="card"><div class="row"><div class="h3">Reste à valider</div><span class="pill ' + (reste ? 'wait' : 'ok') + '" style="margin-left:auto">' + reste + ' colis</span></div>'
-      + (reste ? body : '<div class="p" style="margin-top:6px">Tout est chargé. Le compte y est : ' + done + ' colis sur ' + all.length
+      + (!all.length
+          ? '<div class="p" style="margin-top:6px">Aucun colis servi pour cette tournée aujourd\'hui. ' + esc(raisonSansColis())
+            + ' La feuille de route, elle, est disponible.</div>'
+          : reste ? body : '<div class="p" style="margin-top:6px">Tout est chargé. Le compte y est : ' + done + ' colis sur ' + all.length
           + (miss ? ' — ' + miss + ' signalé(s) manquant(s), ils partent au dépôt.' : '') + '.</div>')
       + '</div>'
       + '<div class="card soft"><div class="p" style="color:var(--color-text);font-size:10.5px"><b>Aucun « tout cocher ».</b> Chaque colis passe par le scan ou par sa propre case : c\'est ce qui évite de partir sans un carton.</div></div>'
       + '</div>'
       + '<div class="foot"><button class="btn" data-act="loaddone"' + (reste ? ' disabled' : '') + '>'
-      + (reste ? 'Terminer le chargement · ' + reste + ' restant(s)' : 'Terminer le chargement →') + '</button>'
+      + (reste ? 'Terminer le chargement · ' + reste + ' restant(s)'
+               : (all.length ? 'Terminer le chargement →' : 'Voir la feuille de route →')) + '</button>'
       + '<button class="btn gh sm" data-act="missing">Signaler un colis manquant</button></div>';
   }
 
@@ -355,13 +398,17 @@
       return '<button class="stop" data-act="gostop" data-i="' + i + '">'
         + '<span class="num ' + (isDone ? 'done' : isNow ? 'now' : '') + '">' + (isDone ? '✓' : (i + 1)) + '</span>'
         + '<span class="grow"><span class="h3" style="display:block">' + esc(s.libelle) + '</span>'
-        + '<span class="p" style="font-size:10.5px;display:block">' + esc(s.adresse || s.office) + ' · ' + s.orders.length + ' colis'
+        + '<span class="p" style="font-size:10.5px;display:block">' + esc(s.adresse || s.office) + ' · '
+        + (s.sansColis ? 'colis non servis' : s.orders.length + ' colis')
         + (isDone ? ' · livré' + ((loc.arrived[s.key]) ? ' ' + esc(loc.arrived[s.key]) : '') : (rem ? ' · ' + rem + ' à remettre' : '')) + '</span></span>'
         + (isDone ? '<span class="pill ok">✓</span>' : isNow ? '<span class="pill ruby">à livrer</span>' : '') + '</button>';
     }).join('<div class="sep" style="margin:0"></div>');
     return bar({ back: 'goPick', ttl: 'Feuille de route', sub: (t ? t.name : '') + ' · ' + stops.length + ' arrêts', rt: doneN + '/' + stops.length, rtSub: 'livrés' })
       + '<div class="body">' + errBox()
-      + '<div class="card" style="padding:6px 13px">' + (stops.length ? list : '<div class="p" style="padding:10px 0">Aucun arrêt servi pour cette tournée aujourd\'hui.</div>') + '</div>'
+      + '<div class="card" style="padding:6px 13px">' + (stops.length ? list : '<div class="p" style="padding:10px 0">Aucun arrêt servi pour cette tournée : ni commandes du jour, ni sites de livraison rattachés. ' + esc(raisonSansColis()) + '</div>') + '</div>'
+      + (stops.length && stops[0].sansColis
+          ? '<div class="card soft"><div class="p" style="color:var(--color-text);font-size:10.5px">Arrêts lus sur les <b>sites de livraison</b> de la tournée — l\'ordre est celui du paramétrage. ' + esc(raisonSansColis()) + '</div></div>'
+          : '')
       + '<div class="p">L\'ordre vient du dépôt. Le bon de livraison papier porte la même feuille de route : si le téléphone lâche, le bon suffit.</div>'
       + '</div>'
       + '<div class="foot">'
@@ -382,8 +429,11 @@
       + '<div class="body">' + errBox()
       + '<div class="card"><div class="row"><div class="h2">' + esc(s.libelle) + '</div></div>'
       + '<div class="p" style="margin-top:3px">' + esc(s.adresse || '— adresse non renseignée sur le site') + '</div>'
-      + '<div class="row wrap" style="gap:5px;margin-top:8px"><span class="pill grey">' + s.orders.length + ' colis</span>'
-      + '<span class="pill grey">' + esc(s.office) + '</span><span class="pill abr">' + esc(s.zone) + '</span></div></div>'
+      + '<div class="row wrap" style="gap:5px;margin-top:8px"><span class="pill grey">' + (s.sansColis ? 'colis non servis' : s.orders.length + ' colis') + '</span>'
+      + '<span class="pill grey">' + esc(s.office) + '</span>'
+      + (s.zone && s.zone.trim() ? '<span class="pill abr">' + esc(s.zone) + '</span>' : '')
+      + (s.contact || s.tel ? '<span class="pill grey">' + esc([s.contact, s.tel].filter(Boolean).join(' · ')) + '</span>' : '')
+      + '</div></div>'
       + '<div class="row" style="gap:8px">'
       + '<a class="btn gh sm grow" href="https://www.google.com/maps/dir/?api=1&destination=' + q + '&travelmode=driving" target="_blank" rel="noopener">Google Maps</a>'
       + '<a class="btn gh sm grow" href="https://waze.com/ul?q=' + q + '&navigate=yes" target="_blank" rel="noopener">Waze</a>'
@@ -403,7 +453,9 @@
     if (!s) return vRoute();
     var loc = tourLocal(S.tourId), del = loc.delivered[s.key] || {};
     var done = s.orders.filter(function (o) { return del[o.ref]; }).length, reste = s.orders.length - done;
-    var tpl = smsTpl(), phone = loc.phones[s.key] || '';
+    // Le numéro du contact vient de la fiche du site quand elle en porte un :
+    // un chauffeur ne doit pas retaper ce que la base sait déjà.
+    var tpl = smsTpl(), phone = loc.phones[s.key] || s.tel || '';
     var first = (s.orders[0] && String(s.orders[0].client).trim().split(/\s+/)[0]) || '';
     var msg = smsText(tpl, first, s);
     var rows = s.orders.map(function (o) {
@@ -424,7 +476,10 @@
       + '<button class="btn gh sm grow" data-act="manualref">Saisir un n°</button></div>'
       + '<div class="card"><div class="row"><div class="h3">À remettre ici</div><span class="pill ' + (reste ? 'wait' : 'ok') + '" style="margin-left:auto">' + (reste ? reste + ' restant(s)' : 'complet') + '</span></div>'
       + '<div class="p" style="font-size:10.5px;margin-top:2px">' + esc(s.office) + '</div>' + rows
-      + '<div class="p" style="font-size:10.5px;margin-top:9px">↳ QR abîmé ? Coche le colis — le motif est demandé.</div></div>'
+      + (s.orders.length
+          ? '<div class="p" style="font-size:10.5px;margin-top:9px">↳ QR abîmé ? Coche le colis — le motif est demandé.</div>'
+          : '<div class="p" style="margin-top:8px">Aucun colis servi pour cet arrêt. ' + esc(raisonSansColis())
+            + ' Tu peux quand même envoyer le SMS et passer à l\'arrêt suivant.</div>') + '</div>'
       + '<div class="sms"><div class="row"><div class="h3">SMS d\'arrivée</div><span class="p" style="margin-left:auto;color:var(--color-on-abricot);font-weight:600;font-size:10.5px">'
       + (loc.sms[s.key] ? 'envoyé ' + esc(loc.sms[s.key]) : 'à envoyer') + '</span></div>'
       + '<div class="bub" style="margin-top:9px">' + esc(msg) + '</div>'
