@@ -153,6 +153,19 @@
   .bo-tiph{position:relative;display:inline-flex}
   .bo-tip{opacity:0;visibility:hidden;transition:opacity .12s ease;pointer-events:none}
   .bo-tiph:hover .bo-tip{opacity:1;visibility:visible}
+  /* Assistant tournée → sites → bureaux et champ « adresse » relié à Google. */
+  .tw-head{display:flex;align-items:center;gap:12px}
+  .tw-num{width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;font:700 13px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .tw-title{font:600 15px var(--font-ui);color:var(--color-text)}
+  .tw-sub{font:400 11.5px/1.45 var(--font-ui);color:var(--color-text-muted);margin-top:2px}
+  .tw-lbl{font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px}
+  .tw-in{width:100%;box-sizing:border-box;padding:10px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)}
+  .tw-drop{position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--color-surface);border:.5px solid var(--color-border-secondary);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);overflow:hidden;z-index:80;max-height:280px;overflow-y:auto}
+  .tw-sug{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:none;border-top:.5px solid var(--color-border-tertiary);background:var(--color-surface);padding:10px 13px;font:400 12.5px var(--font-ui);color:var(--color-text);cursor:pointer}
+  .tw-sug:first-child{border-top:none}
+  .tw-sug:hover{background:var(--color-background-secondary)}
+  .tw-sugmsg{padding:9px 13px;font:400 11.5px var(--font-ui);color:var(--color-text-muted)}
+  .tw-ico{width:26px;height:26px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;font:600 13px var(--font-ui);color:var(--color-text)}
   ::-webkit-scrollbar{width:9px;height:9px}
   ::-webkit-scrollbar-thumb{background:rgba(34,34,34,.18);border-radius:6px}
   ::-webkit-scrollbar-track{background:transparent}
@@ -512,7 +525,7 @@
       <sc-if value="{{ isTournees }}" hint-placeholder-val="{{ true }}">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 18px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px"><div><div class="t-section-title" style="font-size:15px">Sites non assignés</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">« Ajouter » → tournée surlignée</div></div><div style="display:flex;align-items:center;gap:8px;flex:none"><button onClick="{{ goParams }}" title="Coûts · temps · frais — paramètres de coût des tournées" style="width:34px;height:34px;border-radius:8px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#b26a00;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button onClick="{{ openRouteForm }}" class="btn-primary" style="padding:9px 16px;font-size:12px;flex:none">+ Nouvelle tournée</button></div></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px"><div><div class="t-section-title" style="font-size:15px">Sites non assignés</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">« Ajouter » → tournée surlignée</div></div><div style="display:flex;align-items:center;gap:8px;flex:none"><button onClick="{{ goParams }}" title="Coûts · temps · frais — paramètres de coût des tournées" style="width:34px;height:34px;border-radius:8px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:#b26a00;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button onClick="{{ openRouteForm }}" class="btn-secondary" title="Formulaire court : nom, départ, capacité, codes postaux" style="padding:9px 14px;font-size:12px;flex:none">Formulaire rapide</button><button onClick="{{ twNew }}" class="btn-primary" title="Assistant : tournée → sites → bureaux, itinéraire Google, prix au km" style="padding:9px 16px;font-size:12px;flex:none">+ Nouvelle tournée (assistant)</button></div></div>
           <div style="display:flex;flex-wrap:wrap;gap:10px">
             <sc-for list="{{ unassignedSites }}" as="u" hint-placeholder-count="2">
               <div style="{{ u.cardStyle }}">
@@ -587,7 +600,7 @@
               <button onClick="{{ st.focus }}" style="{{ st.cardStyle }}">
                 <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><span style="width:11px;height:11px;border-radius:50%;background:{{ st.color }};flex:none"></span><span style="font:600 13px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ st.nom }}</span><span style="margin-left:auto;flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:50%;background:{{ st.color }};color:#fff;font:700 12px var(--font-ui);padding:0 6px" title="Nombre de bureaux servis">{{ st.nbOffices }}</span></div>
                 <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-bottom:6px">{{ st.nbSites }} site(s) · {{ st.nbOffices }} bureau(x) · {{ st.chauffeur }}</div>
-                <div style="display:flex;align-items:center;gap:6px"><span style="font:600 12.5px var(--font-ui);color:var(--color-text)">Départ {{ st.dep }}</span><span style="color:var(--color-text-muted)">→</span><span style="font:700 13px var(--font-ui);color:{{ st.color }}">ETA retour ~{{ st.fin }}</span></div>
+                <div style="display:flex;align-items:center;gap:6px"><span style="font:600 12.5px var(--font-ui);color:var(--color-text)">Départ {{ st.dep }}</span><span style="color:var(--color-text-muted)">→</span><span style="font:700 13px var(--font-ui);color:{{ st.color }}">ETA retour ~{{ st.fin }}</span><span class="bo-tiph"><span style="{{ etaInfoIcon }}">i</span><span class="bo-tip" style="{{ etaTipStyle }}">{{ etaTipTxt }}</span></span></div>
               </button>
             </sc-for>
           </div>
@@ -616,7 +629,7 @@
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px">
             <div><div class="t-section-title" style="font-size:15px">{{ selNom }} · livraisons</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Tournée {{ selTournee }} · {{ selVehicule }} · {{ selAvancement }} points</div></div>
-            <div style="text-align:right;flex:none"><span style="{{ selStatutStyle }}">{{ selStatut }}</span><div style="font:600 13px var(--font-ui);color:var(--color-primary);margin-top:4px">ETA {{ selEta }} <span style="font-weight:400;font-size:10px;color:{{ selDriftColor }}">{{ selDrift }}</span></div></div>
+            <div style="text-align:right;flex:none"><span style="{{ selStatutStyle }}">{{ selStatut }}</span><div style="font:600 13px var(--font-ui);color:var(--color-primary);margin-top:4px;display:inline-flex;align-items:center;gap:5px">ETA {{ selEta }} <span style="font-weight:400;font-size:10px;color:{{ selDriftColor }}">{{ selDrift }}</span><span class="bo-tiph"><span style="{{ etaInfoIcon }}">i</span><span class="bo-tip" style="{{ etaTipStyle }}">{{ etaTipTxt }}</span></span></div></div>
           </div>
           <sc-if value="{{ selHasStops }}" hint-placeholder-val="{{ true }}">
           <div style="padding:2px 2px 0">
@@ -2670,6 +2683,7 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div><div class="t-admin-label" style="margin-bottom:5px">Max drops (offices)</div><input type="number" value="{{ rf.max }}" onInput="{{ rfSet.max }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
           <div><div class="t-admin-label" style="margin-bottom:5px">Forfait livraison (€ / tournée)</div><input type="number" value="{{ rf.forfait }}" onInput="{{ rfSet.forfait }}" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
+          <div><div class="t-admin-label" style="margin-bottom:5px">Prix au km (€ / km)</div><input type="number" step="0.01" min="0" value="{{ rf.pricePerKm }}" onInput="{{ rfSet.pricePerKm }}" placeholder="ex. 0,85" style="width:100%;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:10px 11px;font:400 13px var(--font-ui)"/></div>
         </div>
         <div><div class="t-admin-label" style="margin-bottom:6px">Type de véhicule</div><div style="display:flex;gap:8px"><button onClick="{{ rfVehFrigo }}" style="{{ rfVehFrigoStyle }}">Camion frigo</button><button onClick="{{ rfVehBox }}" style="{{ rfVehBoxStyle }}">Box frigorifique</button></div></div>
         <div>
@@ -2684,6 +2698,131 @@
         <div><div class="t-admin-label" style="margin-bottom:6px">Retour au dépôt (inclus dans l'ETA)</div><div style="display:flex;gap:8px"><button onClick="{{ rfRetOn }}" style="{{ rfRetStyle }}">Oui</button><button onClick="{{ rfRetOff }}" style="{{ rfRetOffStyle }}">Non</button></div></div>
       </div>
       <div style="padding:14px 24px 20px;border-top:.5px solid var(--color-border-tertiary);display:flex;gap:10px"><button onClick="{{ rfClose }}" class="btn-secondary" style="flex:1;font-size:13px">Annuler</button><button onClick="{{ rfSubmit }}" class="btn-primary" style="flex:2;font-size:13px;{{ rfSubmitExtra }}">{{ rfSubmitLabel }}</button></div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ===================== ASSISTANT TOURNÉE → SITES → BUREAUX ===================== -->
+  <!-- Les trois points de gestion des tournées sur un seul écran, de haut en
+       bas, chaque étape rouvrable ; UN enregistrement (POST /franchisee/tour-
+       wizard, transaction) au lieu de trois sauvegardes qui se perdaient. -->
+  <sc-if value="{{ twOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:1990;padding:20px">
+    <div class="lz" style="background:var(--color-bg);border-radius:16px;width:1040px;max-width:100%;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+      <div style="padding:18px 26px;background:var(--color-surface);border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;gap:14px">
+        <div><div class="t-page-title" style="font-size:19px">{{ twTitle }}</div><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">Tournée → sites → bureaux, de haut en bas. Un seul enregistrement, en tête ou en pied de page.</div></div>
+        <div style="display:flex;gap:8px;align-items:center;flex:none"><button onClick="{{ twClose }}" class="btn-secondary" style="font-size:12.5px">Annuler</button><button onClick="{{ twSave }}" class="btn-primary" style="font-size:12.5px;{{ twSaveStyle }}">{{ twSaveLabel }}</button></div>
+      </div>
+      <div style="padding:20px 26px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px">
+        <sc-if value="{{ twHasErr }}" hint-placeholder-val="{{ false }}"><div style="background:#fbe9eb;color:var(--color-primary);border-radius:10px;padding:11px 14px;font:500 12.5px var(--font-ui)">{{ twErr }}</div></sc-if>
+
+        <!-- 1 · TOURNÉE -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px 20px">
+          <div class="tw-head"><span class="tw-num">1</span><div><div class="tw-title">Tournée</div><div class="tw-sub">Nom, départ, capacité, prix au km, jours et codes postaux desservis.</div></div></div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-top:14px">
+            <div><div class="tw-lbl">Nom de la tournée *</div><input value="{{ tw.name }}" onInput="{{ twSet.name }}" placeholder="ex. Gembloux" class="tw-in"/></div>
+            <div><div class="tw-lbl">Heure de départ *</div><input type="time" value="{{ tw.start }}" onInput="{{ twSet.start }}" class="tw-in"/></div>
+            <div><div class="tw-lbl">Capacité (bureaux max)</div><input type="number" min="0" value="{{ tw.max }}" onInput="{{ twSet.max }}" placeholder="—" class="tw-in"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px">
+            <div><div class="tw-lbl">Véhicule</div><div style="display:flex;gap:8px"><sc-for list="{{ twVehOpts }}" as="v" hint-placeholder-count="2"><button type="button" onClick="{{ v.pick }}" style="{{ v.style }}">{{ v.label }}</button></sc-for></div></div>
+            <div><div class="tw-lbl">Retour au dépôt</div><div style="display:flex;gap:8px"><button type="button" onClick="{{ twRetOn }}" style="{{ twRetOnStyle }}">Oui</button><button type="button" onClick="{{ twRetOff }}" style="{{ twRetOffStyle }}">Non</button></div></div>
+            <div><div class="tw-lbl">Prix au km (€ / km)</div><input type="number" step="0.01" min="0" value="{{ tw.pricePerKm }}" onInput="{{ twSet.pricePerKm }}" placeholder="ex. 0,85" class="tw-in"/></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-top:14px">
+            <div><div class="tw-lbl">Forfait livraison (€ / tournée)</div><input type="number" min="0" value="{{ tw.forfait }}" onInput="{{ twSet.forfait }}" placeholder="—" class="tw-in"/></div>
+            <div><div class="tw-lbl">Jours desservis</div><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ twDays }}" as="d" hint-placeholder-count="7"><button type="button" onClick="{{ d.toggle }}" style="{{ d.style }}">{{ d.k }}</button></sc-for></div></div>
+          </div>
+          <div style="margin-top:16px">
+            <div class="tw-lbl">Codes postaux desservis — recherche par localité ou par code, un clic ajoute le code</div>
+            <div style="position:relative">
+              <input value="{{ twCpQ }}" onInput="{{ twSetCpQ }}" placeholder="ex. Gembloux, Wavre, 1348…" autocomplete="off" class="tw-in"/>
+              <sc-if value="{{ twCpOpen }}" hint-placeholder-val="{{ false }}">
+                <div class="tw-drop">
+                  <sc-for list="{{ twCpSug }}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{ c.pick }}" title="{{ c.title }}" class="tw-sug" style="{{ c.style }}"><b style="min-width:44px">{{ c.cp }}</b><span>{{ c.loc }}</span><span style="margin-left:auto;font:500 10.5px var(--font-ui);color:var(--color-text-muted)">{{ c.note }}</span></button></sc-for>
+                  <sc-if value="{{ twCpNone }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg">{{ twCpNoneTxt }}</div></sc-if>
+                </div>
+              </sc-if>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+              <sc-for list="{{ twCpChips }}" as="c" hint-placeholder-count="4"><span style="display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--color-primary);background:var(--color-background-secondary);color:var(--color-primary);border-radius:8px;padding:6px 10px;font:600 12px var(--font-ui)">{{ c.cp }} <span style="font-weight:400;color:var(--color-text-muted)">{{ c.loc }}</span><button type="button" onClick="{{ c.remove }}" title="Retirer" style="border:none;background:transparent;color:var(--color-primary);cursor:pointer;font-size:14px;line-height:1;padding:0">×</button></span></sc-for>
+              <sc-if value="{{ twCpEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">{{ twCpEmptyTxt }}</span></sc-if>
+            </div>
+          </div>
+          <!-- Itinéraire Google : dépôt → arrêts (→ dépôt), km et durée par tronçon. -->
+          <div style="margin-top:16px;background:var(--color-background-secondary);border-radius:12px;padding:14px 16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+              <div><div class="tw-lbl" style="margin-bottom:2px">Itinéraire Google — dépôt → arrêts{{ twRetTxt }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Calculé par Google depuis la position de la boutique, dans l'ordre des arrêts de l'étape 2. Coût = km × prix au km.</div></div>
+              <button type="button" onClick="{{ twRouteGo }}" class="btn-secondary" style="font-size:12px;flex:none;{{ twRouteBtnStyle }}">{{ twRouteBtn }}</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px">
+              <div style="background:var(--color-surface);border-radius:10px;padding:10px 12px"><div class="tw-lbl">Distance</div><div style="font:600 18px var(--font-ui);color:var(--color-text)">{{ twRouteKm }}</div></div>
+              <div style="background:var(--color-surface);border-radius:10px;padding:10px 12px"><div class="tw-lbl">Durée de route</div><div style="font:600 18px var(--font-ui);color:var(--color-text)">{{ twRouteMin }}</div></div>
+              <div style="background:var(--color-surface);border-radius:10px;padding:10px 12px"><div class="tw-lbl">Coût (km × prix au km)</div><div style="font:600 18px var(--font-ui);color:var(--color-primary)">{{ twRouteCost }}</div></div>
+            </div>
+            <sc-if value="{{ twRouteHasErr }}" hint-placeholder-val="{{ false }}"><div style="margin-top:10px;font:500 12px var(--font-ui);color:var(--color-primary)">{{ twRouteErr }}</div></sc-if>
+            <div style="margin-top:10px;font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ twRouteAt }}</div>
+          </div>
+          <!-- ETA par arrêt, avec le (i) qui dit comment elle se calcule. -->
+          <div style="margin-top:14px">
+            <div class="tw-lbl" style="display:inline-flex;align-items:center;gap:6px">Heure d'arrivée estimée (ETA) par arrêt <span class="bo-tiph"><span style="{{ etaInfoIcon }}">i</span><span class="bo-tip" style="{{ etaTipStyle }}">{{ etaTipTxt }}</span></span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+              <sc-for list="{{ twStops }}" as="s" hint-placeholder-count="3"><span title="{{ s.why }}" style="display:inline-flex;align-items:center;gap:7px;border:.5px solid var(--color-border-tertiary);border-radius:9px;padding:7px 10px;font:500 12px var(--font-ui);background:var(--color-surface)"><span style="{{ s.numStyle }}">{{ s.num }}</span><span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</span><span style="font-weight:700;color:{{ s.color }}">{{ s.eta }}</span></span></sc-for>
+              <sc-if value="{{ twRetShow }}" hint-placeholder-val="{{ false }}"><span title="{{ twRetWhy }}" style="display:inline-flex;align-items:center;gap:7px;border:.5px solid var(--color-border-tertiary);border-radius:9px;padding:7px 10px;font:500 12px var(--font-ui);background:var(--color-surface)"><span>Retour dépôt</span><span style="font-weight:700;color:var(--color-primary)">{{ twRetEta }}</span></span></sc-if>
+              <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><span style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:7px 0">Aucun arrêt — ajoutez des sites à l'étape 2.</span></sc-if>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 · SITES -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px 20px">
+          <div class="tw-head" style="justify-content:space-between;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:12px"><span class="tw-num">2</span><div><div class="tw-title">Sites (arrêts), dans l'ordre de la tournée</div><div class="tw-sub">Un site = un bâtiment desservi. L'adresse se choisit dans la liste Google : rue, n°, code postal, localité et position d'un coup.</div></div></div>
+            <div style="display:flex;gap:8px;align-items:center;flex:none"><sc-if value="{{ twExistHas }}" hint-placeholder-val="{{ false }}"><select value="{{ twExist }}" onChange="{{ twExistPick }}" class="tw-in" style="width:auto;max-width:340px"><option value="">Reprendre un site existant…</option><sc-for list="{{ twExistOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></sc-if><button type="button" onClick="{{ twAddSite }}" class="btn-primary" style="font-size:12px">+ Nouveau site</button></div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+            <sc-for list="{{ twSites }}" as="s" hint-placeholder-count="2">
+              <div style="border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 14px;background:var(--color-background-secondary)">
+                <div style="display:grid;grid-template-columns:34px 1.2fr 2fr 96px auto;gap:10px;align-items:start">
+                  <span style="{{ s.numStyle }}">{{ s.num }}</span>
+                  <div><div class="tw-lbl">Nom du site</div><input value="{{ s.name }}" onInput="{{ s.setName }}" placeholder="ex. Tour Bastion" class="tw-in"/></div>
+                  <div style="position:relative"><div class="tw-lbl">Adresse — liste Google</div><input value="{{ s.address }}" onInput="{{ s.addrType }}" placeholder="commencez à taper l'adresse…" autocomplete="off" class="tw-in"/>
+                    <sc-if value="{{ s.geoOpen }}" hint-placeholder-val="{{ false }}"><div class="tw-drop">
+                      <sc-for list="{{ s.geoSug }}" as="g" hint-placeholder-count="3"><button type="button" onClick="{{ g.pick }}" class="tw-sug"><b>{{ g.main }}</b> <span style="color:var(--color-text-muted)">{{ g.secondary }}</span></button></sc-for>
+                      <sc-if value="{{ s.geoBusy }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg">Recherche Google…</div></sc-if>
+                      <sc-if value="{{ s.geoHasMsg }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg" style="color:var(--color-primary)">{{ s.geoMsgTxt }}</div></sc-if>
+                    </div></sc-if>
+                    <div style="margin-top:4px;{{ s.geoBadgeStyle }}">{{ s.geoBadge }}</div>
+                  </div>
+                  <div><div class="tw-lbl">Accès (min)</div><input type="number" min="0" value="{{ s.acc }}" onInput="{{ s.setAcc }}" placeholder="à mesurer" class="tw-in"/></div>
+                  <div style="display:flex;gap:4px;padding-top:22px">
+                    <button type="button" onClick="{{ s.up }}" title="Monter dans l'ordre" class="tw-ico" style="{{ s.upStyle }}">↑</button><button type="button" onClick="{{ s.down }}" title="Descendre dans l'ordre" class="tw-ico" style="{{ s.downStyle }}">↓</button><button type="button" onClick="{{ s.remove }}" title="Retirer de la tournée (le site n'est pas supprimé)" class="tw-ico" style="color:var(--color-primary)">×</button>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Aucun site sur cette tournée. « + Nouveau site », ou reprenez un site existant.</div></sc-if>
+          </div>
+        </div>
+
+        <!-- 3 · BUREAUX -->
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px 20px">
+          <div class="tw-head"><span class="tw-num">3</span><div><div class="tw-title">Bureaux livrés à chaque site</div><div class="tw-sub">Le bureau (société) desservi à chaque arrêt. Un site sans bureau n'est pas livrable — le lien se fait ici, jamais deviné.</div></div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+            <sc-for list="{{ twSiteOffices }}" as="s" hint-placeholder-count="2">
+              <div style="display:grid;grid-template-columns:34px 1.4fr 2fr;gap:10px;align-items:center;border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 14px">
+                <span style="{{ s.numStyle }}">{{ s.num }}</span>
+                <div style="min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.address }}</div></div>
+                <select value="{{ s.officeId }}" onChange="{{ s.setOffice }}" class="tw-in"><option value="">— Aucun bureau (site seul, non livrable) —</option><sc-for list="{{ s.officeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+              </div>
+            </sc-for>
+            <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Les bureaux se rattachent aux sites de l'étape 2.</div></sc-if>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap"><span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Le bureau n'existe pas encore ? Créez-le par l'onboarding, puis rattachez-le ici.</span><button type="button" onClick="{{ twOnboard }}" class="btn-secondary" style="font-size:12px">Onboarder un nouveau bureau</button></div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 26px;background:var(--color-surface);border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="font:500 12px var(--font-ui);color:var(--color-text)">{{ twSumTxt }}</div>
+        <div style="display:flex;gap:8px"><button onClick="{{ twClose }}" class="btn-secondary" style="font-size:12.5px">Annuler</button><button onClick="{{ twSave }}" class="btn-primary" style="font-size:12.5px;{{ twSaveStyle }}">{{ twSaveLabel }}</button></div>
+      </div>
     </div>
   </div>
   </sc-if>
@@ -2954,6 +3093,23 @@
             </sc-if>
             <sc-if value="{{ f.isText }}" hint-placeholder-val="{{ false }}">
               <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}"/>
+            </sc-if>
+            <!-- ADRESSE RELIÉE À LA LISTE GOOGLE : on tape, le serveur interroge
+                 Google, on clique — rue, n°, code postal, localité et position
+                 sont remplis d'un coup. Sans clic, l'adresse reste « non
+                 vérifiée » et n'entre pas dans l'itinéraire. -->
+            <sc-if value="{{ f.isAdresse }}" hint-placeholder-val="{{ false }}">
+              <div style="position:relative">
+                <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" onInput="{{ f.geoType }}" autocomplete="off" style="{{ f.inputStyle }}"/>
+                <sc-if value="{{ f.geoOpen }}" hint-placeholder-val="{{ false }}">
+                  <div class="tw-drop">
+                    <sc-for list="{{ f.geoSug }}" as="g" hint-placeholder-count="3"><button type="button" onClick="{{ g.pick }}" class="tw-sug"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" stroke-width="2"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/></svg><span><b>{{ g.main }}</b> <span style="color:var(--color-text-muted)">{{ g.secondary }}</span></span></button></sc-for>
+                    <sc-if value="{{ f.geoBusy }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg">Recherche Google…</div></sc-if>
+                    <sc-if value="{{ f.geoHasMsg }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg" style="color:var(--color-primary)">{{ f.geoMsgTxt }}</div></sc-if>
+                  </div>
+                </sc-if>
+                <div style="margin-top:5px;{{ f.geoBadgeStyle }}">{{ f.geoBadge }}</div>
+              </div>
             </sc-if>
             <sc-if value="{{ f.isImage }}" hint-placeholder-val="{{ false }}">
               <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -3263,9 +3419,24 @@
       <div style="padding:22px 26px;overflow-y:auto;flex:1">
 
         <sc-if value="{{ obStep0 }}" hint-placeholder-val="{{ true }}">
+        <!-- 1 · RECHERCHE DANS LA BASE CLIENTS DE LA BOUTIQUE (index b2b_clients
+             déjà lu par la console) : « Reprendre » remplit la fiche, rien
+             n'est écrit avant « Créer le bureau ». -->
+        <div style="margin-bottom:16px;background:var(--color-background-secondary);border-radius:12px;padding:13px 15px">
+          <div class="tw-lbl">Rechercher dans la base clients de la boutique</div>
+          <input value="{{ obSearchQ }}" onInput="{{ obSetSearchQ }}" placeholder="raison sociale, nom, n° TVA, e-mail ou téléphone…" autocomplete="off" class="tw-in"/>
+          <sc-if value="{{ obSearchHas }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:5px;margin-top:8px">
+            <sc-for list="{{ obSearchHits }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:10px;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:9px;padding:8px 11px"><div style="flex:1;min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ h.nom }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ h.sub }}</div></div><button type="button" onClick="{{ h.pick }}" class="btn-secondary" style="font-size:11.5px;padding:7px 12px;flex:none">Reprendre</button></div></sc-for>
+          </div></sc-if>
+          <sc-if value="{{ obSearchNone }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px;font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucun client de la boutique ne correspond — la fiche sera créée.</div></sc-if>
+          <div style="margin-top:6px;font:400 11px var(--font-ui);color:var(--color-text-muted)">« Reprendre » remplit raison sociale, TVA, contact et adresse depuis la fiche existante.</div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Nom de l'entreprise *</label><input value="{{ ob.raison }}" onInput="{{ obSetRaison }}" placeholder="raison sociale du client" style="{{ obInStyle }}"/></div>
-          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">N° TVA</label><input value="{{ ob.tva }}" onInput="{{ obSetTva }}" placeholder="BE 0xxx.xxx.xxx" style="{{ obInStyle }}"/></div>
+          <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Nom de l'entreprise *</label>
+            <sc-if value="{{ obViesLocked }}" hint-placeholder-val="{{ false }}"><input value="{{ ob.raison }}" readonly style="{{ obInStyle }};background:var(--color-background-secondary);color:#2d7a3e;font-weight:600"/><div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;font:400 11px var(--font-ui);color:var(--color-text-muted)"><span>Nom officiel confirmé par VIES depuis le n° TVA.</span><button type="button" onClick="{{ obViesUnlock }}" style="border:none;background:transparent;color:var(--color-primary);font:600 11px var(--font-ui);cursor:pointer;padding:0">Modifier quand même</button></div></sc-if>
+            <sc-if value="{{ obViesFree }}" hint-placeholder-val="{{ true }}"><input value="{{ ob.raison }}" onInput="{{ obSetRaison }}" placeholder="raison sociale du client" style="{{ obInStyle }}"/></sc-if>
+          </div>
+          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">N° TVA — validé par VIES</label><div style="display:flex;gap:8px"><input value="{{ ob.tva }}" onInput="{{ obSetTva }}" placeholder="BE 0xxx.xxx.xxx" style="{{ obInStyle }}"/><button type="button" onClick="{{ obViesCheck }}" style="flex:none;border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:8px;padding:0 12px;font:600 11.5px var(--font-ui);cursor:pointer">Vérifier (VIES)</button></div><div style="margin-top:5px;{{ obViesStyle }}">{{ obViesMsg }}</div></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Segment</label><select value="{{ ob.seg }}" onChange="{{ obSetSeg }}" style="{{ obInStyle }}"><sc-for list="{{ obSegOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Conditions de paiement</label><input value="{{ ob.paiement }}" onInput="{{ obSetPaiement }}" placeholder="ex. 30 j fin de mois" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Encours autorisé (€)</label><input type="number" value="{{ ob.plafond }}" onInput="{{ obSetPlafond }}" style="{{ obInStyle }}"/></div>
@@ -3291,7 +3462,13 @@
 
         <sc-if value="{{ obStep2 }}" hint-placeholder-val="{{ false }}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Adresse du delivery site *</label><input value="{{ ob.adr }}" onInput="{{ obSetAdr }}" placeholder="Rue et n°" style="{{ obInStyle }}"/></div>
+          <div style="grid-column:1/-1;position:relative"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Adresse du delivery site * — liste Google</label><input value="{{ ob.adr }}" onInput="{{ obAdrType }}" placeholder="commencez à taper : rue et n°" autocomplete="off" style="{{ obInStyle }}"/>
+            <sc-if value="{{ obGeoOpen }}" hint-placeholder-val="{{ false }}"><div class="tw-drop">
+              <sc-for list="{{ obGeoSug }}" as="g" hint-placeholder-count="3"><button type="button" onClick="{{ g.pick }}" class="tw-sug"><b>{{ g.main }}</b> <span style="color:var(--color-text-muted)">{{ g.secondary }}</span></button></sc-for>
+              <sc-if value="{{ obGeoBusy }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg">Recherche Google…</div></sc-if>
+              <sc-if value="{{ obGeoHasMsg }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg" style="color:var(--color-primary)">{{ obGeoMsgTxt }}</div></sc-if>
+            </div></sc-if>
+            <div style="margin-top:5px;{{ obGeoBadgeStyle }}">{{ obGeoBadge }}</div></div>
           <!-- Collecte du code postal client (obligatoire partout) : dès 4 chiffres,
                la localité s'affiche depuis le référentiel /geo/postcodes ; liste
                déroulante quand un même code couvre plusieurs localités. -->
@@ -3326,8 +3503,8 @@
         </sc-if>
 
         <sc-if value="{{ obStep3 }}" hint-placeholder-val="{{ false }}">
-        <div style="font:400 12px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Rattachez les départements de ce site (propres à l'entreprise). Créez-en un nouveau si nécessaire.</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"><sc-for list="{{ obDeptQuick }}" as="q" hint-placeholder-count="7"><button onClick="{{ q.pick }}" style="border:.5px solid var(--color-border-secondary);background:var(--color-surface);border-radius:999px;padding:6px 12px;font:500 11px var(--font-ui);color:var(--color-text);cursor:pointer">{{ q.label }}</button></sc-for></div>
+        <div style="font:400 12px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Rattachez les départements de ce site (propres à l'entreprise) : cliquez pour sélectionner ou désélectionner, plusieurs à la fois. Un même département ne s'ajoute qu'une fois.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"><sc-for list="{{ obDeptChips }}" as="q" hint-placeholder-count="7"><button type="button" onClick="{{ q.toggle }}" style="{{ q.style }}">{{ q.label }}</button></sc-for></div>
         <div style="display:flex;gap:8px;align-items:end;margin-bottom:16px">
           <div style="flex:1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Nom du département (libre)</label><input value="{{ obDeptDraft }}" onInput="{{ obSetDeptDraft }}" placeholder="nom du département" style="{{ obInStyle }}"/></div>
           <div style="width:110px"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Effectif</label><input type="number" value="{{ obDeptEff }}" onInput="{{ obSetDeptEff }}" style="{{ obInStyle }}"/></div>
@@ -3352,15 +3529,15 @@
         </div>
         <div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:6px;margin-bottom:8px">Vouchers</div>
         <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">Autant que nécessaire — bienvenue, découverte d'une gamme, geste commercial. Chacun devient une carte du courrier envoyé au bureau. Aucun voucher n'est créé si vous n'en ajoutez pas.</div>
-        <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:12px">
-          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Libellé</label><input value="{{ obVLibelle }}" onInput="{{ obSetVLibelle }}" placeholder="ex. Voucher de bienvenue" style="{{ obInStyle }}"/></div>
-          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Code (auto si vide)</label><input value="{{ ob.vCode }}" onInput="{{ obSetVCode }}" placeholder="code du bon" style="{{ obInStyle }}"/></div>
+        <!-- Les bons se CHOISISSENT dans la liste que sert l'endpoint
+             (/franchisee/ws-vouchers-local) — ils ne se saisissent plus ici :
+             un bon se crée dans Paramétrage › Bons. Un bon déjà attribué ne
+             se rajoute pas. -->
+        <div style="display:flex;gap:12px;align-items:end;margin-bottom:8px">
+          <div style="flex:1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Bon à attribuer — liste des bons de la boutique et du réseau</label><select value="{{ obVSel }}" onChange="{{ obSetVSel }}" style="{{ obInStyle }}"><option value="">{{ obVSelPh }}</option><sc-for list="{{ obVOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
+          <button onClick="{{ obAddVoucher }}" class="btn-primary" style="font-size:13px;flex:none;height:42px;{{ obVAddStyle }}">+ Attribuer</button>
         </div>
-        <div style="display:flex;gap:12px;align-items:end;margin-bottom:16px">
-          <div style="flex:1.6"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Valeur / effet</label><input value="{{ ob.vValeur }}" onInput="{{ obSetVValeur }}" placeholder="ex. −10 % sur la première commande" style="{{ obInStyle }}"/></div>
-          <div style="flex:1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Validité</label><input value="{{ obVValidite }}" onInput="{{ obSetVValidite }}" placeholder="ex. 60 jours" style="{{ obInStyle }}"/></div>
-          <button onClick="{{ obAddVoucher }}" class="btn-primary" style="font-size:13px;flex:none;height:42px">+ Ajouter</button>
-        </div>
+        <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">{{ obVSrcTxt }}</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span class="t-admin-label">Vouchers du bureau</span><span style="font:600 11px var(--font-ui);color:var(--color-text-muted)">{{ obVCount }}</span></div>
         <sc-if value="{{ obVEmpty }}" hint-placeholder-val="{{ true }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun voucher — le courrier au bureau n'en annoncera aucun.</div></sc-if>
         <div style="display:flex;flex-direction:column;gap:6px">
@@ -3512,7 +3689,13 @@
         <sc-if value="{{ shopEditing }}" hint-placeholder-val="{{ false }}">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Enseigne</span><input value="{{ shopDraftEnseigne }}" onInput="{{ shopSetEnseigne }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
-          <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Adresse</span><input value="{{ shopDraftAdresse }}" onInput="{{ shopSetAdresse }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
+          <div style="display:flex;flex-direction:column;gap:5px;position:relative"><span class="t-admin-label">Adresse — liste Google</span><input value="{{ shopDraftAdresse }}" onInput="{{ shopAdrType }}" autocomplete="off" placeholder="commencez à taper : rue et n°" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/>
+            <sc-if value="{{ shopGeoOpen }}" hint-placeholder-val="{{ false }}"><div class="tw-drop">
+              <sc-for list="{{ shopGeoSug }}" as="g" hint-placeholder-count="3"><button type="button" onClick="{{ g.pick }}" class="tw-sug"><b>{{ g.main }}</b> <span style="color:var(--color-text-muted)">{{ g.secondary }}</span></button></sc-for>
+              <sc-if value="{{ shopGeoBusy }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg">Recherche Google…</div></sc-if>
+              <sc-if value="{{ shopGeoHasMsg }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg" style="color:var(--color-primary)">{{ shopGeoMsgTxt }}</div></sc-if>
+            </div></sc-if>
+            <div style="{{ shopGeoBadgeStyle }}">{{ shopGeoBadge }}</div></div>
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Ville</span><input value="{{ shopDraftVille }}" onInput="{{ shopSetVille }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
           <label style="display:flex;flex-direction:column;gap:5px"><span class="t-admin-label">Code postal</span><input value="{{ shopDraftCp }}" onInput="{{ shopSetCp }}" style="width:100%;box-sizing:border-box;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:8px;font:500 13px var(--font-ui);color:var(--color-text);background:var(--color-surface)"/></label>
         </div>
@@ -3582,7 +3765,7 @@ class Component extends DCLogic {
       return o; })(),
     toast: '', printed: {},
     newRoutes: [], newZones: [], deletedRoutes: [], delRoute: null,
-    rfOpen: false, rfEditId: null, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, driver:'', vehicule:'', postcodes:[], ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
+    rfOpen: false, rfEditId: null, rf: { name:'', short:'', start:'06:00', max:10, forfait:45, pricePerKm:'', driver:'', vehicule:'', postcodes:[], ret:true, days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false} },
     zfOpen: false, zf: { name:'', type:'primary', parent:'', catchment:'', cp:'', vehicule:'', franco:'', delai:'', service:'', access:'' },
     obOpen: false, obStep: 0,
     ob: { raison:'', tva:'', seg:'', paiement:'', plafond:'',
@@ -3594,23 +3777,176 @@ class Component extends DCLogic {
       // avait choisis. Ils partent vides et sont saisis à l'étape 3.
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'', franco:'', drop:'',
-      vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
+      vCode:'', vValeur:'', sendMail:true, sendAdhesion:true, geo:null },
     obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'', obPickQ:'', obSel:{},
     obVouchers: [], obVLibelle:'', obVValidite:'',
     profileOpen: false, srcOpen: false, paramDrafts: {},
+    // Assistant tournée (tw), listes d'adresses Google par champ (geo), onboarding : recherche clients, VIES, bon choisi.
+    tw: null, geo: {}, obSearchQ:'', obViesLocked:false, obViesMsg:'', obViesOk:null, obVSel:'',
     dsQuery: '', dsOpen: false, dsIdx: 0,
   };
   printJob(msg){ this.setState({toast:msg}); clearTimeout(this._tt); this._tt=setTimeout(()=>this.setState({toast:''}),2800); }
   OB_STEPS=['Société','Contact','Delivery site','Départements','Webshop & voucher','Personnel & adhésion','Récapitulatif'];
+  _geoT={}; _geoSeq={};
   obOpen(){ this.setState({obOpen:true,obStep:0,
     ob:{ raison:'', tva:'', seg:'', paiement:'', plafond:'',
       contactNom:'', contactEmail:'', contactTel:'', contactRole:'',
       adr:'', cp:'', localite:'', etage:'', tour:'', acc:null, office:'',
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'', franco:'', drop:'',
-      vCode:'', vValeur:'', sendMail:true, sendAdhesion:true },
+      vCode:'', vValeur:'', sendMail:true, sendAdhesion:true, geo:null },
     obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'', obPickQ:'', obSel:{},
-    obVouchers:[], obVLibelle:'', obVValidite:'' }); this.zfGeoEnsure(); }
+    obVouchers:[], obVLibelle:'', obVValidite:'', obSearchQ:'', obViesLocked:false, obViesMsg:'', obViesOk:null, obVSel:'' }); this.zfGeoEnsure(); }
+  /* ── ADRESSE VIA LA LISTE GOOGLE ─────────────────────────────────────────
+     Un seul mécanisme pour tous les formulaires (bureau, site, client, boutique,
+     onboarding, assistant) : on tape (≥ 3 caractères), le SERVEUR interroge
+     Google (la clé ne quitte jamais le serveur), on clique une proposition et
+     la fiche du lieu remplit rue, n°, code postal, localité et position d'un
+     coup. Sans clic, l'adresse reste « non vérifiée » : elle n'entre pas dans
+     l'itinéraire. Sans clé Google, le serveur répond 501 et la liste le dit —
+     la saisie manuelle reste possible. Un « slot » par champ affiché. */
+  geoState(slot){ return (this.state.geo||{})[slot]||{sug:[],busy:false,msg:'',open:false}; }
+  geoSet(slot,patch){ this.setState(s=>({geo:{...(s.geo||{}),[slot]:{...((s.geo||{})[slot]||{sug:[],busy:false,msg:'',open:false}),...patch}}})); }
+  geoType(slot,q){ const v=String(q||''); clearTimeout(this._geoT[slot]);
+    if(v.trim().length<3){ this.geoSet(slot,{sug:[],msg:'',open:false,busy:false}); return; }
+    this.geoSet(slot,{busy:true,open:true,msg:''});
+    this._geoT[slot]=setTimeout(()=>{ const fr=window.__FR||{}; const seq=(this._geoSeq[slot]=(this._geoSeq[slot]||0)+1);
+      fetch((fr.base||'')+'/franchisee/geo-suggest?q='+encodeURIComponent(v.trim())+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+        .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ if(seq!==this._geoSeq[slot]) return;
+          if(st===200&&j&&j.ok){ const sug=Array.isArray(j.suggestions)?j.suggestions:[]; this.geoSet(slot,{busy:false,sug,open:true,msg:sug.length?'':('Aucune adresse trouvée par Google pour « '+v.trim()+' » — précisez le n° ou la localité.')}); }
+          else this.geoSet(slot,{busy:false,sug:[],open:true,msg:(j&&j.error)||('Liste Google indisponible (HTTP '+st+')')}); })
+        .catch(()=>{ if(seq===this._geoSeq[slot]) this.geoSet(slot,{busy:false,sug:[],open:true,msg:'Réseau indisponible'}); }); },280); }
+  geoPick(slot,id,apply){ const fr=window.__FR||{}; this.geoSet(slot,{busy:true,msg:''});
+    fetch((fr.base||'')+'/franchisee/geo-place?id='+encodeURIComponent(id)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        if(st===200&&j&&j.ok&&j.lat!=null&&j.lng!=null){ this.geoSet(slot,{busy:false,sug:[],open:false,msg:''}); apply(j); }
+        else this.geoSet(slot,{busy:false,open:true,msg:(j&&j.error)||('Fiche du lieu indisponible (HTTP '+st+')')}); })
+      .catch(()=>this.geoSet(slot,{busy:false,open:true,msg:'Réseau indisponible'})); }
+  geoClose(slot){ this.geoSet(slot,{open:false}); }
+  /* Ligne « rue n° » depuis une fiche Google ; à défaut, le premier segment de l'adresse formatée. */
+  geoLigne(j){ return [j.street,j.number].filter(Boolean).join(' ').trim()||String(j.formatted||'').split(',')[0].trim(); }
+  /* Vue d'un champ adresse : propositions, message, badge « vérifiée ». */
+  geoView(slot,verified,opts){ const g=this.geoState(slot); const o=opts||{};
+    return { geoOpen:!!g.open&&(!!g.busy||(g.sug||[]).length>0||!!g.msg), geoBusy:!!g.busy, geoHasMsg:!!g.msg&&!g.busy, geoMsgTxt:g.msg||'',
+      geoSug:(g.sug||[]).map(x=>({id:x.id,main:x.main||x.label||'',secondary:x.secondary||'',pick:()=>{ if(o.pick) o.pick(x.id); }})),
+      geoVerified:!!verified, geoBadge:verified?'✓ Adresse vérifiée par Google — position connue':'Adresse non vérifiée — choisissez-la dans la liste Google',
+      geoBadgeStyle:'font:500 11px var(--font-ui);color:'+(verified?'#2d7a3e':'var(--color-text-muted)'),
+      geoClose:()=>this.geoClose(slot) }; }
+  /* Formulaire générique : le champ `adresse` (f.k) et ses champs liés (f.cp, f.ville). */
+  fGeoType(f,e){ const v=e.target.value;
+    this.setState(s=>{ const fv={...(s.formVals||{}),[f.k]:v,lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:''};
+      if(f.cp!=='postal_code') fv.postal_code=''; if(f.ville!=='city') fv.city=''; return {formVals:fv}; });
+    this.geoType('form',v); }
+  fGeoPick(f,id){ this.geoPick('form',id,j=>this.setState(s=>{
+      const fv={...(s.formVals||{}),[f.k]:this.geoLigne(j),lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''};
+      if(f.cp&&j.zip) fv[f.cp]=j.zip; if(f.ville&&j.city) fv[f.ville]=j.city; return {formVals:fv}; })); }
+
+  /* ── ONBOARDING : base clients de la boutique, VIES, adresse Google ── */
+  obSearchHits(q){ const s=String(q||'').trim().toLowerCase(); if(s.length<2) return [];
+    const src=(window.BOServer?window.BOServer.table('b2b_clients'):[])||[]; const nd=x=>String(x||'').toLowerCase(); const sn=s.replace(/[^a-z0-9]/g,'');
+    return src.filter(c=>{ if(c.active!=null&&Number(c.active)===0) return false;
+      const hay=[c.company_name,c.name,c.surname,c.email,c.phone,c.phone_e164,c.city,c.locality].map(nd).join(' ');
+      return hay.includes(s)||(sn.length>=4&&nd(c.tax_number).replace(/[^a-z0-9]/g,'').includes(sn)); }).slice(0,8); }
+  obReprendre(c){ const nom=[c.name,c.surname].filter(Boolean).join(' ').trim();
+    this.setState(s=>({ob:{...s.ob,raison:c.company_name||nom||s.ob.raison,tva:c.tax_number||s.ob.tva,office:s.ob.office||c.company_name||'',
+        contactNom:nom||s.ob.contactNom,contactEmail:c.email||s.ob.contactEmail,contactTel:c.phone_e164||c.phone||s.ob.contactTel,
+        cp:(c.zip?String(c.zip):s.ob.cp),localite:c.city||c.locality||s.ob.localite},
+      obSearchQ:'',obViesLocked:false,obViesOk:null,obViesMsg:'Fiche reprise de la base clients — confirmez le nom via VIES.'}));
+    this.printJob('✓ Fiche client reprise : '+(c.company_name||nom||'client #'+c.id)); }
+  obViesCheck(){ const raw=String(this.state.ob.tva||'').replace(/[^A-Za-z0-9]/g,'');
+    if(!raw){ this.setState({obViesOk:false,obViesMsg:'Encodez d’abord le n° TVA'}); return; }
+    this.setState({obViesOk:null,obViesMsg:'Vérification VIES…'}); const fr=window.__FR||{};
+    fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(raw)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json()).then(j=>{
+        if(j&&j.valid){ this.setState(s=>({obViesOk:true,obViesLocked:!!j.name,obViesMsg:'✓ TVA valide'+(j.name?(' — nom officiel : '+j.name):' — VIES ne rend pas de nom pour ce pays'),ob:{...s.ob,raison:j.name||s.ob.raison}})); }
+        else if(j&&j.error==='vies_unavailable'){ this.setState({obViesOk:false,obViesMsg:'Service VIES indisponible — réessayez'}); }
+        else { this.setState({obViesOk:false,obViesLocked:false,obViesMsg:'✕ N° TVA introuvable via VIES'}); } })
+      .catch(()=>this.setState({obViesOk:false,obViesMsg:'Réseau indisponible'})); }
+  obAdrType(e){ const v=e.target.value; this.setState(s=>({ob:{...s.ob,adr:v,geo:null}})); this.geoType('ob',v); }
+  obAdrPick(id){ this.geoPick('ob',id,j=>{ const locs=this.obLocsOf(j.zip||''); const m=locs.find(x=>x.toLowerCase()===String(j.city||'').toLowerCase());
+    this.setState(s=>({ob:{...s.ob,adr:this.geoLigne(j),cp:j.zip||s.ob.cp,localite:(locs.length===1?locs[0]:(m||(locs.length?'':(j.city||s.ob.localite)))),
+      geo:{lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''}}})); }); }
+  obDeptKey(x){ return String(x||'').trim().toLowerCase().replace(/\s+/g,' '); }
+  obDeptToggle(name){ return ()=>this.setState(s=>{ const k=this.obDeptKey(name); const has=s.obDepts.some(d=>this.obDeptKey(d.dept)===k);
+    return {obDepts:has?s.obDepts.filter(d=>this.obDeptKey(d.dept)!==k):[...s.obDepts,{dept:String(name).trim(),effectif:null}]}; }); }
+
+  /* ── ASSISTANT TOURNÉE → SITES → BUREAUX ──────────────────────────────────
+     Les trois points de gestion sur un écran vertical ; UN enregistrement
+     (POST /franchisee/tour-wizard, transaction côté serveur). L'état `tw` est
+     un brouillon : rien n'est écrit avant « Enregistrer », et après, les
+     tables sont RELUES depuis l'API — jamais mises à jour de mémoire. */
+  twVide(){ return {open:false,tourId:null,name:'',start:'06:00',max:'',vehicule:'',ret:true,forfait:'',pricePerKm:'',
+    days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false},postcodes:[],cpQ:'',sites:[],removed:[],route:null,routeBusy:false,routeErr:'',saving:false,err:'',exist:''}; }
+  twSiteDe(r){ return {key:'s'+(r.id!=null?r.id:Math.random().toString(36).slice(2)),id:(r.id!=null?r.id:null),
+    name:(r.name&&r.name!=='—')?r.name:'',address:(r.adr&&r.adr!=='—')?r.adr:'',acc:(r.acc!=null?String(r.acc):''),
+    officeId:(r.office_client_id!=null?String(r.office_client_id):''),lat:(r.lat!=null?+r.lat:null),lng:(r.lng!=null?+r.lng:null),
+    place_id:r.place_id||'',formatted:'',street:r.street||'',street_number:r.street_number||'',postal_code:r.postal_code||'',city:r.city||''}; }
+  twOpen(tourId){ const T=this.twVide(); T.open=true; this.zfGeoEnsure();
+    if(tourId){ const t=(this.routesMeta()||[]).find(x=>String(x.id)===String(tourId));
+      if(t){ const k=String(t.id).replace(/^r/,'');
+        T.tourId=k; T.name=t.name||''; T.start=(t.start!=null?this.hhmm(t.start):''); T.max=(t.max!=null?String(t.max):''); T.vehicule=t.vehicule||''; T.ret=(t.ret!==false);
+        T.forfait=(t.forfait!=null?String(t.forfait):''); T.pricePerKm=(t.pricePerKm!=null?String(t.pricePerKm):''); T.days=t.days||T.days;
+        const tp=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; T.postcodes=[...new Set(tp.filter(r=>String(r.tour_id)===k).map(r=>String(r.postcode)))];
+        const sites=(window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[];
+        T.sites=sites.filter(r=>r.tournee_id!=null&&String(r.tournee_id)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))).map(r=>this.twSiteDe(r));
+        if(t.routeKm!=null&&t.routeMin!=null) T.route={km:+t.routeKm,minutes:+t.routeMin,legs:null,at:t.routeAt||null}; }
+      else { this.printJob('⚠ Tournée introuvable — rechargez la page'); return; } }
+    this.setState({tw:T}); }
+  twClose(){ this.setState(s=>({tw:{...(s.tw||this.twVide()),open:false}})); }
+  twPatch(p){ this.setState(s=>{ const t=s.tw||this.twVide(); return {tw:{...t,...(typeof p==='function'?p(t):p)}}; }); }
+  twSiteSet(i,k){ return e=>{ const v=(e&&e.target)?e.target.value:e; this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,[k]:v}:x),err:''})); }; }
+  twSiteType(i){ return e=>{ const v=e.target.value; const key=((this.state.tw||{}).sites||[])[i]?.key;
+    this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,address:v,lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}:x),route:null}));
+    if(key) this.geoType('tw'+key,v); }; }
+  twSitePick(i,id){ const key=((this.state.tw||{}).sites||[])[i]?.key; if(!key) return;
+    this.geoPick('tw'+key,id,j=>this.twPatch(t=>({sites:t.sites.map((x,jj)=>jj===i?{...x,
+      address:this.geoLigne(j)+((j.zip||j.city)?(', '+[j.zip,j.city].filter(Boolean).join(' ')):''),name:x.name||this.geoLigne(j),
+      lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''}:x),route:null}))); }
+  twSiteMove(i,d){ this.twPatch(t=>{ const a=t.sites.slice(); const j=i+d; if(j<0||j>=a.length) return {}; const x=a[i]; a[i]=a[j]; a[j]=x; return {sites:a,route:null}; }); }
+  twSiteRemove(i){ this.twPatch(t=>{ const x=t.sites[i]; return {sites:t.sites.filter((_,j)=>j!==i),removed:(x&&x.id!=null)?[...t.removed,x.id]:t.removed,route:null}; }); }
+  twAddSite(){ this.twPatch(t=>({sites:[...t.sites,{key:'n'+Date.now(),id:null,name:'',address:'',acc:'',officeId:'',lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}],route:null})); }
+  twAddExisting(e){ const id=e.target.value; if(!id) return;
+    const r=((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[]).find(x=>String(x.id)===String(id)); if(!r) return;
+    this.twPatch(t=>t.sites.some(x=>String(x.id)===String(id))?{exist:''}:{sites:[...t.sites,this.twSiteDe(r)],removed:t.removed.filter(x=>String(x)!==String(id)),route:null,exist:''}); }
+  twCpAdd(cp){ this.twPatch(t=>({postcodes:t.postcodes.includes(cp)?t.postcodes:[...t.postcodes,cp],cpQ:'',err:''})); }
+  twCpRemove(cp){ this.twPatch(t=>({postcodes:t.postcodes.filter(x=>x!==cp)})); }
+  twRoute(){ const T=this.state.tw||this.twVide(); const fr=window.__FR||{};
+    if(!T.sites.length){ this.twPatch({routeErr:'Ajoutez d’abord au moins un site (étape 2).'}); return; }
+    const manq=T.sites.map((x,i)=>(x.lat==null||x.lng==null)?(x.name||x.address||('site '+(i+1))):null).filter(Boolean);
+    if(manq.length){ this.twPatch({routeErr:'Adresse non vérifiée — à choisir dans la liste Google : '+manq.join(', ')}); return; }
+    if(!fr.base){ this.twPatch({routeErr:'API non configurée.'}); return; }
+    this.twPatch({routeBusy:true,routeErr:''});
+    fetch(fr.base+'/franchisee/tour-route'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+      body:JSON.stringify({tourId:(T.tourId?+T.tourId:null),returnToDepot:!!T.ret,stops:T.sites.map(x=>({lat:x.lat,lng:x.lng,label:x.name||x.address}))})})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        if(st===200&&j&&j.ok) this.twPatch({routeBusy:false,route:{km:+j.km,minutes:+j.minutes,legs:(Array.isArray(j.legs)?j.legs:[]),at:new Date().toISOString()}});
+        else this.twPatch({routeBusy:false,routeErr:(j&&j.error)||('Itinéraire indisponible (HTTP '+st+')')}); })
+      .catch(()=>this.twPatch({routeBusy:false,routeErr:'Réseau indisponible'})); }
+  twSave(){ const T=this.state.tw||this.twVide(); const fr=window.__FR||{};
+    if(!String(T.name||'').trim()){ this.twPatch({err:'Nom de tournée requis.'}); return; }
+    if(!/^\d{1,2}:\d{2}$/.test(String(T.start||''))){ this.twPatch({err:'Heure de départ requise : toutes les heures d’arrivée en découlent.'}); return; }
+    const vide=T.sites.findIndex(x=>!String(x.name||'').trim()&&!String(x.address||'').trim());
+    if(vide>=0){ this.twPatch({err:'Site '+(vide+1)+' : nom ou adresse requis.'}); return; }
+    if(!fr.base){ this.twPatch({err:'API non configurée — rien ne peut être enregistré.'}); return; }
+    this.twPatch({saving:true,err:''});
+    const num=v=>{ const n=parseFloat(String(v==null?'':v).replace(',','.')); return isNaN(n)?null:n; };
+    const payload={tour:{id:(T.tourId?+T.tourId:null),name:String(T.name).trim(),start:T.start,max:(String(T.max||'').trim()===''?null:parseInt(T.max,10)),vehicule:T.vehicule||'',ret:!!T.ret,
+        forfait:num(T.forfait),pricePerKm:num(T.pricePerKm),days:T.days,postcodes:T.postcodes,routeKm:(T.route?T.route.km:null),routeMin:(T.route?T.route.minutes:null)},
+      sites:T.sites.map(x=>({id:x.id,name:String(x.name||'').trim(),address:String(x.address||'').trim(),acc:num(x.acc),officeId:(x.officeId?+x.officeId:null),
+        lat:x.lat,lng:x.lng,place_id:x.place_id||'',formatted:x.formatted||'',street:x.street||'',street_number:x.street_number||'',postal_code:x.postal_code||'',city:x.city||''})),
+      removeSites:T.removed};
+    fetch(fr.base+'/franchisee/tour-wizard'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(payload)})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        if(st===200&&j&&j.ok){
+          this.printJob('✓ Tournée « '+payload.tour.name+' » enregistrée — '+T.sites.length+' site(s), '+T.postcodes.length+' code(s) postal(aux)');
+          this.twReload().then(()=>this.setState(s=>({tw:{...(s.tw||this.twVide()),open:false,saving:false},_rev:(s._rev||0)+1}),()=>{ if(this.drawRoute) this.drawRoute(); })); }
+        else this.twPatch({saving:false,err:(j&&j.error)||(st===404?'POST /franchisee/tour-wizard absent du serveur — déployez le webshop.':('Enregistrement refusé (HTTP '+st+')'))}); })
+      .catch(()=>this.twPatch({saving:false,err:'Réseau indisponible — rien n’a été enregistré.'})); }
+  /* Relire depuis l'API les tables que l'assistant vient d'écrire. */
+  twReload(){ const fr=window.__FR||{}; if(!fr.base||!window.BOServer) return Promise.resolve();
+    const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
+    const M={ws_tours:'ws-tours',ws_office_delivery_sites:'ws-office-delivery-sites',ws_tour_postcodes:'ws-tour-postcodes',ws_offices:'ws-offices',ws_tour_availability:'ws-tour-availability'};
+    return Promise.all(Object.keys(M).map(k=>fetch(fr.base+'/franchisee/'+M[k]+qs,{headers:FRH(),credentials:'omit'}).then(r=>r.ok?r.json():null).then(d=>{ if(Array.isArray(d)) window.BOServer.refresh(k,d); }).catch(()=>{}))); }
   obClose(){ this.setState({obOpen:false}); }
   // Localités du référentiel pour un CP belge (un code peut couvrir plusieurs
   // localités, ex. 1300 → Limal · Wavre). [] tant que /geo/postcodes n'est pas chargé.
@@ -3687,6 +4023,9 @@ class Component extends DCLogic {
      encore un domaine au POST /inscription, c'est là que ça se retire —
      ré-annoncer une restriction ici ne l'éteindrait pas. */
   obAddDept(){ const d=(this.state.obDeptDraft||'').trim(); if(!d) return;
+    // Un même département ne s'ajoute qu'une fois (casse et espaces ignorés) —
+    // le serveur applique la même règle à la création.
+    if(this.state.obDepts.some(x=>this.obDeptKey(x.dept)===this.obDeptKey(d))){ this.printJob('⚠ Département déjà ajouté : '+d); this.setState({obDeptDraft:'',obDeptEff:''}); return; }
     // Effectif : celui qui a été saisi, ou aucun. « 5 » se retrouvait en base
     // comme un effectif communiqué par le client.
     const eff=String(this.state.obDeptEff||'').trim();
@@ -3696,27 +4035,26 @@ class Component extends DCLogic {
      du libellé et d'un numéro — un identifiant, pas une donnée inventée. Le
      libellé, lui, est obligatoire : c'est ce que le bureau lira sur sa carte,
      et « Voucher » tout court ne dit rien de ce qu'il offre. */
-  obAddVoucher(){ const S=this.state, o=S.ob;
-    const lib=String(S.obVLibelle||'').trim();
-    const val=String(o.vValeur||'').trim();
-    if(!lib){ this.printJob('⚠ Libellé du voucher requis — c’est ce que le bureau lit sur sa carte'); return; }
-    if(!val){ this.printJob('⚠ Valeur du voucher requise — un code sans effet annoncé n’engage rien'); return; }
-    const code=(String(o.vCode||'').trim()||this.obVCodeAuto(lib)).toUpperCase().replace(/\s+/g,'');
-    if(S.obVouchers.some(v=>v.code===code)){ this.printJob('⚠ Le code '+code+' est déjà dans la liste'); return; }
-    this.setState(s=>({obVouchers:[...s.obVouchers,{libelle:lib,code,valeur:val,validite:String(s.obVValidite||'').trim()}],
-      obVLibelle:'', obVValidite:'', ob:{...s.ob,vCode:'',vValeur:''}})); }
+  /* ATTRIBUER UN BON. Il se CHOISIT dans la liste servie par
+     /franchisee/ws-vouchers-local (ws_vouchers, boutique + réseau) — il ne se
+     saisit plus ici : un bon se crée dans Paramétrage › Bons. Un bon déjà
+     attribué ne se rajoute pas. */
+  obAddVoucher(){ const S=this.state; const code=String(S.obVSel||'').trim().toUpperCase();
+    const list=(window.BOServer?window.BOServer.table('ws_vouchers_local'):[])||[];
+    if(!list.length){ this.printJob('⚠ Aucun bon actif — créez-en un dans Paramétrage › Bons'); return; }
+    if(!code){ this.printJob('⚠ Choisissez un bon dans la liste'); return; }
+    const v=list.find(x=>String(x.code||'').toUpperCase()===code);
+    if(!v){ this.printJob('⚠ Bon inconnu de la liste ws-vouchers-local'); return; }
+    if(S.obVouchers.some(x=>x.code===code)){ this.printJob('⚠ Le bon '+code+' est déjà attribué à ce bureau'); return; }
+    this.setState(s=>({obVouchers:[...s.obVouchers,{libelle:code,code,valeur:String(v.valeur||''),validite:String(v.validite||'')}],obVSel:''})); }
   obVCodeAuto(lib){ const base=String(lib||'VOUCHER').toUpperCase().replace(/[^A-Z0-9]+/g,'').slice(0,10)||'VOUCHER';
     return base+(1000+Math.floor(Math.random()*8999)); }
   obRemoveVoucher(i){ return ()=>this.setState(s=>({obVouchers:s.obVouchers.filter((_,j)=>j!==i)})); }
   /* Les vouchers RETENUS à la création : la liste, plus le brouillon s'il est
      rempli — un franchisé qui saisit son dernier voucher et clique « Créer »
      sans repasser par « + Ajouter » ne doit pas le perdre en silence. */
-  obVouchersFinaux(){ const S=this.state, o=S.ob;
-    const out=S.obVouchers.slice();
-    const lib=String(S.obVLibelle||'').trim(), val=String(o.vValeur||'').trim();
-    if(lib&&val){ const code=(String(o.vCode||'').trim()||this.obVCodeAuto(lib)).toUpperCase().replace(/\s+/g,'');
-      if(!out.some(v=>v.code===code)) out.push({libelle:lib,code,valeur:val,validite:String(S.obVValidite||'').trim()}); }
-    return out; }
+  /* Les bons RETENUS à la création : la liste attribuée, rien d'autre. */
+  obVouchersFinaux(){ return (this.state.obVouchers||[]).slice(); }
   obAddStaff(){ const n=(this.state.obStaffName||'').trim(), e=(this.state.obStaffEmail||'').trim(); if(!e) return; this.setState(s=>({obStaff:[...s.obStaff,{name:n||e.split('@')[0],email:e}],obStaffName:'',obStaffEmail:''})); }
   obRemoveStaff(i){ return ()=>this.setState(s=>({obStaff:s.obStaff.filter((_,j)=>j!==i)})); }
   /* Cocher un client EXISTANT. La sélection est mémorisée par id et non par
@@ -3861,6 +4199,8 @@ class Component extends DCLogic {
         body:JSON.stringify({raison:o.raison,tva:o.tva,seg:o.seg,paiement:o.paiement,plafond:o.plafond,remiseWeb:o.remiseWeb,franco:o.franco,cp:obCp,localite:obLocalite,
           contactNom:o.contactNom,contactEmail:o.contactEmail,contactTel:o.contactTel,logo:o.logo||'',
           adr:o.adr,etage:o.etage,tour:o.tour,acc:o.acc,office:o.office,drop:o.drop,
+          // Adresse choisie dans la liste Google : position et composantes posées sur le site (itinéraire, ETA).
+          ...((o.geo&&o.geo.lat!=null)?{lat:o.geo.lat,lng:o.geo.lng,place_id:o.geo.place_id||'',formatted:o.geo.formatted||'',street:o.geo.street||'',street_number:o.geo.street_number||'',postal_code:o.geo.postal_code||'',city:o.geo.city||''}:{}),
           fenetre:obFenetre,jours:obJours,validation:o.validation,
           departements:S.obDepts,staff:S.obStaff,
           /* LES DEUX INTERRUPTEURS DE L'ÉCRAN. Ils n'étaient pas postés : le
@@ -4104,7 +4444,7 @@ class Component extends DCLogic {
           // Adresse STRUCTURÉE (rue+n° / CP / ville) : recomposée en `adr` à
           // l'enregistrement — garantit un CP exploitable par la carte
           // (géolocalisation via le référentiel CP→GPS, pas d'API externe).
-          {k:'adr_rue',label:'Rue et numéro',type:'text',ph:'ex. Rue du Zoning 5',section:'Adresse du site'},
+          {k:'adr_rue',label:'Rue et numéro — liste Google',type:'adresse',cp:'adr_cp',ville:'adr_ville',ph:'commencez à taper : rue et n°',info:'Choisie dans la liste Google, l\'adresse remplit code postal, ville et position d\'un coup — c\'est cette position qui entre dans l\'itinéraire et les heures d\'arrivée.',section:'Adresse du site'},
           {k:'adr_cp',label:'Code postal',type:'text',ph:'1348',half:true,info:'4 chiffres (BE). C\'est LUI qui positionne le site sur la carte des tournées — la ville se remplit automatiquement s\'il est reconnu.',section:'Adresse du site'},
           {k:'adr_ville',label:'Ville / commune',type:'text',ph:'auto via le CP',half:true},
           {k:'etage',label:'Étage / local',type:'text',ph:'ex. Sous-sol / quai',section:'Site'},
@@ -4133,7 +4473,7 @@ class Component extends DCLogic {
           {k:'vat',label:'N° TVA',type:'text',ph:'BE0123456789',info:'TVA du bureau — sert au contrôle de conflit (un même CP déjà desservi sous une autre TVA).',section:'Identité'},
           {k:'logo_url',label:'Logo de l\'entreprise (bureau)',type:'image',info:'Figure sur la couverture du dossier imprimé de ce bureau, à côté du logo L\'Atelier. PNG, JPG ou WebP ; réduit à 600 px avant envoi. Sans logo, la couverture n\'en montre pas.',section:'Identité'},
           {k:'site',label:'Site (building) du bureau',type:'select',options:[{value:'',label:'— Aucun building (site à créer) —'},...buildings.map(b=>({value:b,label:b}))],info:'Sens du paramétrage : c\'est le BUREAU qui choisit son building (site). Un site peut regrouper plusieurs bureaux — c\'est l\'arrêt physique de la tournée.',section:'Identité'},
-          {k:'address',label:'Adresse',type:'text',ph:'Rue, n°',section:'Coordonnées'},
+          {k:'address',label:'Adresse — liste Google',type:'adresse',cp:'postal_code',ville:'city',ph:'commencez à taper : rue et n°',info:'Choisie dans la liste Google, l\'adresse remplit code postal et ville, et pose la position sur le site du bureau.',section:'Coordonnées'},
           {k:'postal_code',label:'Code postal',type:'text',ph:'1000',half:true,section:'Coordonnées'},
           {k:'city',label:'Ville',type:'text',ph:'Bruxelles',half:true},
           {k:'contact',label:'Personne de contact',type:'text',ph:'ex. Facility',half:true,section:'Contact'},
@@ -4174,7 +4514,7 @@ class Component extends DCLogic {
         fields:[
           {k:'raison',label:'Raison sociale (nom officiel)',type:'text',ph:'raison sociale officielle',section:'Identité'},
           {k:'tva',label:'N° TVA (validé via VIES)',type:'text',ph:'BE 0xxx.xxx.xxx',vies:true,info:'Vérifié au registre européen VIES : le nom officiel remplace la raison sociale. Si le siège diffère de l\'adresse encodée, un choix « garder le siège / garder le site » vous est proposé.',section:'Identité'},
-          {k:'adresse',label:'Adresse du siège social',type:'text',ph:'Rue, n°',info:'Le siège = l\'adresse juridique de la société (client). Les lieux de livraison (offices) et les buildings (sites) s\'encodent séparément.',section:'Siège social'},
+          {k:'adresse',label:'Adresse du siège social — liste Google',type:'adresse',cp:'cp',ville:'ville',ph:'commencez à taper : rue et n°',info:'Le siège = l\'adresse juridique de la société (client). Les lieux de livraison (offices) et les buildings (sites) s\'encodent séparément.',section:'Siège social'},
           {k:'cp',label:'Code postal',type:'text',ph:'1000',half:true,section:'Siège social'},
           {k:'ville',label:'Ville',type:'text',ph:'Bruxelles',half:true},
           {k:'seg',label:'Segment',type:'select',options:sel(['horeca','retail','corporate','event']),def:'horeca',section:'Conditions'},
@@ -4283,7 +4623,7 @@ class Component extends DCLogic {
       shop:{ title:'Paramètres du shop', table:'atelierbydb_shops', save:'Enregistrer',
         fields:[
           {k:'enseigne',label:'Enseigne',type:'text',def:this.shopField('name','')},
-          {k:'adresse',label:'Adresse',type:'text',def:this.shopField('address','')},
+          {k:'adresse',label:'Adresse — liste Google',type:'adresse',cp:'cp',ville:'ville',def:this.shopField('address','')},
           {k:'ville',label:'Ville',type:'text',def:this.shopField('city','')},
           {k:'cp',label:'Code postal',type:'text',def:this.shopField('cp','')},
         ]},
@@ -4328,6 +4668,9 @@ class Component extends DCLogic {
        que ce qui s'édite, or l'écriture a besoin de la clé (officeId) et
        les liens « ouvrir la fiche » du nom. Les déduire du libellé affiché
        marchait tant que deux bureaux ne portaient pas le même nom. */
+    // Position et composantes Google de la ligne : elles accompagnent la fiche
+    // pour que l'enregistrement ne les efface pas et que le badge « vérifiée » soit juste.
+    ['lat','lng','place_id','street','street_number','postal_code','city'].forEach(k=>{ if(vals&&vals[k]!==undefined&&v[k]===undefined) v[k]=vals[k]; });
     this.setState({formKey:key,formVals:v,formRow:(vals||null),formEdit:true,formIndex:(idx!=null?idx:null),viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   closeForm(){ this.setState({formKey:null}); }
   submitForm(){ const S=this.state, cfg=this.formDefs()[S.formKey]; if(!cfg){ return; } const v={...S.formVals};
@@ -5490,6 +5833,8 @@ class Component extends DCLogic {
       .forEach(([col,k,src])=>{ const v=vals[k];
         if((v===''||v==null)&&si[src]===undefined) return;
         body[col]=(v==null?'':v); });
+    // Position choisie dans la liste Google : départ et retour exacts des tournées.
+    if(vals.lat!=null&&vals.lng!=null&&!isNaN(parseFloat(vals.lat))&&!isNaN(parseFloat(vals.lng))){ body.lat=parseFloat(vals.lat); body.lng=parseFloat(vals.lng); }
     return fetch(fr.base+'/franchisee/shop-update?shop='+encodeURIComponent(shop),
       {method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(body)})
       .then(r=>r.json().then(j=>({ok:r.ok,status:r.status,j}),()=>({ok:r.ok,status:r.status,j:null})))
@@ -7034,7 +7379,7 @@ class Component extends DCLogic {
         addOpts:[{value:'',label:'+ Assigner un site…'},...addable.map(b=>({value:b.key,label:b.name+(b.tour?(' ← '+b.tour):'')}))],
         addSet:(e)=>{ const v=e.target.value; const b=tvBlds[v]; if(b) tourSetBld(b,t.name); },
         edit:()=>{ this.setState({selRoute:t.id},()=>{ const fn=this._editRouteById; if(fn) fn(t.id); }); },
-        editTile:()=>{ if(this._editRouteById) this._editRouteById(t.id); },
+        editTile:()=>this.twOpen(t.id),
         delTile:()=>this.setState({delRoute:t.id})};
     });
     const tourTilesEmpty=tourTiles.length===0;
@@ -7055,10 +7400,10 @@ class Component extends DCLogic {
        page prenait 06:00. Elle est donc exigée — c'est la même règle que côté
        serveur, où une tournée sans heure de départ ne publie aucune ETA. */
     const rfCanSubmit=!!(rForm.name.trim()&&rForm.short.trim()&&String(rForm.start||'').trim());
-    const RF_RESET={name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}};
+    const RF_RESET={name:'',short:'',start:'06:00',max:10,forfait:45,pricePerKm:'',driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}};
     const rfSubmit=()=>{ if(!rfCanSubmit) return; const p=String(rForm.start).split(':'); const startMin=(+p[0])*60+(+(p[1]||0)); const editing=S.rfEditId; const newId='rn'+Date.now();
       const base={name:String(rForm.name||'').trim(),short:String(rForm.short||rForm.name.slice(0,8)).trim(),driver:rForm.driver||'— non assigné',start:startMin,max:(String(rForm.max||'').trim()===''?null:parseInt(rForm.max,10)),
-        forfait:(String(rForm.forfait||'').trim()===''?null:parseFloat(rForm.forfait)),ret:rForm.ret,vehicule:rForm.vehicule||'',days:rForm.days,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')};
+        forfait:(String(rForm.forfait||'').trim()===''?null:parseFloat(rForm.forfait)),pricePerKm:(String(rForm.pricePerKm||'').trim()===''?null:parseFloat(String(rForm.pricePerKm).replace(',','.'))),ret:rForm.ret,vehicule:rForm.vehicule||'',days:rForm.days,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')};
       if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); const i=editing?rows.findIndex(t=>t.id===editing):-1; if(i>=0){ rows[i]={...rows[i],...base}; } else { rows.push({id:newId,amplitude:null,decharge:null,trajet:null,used:0,...base}); } window.BOServer.save('ws_tours',rows); }
       if(editing){ this.setState(s=>({rfEditId:null,rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
       else { this.setState(s=>({routeAssign:{...s.routeAssign,[newId]:[]},rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
@@ -7073,6 +7418,87 @@ class Component extends DCLogic {
     const rfPostcodeOpts=rfPoolCps.map(cp=>({cp, loc:rfLocByCp[cp]||'', style:(rfSelSet.has(cp)?pillActive:pillIdle), toggle:()=>this.setState(s=>{ const cur=new Set((s.rf.postcodes||[]).map(String)); if(cur.has(cp)) cur.delete(cp); else cur.add(cp); return {rf:{...s.rf,postcodes:[...cur]}}; })}));
     const rfPostEmpty=rfPoolCps.length===0;
     const rfPostCount=(S.rf.postcodes||[]).length;
+    /* ── ASSISTANT TOURNÉE → SITES → BUREAUX (vals) ── */
+    const T=S.tw||this.twVide();
+    const twSet=(k)=>(e)=>this.twPatch({[k]:e.target.value,err:''});
+    const twVehOpts=['Camion frigo','Box frigorifique'].map(v=>({label:v,style:(T.vehicule===v?pillActive:pillIdle),pick:()=>this.twPatch({vehicule:(T.vehicule===v?'':v)})}));
+    const twDays=['L','Ma','Me','J','V','S','D'].map(k=>({k,style:(T.days&&T.days[k])?pillActive:pillIdle,toggle:()=>this.twPatch(t=>({days:{...(t.days||{}),[k]:!(t.days&&t.days[k])}}))}));
+    // Codes postaux : recherche par localité ou par code dans la chalandise (à défaut, tout le référentiel des communes).
+    const twNorm=x=>String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+    const twCpLoc=(cp)=>{ if(rfLocByCp[cp]) return rfLocByCp[cp]; const G=window.__CPGEO; const e=(G&&G.idx)?G.idx[cp]:null; return e?(e.city||''):''; };
+    const twTaken={}; (()=>{ const byId={}; rMeta.forEach(t=>{ byId[String(t.id).replace(/^r/,'')]=t; });
+      (SRV('ws_tour_postcodes')||[]).forEach(r=>{ const k=String(r.tour_id); if(T.tourId!=null&&k===String(T.tourId)) return; const t=byId[k]; if(!t||t.active===false) return; (twTaken[String(r.postcode)]=twTaken[String(r.postcode)]||[]).push(t.name); }); })();
+    const twQ=twNorm(T.cpQ); const twSelSet=new Set((T.postcodes||[]).map(String));
+    let twCand=rfPoolCps.slice(); let twCandSrc='chalandise';
+    if(!twCand.length){ const G=window.__CPGEO; if(G&&G.list){ const seen={}; G.list.forEach(e=>{ const cp=String(e[0]); if(!seen[cp]){ seen[cp]=1; twCand.push(cp); } }); twCandSrc='referentiel'; } }
+    const twCpSug=twQ.length<2?[]:twCand.filter(cp=>!twSelSet.has(cp)&&(cp.startsWith(twQ)||twNorm(twCpLoc(cp)).includes(twQ))).slice(0,12).map(cp=>{ const taken=twTaken[cp]||[];
+      return {cp,loc:twCpLoc(cp)||'—',note:taken.length?('déjà : '+taken.join(', ')):'',title:taken.length?('Déjà desservi par '+taken.join(', ')+' — le serveur refusera le doublon'):('Ajouter '+cp),
+        style:taken.length?'opacity:.45':'',pick:()=>{ if(taken.length){ this.printJob('⚠ '+cp+' est déjà desservi par '+taken.join(', ')); return; } this.twCpAdd(cp); }}; });
+    const twCpChips=(T.postcodes||[]).map(cp=>({cp,loc:twCpLoc(cp),remove:()=>this.twCpRemove(cp)}));
+    // Itinéraire et ETA par arrêt : départ + trajets (Google, sinon vol d'oiseau ≈) + accès + dépôt du bureau.
+    const twStart=/^\d{1,2}:\d{2}$/.test(String(T.start||''))?this.toMin(T.start):null;
+    const twOffById={}; (SRV('ws_offices')||[]).forEach(o=>{ twOffById[String(o.id)]=o; });
+    const twDset={}; (SRV('ws_office_delivery_settings')||[]).forEach(b=>{ const k=String(b.bureau||'').trim(); if(k) twDset[k]=b; });
+    const twDropOf=(officeId)=>{ const o=twOffById[String(officeId||'')]; if(!o) return null; const c=twDset[String(o.name||'').trim()]; const v=(c&&c.drop!=null&&c.drop!=='')?parseFloat(c.drop):NaN; return isNaN(v)?null:v; };
+    const twDep=this.depot(); let twCur=twStart; let twPrev=(twDep&&twDep.lat!=null)?{lat:twDep.lat,lng:twDep.lng}:null;
+    const twLegs=(T.route&&Array.isArray(T.route.legs))?T.route.legs:null;
+    const twNumStyle='width:22px;height:22px;border-radius:50%;background:var(--color-primary);color:#fff;font:700 11px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;flex:none';
+    const twStops=(T.sites||[]).map((x,i)=>{ let eta='—', why='';
+      if(twCur==null){ why=(twStart==null?'Heure de départ manquante':'Une étape précédente est incomplète'); }
+      else if(twLegs&&twLegs[i]){ twCur+=(+twLegs[i].min||0); eta=this.hhmm(twCur); why='Trajet Google'; }
+      else if(twPrev&&x.lat!=null&&x.lng!=null){ twCur+=this.travelMin(twPrev,{lat:+x.lat,lng:+x.lng}).min; eta='≈ '+this.hhmm(twCur); why='Estimation à vol d’oiseau — calculez l’itinéraire Google'; }
+      else { why=(x.lat==null?'Adresse non vérifiée (à choisir dans la liste Google)':'Boutique non positionnée'); twCur=null; }
+      if(twCur!=null){ const acc=parseFloat(x.acc); if(isNaN(acc)){ twCur=null; why='Temps d’accès à saisir — les arrêts suivants n’ont pas d’heure'; } else { twCur+=acc; const dr=twDropOf(x.officeId); if(dr!=null) twCur+=dr; } }
+      if(x.lat!=null&&x.lng!=null) twPrev={lat:+x.lat,lng:+x.lng};
+      return {num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),eta,why,color:(eta==='—'?'var(--color-text-muted)':'var(--color-primary)')}; });
+    let twRetEta='—', twRetWhy='';
+    if(T.ret&&(T.sites||[]).length){ if(twCur==null) twRetWhy='Une étape est incomplète';
+      else if(twLegs&&twLegs.length===(T.sites||[]).length+1){ twRetEta=this.hhmm(twCur+(+twLegs[twLegs.length-1].min||0)); twRetWhy='Trajet Google'; }
+      else if(twPrev&&twDep&&twDep.lat!=null){ twRetEta='≈ '+this.hhmm(twCur+this.travelMin(twPrev,{lat:twDep.lat,lng:twDep.lng}).min); twRetWhy='Estimation à vol d’oiseau'; }
+      else twRetWhy='Boutique non positionnée'; }
+    const twPpk=parseFloat(String(T.pricePerKm||'').replace(',','.'));
+    const twKmTxt=(T.route&&T.route.km!=null)?(String(T.route.km).replace('.',',')+' km'):'—';
+    const twRouteCost=(T.route&&T.route.km!=null&&!isNaN(twPpk))?((T.route.km*twPpk).toFixed(2).replace('.',',')+' €'):'—';
+    const twExistOpts=(SRV('ws_office_delivery_sites')||[]).filter(r=>r.id!=null&&!(T.sites||[]).some(x=>String(x.id)===String(r.id)))
+      .map(r=>({value:String(r.id),label:((r.name&&r.name!=='—')?r.name:'(sans nom)')+((r.adr&&r.adr!=='—')?(' — '+r.adr):'')+((r.tour&&r.tour!=='—')?(' · tournée '+r.tour):' · sans tournée')}));
+    const twOfficeOpts=(SRV('ws_offices')||[]).filter(o=>o.active!==false&&o.active!==0&&o.name).map(o=>({value:String(o.id),label:String(o.name)+(o.city?(' · '+o.city):'')}));
+    const twSitesView=(T.sites||[]).map((x,i)=>({num:String(i+1),numStyle:twNumStyle,key:x.key,name:x.name||'',address:x.address||'',acc:(x.acc==null?'':String(x.acc)),
+      setName:this.twSiteSet(i,'name'),setAcc:this.twSiteSet(i,'acc'),addrType:this.twSiteType(i),
+      ...this.geoView('tw'+x.key,(x.lat!=null&&x.lng!=null),{pick:(id)=>this.twSitePick(i,id)}),
+      up:()=>this.twSiteMove(i,-1),down:()=>this.twSiteMove(i,1),remove:()=>this.twSiteRemove(i),
+      upStyle:(i===0?'opacity:.3':''),downStyle:(i===T.sites.length-1?'opacity:.3':'')}));
+    const twSiteOffices=(T.sites||[]).map((x,i)=>({num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),address:x.address||'—',officeId:x.officeId||'',setOffice:this.twSiteSet(i,'officeId'),officeOpts:twOfficeOpts}));
+    const twNbOff=(T.sites||[]).filter(x=>x.officeId).length;
+    const twVals={
+      twOpen:!!(S.tw&&S.tw.open), twTitle:(T.tourId?('Assistant — tournée « '+(T.name||'')+' »'):'Assistant — nouvelle tournée'),
+      twClose:()=>this.twClose(), twSave:()=>this.twSave(), twNew:()=>this.twOpen(null),
+      twSaveLabel:(T.saving?'Enregistrement…':(T.tourId?'Enregistrer la tournée':'Créer la tournée')), twSaveStyle:(T.saving?'opacity:.6;pointer-events:none':''),
+      twHasErr:!!T.err, twErr:T.err||'',
+      tw:{name:T.name||'',start:T.start||'',max:(T.max==null?'':String(T.max)),pricePerKm:(T.pricePerKm==null?'':String(T.pricePerKm)),forfait:(T.forfait==null?'':String(T.forfait))},
+      twSet:{name:twSet('name'),start:twSet('start'),max:twSet('max'),pricePerKm:twSet('pricePerKm'),forfait:twSet('forfait')},
+      twVehOpts, twDays,
+      twRetOn:()=>this.twPatch({ret:true,route:null}), twRetOff:()=>this.twPatch({ret:false,route:null}),
+      twRetOnStyle:(T.ret?pillActive:pillIdle), twRetOffStyle:(!T.ret?pillActive:pillIdle),
+      twCpQ:T.cpQ||'', twSetCpQ:(e)=>this.twPatch({cpQ:e.target.value}),
+      twCpOpen:twQ.length>=2, twCpSug, twCpNone:twQ.length>=2&&twCpSug.length===0,
+      twCpNoneTxt:(twCand.length?('Aucun code postal '+(twCandSrc==='chalandise'?'de votre chalandise':'du référentiel')+' ne correspond à « '+(T.cpQ||'')+' ».'):'Aucun code postal disponible — chalandise non attribuée et référentiel /geo/postcodes non chargé.'),
+      twCpChips, twCpEmpty:!(T.postcodes||[]).length,
+      twCpEmptyTxt:(twCand.length?'Aucun code postal — la tournée ne sera proposée à aucun client.':'Aucun code postal dans votre chalandise — le franchiseur doit d’abord vous en attribuer.'),
+      twRetTxt:(T.ret?' → dépôt':''), twRouteGo:()=>this.twRoute(),
+      twRouteBtn:(T.routeBusy?'Calcul en cours…':(T.route?'Recalculer l’itinéraire (Google)':'Calculer l’itinéraire (Google)')), twRouteBtnStyle:(T.routeBusy?'opacity:.6;pointer-events:none':''),
+      twRouteKm:twKmTxt, twRouteMin:(T.route&&T.route.minutes!=null?this.fmtMin(T.route.minutes):'—'), twRouteCost,
+      twRouteHasErr:!!T.routeErr, twRouteErr:T.routeErr||'',
+      twRouteAt:(T.route?(T.route.legs?'Itinéraire calculé à l’instant par Google Directions — il est mémorisé sur la tournée à l’enregistrement.':('Dernier itinéraire mémorisé'+(T.route.at?(' le '+String(T.route.at).slice(0,16).replace('T',' ')):'')+' — recalculez après un changement d’arrêts.')):(isNaN(twPpk)?'Renseignez le prix au km pour obtenir le coût de la tournée.':'Pas encore calculé.')),
+      twStops, twRetShow:!!T.ret&&(T.sites||[]).length>0, twRetEta, twRetWhy,
+      twSites:twSitesView, twSitesEmpty:!(T.sites||[]).length, twAddSite:()=>this.twAddSite(),
+      twExist:T.exist||'', twExistPick:(e)=>this.twAddExisting(e), twExistOpts, twExistHas:twExistOpts.length>0,
+      twSiteOffices, twOnboard:()=>this.obOpen(),
+      twSumTxt:((T.sites||[]).length+' site(s) · '+twNbOff+' bureau(x) rattaché(s) · '+(T.postcodes||[]).length+' code(s) postal(aux)'+(twKmTxt!=='—'?(' · '+twKmTxt+(twRouteCost!=='—'?(' · '+twRouteCost):'')):'')),
+      // (i) ETA — même explication partout où une heure d'arrivée est annoncée.
+      etaInfoIcon:'width:14px;height:14px;border-radius:50%;background:#E8A15C;color:#fff;font:700 9px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;cursor:help;flex:none',
+      etaTipStyle:'position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);background:var(--color-text);color:var(--color-surface);font:400 11px/1.5 var(--font-ui);padding:8px 11px;border-radius:8px;width:260px;z-index:60;text-transform:none;letter-spacing:0;text-align:left;white-space:normal;box-shadow:0 8px 24px rgba(0,0,0,.25)',
+      etaTipTxt:'ETA = heure d’arrivée estimée : heure de départ + trajets Google entre les arrêts (à défaut, distance à vol d’oiseau, notée ≈) + temps d’accès de chaque site + temps de dépôt du bureau. Sans heure de départ, sans temps d’accès ou avec une adresse non vérifiée, aucune heure n’est annoncée.',
+    };
     const zfSet=(k)=>(e)=>this.setState(s=>({zf:{...s.zf,[k]:e.target.value}}));
     const zoneParentOpts=[{value:'',label:'— Aucune —'},...this.zonesData().map(z=>({value:z.id,label:z.nom}))];
     const catchmentOpts=[{value:'',label:'— Sélectionner un territoire marque —'},...SRV('ws_franchisor_catchment').map(c=>({value:c.id,label:c.name}))];
@@ -7941,6 +8367,7 @@ class Component extends DCLogic {
     // enregistrement quand rien n'était parti.
     const shopSave=()=>{ const d=this.state.shopDraft||{}; const vals={};
       SHOP_KEYS.forEach(([k])=>{ vals[k]=d[k]!==undefined?d[k]:shopEditable(k); });
+      if(d.lat!=null&&d.lng!=null){ vals.lat=d.lat; vals.lng=d.lng; }
       this.setState({shopEdit:false,shopDraft:null});
       this.shopWrite(vals); };
 
@@ -8011,7 +8438,10 @@ class Component extends DCLogic {
               const n=c.includes(iso)?c.filter(x=>x!==iso):[...c,iso].sort((a,b)=>a-b);
               return {formVals:{...s.formVals,[f.k]:n}}; })};
         }):[],
-        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&f.type!=='date'&&f.type!=='days'&&f.type!=='image'&&!isToggle&&!f.readonly,
+        isText:f.type!=='select'&&f.type!=='number'&&f.type!=='time'&&f.type!=='date'&&f.type!=='days'&&f.type!=='image'&&f.type!=='adresse'&&!isToggle&&!f.readonly,
+        // Adresse reliée à la liste Google (f.cp / f.ville = champs liés remplis au clic).
+        isAdresse:f.type==='adresse', geoType:(e)=>this.fGeoType(f,e),
+        ...(f.type==='adresse'?this.geoView('form',!!(S.formVals&&S.formVals.lat!=null&&S.formVals.lng!=null),{pick:(id)=>this.fGeoPick(f,id)}):{}),
         // Image (logo du bureau) : la valeur est une URL servie (existant) ou une
         // data: URL (fichier choisi, réduit à 600 px) ; vide = retirer.
         isImage:f.type==='image', hasImg:!!val, imgSrc:this.assetUrl(val),
@@ -9023,8 +9453,35 @@ class Component extends DCLogic {
       {lbl:'Tournée',val:O.tour||'—'},{lbl:'Chalandise',val:obZc.prim},{lbl:'Code postal',val:obZc.sec},
       {lbl:'Delivery site',val:O.adr||'—'},{lbl:'Office',val:O.office||O.raison||'—'},
     ].map(x=>({...x,style:obChip}));
+    // Recherche base clients, catalogue des départements (sans doublon), bons servis par l'endpoint.
+    const obSH=this.obSearchHits(S.obSearchQ);
+    const obDeptCat=(()=>{ const seen={}; const out=[]; const add=n=>{ const k=this.obDeptKey(n); if(!k||seen[k]) return; seen[k]=1; out.push(String(n).trim()); };
+      ['Marketing','Bureau','Production','Direction','Accueil','Logistique','Cuisine'].forEach(add);
+      (SRV('b2b_client_company_department')||[]).forEach(d=>add(d.name||d.dept||''));
+      (S.obDepts||[]).forEach(d=>add(d.dept)); return out; })();
+    const obVList=SRV('ws_vouchers_local')||[];
     const obVals={
       obOpen:S.obOpen, obTitle:'Onboarding bureau', obStep, obSteps,
+      // 1 · recherche dans la base clients de la boutique + VIES
+      obSearchQ:S.obSearchQ||'', obSetSearchQ:(e)=>this.setState({obSearchQ:e.target.value}),
+      obSearchHits:obSH.map(c=>{ const nom=[c.name,c.surname].filter(Boolean).join(' ').trim();
+        return {nom:c.company_name||nom||'(sans nom)', sub:[c.tax_number,(c.company_name&&nom)?nom:'',c.email,c.city||c.locality].filter(Boolean).join(' · ')||'—', pick:()=>this.obReprendre(c)}; }),
+      obSearchHas:obSH.length>0, obSearchNone:String(S.obSearchQ||'').trim().length>=2&&obSH.length===0,
+      obViesLocked:!!S.obViesLocked, obViesFree:!S.obViesLocked, obViesUnlock:()=>this.setState({obViesLocked:false}), obViesCheck:()=>this.obViesCheck(),
+      obViesMsg:S.obViesMsg||'', obViesStyle:'font:500 11.5px var(--font-ui);color:'+(S.obViesOk===true?'#2d7a3e':(S.obViesOk===false?'var(--color-primary)':'var(--color-text-muted)')),
+      // 3 · adresse du delivery site via la liste Google
+      obAdrType:(e)=>this.obAdrType(e),
+      ...(()=>{ const g=this.geoView('ob',!!(O.geo&&O.geo.lat!=null),{pick:(id)=>this.obAdrPick(id)}); return {obGeoOpen:g.geoOpen,obGeoBusy:g.geoBusy,obGeoHasMsg:g.geoHasMsg,obGeoMsgTxt:g.geoMsgTxt,obGeoSug:g.geoSug,obGeoBadge:g.geoBadge,obGeoBadgeStyle:g.geoBadgeStyle}; })(),
+      // 4 · départements : sélection multiple, un nom une seule fois
+      obDeptChips:obDeptCat.map(n=>{ const on=(S.obDepts||[]).some(d=>this.obDeptKey(d.dept)===this.obDeptKey(n));
+        return {label:n,toggle:this.obDeptToggle(n),style:'border-radius:999px;padding:6px 12px;font:'+(on?'600':'500')+' 11px var(--font-ui);cursor:pointer;border:1.5px solid '+(on?'var(--color-primary)':'var(--color-border-secondary)')+';background:'+(on?'var(--color-primary)':'var(--color-surface)')+';color:'+(on?'#fff':'var(--color-text)')}; }),
+      // 5 · bons : la liste servie par /franchisee/ws-vouchers-local, rien d'autre
+      obVSel:S.obVSel||'', obSetVSel:(e)=>this.setState({obVSel:e.target.value}),
+      obVOpts:obVList.map(v=>{ const code=String(v.code||'').toUpperCase(); const deja=(S.obVouchers||[]).some(x=>x.code===code);
+        return {value:String(v.code||''),label:code+' — '+(v.valeur||v.type||'')+(v.validite?(' · '+v.validite):'')+(v.loc?'':' · réseau')+(deja?' (déjà attribué)':'')}; }),
+      obVSelPh:(obVList.length?'— Choisir un bon —':'— Aucun bon actif servi par ws-vouchers-local —'),
+      obVAddStyle:(obVList.length?'':'opacity:.5'),
+      obVSrcTxt:(obVList.length?(obVList.length+' bon(s) actif(s) — boutique et réseau (ws_vouchers). Un bon se crée dans Paramétrage › Bons, jamais ici ; un bon déjà attribué ne se rajoute pas.'):'Aucun bon actif : créez-en un dans Paramétrage › Bons avant l’onboarding — aucun bon n’est inventé ici.'),
       obStep0:obStep===0,obHasLogo:!!(S.ob&&S.ob.logo),obLogoSrc:(S.ob&&S.ob.logo)||'',obStep1:obStep===1,obStep2:obStep===2,obStep3:obStep===3,obStep4:obStep===4,obStep5:obStep===5,obStep6:obStep===6,
       ob:O, obInStyle:obIn,
       obSetRaison:this.obSet('raison'),obSetTva:this.obSet('tva'),obSetSeg:this.obSet('seg'),obSetPaiement:this.obSet('paiement'),obSetPlafond:this.obSet('plafond'),
@@ -9174,6 +9631,10 @@ class Component extends DCLogic {
       shopDraftVille:shopDraftOf('ville'), shopDraftCp:shopDraftOf('cp'),
       shopEnter, shopCancel, shopSave,
       shopSetEnseigne:shopSetK('enseigne'), shopSetAdresse:shopSetK('adresse'),
+      shopAdrType:(e)=>{ const v=e.target.value; this.setState(st=>({shopDraft:{...(st.shopDraft||{}),adresse:v,lat:null,lng:null}})); this.geoType('shop',v); },
+      ...(()=>{ const d=this.state.shopDraft||{}; const si=this.shopInfo()||{};
+        const g=this.geoView('shop',((d.lat!=null&&d.lng!=null)||(d.lat===undefined&&si.lat!=null)),{pick:(id)=>this.geoPick('shop',id,j=>this.setState(st=>{ const c=st.shopDraft||{}; return {shopDraft:{...c,adresse:this.geoLigne(j),ville:j.city||c.ville||'',cp:j.zip||c.cp||'',lat:j.lat,lng:j.lng}}; }))});
+        return {shopGeoOpen:g.geoOpen,shopGeoBusy:g.geoBusy,shopGeoHasMsg:g.geoHasMsg,shopGeoMsgTxt:g.geoMsgTxt,shopGeoSug:g.geoSug,shopGeoBadge:g.geoBadge,shopGeoBadgeStyle:'margin-top:2px;'+g.geoBadgeStyle}; })(),
       shopSetVille:shopSetK('ville'), shopSetCp:shopSetK('cp'),
       closeProfile:()=>this.setState({profileOpen:false}),
       paramRows,
@@ -10189,13 +10650,14 @@ class Component extends DCLogic {
       confirmDelOpen:S.confirmDel!=null,confirmDelLabel:(S.confirmDel&&S.confirmDel.label)||'',
       confirmDelCancel:()=>this.setState({confirmDel:null}),confirmDelOk:()=>this.confirmDelDo(),
       delRouteConfirm:()=>{ const rid=S.delRoute; if(!rid) return; const nextRA={...RA}; delete nextRA[rid]; const remaining=rMeta.filter(r=>r.id!==rid); if(window.BOServer){ const rows=window.BOServer.table('ws_tours').filter(t=>t.id!==rid); window.BOServer.save('ws_tours',rows); } this.setState(st=>({routeAssign:nextRA,delRoute:null,_rev:(st._rev||0)+1,selRoute:(st.selRoute===rid?(remaining[0]?remaining[0].id:''):st.selRoute)}),()=>this.drawRoute()); this.printJob('✓ Tournée supprimée'); },
-      openRouteForm:()=>this.setState({rfOpen:true,rfEditId:null,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),
+      openRouteForm:()=>this.setState({rfOpen:true,rfEditId:null,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,pricePerKm:'',driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),
+      ...twVals,
       rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false,rfEditId:null}),
       rfTitle:(S.rfEditId?'Modifier la tournée':'Nouvelle tournée'),rfSubmitLabel:(S.rfEditId?'Enregistrer':'Créer la tournée'),
-      editRoute:(()=>{ const byId=(id)=>{ const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:(t.max!=null?t.max:''),forfait:(t.forfait!=null?t.forfait:''),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); };
+      editRoute:(()=>{ const byId=(id)=>{ const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:(t.max!=null?t.max:''),forfait:(t.forfait!=null?t.forfait:''),pricePerKm:(t.pricePerKm!=null?t.pricePerKm:''),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); };
         this._editRouteById=byId; return ()=>byId(this.state.selRoute); })(),
       rfPostcodeOpts,rfPostEmpty,rfPostCount,
-      rfSet:{name:rfSet('name'),short:rfSet('short'),start:rfSet('start'),max:rfSet('max'),forfait:rfSet('forfait'),driver:rfSet('driver'),vehicule:rfSet('vehicule')},
+      rfSet:{name:rfSet('name'),short:rfSet('short'),start:rfSet('start'),max:rfSet('max'),forfait:rfSet('forfait'),pricePerKm:rfSet('pricePerKm'),driver:rfSet('driver'),vehicule:rfSet('vehicule')},
       rfZoneOpts:SRV('ws_delivery_zones').filter(z=>z.active===true||z.active==='Active').map(z=>({value:z.name,label:z.name})),
       rfDays,rfRetOn:()=>this.setState(s=>({rf:{...s.rf,ret:true}})),rfRetOff:()=>this.setState(s=>({rf:{...s.rf,ret:false}})),
       rfVehFrigo:()=>this.setState(s=>({rf:{...s.rf,vehicule:'Camion frigo'}})),rfVehBox:()=>this.setState(s=>({rf:{...s.rf,vehicule:'Box frigorifique'}})),

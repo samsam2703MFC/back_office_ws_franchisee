@@ -493,6 +493,20 @@ jobs:
             echo "           ⇒ aucune ETA publiée pour elles (08:00 était supposé auparavant)"
           fi
 
+          # 2b. Géo Google (assistant tournées, 0120) : la liste d'adresses et
+          #     l'itinéraire passent par le serveur et sa clé ws_param
+          #     google_api_key. 501 = clé absente (chantier de configuration,
+          #     pas une panne) ; 404 = le serveur n'a pas le code 0120.
+          GEO=$(curl -s -o /tmp/geo.json -w '%{http_code}' --max-time 12 "${HDR[@]}" "$BASE/franchisee/geo-suggest?q=rue%20de%20la%20gare${QS:+&${QS#?}}" 2>/dev/null)
+          case "$GEO" in
+            200) echo "  OK       geo-suggest : clé Google configurée — $(grep -o '"id"' /tmp/geo.json | wc -l | tr -d ' ') proposition(s) pour « rue de la gare »";;
+            501) echo "  ⚠ geo-suggest : 501 — clé Google absente (ws_param google_api_key) : listes d'adresses, itinéraires et coût au km indisponibles";;
+            404) echo "  ✗ geo-suggest : 404 — le serveur n'a pas le code de l'assistant (déployer le webshop, migration 0120)";;
+            *)   echo "  ✗ geo-suggest : HTTP $GEO $(head -c 200 /tmp/geo.json 2>/dev/null)";;
+          esac
+          if printf '%s' "$TRJ" | grep -q '"pricePerKm"'; then echo "  OK       ws-tours sert pricePerKm / routeKm (migration 0120 passée)"
+          else echo "  ✗ ws-tours ne sert pas pricePerKm — migration 0120 non passée ou ancien code"; fi
+
           # 3. Temps d'accès et de dépôt des sites. Ils entrent dans chaque heure
           #    d'arrivée : il en manque un et la tournée entière perd ses heures.
           # Le temps d'ACCÈS est sur le site ; le temps de DÉPÔT est par BUREAU,
