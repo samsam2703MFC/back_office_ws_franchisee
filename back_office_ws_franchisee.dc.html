@@ -466,8 +466,18 @@
         </div>
         <sc-if value="{{ tourTilesEmpty }}" hint-placeholder-val="{{ false }}"><div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:26px;text-align:center;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée — créez-en une avec « + Nouvelle tournée ».</div></sc-if>
 
+        <!-- Barre trafic (légende, état, rafraîchir) : HORS du conteneur de la
+             carte — Leaflet garde son élément tel quel, sans voisin re-rendu. -->
+        <sc-if value="{{ tourMapOn }}" hint-placeholder-val="{{ true }}">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--color-background-secondary)">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font:400 11px var(--font-ui);color:var(--color-text-muted)"><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#2e9e44;vertical-align:middle;margin-right:5px"></i>fluide</span><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#f2a900;vertical-align:middle;margin-right:5px"></i>ralenti</span><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#c62828;vertical-align:middle;margin-right:5px"></i>bouchon</span><span><i style="display:inline-block;width:16px;height:0;border-top:2px dashed #999;vertical-align:middle;margin-right:5px"></i>sans tracé Google (ligne droite)</span><span>{{ trEtat }}</span></div>
+            <button onClick="{{ trGo }}" class="btn-secondary" title="Tracé réel Google et trafic à l'instant (Routes API) — rafraîchi automatiquement toutes les 2 minutes" style="font-size:11.5px;padding:6px 11px;{{ trBtnStyle }}">{{ trBtn }}</button>
+          </div>
+        </div>
+        </sc-if>
         <!-- Carte sous la grille : une couleur par tournée, sites gris = non assignés. -->
-        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden;{{ tourMapWrapStyle }}">
+        <div id="map-tournees-wrap" style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div id="map-tournees" style="width:100%;height:440px;background:var(--color-background-secondary)"></div>
         </div>
         <!-- CHRONOLOGIE DU JOUR : chaque tournée sur sa ligne de temps — trajets
@@ -565,6 +575,12 @@
             </sc-for>
           </div>
           </sc-if>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--color-background-secondary)">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;font:400 11px var(--font-ui);color:var(--color-text-muted)"><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#2e9e44;vertical-align:middle;margin-right:5px"></i>fluide</span><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#f2a900;vertical-align:middle;margin-right:5px"></i>ralenti</span><span><i style="display:inline-block;width:16px;height:4px;border-radius:2px;background:#c62828;vertical-align:middle;margin-right:5px"></i>bouchon</span><span><i style="display:inline-block;width:16px;height:0;border-top:2px dashed #999;vertical-align:middle;margin-right:5px"></i>sans tracé Google (ligne droite)</span><span>{{ trEtat }}</span></div>
+            <button onClick="{{ trGo }}" class="btn-secondary" title="Tracé réel Google et trafic à l'instant (Routes API) — rafraîchi automatiquement toutes les 2 minutes" style="font-size:11.5px;padding:6px 11px;{{ trBtnStyle }}">{{ trBtn }}</button>
+          </div>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
           <div id="map-suivi" style="width:100%;height:480px;background:var(--color-background-secondary)"></div>
@@ -3820,6 +3836,8 @@ class Component extends DCLogic {
     tw: null, geo: {}, obSearchQ:'', obViesLocked:false, obViesMsg:'', obViesOk:null, obVSel:'',
     // Tournées : vue carte ou chronologie ; tronçons Google par tournée (clé = ordre des arrêts).
     tourView:'map', chrono:{legs:{},busy:0,err:''},
+    // Tracés Google + trafic par tournée (clé = ordre des arrêts), rafraîchis toutes les 2 min sur Tournées / Suivi.
+    trace:{byTour:{},busy:0,err:'',at:null},
     dsQuery: '', dsOpen: false, dsIdx: 0,
   };
   printJob(msg){ this.setState({toast:msg}); clearTimeout(this._tt); this._tt=setTimeout(()=>this.setState({toast:''}),2800); }
@@ -4034,7 +4052,11 @@ class Component extends DCLogic {
      d'engagement (onboarding, fr_clients.points.fenetre), trajets Google par
      tournée (POST tour-route, mémorisés par ordre d'arrêts) — à défaut, vol
      d'oiseau signalé ≈. Une donnée manquante arrête la ligne et le dit. */
-  chronoToggle(v){ this.setState({tourView:v},()=>{ if(v==='chrono') this.chronoRoutes(false);
+  /* La carte est masquée / montrée HORS du gabarit (style posé à la main) : un
+     attribut lié sur le conteneur de Leaflet le faisait recréer à chaque rendu,
+     et la carte se redessinait sur un élément détaché (erreurs Leaflet). */
+  chronoMapShow(show){ const w=document.getElementById('map-tournees-wrap'); if(w) w.style.display=show?'':'none'; }
+  chronoToggle(v){ this.setState({tourView:v},()=>{ this.chronoMapShow(v!=='chrono'); if(v==='chrono') this.chronoRoutes(false);
       else setTimeout(()=>{ try{ if(this._tourneesMap) this._tourneesMap.invalidateSize(); }catch(e){} if(this.drawRoute) this.drawRoute(); },60); }); }
   chronoFen(officeName){ const T=(window.BOServer?window.BOServer.table('fr_clients'):[])||[]; const c=T.find(x=>x&&x.raison===officeName);
     const pt=(c&&Array.isArray(c.points)&&c.points.length)?c.points[0]:null; const f=pt&&pt.fenetre?String(pt.fenetre):'';
@@ -4059,7 +4081,7 @@ class Component extends DCLogic {
     const base={tourChrono:on,tvMap:()=>this.chronoToggle('map'),tvChrono:()=>this.chronoToggle('chrono'),
       tvMapStyle:'border:none;padding:8px 13px;font:600 12px var(--font-ui);cursor:pointer;'+(!on?'background:var(--color-primary);color:#fff':'background:var(--color-surface);color:var(--color-text-muted)'),
       tvChronoStyle:'border:none;padding:8px 13px;font:600 12px var(--font-ui);cursor:pointer;'+(on?'background:var(--color-primary);color:#fff':'background:var(--color-surface);color:var(--color-text-muted)'),
-      tourMapWrapStyle:on?'display:none':'',chronoRecalc:()=>this.chronoRoutes(true),chronoBtnStyle:C.busy?'opacity:.6;pointer-events:none':'',
+      tourMapOn:!on,chronoRecalc:()=>this.chronoRoutes(true),chronoBtnStyle:C.busy?'opacity:.6;pointer-events:none':'',
       chronoEtat:C.busy?('Google : '+C.busy+' tournée(s) en cours…'):(C.err||''),chronoTicks:[],chronoLanes:[],chronoEmpty:false,chronoHasNow:false,chronoNowLeft:0,chronoSub:''};
     if(!on) return base;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F']; const d=this.depot(); const depOk=!!(d&&d.lat!=null);
@@ -4102,6 +4124,40 @@ class Component extends DCLogic {
     const tot=lanes.reduce((a,l)=>({off:a.off+l.nbOff,late:a.late+l.late,km:a.km+l.km,att:a.att+l.attente}),{off:0,late:0,km:0,att:0});
     return {...base,chronoTicks:ticks,chronoLanes:lanesV,chronoEmpty:false,chronoHasNow:hasNow,chronoNowLeft:pct(nowMin),
       chronoSub:lanes.length+' tournée(s) · '+tot.off+' dépôt(s) · '+tot.km.toFixed(1).replace('.',',')+' km · '+(tot.late?(tot.late+' dépôt(s) hors fenêtre'):'toutes les fenêtres tenues')+(tot.att?(' · '+tot.att+' min d’attente'):'')+' · trajets '+(Object.keys(C.legs||{}).length?'Google':'à vol d’oiseau (≈) — « Recalculer (Google) »')}; }
+  /* ── TRACÉ GOOGLE + TRAFIC (Routes API, TRAFFIC_ON_POLYLINE) ──────────────
+     Par tournée dont tous les arrêts sont positionnés : tracé réel, portions
+     colorées fluide / ralenti / bouchon, durée avec et sans trafic. Rafraîchi
+     à l'arrivée sur Tournées / Suivi puis toutes les 2 minutes ; sans tracé,
+     la carte garde ses lignes droites (pointillées) et le dit. */
+  traceSig(t,pts){ return pts.map(p=>p.id).join(',')+'|'+(t.ret!==false?'r':'n'); }
+  traceFor(t,pts){ const c=((this.state.trace||{}).byTour||{})[String(t.id)]; return (c&&c.sig===this.traceSig(t,pts)&&Array.isArray(c.points)&&c.points.length>1)?c:null; }
+  traceRefresh(force){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
+    const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); const sites=this.sitesData();
+    const jobs=(this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false).map(t=>{ const pts=sites.filter(s=>norm(s.zone)===norm(t.name)&&s.lat!=null).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))); return {t,pts,sig:this.traceSig(t,pts)}; })
+      .filter(x=>x.pts.length&&(force||!this.traceFor(x.t,x.pts)));
+    if(!jobs.length) return;
+    this.setState(s=>({trace:{...s.trace,busy:jobs.length,err:''}}));
+    jobs.forEach(x=>{ fetch(fr.base+'/franchisee/tour-trace'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+        body:JSON.stringify({returnToDepot:x.t.ret!==false,stops:x.pts.map(p=>({lat:p.lat,lng:p.lng,label:p.name}))})})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        this.setState(s=>{ const byTour={...(s.trace.byTour||{})}; let err=s.trace.err;
+          if(st===200&&j&&j.ok) byTour[String(x.t.id)]={sig:x.sig,points:j.points||[],intervals:j.intervals||[],legs:j.legs||[],km:+j.km,minutes:+j.minutes,minutesSans:+j.minutesSans,trafic:j.trafic||null,at:new Date()};
+          else err=(j&&j.error)||('Tracé Google indisponible (HTTP '+st+')');
+          // Pas de redessin ici : le rendu qui suit ce setState redessine les cartes (ensureMaps).
+          return {trace:{...s.trace,byTour,busy:Math.max(0,s.trace.busy-1),err,at:new Date()}}; }); })
+      .catch(()=>this.setState(s=>({trace:{...s.trace,busy:Math.max(0,s.trace.busy-1),err:'Réseau indisponible'}}))); }); }
+  traceDraw(L,g,t,pts,col,o,tip){ const tr=this.traceFor(t,pts); if(!tr) return false;
+    const P=tr.points; const COL={NORMAL:'#2e9e44',SLOW:'#f2a900',TRAFFIC_JAM:'#c62828'};
+    const w=o.focus?6:4.5, op=o.dim?0.15:0.95;
+    const segs=(tr.intervals&&tr.intervals.length)?tr.intervals:[{a:0,b:P.length-1,speed:'NORMAL'}];
+    const info=tip+'<br>'+String(tr.km).replace('.',',')+' km · '+tr.minutes+' min avec trafic ('+tr.minutesSans+' sans)'+(tr.trafic?(' · '+(tr.trafic.jam?(tr.trafic.jam+' bouchon(s) · '):'')+(tr.trafic.slow?(tr.trafic.slow+' ralenti(s)'):'fluide')):'')+'<br><span style="color:#666">trafic Google à '+this.hhmm(tr.at.getHours()*60+tr.at.getMinutes())+'</span>';
+    L.polyline(P,{color:'#fff',weight:w+3,opacity:o.dim?0.1:0.9}).addTo(g);   // liseré blanc pour la lisibilité sur le fond de carte
+    segs.forEach(sg=>{ const a=Math.max(0,sg.a|0), b=Math.min(P.length-1,sg.b|0); if(b<=a) return;
+      const ln=L.polyline(P.slice(a,b+1),{color:COL[sg.speed]||col,weight:w,opacity:op}).addTo(g); ln.bindTooltip(info,{sticky:true}); });
+    return true; }
+  traceVals(){ const T=this.state.trace||{byTour:{},busy:0,err:'',at:null}; const n=Object.keys(T.byTour||{}).length;
+    return {trGo:()=>this.traceRefresh(true),trBtn:(T.busy?'Google… ('+T.busy+')':(n?'Rafraîchir le trafic':'Tracé Google + trafic')),trBtnStyle:(T.busy?'opacity:.6;pointer-events:none':''),
+      trEtat:(T.err?('⚠ '+T.err):(n?('trafic à '+this.hhmm((T.at||new Date()).getHours()*60+(T.at||new Date()).getMinutes())+' · '+n+' tournée(s) tracée(s) · auto toutes les 2 min'):'aucun tracé Google demandé'))}; }
   /* ── DONNÉES À COMPLÉTER ─────────────────────────────────────────────────
      Contrôles calculés sur les tables servies, chacun avec l'écran où le
      corriger. Trois groupes : bloquant pour la livraison, heures d'arrivée
@@ -6299,6 +6355,8 @@ class Component extends DCLogic {
     // Offices : la liste des bureaux et leurs réglages sont RELUS à l'arrivée —
     // un onglet ouvert avant un onboarding montrait un bureau de moins.
     if(s==='offices'){ setTimeout(()=>{ this.bcRefreshOffices(); this.bpRefresh(); },0); }
+    // Tournées / Suivi : tracé Google + trafic à l'arrivée (puis toutes les 2 min par le minuteur).
+    if(s==='tournees'||s==='suivi') setTimeout(()=>this.traceRefresh(false),400);
     // Rentabilité : charge (une fois) les points réels (geo-clients).
     if(s==='rentabilite') setTimeout(()=>this.rentaEnsure(),0);
     // Écrans à données de commandes : refetch à l'ENTRÉE (une nouvelle
@@ -6534,6 +6592,7 @@ class Component extends DCLogic {
         .then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.clients)){ this._geoAData=d; this.setState(s=>({_rev:(s._rev||0)+1})); } }).catch(()=>{}); }
     if(!window.L){ clearTimeout(this._gaT); this._gaT=setTimeout(()=>this.geoAEnsure(),160); return; }
     const el=document.getElementById('map-geo-fr'); if(!el) return;
+    if(this.mapStale(this._geoAMap)){ this._geoAMap=null; this._geoAKey=null; }
     if(!el._leaflet_id){ const L=window.L; const m=L.map(el,{zoomControl:true}).setView([50.72,4.45],10);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m); this._geoAMap=m; this._geoAKey=null; }
     this.geoADraw();
@@ -6958,6 +7017,16 @@ class Component extends DCLogic {
         this.setState(st=>({_rev:(st._rev||0)+1})); });
   }
 
+  /* Leaflet peut être chargé DEUX fois : la balise <helmet> est rejouée dans
+     <head> par le runtime, et la seconde copie remplace window.L. Une carte
+     créée avec la première copie et des tracés créés avec la seconde ne se
+     comprennent plus (« Cannot read properties of undefined (reading 'x') »
+     dans _clipPoints, et plus rien ne se dessine). Une carte issue d'une copie
+     périmée est détruite ici ; l'appelant la recrée avec la copie courante. */
+  mapStale(m){ const L=window.L; if(!m||!L||!L.Map) return false; if(m instanceof L.Map) return false;
+    // Une animation de zoom en cours (fitBounds) programme _onZoomTransitionEnd
+    // 250 ms plus tard ; sur une carte détruite il lève « _leaflet_pos ».
+    try{ m._animatingZoom=false; m.remove(); }catch(e){} return true; }
   ensureMaps(){
     this.reviewsEnsure();
     this.gRevEnsure();
@@ -6969,6 +7038,7 @@ class Component extends DCLogic {
     if(!window.L){ this._mapTimer=setTimeout(()=>this.ensureMaps(),140); return; }
     if(this.state.screen==='zones'){
       const elz=document.getElementById('map-zones-fr');
+      if(this.mapStale(this._zonesFrMap)){ this._zonesFrMap=null; this._zfKey=null; }
       if(elz && !elz._leaflet_id){ const Lz=window.L; const mz=Lz.map(elz,{zoomControl:true}).setView([50.72,4.45],9);
         Lz.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(mz); this._zonesFrMap=mz; this._zfKey=null; }
       this.drawZonesMap();
@@ -6979,6 +7049,7 @@ class Component extends DCLogic {
       // aussi — sans eux la carte restait vide (aucun site géolocalisable).
       this.zfGeoEnsure();
       const el=document.getElementById('map-suivi');
+      if(this.mapStale(this._suiviMap)){ this._suiviMap=null; this._suiviLayer=null; this._suiviSig=null; }
       if(el && !el._leaflet_id){
         // Vue initiale centrée sur la BOUTIQUE quand l'API en a servi la
         // position ; sinon la vue par défaut, que fitBounds corrige dès qu'il
@@ -7005,6 +7076,7 @@ class Component extends DCLogic {
       // point par défaut).
       this.zfGeoEnsure();
       const el=document.getElementById('map-tournees');
+      if(this.mapStale(this._tourneesMap)){ this._tourneesMap=null; this._routeLayer=null; this._routeSig=null; }
       if(el && !el._leaflet_id){
         const dc1=this.depotCoords();
         const m=L.map(el,{zoomControl:true}).setView(dc1.length?dc1[0]:[50.84,4.37],12);
@@ -7030,6 +7102,10 @@ class Component extends DCLogic {
   // = adresses de TOUS ses bureaux. Sites sans tournée en gris.
   drawRoute(){
     const L=window.L, m=this._tourneesMap; if(!L||!m) return;
+    // La carte peut avoir été créée avant que son conteneur ait une taille
+    // (écran caché, mise en page en cours) : sans cela, Leaflet dessine les
+    // tracés sur un rendu sans bornes et lève « reading 'x' ».
+    try{ m.invalidateSize({animate:false}); }catch(e){}
     if(this._routeLayer) m.removeLayer(this._routeLayer);
     const g=L.layerGroup(); const d=this.depot();
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
@@ -7065,10 +7141,11 @@ class Component extends DCLogic {
       const coords=[...depC,...pts.map(p=>[p.lat,p.lng])];
       if(t.ret!==false&&depC.length) coords.push(depC[0]);
       const itin=pts.map((p,k)=>(k+1)+'. '+p.name).join(' → ');
-      const line=L.polyline(coords,{color:col,weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}).addTo(g);
-      line.bindTooltip('<b>'+esc(t.name)+'</b><br>'+esc(itin),{sticky:true});
-      line.on('mouseover',function(){ this.setStyle({weight:6,opacity:1,dashArray:null}); });
-      line.on('mouseout',function(){ this.setStyle({weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}); });
+      if(!this.traceDraw(L,g,t,pts,col,{focus:isFocus,dim},'<b>'+esc(t.name)+'</b><br>'+esc(itin))){
+        const line=L.polyline(coords,{color:col,weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}).addTo(g);
+        line.bindTooltip('<b>'+esc(t.name)+'</b><br>'+esc(itin),{sticky:true});
+        line.on('mouseover',function(){ this.setStyle({weight:6,opacity:1,dashArray:null}); });
+        line.on('mouseout',function(){ this.setStyle({weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}); }); }
       if(isFocus) focusBounds=L.latLngBounds(coords);
       pts.forEach((p,k)=>{
         const icon=L.divIcon({className:'',html:`<div style="width:26px;height:26px;border-radius:50%;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);opacity:${dim?0.25:1}">${k+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
@@ -7125,6 +7202,7 @@ class Component extends DCLogic {
   // prévisionnelle par arrêt, chauffeurs GPS réels s'il y en a.
   drawSuiviMap(){
     const L=window.L, m=this._suiviMap; if(!L||!m) return;
+    try{ m.invalidateSize({animate:false}); }catch(e){}
     if(this._suiviLayer) m.removeLayer(this._suiviLayer);
     const g=L.layerGroup(); const d=this.depot();
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
@@ -7153,8 +7231,9 @@ class Component extends DCLogic {
       if(!pts.length) return;
       const et=etas[k]||{stops:{},dep:'—',fin:'—'};
       const coords=[...depC,...pts.map(p=>[p.lat,p.lng]),...depC];
-      const line=L.polyline(coords,{color:col,weight:isFocus?5:3.5,opacity:dim?0.15:0.8}).addTo(g);
-      line.bindTooltip('<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin),{sticky:true});
+      if(!this.traceDraw(L,g,t,pts,col,{focus:isFocus,dim},'<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin))){
+        const line=L.polyline(coords,{color:col,weight:isFocus?5:3.5,opacity:dim?0.15:0.8}).addTo(g);
+        line.bindTooltip('<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin),{sticky:true}); }
       pts.forEach((p,kk)=>{
         const no=p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').length;
         const eta=et.stops[p.id]||'—';
@@ -7170,8 +7249,14 @@ class Component extends DCLogic {
       });
     });
     // Chauffeurs RÉELS (fr_live_drivers) — placés uniquement s'ils ont un GPS.
+    // Position envoyée par la tablette (fr-live-drivers, 0122) : camion + âge du
+    // signal. Sans position, rien n'est placé.
     (window.BOServer?window.BOServer.table('fr_live_drivers'):[]).forEach(dr=>{
-      if(dr.lat&&dr.lng) L.circleMarker([dr.lat,dr.lng],{radius:10,color:'#8D1D2C',weight:3,fillColor:'#F2C9A0',fillOpacity:1}).addTo(g).bindPopup("<b>"+esc(dr.name||dr.nom||'Chauffeur')+"</b><br>"+esc(dr.vehicule||''));
+      if(dr.lat==null||dr.lng==null) return;
+      const age=(dr.ageMin!=null)?(dr.ageMin<1?'à l’instant':('il y a '+dr.ageMin+' min')):'';
+      const stale=dr.ageMin!=null&&dr.ageMin>15;
+      const icon=L.divIcon({className:'',html:'<div title="'+esc(dr.nom||'Chauffeur')+'" style="width:30px;height:30px;border-radius:50%;background:'+(stale?'#9a9a9a':(dr.color||'#8D1D2C'))+';border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:15px">🚚</div>',iconSize:[30,30],iconAnchor:[15,15]});
+      L.marker([dr.lat,dr.lng],{icon,zIndexOffset:900}).addTo(g).bindPopup("<b>"+esc(dr.nom||dr.name||'Chauffeur')+"</b><br>"+esc(dr.info||dr.vehicule||'')+"<br>"+esc(dr.avancement||'')+" arrêt(s)"+(age?("<br><span style='color:#666'>Position "+esc(age)+(stale?" — signal ancien":"")+"</span>"):""));
     });
     this.sitesBanner('map-suivi', sites);
     g.addTo(m); this._suiviLayer=g;
@@ -7179,6 +7264,12 @@ class Component extends DCLogic {
       if(all.length>1){ this._suiviFit=true; m.fitBounds(L.latLngBounds(all),{padding:[40,40],maxZoom:12}); } }
   }
   componentDidMount(){ this.ensureMaps();
+    // Trafic Google toutes les 2 min et position des chauffeurs toutes les
+    // 60 s, uniquement sur Tournées / Suivi et onglet visible.
+    this._traceTick=0;
+    this._traceTimer=setInterval(()=>{ if(document.visibilityState!=='visible') return; const sc=this.state.screen; if(sc!=='tournees'&&sc!=='suivi') return;
+      this._traceTick++; if(this._traceTick%2===0) this.traceRefresh(true);
+      if(sc==='suivi'){ const fr=window.__FR||{}; if(fr.base&&window.BOServer) fetch(fr.base+'/franchisee/fr-live-drivers'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'}).then(r=>r.ok?r.json():null).then(d=>{ if(Array.isArray(d)){ window.BOServer.refresh('fr_live_drivers',d); this.setState(s2=>({_rev:(s2._rev||0)+1})); } }).catch(()=>{}); } },60000);
     // Auto-refresh des COMMANDES : toutes les 60 s tant que l'onglet est
     // visible et qu'un écran « commandes » est affiché — une nouvelle commande
     // webshop apparaît sans recharger la page. Au retour sur l'onglet
@@ -10962,6 +11053,7 @@ class Component extends DCLogic {
       ...twVals,
       ...this.chronoVals(),
       ...this.dcVals(),
+      ...this.traceVals(),
       rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false,rfEditId:null}),
       rfTitle:(S.rfEditId?'Modifier la tournée':'Nouvelle tournée'),rfSubmitLabel:(S.rfEditId?'Enregistrer':'Créer la tournée'),
       editRoute:(()=>{ const byId=(id)=>{ const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:(t.max!=null?t.max:''),forfait:(t.forfait!=null?t.forfait:''),pricePerKm:(t.pricePerKm!=null?t.pricePerKm:''),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); };
