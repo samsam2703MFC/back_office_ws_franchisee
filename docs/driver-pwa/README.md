@@ -73,6 +73,18 @@ La demande était « case à cocher **ou** QR — le QR est mieux », et surtout
 - Le bouton de sortie reste **inactif tant qu'il reste des colis** : on ne
   quitte pas l'écran par distraction, on le quitte parce que le compte y est.
 
+## Identité
+
+L'en-tête porte le **logo** (`img/logo.png`), pas le nom en texte. Reste un
+point matériel : l'icône que le chauffeur installe sur son écran d'accueil est
+**carrée** (192 et 512 px). Le logo actuel est un bandeau (708 × 121) — posé
+tel quel dans un carré, il se réduit à une bande minuscule au milieu. Il faut
+donc une **version carrée** (monogramme, ou le logo sur fond beige avec des
+marges) ; à défaut, je pose le logo sur un fond de marque et vous jugez.
+
+Le seul endroit où le nom reste en texte est le **SMS au client** — c'est le
+message qu'il lit, il doit être signé en clair.
+
 ## Ce qui existe déjà côté serveur
 
 - **`POST /franchisee/driver-position {tourId, lat, lng, driver?}`** — la

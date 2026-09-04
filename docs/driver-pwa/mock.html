@@ -69,7 +69,7 @@
   .zone{font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-primary);
         display:flex;align-items:center;gap:6px;margin:2px 0 4px}
   .zone i{flex:1;height:.5px;background:var(--color-border-tertiary);display:block}
-  .scan{border-radius:14px;background:#241a1c;padding:12px;position:relative;overflow:hidden}
+  .scan{border-radius:14px;background:#241a1c;padding:12px;position:relative;overflow:hidden;flex:none}
   .vf{height:112px;border-radius:10px;background:#0f0b0c;position:relative;display:flex;align-items:center;justify-content:center}
   .vf .c{position:absolute;width:26px;height:26px;border:3px solid var(--color-secondary)}
   .vf .c1{top:10px;left:10px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
@@ -108,16 +108,17 @@
   <div class="sb"><span>08:12</span><span class="r">4G ▮▮▮ 87%</span></div>
   <div class="bar">
     <div class="back">☰</div>
-    <div><div class="ttl">L'Atelier By · Livraison</div><div class="sub">Anderlecht · jeudi 4 septembre</div></div>
+    <div><div style="background:#fff;border-radius:8px;padding:5px 9px;display:inline-flex"><img src="../../img/logo.png" alt="L'Atelier" style="height:17px;width:auto;display:block"/></div>
+      <div class="sub" style="margin-top:3px">Livraison · Anderlecht · jeudi 4 septembre</div></div>
     <div class="rt">Karim B.<br><span style="opacity:.75;font-weight:400">changer</span></div>
   </div>
   <div class="body">
-    <div class="h1" style="font-size:22px">Scanne ton bon de livraison</div>
+    <div class="h1" style="font-size:21px">Scanne ton bon de livraison</div>
 
     <div class="scan" style="padding:11px">
-      <div class="vf" style="height:96px">
+      <div class="vf" style="height:78px">
         <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
-        <span class="laser" style="top:47px"></span>
+        <span class="laser" style="top:38px"></span>
       </div>
       <div style="font:600 11px var(--font-ui);color:#fff;margin-top:8px;display:flex;align-items:center;gap:6px">
         Bon de livraison (ERP) · 1 bon = 1 tournée <span class="pill abr" style="margin-left:auto">n° de bon</span>
