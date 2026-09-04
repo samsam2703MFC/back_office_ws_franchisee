@@ -212,7 +212,15 @@
           ? '<select class="field" data-act="shop">' + '<option value="">— choisir —</option>' + opts + '</select>'
           : '<input class="field" inputmode="numeric" placeholder="id de la boutique" value="' + esc(S.shopId) + '" data-act="shopnum">')
       + '<div class="dots">' + dots + '</div>'
-      + '<div class="p" style="font-size:10.5px">Pas encore de compte chauffeur ? Ouvre l\'app avec <code>?shop=&lt;id&gt;&amp;token=&lt;jeton admin&gt;</code> — mode test, annoncé à l\'écran.</div>'
+      /* Entrée SANS PIN : le QR de la console (écran Tournées) porte l'adresse,
+         la boutique et le jeton de test. Le scanner vit donc aussi ici — sinon
+         un téléphone sans session n'avait aucun moyen de le lire. */
+      + '<div class="scan" style="padding:10px"><div class="vf" style="height:' + (S.scanOn ? '190px' : '96px') + '" id="vf" data-act="focus">' + corners()
+      + '<div class="hint">' + esc(S.scanMsg || 'Ou scanne le QR de la console (écran Tournées)') + '</div></div>'
+      + '<div class="lg">' + (S.scanOn ? 'Scan — ' + scanMoteur() : 'Sans compte chauffeur : scanne le QR') + scanTools() + '</div></div>'
+      + '<button class="btn gh sm" data-act="scanon">' + (S.scanOn ? 'Arrêter le scan' : CAM + ' Scanner le QR de la console') + '</button>'
+      + (S.lastScan ? '<div class="card soft" style="padding:9px 11px"><div class="lbl">Dernier code lu</div>'
+            + '<div class="pin" style="word-break:break-all;margin-top:2px">' + esc(S.lastScan.slice(0, 90)) + '</div></div>' : '')
       + '<div class="pad">' + keys + '</div>'
       + '</div>'
       + '<div class="foot"><button class="btn" data-act="dologin"' + (S.shopId && S.pin.length === 4 && !S.busy ? '' : ' disabled') + '>'
@@ -256,6 +264,11 @@
         + '<div class="hint">' + esc(S.scanMsg || 'Le QR du bon de livraison (ERP) — 1 bon = 1 tournée') + '</div></div>'
         + '<div class="lg">' + (S.scanOn ? 'Scan — ' + scanMoteur() : 'Appuie sur « Scanner »') + scanTools() + '</div></div>'
       + '<button class="btn gh sm" data-act="scanon">' + (S.scanOn ? 'Arrêter le scan' : CAM + ' Scanner le bon') + '</button>'
+      /* Le dernier code lu reste AFFICHÉ : c'est la preuve que la caméra et le
+         décodeur font leur travail, et ça montre exactement ce qui a été lu
+         quand rien ne se passe ensuite. */
+      + (S.lastScan ? '<div class="card soft" style="padding:9px 11px"><div class="lbl">Dernier code lu</div>'
+            + '<div class="pin" style="word-break:break-all;margin-top:2px">' + esc(S.lastScan.slice(0, 90)) + '</div></div>' : '')
       + '<div class="card"><div class="row"><div class="h3">Tes tournées du jour</div><span class="pill ruby" style="margin-left:auto">' + ts.length + '</span></div>'
       + (ts.length ? '<div class="sep"></div>' + list
                      + '<div class="p" style="font-size:10.5px;margin-top:9px">Le QR ne passe pas ? Appuie simplement sur ta tournée ci-dessus.</div>'
@@ -695,16 +708,41 @@
   /* Un code lu ne vaut que s'il DÉSIGNE quelque chose d'attendu ici : sinon
      on le dit, on ne valide rien au hasard. */
   function norm(x) { return String(x || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+  /* Le QR affiché par la console (écran Tournées) porte l'ADRESSE de l'app,
+     avec la boutique et — si on l'a demandé — le jeton de test. Le scanner le
+     reconnaît et se configure tout seul : rien à taper sur un téléphone, et le
+     jeton ne passe pas par un clavier. */
+  function tryConfigCode(txt) {
+    if (!/[?&](token|shop)=/.test(txt) || !/driver/.test(txt)) return false;
+    var tok = null, sh = null;
+    try { var u = new URL(txt, location.href); tok = u.searchParams.get('token'); sh = u.searchParams.get('shop'); }
+    catch (e) { return false; }
+    if (!tok && !sh) return false;
+    DRV.applyConfig(tok, sh);
+    S.scanOn = false; stopScanner(); S.lastScan = ''; S.scanMsg = ''; S.err = null; S.sections = [];
+    vibrate(60);
+    toast(tok ? 'Configuré par QR — boutique ' + (sh || DRV.adminShop() || '?') + ', mode test'
+              : 'Boutique ' + sh + ' enregistrée');
+    S.screen = 'boot'; render();
+    loadAll();
+    return true;
+  }
+
   function onCode(txt) {
     if (!txt || txt === S.lastScan) return;
     S.lastScan = txt;
+    if (tryConfigCode(txt)) return;
     if (S.screen === 'pick') return matchTour(txt);
     var refs = (S.screen === 'load')
       ? allOrders(S.tourId).map(function (x) { return x.o.ref; })
       : (tourStops(S.tourId)[S.stopIx] || { orders: [] }).orders.map(function (o) { return o.ref; });
     var n = norm(txt);
     var hit = refs.find(function (r) { return norm(r) === n || (n.length > 3 && n.indexOf(norm(r)) >= 0); });
-    if (!hit) { S.scanMsg = 'Code inconnu ici : ' + txt.slice(0, 24); vibrate([90, 60, 90]); render(); return; }
+    if (!hit) {
+      S.scanMsg = '✓ QR lu : « ' + txt.slice(0, 24) + ' » — mais ce colis n\'est pas attendu ici.';
+      toast('✓ QR lu : ' + txt.slice(0, 20) + ' — pas dans cette liste');
+      vibrate([90, 60, 90]); render(); return;
+    }
     if (S.screen === 'load') validateLoad(hit, null); else validateDeliver(hit, null);
   }
   function vibrate(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
@@ -719,6 +757,7 @@
     if (!dispo.length) {
       S.scanMsg = '✓ QR lu : « ' + txt.slice(0, 28) + ' ». Mais AUCUNE tournée n\'est chargée — '
         + (S.err ? 'voir le bandeau rouge ci-dessus.' : 'le serveur n\'en sert aucune aujourd\'hui.');
+      toast('✓ QR lu — mais aucune tournée chargée');
       vibrate([60]); render(); return;
     }
     var t = dispo.find(function (x) {

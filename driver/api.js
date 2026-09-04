@@ -136,6 +136,16 @@
     isAdmin: function () { return !!adminToken(); },
     adminShop: adminShop,
     clearAdmin: function () { try { localStorage.removeItem(LS_ADM); } catch (e) {} },
+    /* Configuration par SCAN : le QR affiché par la console porte l'adresse
+       complète (?shop=…&token=…). Le scanner la reconnaît et l'applique — le
+       chauffeur n'a rien à taper, et le jeton ne passe pas par un clavier. */
+    applyConfig: function (token, shop) {
+      try {
+        if (token) localStorage.setItem(LS_ADM, token);
+        if (shop && /^[0-9]+$/.test(String(shop))) localStorage.setItem(LS_SHOP, String(shop));
+      } catch (e) {}
+      return { token: !!token, shop: shop || adminShop() };
+    },
     /* Nom du chauffeur : donné par la session PIN, saisi à la main en mode
        test — il part sur la prise de tournée et la position, donc il ne peut
        pas être deviné. */
