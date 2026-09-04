@@ -616,7 +616,7 @@
             <div onClick="{{ r.dropHere }}" style="{{ r.tileStyle }}">
               <div style="display:flex;align-items:center;gap:9px;min-width:0">
                 <span style="{{ r.colDot }}"></span>
-                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px" title="{{ r.duree }}">départ {{ r.start }} · {{ r.duree }}</div></div>
+                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="départ {{ r.start }} · {{ r.duree }}">départ {{ r.start }} · {{ r.duree }}</div></div>
                 <div style="flex:none;display:flex;gap:5px">
                   <button onClick="{{ r.toggleOn }}" title="{{ r.tOnTitle }}" style="{{ r.tOnStyle }}">{{ r.tOnLabel }}</button>
                   <button onClick="{{ r.itin }}" title="Voir l'itinéraire sur la carte (ordre des arrêts)" style="{{ r.itinStyle }}">🗺 Itinéraire</button>
