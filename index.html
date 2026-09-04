@@ -5090,7 +5090,7 @@ class Component extends DCLogic {
     const bureauxReal=(window.BOServer?window.BOServer.table('ws_offices'):[]).map(o=>o.name).filter(Boolean);
     const bureaux=[...new Set(bureauxReal)];
     // Buildings (sites) existants : adresses distinctes de ws_office_delivery_sites.
-    const buildings=[...new Set((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(s=>s.adr||s.address).filter(v=>v&&v!=='—'))];
+    const buildings=[...new Set(this.sitesActifs().map(s=>s.adr||s.address).filter(v=>v&&v!=='—'))];
     /* NOMS des sites — c'est par le nom que le serveur résout une cible de
        règle de frais (ws_office_delivery_sites.name). L'adresse ne lui sert
        pas : deux sites peuvent la partager. */
@@ -6269,6 +6269,12 @@ class Component extends DCLogic {
      manque — l'adresse validée par Google en tête — la livraison ne peut pas
      être annoncée. Rend la liste des libellés manquants, vide = complet. */
   DROP_STD = 5;
+  /* LES SITES ACTIFS, et eux seuls. Un site désactivé n'est plus un lieu de
+     livraison : ni à assigner à un bureau, ni à poser sur une tournée, ni à
+     compter dans une chronologie. Le serveur ne sert déjà que les actifs,
+     mais une ligne créée ou modifiée dans la console vit d'abord en mémoire —
+     c'est là qu'un site retiré pouvait continuer d'être proposé. */
+  sitesActifs(){ return ((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[]).filter(r=>r&&r.active!==false&&r.active!==0&&r.active!=='0'&&r.active!=='Non'); }
   officeManques(o){
     if(!o) return [];
     const vide=v=>{ const x=String(v==null?'':v).trim(); return x===''||x==='—'; };
@@ -6571,7 +6577,9 @@ class Component extends DCLogic {
   // dérivés de ws_office_delivery_sites (1 site = 1 bâtiment distinct),
   // bureaux = lignes de liaison partageant la même adresse, géo via __CPGEO.
   sitesData(){
-    const rows=(window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]);
+    // Les sites ACTIFS seulement : un site désactivé ne se dessine pas sur une
+    // carte et ne compte dans aucune heure d'arrivée.
+    const rows=this.sitesActifs();
     const geo=(typeof window!=='undefined'&&window.__CPGEO)||null;
     /* Le temps de dépôt est un paramètre PAR BUREAU : il vit dans
        ws_office_delivery_settings (écran « Paramètres livraison — bureau »),
@@ -8303,7 +8311,7 @@ class Component extends DCLogic {
     // Assigner un site à une tournée ÉCRIT tournee_id sur toutes ses lignes
     // (save typé) — plus d'état de session (routeAssign) qui se perdait.
     const tNorm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
-    const tvRows=SRV('ws_office_delivery_sites');
+    const tvRows=this.sitesActifs();
     const tvBlds={}; const tvOrder=[];
     tvRows.forEach(r=>{ const key=(r.adr&&r.adr!=='—')?('a:'+tNorm(r.adr)):((r.name&&r.name!=='—')?('n:'+tNorm(r.name)):null); if(!key) return;
       if(!tvBlds[key]){ tvBlds[key]={key,name:(r.name&&r.name!=='—')?r.name:r.adr,adr:(r.adr&&r.adr!=='—')?r.adr:'',tour:(r.tour&&r.tour!=='—')?r.tour:null,acc:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?null:parseFloat(r.acc),stop:(r.stop!=null?+r.stop:null),offices:[]}; tvOrder.push(key); }
@@ -8952,7 +8960,7 @@ class Component extends DCLogic {
     // ne roule pas, et le webshop refuserait la livraison sans rien expliquer.
     const tourActive=t=>t.active!==false&&t.active!==0;
     const siteTourNames=[...new Set(SRV('ws_tours').filter(tourActive).map(t=>t.name).filter(Boolean))];
-    const siteRowsAll=SRV('ws_office_delivery_sites');
+    const siteRowsAll=this.sitesActifs();
     // Adresse/nom NORMALISÉS (casse, espaces) : deux variantes de la même
     // adresse = UN SEUL bâtiment — sinon cartes et tags apparaissent en double.
     const normA=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
