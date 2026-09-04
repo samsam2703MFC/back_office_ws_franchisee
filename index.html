@@ -6232,9 +6232,14 @@ class Component extends DCLogic {
         // des bureaux concernés.
         const cp=(String(adr).match(/\b(\d{4})\b/)||[])[1]||String(r.office_cp||'').trim();
         const e=(geo&&geo.idx)?geo.idx[cp]:null;
+        // La POSITION du site d'abord : celle choisie dans la liste Google et
+        // servie par le serveur (lat / lng). Le centre du code postal n'est
+        // qu'un repli — il posait chaque site au milieu de sa commune, quelle
+        // que soit l'adresse encodée.
+        const own=(r.lat!=null&&r.lng!=null&&!isNaN(parseFloat(r.lat))&&!isNaN(parseFloat(r.lng)))?{lat:parseFloat(r.lat),lng:parseFloat(r.lng)}:null;
         seen[adr]=out.length;
-        out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,
-          ville:e?e.city:(r.office_city||cp||'—'),lat:e?e.lat:null,lng:e?e.lng:null,cp,
+        out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,adr,geoGoogle:!!own,
+          ville:(r.city&&String(r.city).trim())||(e?e.city:(r.office_city||cp||'—')),lat:own?own.lat:(e?e.lat:null),lng:own?own.lng:(e?e.lng:null),cp,
           stop:(r.stop!=null?+r.stop:null),
           // Temps d'accès : celui de la base, ou RIEN. Les 10 minutes par
           // défaut entraient dans chaque ETA sans que personne les ait
@@ -7382,6 +7387,7 @@ class Component extends DCLogic {
     const focus=this.state.mapFocusTour||null; let manqueTrace=false;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
     const sitePopup=(p,t,k)=>'<div style="font:12.5px/1.5 sans-serif;min-width:210px"><b>'+esc(p.name)+'</b>'
+      +'<br><span style="color:#666;font-size:11.5px">'+esc(p.adr||'')+(p.geoGoogle?' · position Google':' · ≈ centre du code postal, adresse à choisir dans la liste Google')+'</span>'
       +(t?('<br><span style="color:#666">'+esc(t)+' · arrêt n°'+k+'</span>'):'<br><span style="color:#666">Sans tournée</span>')
       +'<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><b style="font-size:11px">Bureaux &amp; adresses</b>'
       +p.offices.map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>';
@@ -7515,6 +7521,7 @@ class Component extends DCLogic {
         const mk=L.marker([p.lat,p.lng],{icon}).addTo(g);
         mk.bindTooltip(esc(p.name)+' · '+no+' bureau'+(no>1?'x':'')+' · ETA ~'+esc(eta),{direction:'top',offset:[0,-14]});
         mk.bindPopup('<div style="font:12.5px/1.5 sans-serif;min-width:210px"><b>'+esc(p.name)+'</b>'
+          +'<br><span style="color:#666;font-size:11.5px">'+esc(p.adr||'')+(p.geoGoogle?' · position Google':' · ≈ centre du code postal')+'</span>'
           +'<br><span style="color:#666">'+esc(t.name)+' · arrêt n°'+(kk+1)+' · <b>ETA ~'+esc(eta)+'</b></span>'
           +'<div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><b style="font-size:11px">'+no+' bureau'+(no>1?'x':'')+'</b>'
           +p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').map(o=>'<div style="margin-top:3px">• <b>'+esc(o.name)+'</b>'+(o.addr?('<br><span style="color:#666;font-size:11px">&nbsp;&nbsp;'+esc(o.addr)+'</span>'):'')+'</div>').join('')+'</div></div>');
