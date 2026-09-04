@@ -73,14 +73,23 @@
       DRV.get('/franchisee/fr-tdb-tree').then(function (j) { S.tree = Array.isArray(j) ? j : []; }, err),
       DRV.get('/franchisee/tour-dispatch-status').then(function (j) { S.dispatch = Array.isArray(j) ? j : []; }, err)
     ];
-    var fails = [];
+    var fails = [], sections = [];
     function err(e) {
       if (e.status === 401 && DRV.isAdmin()) fails.push('Jeton admin refusé (401) — vérifie le ?token= de l\'adresse.');
       else if (e.status === 401) { S.screen = 'login'; }
-      else fails.push(e.message);
+      else {
+        // 403 « section … non autorisée » : c'est un RÉGLAGE DE PROFIL, pas
+        // une panne. On retient la section pour dire quoi faire, au lieu de
+        // répéter trois fois le même refus.
+        var m = /section «\s*([a-zA-Z]+)\s*»/.exec(e.message || '');
+        if (e.status === 403 && m) { if (sections.indexOf(m[1]) < 0) sections.push(m[1]); }
+        else fails.push(e.message);
+      }
     }
     return Promise.all(jobs).then(function () {
       S.busy = false;
+      S.sections = sections;
+      if (sections.length) fails.unshift('Ce compte n\'a pas les sections ' + sections.join(', ') + '.');
       S.err = fails.length ? fails.join(' · ') : null;
       if (S.screen === 'boot' || S.screen === 'login') S.screen = (DRV.session() || DRV.isAdmin()) ? 'pick' : 'login';
       render();
@@ -243,15 +252,25 @@
       + (DRV.isAdmin()
           ? '<div class="lbl">Chauffeur</div><input class="field" placeholder="ton nom (part au dépôt)" value="' + esc(DRV.driverName()) + '" data-act="drvname">'
           : '')
-      + '<div class="scan"><div class="vf" id="vf">' + corners()
+      + '<div class="scan"><div class="vf" id="vf" data-act="focus">' + corners()
         + '<div class="hint">' + esc(S.scanMsg || 'Le QR du bon de livraison (ERP) — 1 bon = 1 tournée') + '</div></div>'
-        + '<div class="lg">' + (S.scanOn ? 'Scan en cours — ' + scanMoteur() : 'Appuie sur « Scanner »') + '</div></div>'
+        + '<div class="lg">' + (S.scanOn ? 'Scan — ' + scanMoteur() : 'Appuie sur « Scanner »') + scanTools() + '</div></div>'
       + '<button class="btn gh sm" data-act="scanon">' + (S.scanOn ? 'Arrêter le scan' : CAM + ' Scanner le bon') + '</button>'
       + '<div class="card"><div class="row"><div class="h3">Tes tournées du jour</div><span class="pill ruby" style="margin-left:auto">' + ts.length + '</span></div>'
       + (ts.length ? '<div class="sep"></div>' + list
                      + '<div class="p" style="font-size:10.5px;margin-top:9px">Le QR ne passe pas ? Appuie simplement sur ta tournée ci-dessus.</div>'
                    : '<div class="p" style="margin-top:6px">Aucune tournée servie pour aujourd\'hui. Rien n\'est inventé ici : si le dépôt en a préparé une, elle apparaîtra dès que le serveur la sert.</div>')
       + '</div>'
+      /* Liste vide À CAUSE d'un refus de section : le scan aura beau marcher,
+         il n'y aura jamais rien à reconnaître. On dit les deux sorties, sans
+         quoi on cherche du côté de la caméra pendant une heure. */
+      + ((!ts.length && (S.sections || []).length)
+          ? '<div class="card warn"><div class="h3">Pourquoi c\'est vide</div>'
+            + '<div class="p" style="color:var(--color-text);margin-top:6px">Le serveur refuse à ce compte les sections <b>'
+            + esc((S.sections || []).join(', ')) + '</b>. Le scan, lui, fonctionne — il n\'a simplement aucune tournée à reconnaître.</div>'
+            + '<div class="p" style="color:var(--color-text);margin-top:6px">Deux sorties : ajouter <b>tournees, tdb, prep</b> au profil de ce compte (console marque → profils), '
+            + 'ou ouvrir l\'app en mode test avec <code>?shop=&lt;id&gt;&amp;token=&lt;jeton admin&gt;</code> — le QR est dans la console, écran Tournées.</div></div>'
+          : '')
       + (sel ? '<div class="lbl">Véhicule</div><div class="row wrap" style="gap:7px">'
             + vehicles.map(function (v) { return '<button class="chip' + (loc.vehicle === v ? ' on' : '') + '" data-act="veh" data-v="' + esc(v) + '">' + esc(v) + '</button>'; }).join('')
             + '<button class="chip' + (loc.vehicle && vehicles.indexOf(loc.vehicle) < 0 ? ' on' : '') + '" data-act="vehother">＋ autre</button></div>'
@@ -298,8 +317,8 @@
       + '<div class="body">'
       + '<div class="bar-p"><i style="width:' + (all.length ? Math.round(done * 100 / all.length) : 0) + '%"></i></div>'
       + errBox()
-      + '<div class="scan"><div class="vf" id="vf">' + corners() + '<div class="hint">' + esc(S.scanMsg || 'Vise le QR de l\'étiquette') + '</div></div>'
-      + '<div class="lg">' + (S.scanOn ? 'Scan continu — enchaîne les colis' : 'Scanner à l\'arrêt') + '<span class="pill abr" style="margin-left:auto">' + esc(S.lastScan || '—') + '</span></div></div>'
+      + '<div class="scan"><div class="vf" id="vf" data-act="focus">' + corners() + '<div class="hint">' + esc(S.scanMsg || 'Vise le QR de l\'étiquette') + '</div></div>'
+      + '<div class="lg">' + (S.scanOn ? 'Scan — ' + scanMoteur() : 'Scanner à l\'arrêt') + scanTools() + '</div></div>'
       + '<div class="row" style="gap:8px"><button class="btn gh sm grow" data-act="scanon">' + (S.scanOn ? 'Arrêter' : CAM + ' Scanner') + '</button>'
       + '<button class="btn gh sm grow" data-act="manualref">Saisir un n°</button></div>'
       + '<div class="card"><div class="row"><div class="h3">Reste à valider</div><span class="pill ' + (reste ? 'wait' : 'ok') + '" style="margin-left:auto">' + reste + ' colis</span></div>'
@@ -385,9 +404,9 @@
     return bar({ back: 'goroute', ttl: 'Arrivé · ' + s.libelle, sub: hhmm() + ' · arrêt ' + (S.stopIx + 1) + ' sur ' + stops.length, rt: done + '/' + s.orders.length, rtSub: 'remis' })
       + '<div class="body">'
       + '<div class="bar-p"><i style="width:' + Math.round(done * 100 / Math.max(1, s.orders.length)) + '%"></i></div>' + errBox()
-      + '<div class="scan" style="padding:10px"><div class="vf" style="height:110px" id="vf">' + corners()
+      + '<div class="scan" style="padding:10px"><div class="vf" style="height:160px" id="vf" data-act="focus">' + corners()
       + '<div class="hint">' + esc(S.scanMsg || 'Scanne chaque colis remis') + '</div></div>'
-      + '<div class="lg">' + (S.scanOn ? 'Scan en cours' : 'Scanner à la remise') + '<span class="pill abr" style="margin-left:auto">' + esc(S.lastScan || '—') + '</span></div></div>'
+      + '<div class="lg">' + (S.scanOn ? 'Scan — ' + scanMoteur() : 'Scanner à la remise') + scanTools() + '</div></div>'
       + '<div class="row" style="gap:8px"><button class="btn gh sm grow" data-act="scanon">' + (S.scanOn ? 'Arrêter' : CAM + ' Scanner') + '</button>'
       + '<button class="btn gh sm grow" data-act="manualref">Saisir un n°</button></div>'
       + '<div class="card"><div class="row"><div class="h3">À remettre ici</div><span class="pill ' + (reste ? 'wait' : 'ok') + '" style="margin-left:auto">' + (reste ? reste + ' restant(s)' : 'complet') + '</span></div>'
@@ -518,7 +537,18 @@
      toujours une de ces deux causes, et il vaut mieux la NOMMER que laisser
      chercher — page servie en http:// (aucun navigateur ne donne la caméra
      hors HTTPS), ou permission refusée. */
-  var SC = { stream: null, video: null, det: null, timer: null, cv: null, cx: null };
+  var SC = { stream: null, video: null, det: null, timer: null, cv: null, cx: null,
+             track: null, torch: false, torchOk: false, n: 0 };
+
+  /* Outils du viseur : lampe (indispensable sur du papier en soute) et
+     relance de la mise au point. Affichés seulement s'ils servent. */
+  function scanTools() {
+    var t = '<span style="margin-left:auto"></span>';
+    if (SC.torchOk) t += '<button class="btn xs" style="background:' + (SC.torch ? 'var(--color-secondary)' : 'rgba(255,255,255,.16)')
+      + ';color:' + (SC.torch ? 'var(--color-on-abricot)' : '#fff') + ';border:none" data-act="torche">Lampe</button>';
+    if (SC.stream) t += '<button class="btn xs" style="background:rgba(255,255,255,.16);color:#fff;border:none;margin-left:6px" data-act="focus">Mise au point</button>';
+    return t;
+  }
 
   function camBlocage() {
     if (!window.isSecureContext && !/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
@@ -561,9 +591,22 @@
     v.muted = true; v.playsInline = true;
     host.insertBefore(v, host.firstChild);
     SC.video = v;
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+    /* RÉSOLUTION ET MISE AU POINT : un QR imprimé de 2 cm, filmé en 640×480
+       sans autofocus, ne se décode pas — c'est exactement ce qu'on a vu sur le
+       papier. On demande donc 1280×720 et la mise au point continue ; les deux
+       sont des SOUHAITS (ideal / advanced), un téléphone qui ne sait pas faire
+       rend simplement ce qu'il peut, sans échouer. */
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' },
+               width: { ideal: 1280 }, height: { ideal: 720 },
+               advanced: [{ focusMode: 'continuous' }] },
+      audio: false })
       .then(function (st) {
         SC.stream = st; v.srcObject = st;
+        SC.track = st.getVideoTracks()[0] || null;
+        focusContinu();
+        try { var cap = SC.track && SC.track.getCapabilities ? SC.track.getCapabilities() : {}; SC.torchOk = !!cap.torch; }
+        catch (e) { SC.torchOk = false; }
         // Sur iOS, play() peut être rejeté sans geste : le scan part d'un
         // bouton, donc on est dans les clous — mais on ne bloque pas dessus.
         return v.play().catch(function () {});
@@ -591,23 +634,41 @@
       });
   }
 
+  /* Mise au point continue, redemandée : certains téléphones l'oublient après
+     quelques secondes, et le QR redevient flou sans rien dire. */
+  function focusContinu() {
+    if (!SC.track || !SC.track.applyConstraints) return;
+    try { SC.track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(function () {}); } catch (e) {}
+  }
+  function torche(on) {
+    if (!SC.track || !SC.track.applyConstraints) return Promise.resolve(false);
+    return SC.track.applyConstraints({ advanced: [{ torch: !!on }] }).then(function () { SC.torch = !!on; return true; },
+                                                                          function () { return false; });
+  }
+
   function tick() {
     var v = SC.video;
     if (!v || !v.videoWidth) return;
+    /* LES DEUX DÉCODEURS, pas l'un OU l'autre. Le lecteur natif est plus
+       rapide mais rend parfois zéro code sur un QR imprimé un peu flou, là où
+       jsQR y arrive (et l'inverse). Le natif passe à chaque image, jsQR une
+       image sur trois — assez pour rattraper, sans faire chauffer le
+       téléphone. */
     if (SC.det) {
       SC.det.detect(v).then(function (codes) {
         if (codes && codes.length) onCode(String(codes[0].rawValue || '').trim());
       }).catch(function () {});
-      return;
+      SC.n = (SC.n || 0) + 1;
+      if (!window.jsQR || (SC.n % 3)) return;
     }
-    // jsQR : on réduit l'image avant de décoder — inutile de traiter 1080p
-    // trente fois par minute sur un téléphone qui roule.
-    var w = Math.min(480, v.videoWidth), h = Math.round(v.videoHeight * (w / v.videoWidth));
+    // jsQR travaille sur une image réduite — mais pas trop : sous ~640 px de
+    // large, les modules d'un QR de bon de livraison se confondent.
+    var w = Math.min(720, v.videoWidth), h = Math.round(v.videoHeight * (w / v.videoWidth));
     SC.cv.width = w; SC.cv.height = h;
     SC.cx.drawImage(v, 0, 0, w, h);
     var img;
     try { img = SC.cx.getImageData(0, 0, w, h); } catch (e) { return; }
-    var r = window.jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
+    var r = window.jsQR(img.data, w, h, { inversionAttempts: 'attemptBoth' });
     if (r && r.data) onCode(String(r.data).trim());
   }
 
@@ -626,7 +687,7 @@
   function stopScanner() {
     if (SC.timer) clearInterval(SC.timer); SC.timer = null;
     if (SC.stream) SC.stream.getTracks().forEach(function (t) { t.stop(); });
-    SC.stream = null; SC.det = null;
+    SC.stream = null; SC.det = null; SC.track = null; SC.torch = false; SC.torchOk = false; SC.n = 0;
     if (SC.video && SC.video.parentNode) SC.video.parentNode.removeChild(SC.video);
     SC.video = null;
   }
@@ -650,10 +711,24 @@
 
   function matchTour(txt) {
     var n = norm(txt);
-    var t = toursToday().find(function (x) {
+    var dispo = toursToday();
+    /* Le QR a été LU — c'est déjà une bonne nouvelle, et il faut le dire :
+       sans ça, « bon non reconnu » se lit comme « la caméra ne marche pas »,
+       alors que le vrai problème est presque toujours en dessous — aucune
+       tournée chargée, parce que l'API refuse ou ne sert rien. */
+    if (!dispo.length) {
+      S.scanMsg = '✓ QR lu : « ' + txt.slice(0, 28) + ' ». Mais AUCUNE tournée n\'est chargée — '
+        + (S.err ? 'voir le bandeau rouge ci-dessus.' : 'le serveur n\'en sert aucune aujourd\'hui.');
+      vibrate([60]); render(); return;
+    }
+    var t = dispo.find(function (x) {
       return n.indexOf(norm(x.name)) >= 0 || n.indexOf(norm(x.short)) >= 0 || n.indexOf(norm('T' + numId(x.id))) >= 0;
     });
-    if (!t) { S.scanMsg = 'Bon non reconnu : ' + txt.slice(0, 28) + ' — choisis dans la liste.'; vibrate([90, 60, 90]); render(); return; }
+    if (!t) {
+      S.scanMsg = '✓ QR lu : « ' + txt.slice(0, 28) + ' » — mais aucune tournée du jour ne porte ce nom ('
+        + dispo.map(function (x) { return x.name; }).join(', ') + '). Choisis dans la liste.';
+      vibrate([90, 60, 90]); render(); return;
+    }
     S.tourId = numId(t.id); S.scanOn = false; S.scanMsg = ''; stopScanner(); vibrate(60);
     toast('Bon reconnu — ' + t.name); render();
   }
@@ -745,6 +820,8 @@
     if (a === 'gostop') { S.stopIx = Number(el.getAttribute('data-i')); S.screen = 'drive'; return render(); }
 
     if (a === 'scanon') { S.scanOn = !S.scanOn; S.scanMsg = ''; S.lastScan = ''; return render(); }
+    if (a === 'torche') { return torche(!SC.torch).then(function (ok) { if (!ok) toast('Lampe non disponible sur ce téléphone'); render(); }); }
+    if (a === 'focus') { if (!SC.stream) return; focusContinu(); toast('Mise au point relancée — tiens le QR à ~20 cm'); return; }
     /* La saisie du numéro de bon a été RETIRÉE : le bon se scanne, et si le QR
        ne passe pas, la tournée se choisit dans la liste juste dessous — une
        liste de ce que le serveur sert vaut mieux qu'un numéro tapé de mémoire. */

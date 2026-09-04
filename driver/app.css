@@ -79,14 +79,17 @@ input.field:focus,textarea.field:focus{outline:2px solid var(--color-primary);ou
 .zone i{flex:1;height:.5px;background:var(--color-border-tertiary);display:block}
 
 .scan{border-radius:14px;background:#241a1c;padding:11px;position:relative;overflow:hidden;flex:none}
-.vf{height:150px;border-radius:10px;background:#0f0b0c;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.vf{height:210px;border-radius:10px;background:#0f0b0c;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .vf .c{position:absolute;width:26px;height:26px;border:3px solid var(--color-secondary);z-index:2}
 .vf .c1{top:10px;left:10px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
 .vf .c2{top:10px;right:10px;border-left:0;border-bottom:0;border-radius:0 6px 0 0}
 .vf .c3{bottom:10px;left:10px;border-right:0;border-top:0;border-radius:0 0 0 6px}
 .vf .c4{bottom:10px;right:10px;border-left:0;border-top:0;border-radius:0 0 6px 0}
-.vf .hint{position:relative;z-index:2;font:600 11.5px var(--font-ui);color:#fff;opacity:.8;text-align:center;padding:0 18px}
+/* Le message se lit PAR-DESSUS l'image : posé au centre, il devenait blanc sur
+   blanc dès qu'un QR remplissait le viseur. En bas, sur un fond sombre. */
+.vf .hint{position:absolute;left:8px;right:8px;bottom:8px;z-index:2;font:600 11.5px/1.35 var(--font-ui);
+          color:#fff;text-align:center;padding:7px 9px;background:rgba(20,12,13,.74);border-radius:9px}
 .scan .lg{font:600 11px var(--font-ui);color:#fff;margin-top:8px;display:flex;align-items:center;gap:6px}
 
 .stop{display:flex;gap:10px;align-items:flex-start;padding:8px 0;width:100%;background:none;border:none;text-align:left}
