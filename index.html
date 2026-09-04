@@ -2792,6 +2792,43 @@
   </div>
   </sc-if>
 
+  <!-- ===================== DONNÉES À COMPLÉTER : bulle + modale =====================
+       Calculé à chaque rendu sur les tables servies : sites sans bureau, tournées
+       sans départ, bureaux en attente et demandes reçues, adresses non vérifiées,
+       temps d'accès / de dépôt manquants, prix au km, taux horaire, doublons.
+       Chaque ligne ouvre l'écran où compléter. Rien n'est supposé. -->
+  <sc-if value="{{ dcHas }}" hint-placeholder-val="{{ false }}">
+  <button onClick="{{ dcOpenFn }}" title="{{ dcBadgeTitle }}" style="position:fixed;left:14px;bottom:104px;z-index:1500;display:inline-flex;align-items:center;gap:8px;background:var(--color-surface);border:.5px solid var(--color-border-secondary);border-radius:999px;padding:7px 12px 7px 8px;font:600 12px var(--font-ui);color:var(--color-text);cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.14)"><span style="{{ dcBadgeStyle }}">{{ dcCount }}</span>Données à compléter</button>
+  </sc-if>
+  <sc-if value="{{ dcOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:1995;padding:24px">
+    <div class="lz" style="background:var(--color-surface);border-radius:16px;width:860px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+      <div style="padding:20px 26px 14px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+        <div><div class="t-page-title" style="font-size:18px">{{ dcTitre }}</div><div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">Tant qu'elles manquent, certaines heures d'arrivée, certains coûts et certaines livraisons ne sont pas annoncés. Chaque ligne ouvre directement l'écran où la compléter. Calculé à l'instant sur vos données, rien n'est supposé.</div></div>
+        <button onClick="{{ dcLater }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button>
+      </div>
+      <div style="padding:16px 26px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ dcGroups }}" as="g" hint-placeholder-count="3">
+          <div style="border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--color-background-secondary)"><span style="width:8px;height:8px;border-radius:50%;flex:none;background:{{ g.color }}"></span><b style="font:700 12.5px var(--font-ui);color:var(--color-text)">{{ g.label }}</b><span style="margin-left:auto;font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ g.sub }}</span></div>
+            <sc-for list="{{ g.items }}" as="d" hint-placeholder-count="2">
+              <div style="display:grid;grid-template-columns:1.1fr 1.1fr auto;gap:12px;align-items:center;padding:10px 14px;border-top:.5px solid var(--color-border-tertiary)">
+                <div><div style="font:600 12.5px var(--font-ui);color:var(--color-text)">{{ d.what }}</div><div style="font:400 11.5px/1.4 var(--font-ui);color:var(--color-text-muted)">{{ d.why }}</div></div>
+                <div style="font:400 11.5px/1.4 var(--font-ui);color:var(--color-text-muted)">{{ d.ctx }}</div>
+                <button onClick="{{ d.go }}" style="border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:8px;padding:7px 12px;font:600 11.5px var(--font-ui);cursor:pointer;white-space:nowrap">{{ d.lien }}</button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <div style="padding:12px 26px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted)">Revient à l'ouverture de la console tant qu'il reste un point bloquant ; la bulle « Données à compléter » reste visible dans le rail.</div>
+        <div style="display:flex;gap:8px"><button onClick="{{ dcLater }}" class="btn-secondary" style="font-size:12.5px">Plus tard</button><button onClick="{{ dcFirst }}" class="btn-primary" style="font-size:12.5px">Commencer par le premier point</button></div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
   <!-- ===================== ASSISTANT TOURNÉE → SITES → BUREAUX ===================== -->
   <!-- Les trois points de gestion des tournées sur un seul écran, de haut en
        bas, chaque étape rouvrable ; UN enregistrement (POST /franchisee/tour-
@@ -4195,6 +4232,53 @@ class Component extends DCLogic {
     const tot=lanes.reduce((a,l)=>({off:a.off+l.nbOff,late:a.late+l.late,km:a.km+l.km,att:a.att+l.attente}),{off:0,late:0,km:0,att:0});
     return {...base,chronoTicks:ticks,chronoLanes:lanesV,chronoEmpty:false,chronoHasNow:hasNow,chronoNowLeft:pct(nowMin),
       chronoSub:lanes.length+' tournée(s) · '+tot.off+' dépôt(s) · '+tot.km.toFixed(1).replace('.',',')+' km · '+(tot.late?(tot.late+' dépôt(s) hors fenêtre'):'toutes les fenêtres tenues')+(tot.att?(' · '+tot.att+' min d’attente'):'')+' · trajets '+(Object.keys(C.legs||{}).length?'Google':'à vol d’oiseau (≈) — « Recalculer (Google) »')}; }
+  /* ── DONNÉES À COMPLÉTER ─────────────────────────────────────────────────
+     Contrôles calculés sur les tables servies, chacun avec l'écran où le
+     corriger. Trois groupes : bloquant pour la livraison, heures d'arrivée
+     incomplètes, coûts et validation. */
+  dcNorm(v){ return String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); }
+  dcGroups(){ const T=(n)=>(window.BOServer?window.BOServer.table(n):[])||[]; const norm=v=>this.dcNorm(v);
+    const tours=(this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false); const tourByName={}; tours.forEach(t=>{ tourByName[norm(t.name)]=t; });
+    const sites=T('ws_office_delivery_sites').filter(r=>r&&r.active!==false); const offices=T('ws_offices').filter(o=>o&&o.name);
+    const dset={}; T('ws_office_delivery_settings').forEach(b=>{ if(b&&b.officeId!=null) dset[String(b.officeId)]=b; });
+    const clientsB=T('fr_clients'); const fen=(nom)=>{ const c=clientsB.find(x=>x&&x.raison===nom); const pt=c&&Array.isArray(c.points)&&c.points[0]; return !!(pt&&pt.fenetre); };
+    const gp=(k)=>{ const v=window.BOServer?window.BOServer.getParam(k,''):''; return (v===''||v==null||isNaN(parseFloat(v)))?null:parseFloat(v); };
+    const goWizard=(t)=>()=>{ this.dcClose(); this.goTo('tournees'); setTimeout(()=>this.twOpen(t.id),80); };
+    const goSite=(r)=>()=>{ this.dcClose(); this.goTo('sites'); setTimeout(()=>this.editForm('site',r,T('ws_office_delivery_sites').indexOf(r))(),80); };
+    const goScreen=(s,extra)=>()=>{ this.dcClose(); this.goTo(s,extra||null); };
+    const goParam=(o)=>()=>{ this.dcClose(); this.goTo('offices'); setTimeout(()=>this.openFormWith('bureauParam',{bureau:o.name,officeId:o.id})(),80); };
+    const B=[],H=[],C=[];
+    // Bloquant : sites sans bureau, tournées sans départ, bureaux en attente / demandes reçues.
+    sites.filter(r=>r.office_client_id==null).forEach(r=>{ const t=tourByName[norm(r.tour)]; B.push({what:r.name||r.adr||'Site',why:'Site sans bureau (société) — le client peut le choisir sans effet',ctx:(t?('Tournée '+t.name+(r.stop!=null?(' · arrêt '+r.stop):'')+' · '):'Sans tournée · ')+(r.adr&&r.adr!=='—'?r.adr:'adresse absente'),lien:t?('Rattacher un bureau → assistant '+t.name):'Rattacher un bureau → fiche site',go:t?goWizard(t):goSite(r)}); });
+    tours.filter(t=>t.start==null||t.start==='').forEach(t=>B.push({what:t.name,why:'Tournée sans heure de départ — aucune heure annoncée, aucun créneau proposé',ctx:(sites.filter(r=>norm(r.tour)===norm(t.name)).length)+' site(s)',lien:'Fixer le départ → assistant tournée',go:goWizard(t)}));
+    const pend=offices.filter(o=>o.status!=='validated'); if(pend.length) B.push({what:pend.map(o=>o.name).join(' · '),why:'Bureau(x) en attente de validation — livraison fermée tant que non validé(s)',ctx:pend.length+' bureau(x) · un clic sur la pastille « En attente » valide',lien:'Valider d’un clic → Offices',go:goScreen('offices')});
+    const join=T('fr_join_requests').filter(r=>r&&!(this.state.jrHandled||{})[r.id]); if(join.length) B.push({what:join.length+' demande(s) de rattachement bureau',why:'Des collaborateurs demandent à rejoindre un bureau — sans décision, ils ne commandent pas',ctx:join.slice(0,3).map(r=>r.email||r.nom||r.name||'').filter(Boolean).join(' · '),lien:'Décider → Demandes de rattachement',go:goScreen('demandesBureau')});
+    // Heures d'arrivée : adresses non vérifiées, temps d'accès, temps de dépôt, fenêtres.
+    sites.filter(r=>r.tour&&r.tour!=='—'&&(r.lat==null||r.lng==null)).forEach(r=>H.push({what:r.name||'Site',why:'Adresse non vérifiée par Google — hors itinéraire, trajet estimé à vol d’oiseau',ctx:(r.adr&&r.adr!=='—'?r.adr:'adresse absente'),lien:'Choisir l’adresse Google → fiche site',go:goSite(r)}));
+    sites.filter(r=>r.tour&&r.tour!=='—'&&(r.acc==null||r.acc==='')).forEach(r=>H.push({what:r.name||'Site',why:'Temps d’accès au site non mesuré — les arrêts suivants perdent leur heure',ctx:'Tournée '+r.tour,lien:'Saisir → fiche site',go:goSite(r)}));
+    offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—').forEach(o=>{ const d=dset[String(o.id)]; if(!d||d.drop==null||d.drop===''){ H.push({what:o.name,why:'Temps de dépôt du bureau non renseigné — l’heure de départ de l’arrêt est inconnue',ctx:'Tournée '+o.tour,lien:'Saisir → paramètres du bureau',go:goParam(o)}); } });
+    offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&!fen(o.name)).forEach(o=>H.push({what:o.name,why:'Pas de fenêtre d’engagement — impossible de dire si la livraison est à l’heure',ctx:'Bureau validé · tournée '+o.tour,lien:'Voir la fiche → Clients',go:goScreen('clients')}));
+    // Coûts et validation : taux horaire, prix au km, doublons de sites.
+    if(gp('cost_driver_hour')==null) C.push({what:'Taux horaire chauffeur',why:'Non paramétré — aucun coût de tournée dans la rentabilité',ctx:'Paramètres de coûts · clé cost_driver_hour',lien:'Paramétrer → Paramètres de coûts',go:goScreen('params')});
+    const sansPpk=tours.filter(t=>t.pricePerKm==null); if(sansPpk.length) C.push({what:sansPpk.map(t=>t.name).join(' · '),why:'Prix au km non renseigné — coût de tournée non calculable',ctx:sansPpk.length+' tournée(s)',lien:'Renseigner → assistant tournée',go:goWizard(sansPpk[0])});
+    const byAdr={}; sites.forEach(r=>{ const k=norm(r.adr); if(!k||k==='—') return; (byAdr[k]=byAdr[k]||[]).push(r); }); const dups=Object.keys(byAdr).filter(k=>byAdr[k].length>1);
+    if(dups.length) C.push({what:dups.map(k=>byAdr[k][0].adr+' ×'+byAdr[k].length).join(' · '),why:'Sites en double à la même adresse',ctx:dups.reduce((a,k)=>a+byAdr[k].length,0)+' lignes pour '+dups.length+' bâtiment(s)',lien:'Nettoyer → Sites',go:goScreen('sites')});
+    const out=[];
+    if(B.length) out.push({key:'b',label:'Bloquant pour les livraisons',color:'var(--color-primary)',sub:B.length+' · le client ne peut pas être livré',items:B});
+    if(H.length) out.push({key:'h',label:'Heures d’arrivée incomplètes',color:'#b26a00',sub:H.length+' · les arrêts concernés perdent leur ETA',items:H});
+    if(C.length) out.push({key:'c',label:'Coûts et validation',color:'#2a5a9e',sub:String(C.length),items:C});
+    return out; }
+  dcClose(){ this.setState({dcOpen:false}); }
+  dcLater(){ try{ sessionStorage.setItem('bo_dc_later','1'); }catch(e){} this.setState({dcOpen:false}); }
+  dcVals(){ const S=this.state; const groups=this.dcGroups(); const n=groups.reduce((a,g)=>a+g.items.length,0); const bloquant=(groups.find(g=>g.key==='b')||{items:[]}).items.length;
+    let later=false; try{ later=sessionStorage.getItem('bo_dc_later')==='1'; }catch(e){}
+    const open=(S.dcOpen!==undefined)?!!S.dcOpen:(bloquant>0&&!later&&n>0);
+    const first=groups.length?groups[0].items[0]:null;
+    return {dcHas:n>0,dcCount:String(n),dcOpen:open&&n>0,dcGroups:groups,dcOpenFn:()=>this.setState({dcOpen:true}),dcLater:()=>this.dcLater(),
+      dcFirst:()=>{ if(first) first.go(); else this.dcClose(); },
+      dcTitre:n+' donnée'+(n>1?'s':'')+' à compléter',
+      dcBadgeTitle:n+' donnée(s) à compléter'+(bloquant?(' — '+bloquant+' bloquante(s) pour la livraison'):''),
+      dcBadgeStyle:'min-width:20px;height:20px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font:700 11px var(--font-ui);padding:0 6px;color:#fff;background:'+(bloquant?'var(--color-primary)':'#b26a00')}; }
   /* Relire depuis l'API les tables que l'assistant vient d'écrire. */
   twReload(){ const fr=window.__FR||{}; if(!fr.base||!window.BOServer) return Promise.resolve();
     const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):'';
@@ -11007,6 +11091,7 @@ class Component extends DCLogic {
       openRouteForm:()=>this.setState({rfOpen:true,rfEditId:null,rf:{name:'',short:'',start:'06:00',max:10,forfait:45,pricePerKm:'',driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}),
       ...twVals,
       ...this.chronoVals(),
+      ...this.dcVals(),
       rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false,rfEditId:null}),
       rfTitle:(S.rfEditId?'Modifier la tournée':'Nouvelle tournée'),rfSubmitLabel:(S.rfEditId?'Enregistrer':'Créer la tournée'),
       editRoute:(()=>{ const byId=(id)=>{ const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:(t.max!=null?t.max:''),forfait:(t.forfait!=null?t.forfait:''),pricePerKm:(t.pricePerKm!=null?t.pricePerKm:''),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); };
