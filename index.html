@@ -5063,20 +5063,20 @@ class Component extends DCLogic {
     {s:'atelierLiv',g:'Paramétrage › Livraison',grp:'g_liv',label:'Atelier livraison (assistant)',meta:'atelierLiv',k:'assistant wizard creation tournee zone bureau simulation apercu client verifier cut-off fenetre midi soir garde-fou parametrage guide'},
     {s:'tournees',g:'Paramétrage › Livraison',grp:'g_liv',label:'Tournées — vue d\'ensemble',k:'constructeur glisser deposer atelier assistant chauffeur vehicule eta publication tablette route itineraire'},
     {s:'horaires',g:'Paramétrage › Livraison',grp:'g_liv',label:'Horaires & fermetures',k:'fenetre depart fin cut-off capacite fermeture ferie conge technique jour non roule'},
-    {s:'zones',g:'Paramétrage › Livraison',grp:'g_liv',label:'Zones — carte & chalandise',k:'code postal cp primaire secondaire franco vehicule territoire carte commune chalandise'},
+    {s:'geoAnalyse',g:'Pilotage',label:'Zones — carte & chalandise',k:'code postal cp primaire secondaire franco vehicule territoire carte commune chalandise zones'},
     {s:'frais',g:'Paramétrage › Livraison',grp:'g_liv',label:'Frais — cascade complète',k:'cascade franco palier seuil gratuit facturation port'},
     {s:'params',g:'Paramétrage › Livraison',grp:'g_liv',label:'Coût & temps',k:'cout horaire carburant emballage structure chargement version simulation'},
     // ---- Paramétrage › Clients B2B ----
-    {s:'clients',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Bureaux & sites',k:'compte b2b plafond encours remise facturation differee tva segment horeca fiche client'},
-    {s:'offices',g:'Paramétrage › Clients B2B',grp:'g_b2b',k:'bureau client statut valide departements effectif'},
-    {s:'offices',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Assortiment par bureau',k:'assortiment bureau produits proposes prix masques affiches selection reduit personne morale'},
+    {s:'clients',g:'Paramétrage › Livraison',grp:'g_liv',label:'Bureaux & sites',k:'compte b2b plafond encours remise facturation differee tva segment horeca fiche client'},
+    {s:'offices',g:'Paramétrage › Livraison',grp:'g_liv',k:'bureau client statut valide departements effectif'},
+    {s:'offices',g:'Paramétrage › Livraison',grp:'g_liv',label:'Assortiment par bureau',k:'assortiment bureau produits proposes prix masques affiches selection reduit personne morale'},
     // Le WIZARD lui-même est une destination : on le cherche par « nouveau
     // bureau », pas par le nom de l'écran qui l'héberge. `act` l'ouvre.
-    {s:'offices',act:'ob',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Nouveau bureau B2B (onboarding)',
+    {s:'offices',act:'ob',g:'Paramétrage › Livraison',grp:'g_liv',label:'Nouveau bureau B2B (onboarding)',
      desc:'Création complète en 7 étapes : société, contact, site, départements, webshop, personnel',
      k:'wizard onboarding creation creer nouveau bureau societe raison sociale tournee site departements voucher invitation lien magique'},
-    {s:'sites',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Sites de livraison',k:'adresse etage local temps acces quai reception chaine tournee zone'},
-    {s:'emailsBureau',g:'Paramétrage › Clients B2B',grp:'g_b2b',label:'Contacts email',k:'mail role principal facturation livraison destinataire notification'},
+    {s:'sites',g:'Paramétrage › Livraison',grp:'g_liv',label:'Sites de livraison',k:'adresse etage local temps acces quai reception chaine tournee zone'},
+    {s:'offices',g:'Paramétrage › Livraison',grp:'g_liv',label:'Contacts email d’un bureau',k:'mail role principal facturation livraison destinataire notification contact'},
     // ---- Paramétrage › Boutique ----
     {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','dispo'],g:'Paramétrage › Boutique',label:'Disponibilité boutique',k:'jours heures webshop comptoir bureau ouverture livraison'},
     {s:'reglesBoutique',grp:'g_boutique',tab:['dispoTab','cal'],g:'Paramétrage › Boutique',label:'Règles calendrier',meta:'calendarRules',k:'open days cut-off lead time delai mode retrait livraison'},
