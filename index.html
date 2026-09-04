@@ -167,6 +167,17 @@
   .tw-sugmsg{padding:9px 13px;font:400 11.5px var(--font-ui);color:var(--color-text-muted)}
   /* Chronologie des tournées (toggle Carte / Chronologie). */
   .ch-lane{display:flex;align-items:center;min-height:66px;border-bottom:.5px solid var(--color-border-tertiary)}
+  .ch-tog{border:.5px solid var(--color-border-secondary);background:var(--color-surface);color:var(--color-text-muted);border-radius:999px;padding:1px 8px;font:500 10.5px var(--font-ui);cursor:pointer;margin-left:6px;vertical-align:1px}
+  .ch-tog:hover{color:var(--color-text);border-color:var(--color-text-muted)}
+  .ch-det{margin:0 0 10px 230px;padding:6px 12px 8px;border:.5px solid var(--color-border-tertiary);border-top:none;border-radius:0 0 10px 10px;background:var(--color-surface)}
+  .ch-det-row{display:flex;gap:12px;padding:4px 0;border-top:.5px dashed var(--color-border-tertiary);font:400 11.5px var(--font-ui);color:var(--color-text)}
+  .ch-det-row:first-child{border-top:none}
+  .ch-det-h{flex:none;width:112px;font-variant-numeric:tabular-nums;color:var(--color-text-muted)}
+  .ch-det-t{flex:1;min-width:0}
+  .ch-det-row.dep .ch-det-t,.ch-det-row.fin .ch-det-t{font-weight:600}
+  .ch-det-row.ch-ko .ch-det-t{color:var(--color-primary);font-weight:600}
+  .ch-det-row.warn .ch-det-t{color:var(--color-primary)}
+  .ch-det-row.ch-att .ch-det-t{color:#8a5a13}
   .ch-nm{width:230px;flex:none;padding-right:12px;min-width:0}
   .ch-bar{position:relative;flex:1;height:48px}
   .ch-seg{position:absolute;top:12px;height:24px;border-radius:5px;font:600 10px var(--font-ui);display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden;white-space:nowrap;padding:0 3px;box-sizing:border-box}
@@ -625,7 +636,7 @@
           <div style="position:relative;height:22px;margin-left:230px;border-bottom:.5px solid var(--color-border-secondary)"><sc-for list="{{ chronoTicks }}" as="k" hint-placeholder-count="6"><span class="ch-tick" style="left:{{ k.left }}%">{{ k.label }}</span></sc-for></div>
           <sc-for list="{{ chronoLanes }}" as="l" hint-placeholder-count="2">
             <div class="ch-lane">
-              <div class="ch-nm"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:{{ l.color }}"></span>{{ l.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.sub }}">{{ l.sub }}</div><sc-if value="{{ l.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px var(--font-ui);color:var(--color-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.warn }}">{{ l.warn }}</div></sc-if></div>
+              <div class="ch-nm"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:{{ l.color }}"></span>{{ l.name }} <button onClick="{{ l.toggle }}" class="ch-tog" title="Le détail de la tournée, étape par étape">{{ l.chev }} détail</button></div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.sub }}">{{ l.sub }}</div><sc-if value="{{ l.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px var(--font-ui);color:var(--color-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.warn }}">{{ l.warn }}</div></sc-if></div>
               <div class="ch-bar">
                 <sc-for list="{{ chronoTicks }}" as="k" hint-placeholder-count="6"><span class="ch-grid" style="left:{{ k.left }}%"></span></sc-for>
                 <sc-for list="{{ l.wins }}" as="w" hint-placeholder-count="2"><span class="ch-win {{ w.cls }}" style="left:{{ w.left }}%;width:{{ w.width }}%" title="{{ w.title }}">{{ w.label }}</span></sc-for>
@@ -634,6 +645,8 @@
                 <sc-if value="{{ chronoHasNow }}" hint-placeholder-val="{{ false }}"><span class="ch-now" style="left:{{ chronoNowLeft }}%"></span></sc-if>
               </div>
             </div>
+            <!-- Le détail déplié : chaque étape avec son heure, dans l'ordre. -->
+            <sc-if value="{{ l.open }}" hint-placeholder-val="{{ false }}"><div class="ch-det"><sc-for list="{{ l.detail }}" as="r" hint-placeholder-count="6"><div class="ch-det-row {{ r.cls }}"><span class="ch-det-h">{{ r.h }}</span><span class="ch-det-t">{{ r.txt }}</span></div></sc-for></div></sc-if>
           </sc-for>
           <sc-if value="{{ chronoEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 0;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée active avec des sites : la chronologie se construit depuis l'assistant tournée.</div></sc-if>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:12px;font:400 11px var(--font-ui);color:var(--color-text-muted)">
@@ -732,7 +745,7 @@
           <div style="position:relative;height:22px;margin-left:230px;border-bottom:.5px solid var(--color-border-secondary)"><sc-for list="{{ svTicks }}" as="k" hint-placeholder-count="6"><span class="ch-tick" style="left:{{ k.left }}%">{{ k.label }}</span></sc-for></div>
           <sc-for list="{{ svLanes }}" as="l" hint-placeholder-count="2">
             <div class="ch-lane">
-              <div class="ch-nm"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:{{ l.color }}"></span>{{ l.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.sub }}">{{ l.sub }}</div><sc-if value="{{ l.hasLive }}" hint-placeholder-val="{{ false }}"><div style="font:600 10.5px var(--font-ui);color:#2d7a3e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.live }}">🚚 {{ l.live }}</div></sc-if><sc-if value="{{ l.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px var(--font-ui);color:var(--color-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.warn }}">{{ l.warn }}</div></sc-if></div>
+              <div class="ch-nm"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:{{ l.color }}"></span>{{ l.name }} <button onClick="{{ l.toggle }}" class="ch-tog" title="Le détail de la tournée, étape par étape">{{ l.chev }} détail</button></div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.sub }}">{{ l.sub }}</div><sc-if value="{{ l.hasLive }}" hint-placeholder-val="{{ false }}"><div style="font:600 10.5px var(--font-ui);color:#2d7a3e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.live }}">🚚 {{ l.live }}</div></sc-if><sc-if value="{{ l.hasWarn }}" hint-placeholder-val="{{ false }}"><div style="font:500 10.5px var(--font-ui);color:var(--color-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ l.warn }}">{{ l.warn }}</div></sc-if></div>
               <div class="ch-bar">
                 <sc-for list="{{ svTicks }}" as="k" hint-placeholder-count="6"><span class="ch-grid" style="left:{{ k.left }}%"></span></sc-for>
                 <sc-for list="{{ l.wins }}" as="w" hint-placeholder-count="2"><span class="ch-win {{ w.cls }}" style="left:{{ w.left }}%;width:{{ w.width }}%" title="{{ w.title }}">{{ w.label }}</span></sc-for>
@@ -741,6 +754,7 @@
                 <sc-if value="{{ svHasNow }}" hint-placeholder-val="{{ false }}"><span class="ch-now" style="left:{{ svNowLeft }}%"></span></sc-if>
               </div>
             </div>
+            <sc-if value="{{ l.open }}" hint-placeholder-val="{{ false }}"><div class="ch-det"><sc-for list="{{ l.detail }}" as="r" hint-placeholder-count="6"><div class="ch-det-row {{ r.cls }}"><span class="ch-det-h">{{ r.h }}</span><span class="ch-det-t">{{ r.txt }}</span></div></sc-for></div></sc-if>
           </sc-for>
           <sc-if value="{{ svEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 0;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune tournée active avec des sites : la chronologie se construit depuis l'assistant tournée.</div></sc-if>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-top:12px;font:400 11px var(--font-ui);color:var(--color-text-muted)">
@@ -4233,19 +4247,28 @@ class Component extends DCLogic {
   chronoTours(){ const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); const sites=this.sitesData();
     return (this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false).map((t,i)=>{ const k=norm(t.name);
       const stops=sites.filter(s=>norm(s.zone)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
-      return {t,i,key:String(t.id),stops,sig:stops.map(s=>s.id).join(',')+'|'+(t.ret!==false?'r':'n')}; }); }
+      // La signature porte la POSITION de chaque arrêt, pas seulement son
+      // identifiant : un site dont l'adresse change garde son id, et les
+      // trajets mémorisés seraient resservis tels quels.
+      return {t,i,key:String(t.id),stops,sig:this.traceSig(t,stops)}; }); }
+  /* Demande différée des trajets Google de la chronologie : dès qu'une ligne
+     se calcule à vol d'oiseau alors que ses arrêts sont positionnés. Un refus
+     ne se retente pas avant 60 s. */
+  chronoAsk(list){ if(this._chronoAskT) return;
+    this._chronoAskT=setTimeout(()=>{ this._chronoAskT=null; const C=this.state.chrono||{}; if(C.busy) return; this.chronoRoutes(false,list); },350); }
   chronoRoutes(force,list){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
-    const jobs=(list||this.chronoTours()).filter(x=>x.stops.length&&x.stops.every(s=>s.lat!=null&&s.lng!=null)).filter(x=>{ const c=(this.state.chrono.legs||{})[x.key]; return force||!c||c.sig!==x.sig; });
+    const fails=this._chronoFail||(this._chronoFail={}); const now=Date.now();
+    const jobs=(list||this.chronoTours()).filter(x=>x.stops.length&&x.stops.every(s=>s.lat!=null&&s.lng!=null)).filter(x=>{ const c=(this.state.chrono.legs||{})[x.key]; return (force||!c||c.sig!==x.sig)&&(force||!fails[x.sig]||now-fails[x.sig]>60000); });
     if(!jobs.length) return;
     this.setState(s=>({chrono:{...s.chrono,busy:jobs.length,err:''}}));
     jobs.forEach(x=>{ fetch(fr.base+'/franchisee/tour-route'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
         body:JSON.stringify({tourId:+String(x.t.id).replace(/^r/,'')||null,returnToDepot:x.t.ret!==false,stops:x.stops.map(s=>({lat:s.lat,lng:s.lng,label:s.name}))})})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
         this.setState(s=>{ const legs={...(s.chrono.legs||{})}; let err=s.chrono.err;
-          if(st===200&&j&&j.ok) legs[x.key]={sig:x.sig,legs:Array.isArray(j.legs)?j.legs:[],km:+j.km,minutes:+j.minutes,at:new Date().toISOString()};
-          else err=(j&&j.error)||('Itinéraire Google indisponible (HTTP '+st+')');
+          if(st===200&&j&&j.ok){ legs[x.key]={sig:x.sig,legs:Array.isArray(j.legs)?j.legs:[],km:+j.km,minutes:+j.minutes,at:new Date().toISOString()}; delete fails[x.sig]; }
+          else { err=(j&&j.error)||('Itinéraire Google indisponible (HTTP '+st+')'); fails[x.sig]=Date.now(); }
           return {chrono:{...s.chrono,legs,busy:Math.max(0,s.chrono.busy-1),err}}; }); })
-      .catch(()=>this.setState(s=>({chrono:{...s.chrono,busy:Math.max(0,s.chrono.busy-1),err:'Réseau indisponible'}}))); }); }
+      .catch(()=>{ fails[x.sig]=Date.now(); this.setState(s=>({chrono:{...s.chrono,busy:Math.max(0,s.chrono.busy-1),err:'Réseau indisponible'}})); }); }); }
   chronoVals(){ const S=this.state; const on=S.tourView==='chrono'; const C=S.chrono||{legs:{},busy:0,err:''};
     const base={tourChrono:on,tvMap:()=>this.chronoToggle('map'),tvChrono:()=>this.chronoToggle('chrono'),
       tvMapStyle:'border:none;padding:8px 13px;font:600 12px var(--font-ui);cursor:pointer;'+(!on?'background:var(--color-primary);color:#fff':'background:var(--color-surface);color:var(--color-text-muted)'),
@@ -4253,7 +4276,11 @@ class Component extends DCLogic {
       tourMapOn:!on,chronoRecalc:()=>this.chronoRoutes(true),chronoBtnStyle:C.busy?'opacity:.6;pointer-events:none':'',
       chronoEtat:C.busy?('Google : '+C.busy+' tournée(s) en cours…'):(C.err||''),chronoTicks:[],chronoLanes:[],chronoEmpty:false,chronoHasNow:false,chronoNowLeft:0,chronoSub:''};
     if(!on) return base;
-    return {...base,...this.chronoBuild(this.chronoTours(),C,null)}; }
+    const list=this.chronoTours(); const b=this.chronoBuild(list,C,null);
+    // Une ligne encore à vol d'oiseau alors que tout est positionné : les
+    // trajets Google se demandent tout de suite, sans attendre le bouton.
+    if(!C.busy&&(b.chronoLanes||[]).some(l=>l.manqueGoogle)) this.chronoAsk(list);
+    return {...base,...b}; }
   /* Construction des lignes de temps — partagée par Tournées (toutes les
      tournées actives) et Suivi (celles qui passent aujourd'hui). `extra(x)`
      rend, par tournée, {closed, live} : une fermeture du jour vide la ligne
@@ -4290,7 +4317,16 @@ class Component extends DCLogic {
         if(fin!=null&&t.ret!==false&&prev){ let lg=null; const n=x.stops.length; if(legs&&legs[n]) lg={min:+legs[n].min||0,km:+legs[n].km||0,g:true}; else { const h=this.travelMin(prev,{lat:d.lat,lng:d.lng}); lg={min:h.min,km:h.km,g:false}; }
           segs.push({t0:cur,t1:cur+lg.min,cls:'ch-trj',label:(lg.g?'':'≈ ')+'retour '+lg.min,title:'Retour au dépôt : '+lg.min+' min'+(lg.g?' (Google)':' (≈)')}); cur+=lg.min; km+=lg.km; fin=cur; } }
       segs.forEach(g=>{ tMin=Math.min(tMin,g.t0); tMax=Math.max(tMax,g.t1); }); wins.forEach(w=>{ tMin=Math.min(tMin,w.t0); tMax=Math.max(tMax,w.t1); }); if(start!=null){ tMin=Math.min(tMin,start); tMax=Math.max(tMax,start+30); }
-      lanes.push({name:t.name,color,start,fin,km,nbOff,late,attente,google,segs,wins,warn,hasWarn:!!warn,empty:!segs.length,emptyTxt:warn||'—',
+      // Le DÉTAIL, dépliable : chaque étape dans l'ordre avec son heure —
+      // trajet, attente, accès, dépôt par bureau et sa fenêtre, retour.
+      const openMap=this.state.chronoOpen||{}; const lk=x.key; const open=!!openMap[lk];
+      const detail=[]; if(start!=null) detail.push({h:this.hhmm(start),txt:'Départ de la boutique',cls:'dep'});
+      segs.forEach(g=>detail.push({h:this.hhmm(g.t0)+' → '+this.hhmm(g.t1),txt:g.title,cls:g.cls||'',ko:g.cls==='ch-ko'}));
+      if(fin!=null) detail.push({h:this.hhmm(fin),txt:'Fin de tournée'+(t.ret!==false?' — retour à la boutique':''),cls:'fin'});
+      if(warn) detail.push({h:'',txt:'⚠ '+warn,cls:'warn'});
+      const manqueGoogle=!google&&x.stops.length>0&&x.stops.every(s0=>s0.lat!=null&&s0.lng!=null)&&start!=null&&depOk;
+      lanes.push({key:lk,open,chev:open?'▾':'▸',toggle:()=>this.setState(s0=>({chronoOpen:{...(s0.chronoOpen||{}),[lk]:!((s0.chronoOpen||{})[lk])}})),detail,hasDetail:detail.length>0,manqueGoogle,
+        name:t.name,color,start,fin,km,nbOff,late,attente,google,segs,wins,warn,hasWarn:!!warn,empty:!segs.length,emptyTxt:warn||'—',
         sub:(start!=null?this.hhmm(start):'—')+(fin!=null?(' → '+this.hhmm(fin)):'')+(km?(' · '+(google?'':'≈ ')+km.toFixed(1).replace('.',',')+' km'):'')+' · '+nbOff+' dépôt(s)'+(late?(' · '+late+' hors fenêtre'):'')+(attente?(' · attente '+attente+' min'):''),live:(ex&&ex.live)||'',hasLive:!!(ex&&ex.live)}); });
     if(!lanes.length||!isFinite(tMin)) return {chronoEmpty:!lanes.length,chronoLanes:lanes.map(l=>({...l,segs:[],wins:[]})),chronoSub:'Aucune heure calculable.'};
     let lo=Math.floor((tMin-30)/30)*30, hi=Math.ceil((tMax+30)/30)*30; if(hi-lo<120) hi=lo+120; const span=hi-lo;
@@ -4323,6 +4359,7 @@ class Component extends DCLogic {
       return {closed:c?('Fermée aujourd’hui'+(c.motif&&c.motif!=='—'?(' — '+c.motif):'')+(c.type&&c.type!=='Fermeture'?(' ('+c.type+')'):'')):'',
               live:dv?('en tournée : '+(dv.nom||'chauffeur')+(dv.avancement?(' · '+dv.avancement):'')):''}; };
     const b=this.chronoBuild(today,C,extra); const all=this.chronoTours().length;
+    if(!C.busy&&(b.chronoLanes||[]).some(l=>l.manqueGoogle)) this.chronoAsk(today);
     return {...base,svTicks:b.chronoTicks,svLanes:b.chronoLanes,svEmpty:b.chronoEmpty,svHasNow:b.chronoHasNow,svNowLeft:b.chronoNowLeft,svSub:b.chronoSub,
       svTitre:JL[now.getDay()]+' '+dstr+' · '+today.length+' tournée(s) prévue(s) sur '+all+' active(s)',
       svEmptyTxt:all?('Aucune tournée ne passe le '+JL[now.getDay()]+' — jours de passage à régler dans l’assistant tournée.'):'Aucune tournée active.'}; }
@@ -4331,7 +4368,7 @@ class Component extends DCLogic {
      colorées fluide / ralenti / bouchon, durée avec et sans trafic. Rafraîchi
      à l'arrivée sur Tournées / Suivi puis toutes les 2 minutes ; sans tracé,
      la carte garde ses lignes droites (pointillées) et le dit. */
-  traceSig(t,pts){ return pts.map(p=>p.id).join(',')+'|'+(t.ret!==false?'r':'n'); }
+  traceSig(t,pts){ const c=v=>(v==null||isNaN(+v))?'?':(+v).toFixed(5); return pts.map(p=>p.id+'@'+c(p.lat)+','+c(p.lng)).join(',')+'|'+(t.ret!==false?'r':'n'); }
   traceFor(t,pts){ const c=((this.state.trace||{}).byTour||{})[String(t.id)]; return (c&&c.sig===this.traceSig(t,pts)&&Array.isArray(c.points)&&c.points.length>1)?c:null; }
   /* Demande DIFFÉRÉE du tracé : appelée par les cartes chaque fois qu'une
      tournée se dessine à vol d'oiseau. Regroupée à 350 ms, jamais pendant
