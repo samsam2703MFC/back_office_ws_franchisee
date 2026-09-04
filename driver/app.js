@@ -30,6 +30,29 @@
 
   var LS_TPL = 'drv_sms_tpl';
   var DEFAULT_TPL = 'Bonjour {prenom} ! Ta commande est là : bon appétit !';
+  /* Numéro de version AFFICHÉ (écran « Ce que le dépôt reçoit »). Sans lui,
+     impossible de savoir si un téléphone tourne la version qu'on vient de
+     déployer — on a cherché des bugs déjà corrigés pour cette seule raison. */
+  var BUILD = 'v7 · 04/09';
+
+  /* Installation sur l'écran d'accueil. Android donne un événement qu'on
+     déclenche à la demande ; iOS n'en donne aucun — on y explique le geste au
+     lieu d'afficher un bouton qui ne ferait rien. */
+  function pwa() { return window.__PWA || { prompt: null, installed: false, sw: 'inconnu' }; }
+  function estInstallee() {
+    try {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || pwa().installed;
+    } catch (e) { return false; }
+  }
+  function estIOS() { return /iPad|iPhone|iPod/.test(navigator.userAgent); }
+  function blocInstall() {
+    if (estInstallee()) return '';
+    if (pwa().prompt) return '<button class="btn gh sm" data-act="install">＋ Installer sur l\'écran d\'accueil</button>';
+    if (estIOS()) return '<div class="card soft" style="padding:9px 11px"><div class="p" style="color:var(--color-text);font-size:10.5px">'
+      + '<b>Installer :</b> touche <b>Partager</b> en bas de Safari, puis <b>« Sur l\'écran d\'accueil »</b>. '
+      + 'L\'app s\'ouvre alors en plein écran, sans barre d\'adresse.</div></div>';
+    return '';
+  }
   // Icône appareil photo — tracé du DS, pas d'emoji : l'emoji change d'un
   // téléphone à l'autre et jure avec la charte.
   var CAM = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="vertical-align:-2px"><path d="M3 8h3.5L8 5.5h8L17.5 8H21v12H3z"/><circle cx="12" cy="13.5" r="3.6"/></svg>';
@@ -261,6 +284,9 @@
       + (S.lastScan ? '<div class="card soft" style="padding:9px 11px"><div class="lbl">Dernier code lu</div>'
             + '<div class="pin" style="word-break:break-all;margin-top:2px">' + esc(S.lastScan.slice(0, 90)) + '</div></div>' : '')
       + '<div class="pad">' + keys + '</div>'
+      // L'installation se propose ICI aussi : c'est le premier écran, et une
+      // app rangée sur l'écran d'accueil est une app qu'on rouvre.
+      + blocInstall()
       + '</div>'
       + '<div class="foot"><button class="btn" data-act="dologin"' + (S.shopId && S.pin.length === 4 && !S.busy ? '' : ' disabled') + '>'
       + (S.busy ? 'Connexion…' : 'Se connecter') + '</button></div>';
@@ -586,6 +612,15 @@
       + '<div class="card soft"><div class="p" style="color:var(--color-text)">Session : '
       + esc(driverName() || '—') + ' · boutique ' + esc((S.me && S.me.name) || DRV.adminShop() || (DRV.session() || {}).shopId || '—')
       + ' · ' + (DRV.isAdmin() ? '<b>mode test (jeton admin réseau)</b>' : 'PIN chauffeur (12 h)') + '</div></div>'
+      /* État de l'APPLICATION elle-même : version, hors-ligne, installation.
+         C'est la première chose à regarder quand « ça ne fait pas ce que tu as
+         dit » — souvent, le téléphone tourne une version d'avant. */
+      + '<div class="card"><div class="h3">L\'application</div>'
+      + '<div class="p" style="margin-top:6px">Version <b>' + esc(BUILD) + '</b></div>'
+      + '<div class="p">Hors-ligne (service worker) : ' + esc(pwa().sw) + '</div>'
+      + '<div class="p">Écran d\'accueil : ' + (estInstallee() ? 'installée' : 'pas encore installée') + '</div>'
+      + (blocInstall() ? '<div style="margin-top:9px">' + blocInstall() + '</div>' : '')
+      + '</div>'
       + '</div>'
       + '<div class="foot">' + (DRV.isAdmin()
           ? '<button class="btn gh" data-act="quitadmin">Oublier le jeton admin</button>'
@@ -913,6 +948,14 @@
     if (a === 'goclose') { S.screen = 'close'; return render(); }
     if (a === 'gostop') { S.stopIx = Number(el.getAttribute('data-i')); S.screen = 'drive'; return render(); }
 
+    if (a === 'install') {
+      var pr = pwa().prompt; if (!pr) { toast('Installation non proposée par ce navigateur'); return; }
+      pwa().prompt = null; pr.prompt();
+      return pr.userChoice.then(function (c) {
+        toast(c && c.outcome === 'accepted' ? 'Ajoutée à l\'écran d\'accueil' : 'Installation refusée');
+        render();
+      });
+    }
     if (a === 'scanon') { S.scanOn = !S.scanOn; S.scanMsg = ''; S.lastScan = ''; return render(); }
     if (a === 'torche') { return torche(!SC.torch).then(function (ok) { if (!ok) toast('Lampe non disponible sur ce téléphone'); render(); }); }
     if (a === 'focus') { if (!SC.stream) return; focusContinu(); toast('Mise au point relancée — tiens le QR à ~20 cm'); return; }
@@ -1016,6 +1059,11 @@
 
   /* ── démarrage ────────────────────────────────────────────────────── */
   function boot() {
+    // La page prévient l'app quand l'installation devient possible ou quand le
+    // service worker change d'état : l'écran se remet à jour tout seul.
+    window.__PWA_MAJ = function () { try { render(); } catch (e) {} };
+    // Raccourci du manifest « Ce que le dépôt reçoit ».
+    try { if (new URLSearchParams(location.search).get('vue') === 'sync') S.screen = 'sync'; } catch (e) {}
     render();
     DRV.flush();
     if (DRV.isAdmin()) {

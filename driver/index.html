@@ -4,9 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <title>Livraison — L'Atelier By</title>
+<meta name="description" content="Tournées, chargement au QR, feuille de route, remise et retour dépôt — application chauffeur L'Atelier By.">
 <meta name="theme-color" content="#8D1D2C">
+<!-- Installation : Android lit le manifest, iOS ces trois balises-là. -->
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Livraison">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
@@ -28,6 +33,23 @@
   <script src="api.js"></script>
   <script src="app.js"></script>
   <script>
+    /* ── INSTALLATION ────────────────────────────────────────────────────
+       Android annonce l'installabilité par beforeinstallprompt : on garde
+       l'événement pour proposer le geste DANS l'app, au bon moment, au lieu
+       de compter sur un menu que personne ne trouve. iOS ne l'émet pas —
+       l'app affiche alors la marche à suivre (Partager → Sur l'écran
+       d'accueil), plutôt qu'un bouton qui ne ferait rien. */
+    window.__PWA = { prompt: null, installed: false, sw: 'inconnu' };
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.__PWA.prompt = e;
+      if (window.__PWA_MAJ) window.__PWA_MAJ();
+    });
+    window.addEventListener('appinstalled', function () {
+      window.__PWA.prompt = null; window.__PWA.installed = true;
+      if (window.__PWA_MAJ) window.__PWA_MAJ();
+    });
+
     if ('serviceWorker' in navigator) {
       /* Quand un nouveau service worker prend la main, la page tourne encore
          l'ANCIEN code : on recharge une fois, sinon on croit essayer la
@@ -38,13 +60,29 @@
       });
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('sw.js').then(function (reg) {
+          window.__PWA.sw = 'actif';
           try { reg.update(); } catch (e) {}
+          // Une mise à jour prête pendant que l'app tourne : on la prend tout
+          // de suite (le rechargement ci-dessus suit), sans attendre que
+          // l'onglet soit fermé un jour.
+          reg.addEventListener('updatefound', function () {
+            var sw = reg.installing;
+            if (!sw) return;
+            sw.addEventListener('statechange', function () {
+              if (sw.state === 'installed' && navigator.serviceWorker.controller) sw.postMessage('skip-waiting');
+            });
+          });
+          if (window.__PWA_MAJ) window.__PWA_MAJ();
         }).catch(function (e) {
           // Un service worker refusé (http, navigateur ancien) n'empêche PAS
           // l'application de tourner : elle perd l'hors-ligne, rien d'autre.
+          window.__PWA.sw = 'refusé : ' + (e && e.message ? e.message : 'erreur');
           console.warn('service worker non enregistré :', e && e.message);
+          if (window.__PWA_MAJ) window.__PWA_MAJ();
         });
       });
+    } else {
+      window.__PWA.sw = 'non géré par ce navigateur';
     }
   </script>
 </body>

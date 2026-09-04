@@ -131,6 +131,23 @@ ln -s ../_ds driver/_ds && ln -s ../img driver/img   # non versionnés : le
 # → http://localhost:8080/driver/?api=https://<hôte>/webshop/api
 ```
 
+## Ce qui en fait une PWA complète
+
+| Pièce | Où | Pourquoi |
+| --- | --- | --- |
+| `manifest.webmanifest` | nom, `id`, `scope`, `start_url`, `display: standalone`, langue, catégories | l'app s'ouvre en plein écran, sans barre d'adresse |
+| **Icônes** | `icon-192`, `icon-512` (`any`) + `icon-maskable-512` (`maskable`) | Android rogne l'icône **en cercle** : le mot-symbole seul était coupé. L'icône maskable garde tout dans les 80 % centraux |
+| **Captures** | `shot-1`, `shot-2` (`form_factor: narrow`) | la boîte d'installation Android montre l'app avant de l'installer |
+| **Raccourcis** | « Ma tournée du jour », « Ce que le dépôt reçoit » | appui long sur l'icône |
+| **Service worker** | `sw.js` — coque réseau d'abord, cache en secours, **repli de navigation** hors ligne | une tournée reste lisible dans un sous-sol ; l'API n'est JAMAIS servie du cache |
+| **Bouton d'installation** | écran de connexion + « Ce que le dépôt reçoit » | Android : `beforeinstallprompt` déclenché depuis l'app ; iOS : la marche à suivre écrite (Partager → Sur l'écran d'accueil), pas un bouton mort |
+| **Numéro de version** | « Ce que le dépôt reçoit » | savoir d'un coup d'œil si le téléphone tourne la version déployée |
+| **Mise à jour** | nouvelle version prise sans attendre, page rechargée une fois | plus de téléphone figé sur la veille |
+
+**Préalable non négociable : HTTPS.** Sans lui, pas de service worker, pas
+d'installation, et pas de caméra. En `http://`, l'app tourne mais reste une
+page web ordinaire — et elle le dit.
+
 ## Déploiement
 
 `.github/workflows/deploy.yml` assemble `driver/` + `_ds/` + `img/` et rsync

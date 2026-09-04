@@ -1,0 +1,19 @@
+<style>html,body{margin:0}
+/* Icône MASKABLE : Android la rogne en cercle. Tout tient dans les 80 %
+   centraux — logo à 52 % de large, le mot LIVRAISON, puis le camion. */
+.i{width:512px;height:512px;background:#8D1D2C;display:flex;flex-direction:column;
+   align-items:center;justify-content:center;gap:14px}
+img{width:52%;height:auto;display:block;filter:brightness(0) invert(1)}
+.t{font:600 26px/1 system-ui,sans-serif;color:#F2C9A0;letter-spacing:.24em}
+svg{display:block;margin-top:2px}
+</style>
+<div class="i" id="ico">
+  <img src="../../img/logo.png">
+  <div class="t">LIVRAISON</div>
+  <svg width="104" height="62" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"
+       stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1" y="6" width="15" height="11" rx="1.6"/>
+    <path d="M16 9h4l3 3v5h-7z"/>
+    <circle cx="6" cy="19" r="1.9"/><circle cx="18" cy="19" r="1.9"/>
+  </svg>
+</div>
