@@ -3437,7 +3437,9 @@
           </div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">N° TVA — validé par VIES</label><div style="display:flex;gap:8px"><input value="{{ ob.tva }}" onInput="{{ obSetTva }}" placeholder="BE 0xxx.xxx.xxx" style="{{ obInStyle }}"/><button type="button" onClick="{{ obViesCheck }}" style="flex:none;border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:8px;padding:0 12px;font:600 11.5px var(--font-ui);cursor:pointer">Vérifier (VIES)</button></div><div style="margin-top:5px;{{ obViesStyle }}">{{ obViesMsg }}</div></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Segment</label><select value="{{ ob.seg }}" onChange="{{ obSetSeg }}" style="{{ obInStyle }}"><sc-for list="{{ obSegOpts }}" as="o" hint-placeholder-count="4"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
-          <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Conditions de paiement</label><input value="{{ ob.paiement }}" onInput="{{ obSetPaiement }}" placeholder="ex. 30 j fin de mois" style="{{ obInStyle }}"/></div>
+          <div><label style="display:flex;align-items:center;gap:6px;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Conditions de paiement<sc-if value="{{ obPayCredit }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph"><span style="{{ etaInfoIcon }}">i</span><span class="bo-tip" style="{{ etaTipStyle }}">Paiement sur compte (crédit) : la facture est établie à la SOCIÉTÉ, pas aux utilisateurs (clients) qui commandent. Le bureau naît avec la facturation différée activée.</span></span></sc-if></label>
+            <select value="{{ ob.paiement }}" onChange="{{ obSetPaiement }}" style="{{ obInStyle }}"><option value="">{{ obPayPh }}</option><sc-for list="{{ obPayOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+            <sc-if value="{{ obPayCredit }}" hint-placeholder-val="{{ false }}"><div style="margin-top:5px;font:500 11px var(--font-ui);color:#b26a00">Crédit : la facture sera faite à la société, non aux utilisateurs.</div></sc-if></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Encours autorisé (€)</label><input type="number" value="{{ ob.plafond }}" onInput="{{ obSetPlafond }}" style="{{ obInStyle }}"/></div>
           <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Logo de l'entreprise</label>
             <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -3480,6 +3482,35 @@
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Étage / local</label><input value="{{ ob.etage }}" onInput="{{ obSetEtage }}" placeholder="ex. Sous-sol / quai" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Tournée rattachée</label><select value="{{ ob.tour }}" onChange="{{ obSetTour }}" style="{{ obInStyle }}"><sc-for list="{{ obTourOpts }}" as="o" hint-placeholder-count="5"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Temps d'accès (min)</label><input type="number" value="{{ ob.acc }}" onInput="{{ obSetAcc }}" style="{{ obInStyle }}"/></div>
+        </div>
+        <!-- AUTRES SITES DE LA SOCIÉTÉ : le site 1 est celui ci-dessus ; chaque
+             site supplémentaire a son adresse (liste Google), son étage, son
+             temps d'accès et sa tournée. -->
+        <div style="margin-top:16px;border-top:.5px solid var(--color-border-tertiary);padding-top:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px"><div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-primary)">Autres sites de la société</div><button type="button" onClick="{{ obXAdd }}" class="btn-secondary" style="font-size:12px;padding:7px 12px">+ Ajouter un site</button></div>
+          <sc-if value="{{ obXEmpty }}" hint-placeholder-val="{{ true }}"><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Un seul site pour l'instant (celui ci-dessus). Ajoutez-en un si la société est livrée à plusieurs adresses.</div></sc-if>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ obSitesX }}" as="x" hint-placeholder-count="1">
+              <div style="border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 14px;background:var(--color-background-secondary)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font:600 12px var(--font-ui);color:var(--color-text)">Site {{ x.num }}</span><button type="button" onClick="{{ x.remove }}" title="Retirer ce site" class="tw-ico" style="color:var(--color-primary)">×</button></div>
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+                  <div style="position:relative"><div class="tw-lbl">Adresse — liste Google</div><input value="{{ x.adr }}" onInput="{{ x.adrType }}" placeholder="commencez à taper : rue et n°" autocomplete="off" class="tw-in"/>
+                    <sc-if value="{{ x.geoOpen }}" hint-placeholder-val="{{ false }}"><div class="tw-drop">
+                      <sc-for list="{{ x.geoSug }}" as="g" hint-placeholder-count="3"><button type="button" onClick="{{ g.pick }}" class="tw-sug"><b>{{ g.main }}</b> <span style="color:var(--color-text-muted)">{{ g.secondary }}</span></button></sc-for>
+                      <sc-if value="{{ x.geoBusy }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg">Recherche Google…</div></sc-if>
+                      <sc-if value="{{ x.geoHasMsg }}" hint-placeholder-val="{{ false }}"><div class="tw-sugmsg" style="color:var(--color-primary)">{{ x.geoMsgTxt }}</div></sc-if>
+                    </div></sc-if>
+                    <div style="margin-top:4px;{{ x.geoBadgeStyle }}">{{ x.geoBadge }}</div></div>
+                  <div><div class="tw-lbl">Office / bâtiment</div><input value="{{ x.office }}" onInput="{{ x.setOffice }}" placeholder="nom de l'office" class="tw-in"/></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:10px">
+                  <div><div class="tw-lbl">Étage / local</div><input value="{{ x.etage }}" onInput="{{ x.setEtage }}" placeholder="ex. Sous-sol / quai" class="tw-in"/></div>
+                  <div><div class="tw-lbl">Temps d'accès (min)</div><input type="number" min="0" value="{{ x.acc }}" onInput="{{ x.setAcc }}" placeholder="à mesurer" class="tw-in"/></div>
+                  <div><div class="tw-lbl">Tournée</div><select value="{{ x.tour }}" onChange="{{ x.setTour }}" class="tw-in"><sc-for list="{{ x.tourOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
         </div>
         <!-- Fenêtre, jours et validation : ce que le bureau recevra comme
              engagement de livraison. Demandés ici, jamais supposés. -->
@@ -3777,7 +3808,7 @@ class Component extends DCLogic {
       fenDeb:'', fenFin:'', jours:[], validation:'',
       remiseWeb:'', franco:'', drop:'',
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true, geo:null },
-    obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'', obPickQ:'', obSel:{},
+    obDepts: [], obStaff: [], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'', obPickQ:'', obSel:{}, obSitesX: [],
     obVouchers: [], obVLibelle:'', obVValidite:'',
     profileOpen: false, srcOpen: false, paramDrafts: {},
     // Assistant tournée (tw), listes d'adresses Google par champ (geo), onboarding : recherche clients, VIES, bon choisi.
@@ -3795,7 +3826,7 @@ class Component extends DCLogic {
       remiseWeb:'', franco:'', drop:'',
       vCode:'', vValeur:'', sendMail:true, sendAdhesion:true, geo:null },
     obDepts:[], obStaff:[], obDeptDraft:'', obDeptEff:'', obStaffName:'', obStaffEmail:'', obCsv:'', obPickQ:'', obSel:{},
-    obVouchers:[], obVLibelle:'', obVValidite:'', obSearchQ:'', obViesLocked:false, obViesMsg:'', obViesOk:null, obVSel:'' }); this.zfGeoEnsure(); }
+    obVouchers:[], obVLibelle:'', obVValidite:'', obSearchQ:'', obViesLocked:false, obViesMsg:'', obViesOk:null, obVSel:'', obSitesX:[] }); this.zfGeoEnsure(); }
   /* ── ADRESSE VIA LA LISTE GOOGLE ─────────────────────────────────────────
      Un seul mécanisme pour tous les formulaires (bureau, site, client, boutique,
      onboarding, assistant) : on tape (≥ 3 caractères), le SERVEUR interroge
@@ -3846,18 +3877,37 @@ class Component extends DCLogic {
     return src.filter(c=>{ if(c.active!=null&&Number(c.active)===0) return false;
       const hay=[c.company_name,c.name,c.surname,c.email,c.phone,c.phone_e164,c.city,c.locality].map(nd).join(' ');
       return hay.includes(s)||(sn.length>=4&&nd(c.tax_number).replace(/[^a-z0-9]/g,'').includes(sn)); }).slice(0,8); }
+  /* REPRISE D'UN CLIENT : la fiche remplit société, contact et adresse ; le
+     n° TVA est validé AUTOMATIQUEMENT via VIES, et l'adresse (fiche client,
+     sinon celle que VIES connaît) devient l'adresse du site de livraison,
+     vérifiée par Google quand la liste la retrouve sans ambiguïté. */
   obReprendre(c){ const nom=[c.name,c.surname].filter(Boolean).join(' ').trim();
+    const rue=[c.street,c.street_number].filter(Boolean).join(' ').trim();
     this.setState(s=>({ob:{...s.ob,raison:c.company_name||nom||s.ob.raison,tva:c.tax_number||s.ob.tva,office:s.ob.office||c.company_name||'',
         contactNom:nom||s.ob.contactNom,contactEmail:c.email||s.ob.contactEmail,contactTel:c.phone_e164||c.phone||s.ob.contactTel,
-        cp:(c.zip?String(c.zip):s.ob.cp),localite:c.city||c.locality||s.ob.localite},
-      obSearchQ:'',obViesLocked:false,obViesOk:null,obViesMsg:'Fiche reprise de la base clients — confirmez le nom via VIES.'}));
+        adr:rue||s.ob.adr,cp:(c.zip?String(c.zip):s.ob.cp),localite:c.city||c.locality||s.ob.localite,geo:(rue?null:s.ob.geo)},
+      obSearchQ:'',obViesLocked:false,obViesOk:null,obViesMsg:(c.tax_number?'Vérification VIES…':'Fiche sans n° TVA — encodez-le puis « Vérifier (VIES) »')}),
+      ()=>{ if(c.tax_number) this.obViesCheck(); if(rue) this.obAdrResoudre(rue,String(c.zip||''),c.city||c.locality||''); });
     this.printJob('✓ Fiche client reprise : '+(c.company_name||nom||'client #'+c.id)); }
+  /* Adresse composée → liste Google → si la première proposition porte le
+     même code postal, elle est retenue (rue, n°, CP, localité, position).
+     Sinon l'adresse reste « non vérifiée » : à choisir dans la liste. */
+  obAdrResoudre(rue,cp,ville){ const fr=window.__FR||{}; if(!fr.base||!rue) return;
+    const q=[rue,[cp,ville].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+    fetch(fr.base+'/franchisee/geo-suggest?q='+encodeURIComponent(q)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.ok?r.json():null).then(j=>{ const sug=(j&&j.ok&&Array.isArray(j.suggestions))?j.suggestions:[]; const first=sug[0];
+        if(first&&(!cp||String(first.label||'').includes(cp))) this.obAdrPick(first.id);
+        else if(sug.length) this.geoSet('ob',{sug,open:true,busy:false,msg:''}); })
+      .catch(()=>{}); }
   obViesCheck(){ const raw=String(this.state.ob.tva||'').replace(/[^A-Za-z0-9]/g,'');
     if(!raw){ this.setState({obViesOk:false,obViesMsg:'Encodez d’abord le n° TVA'}); return; }
     this.setState({obViesOk:null,obViesMsg:'Vérification VIES…'}); const fr=window.__FR||{};
     fetch((fr.base||'')+'/franchisee/vies-check?vat='+encodeURIComponent(raw)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
       .then(r=>r.json()).then(j=>{
-        if(j&&j.valid){ this.setState(s=>({obViesOk:true,obViesLocked:!!j.name,obViesMsg:'✓ TVA valide'+(j.name?(' — nom officiel : '+j.name):' — VIES ne rend pas de nom pour ce pays'),ob:{...s.ob,raison:j.name||s.ob.raison}})); }
+        if(j&&j.valid){ const sansAdr=!String(this.state.ob.adr||'').trim()&&!!j.street;
+          this.setState(s=>({obViesOk:true,obViesLocked:!!j.name,obViesMsg:'✓ TVA valide'+(j.name?(' — nom officiel : '+j.name):' — VIES ne rend pas de nom pour ce pays'),
+            ob:{...s.ob,raison:j.name||s.ob.raison,...(sansAdr?{adr:String(j.street||'').trim(),cp:String(j.zip||s.ob.cp||''),localite:j.city||s.ob.localite,geo:null}:{})}}),
+            ()=>{ if(sansAdr) this.obAdrResoudre(String(j.street||'').trim(),String(j.zip||''),j.city||''); }); }
         else if(j&&j.error==='vies_unavailable'){ this.setState({obViesOk:false,obViesMsg:'Service VIES indisponible — réessayez'}); }
         else { this.setState({obViesOk:false,obViesLocked:false,obViesMsg:'✕ N° TVA introuvable via VIES'}); } })
       .catch(()=>this.setState({obViesOk:false,obViesMsg:'Réseau indisponible'})); }
@@ -3866,6 +3916,17 @@ class Component extends DCLogic {
     this.setState(s=>({ob:{...s.ob,adr:this.geoLigne(j),cp:j.zip||s.ob.cp,localite:(locs.length===1?locs[0]:(m||(locs.length?'':(j.city||s.ob.localite)))),
       geo:{lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''}}})); }); }
   obDeptKey(x){ return String(x||'').trim().toLowerCase().replace(/\s+/g,' '); }
+  /* AUTRES SITES DE LA SOCIÉTÉ (onboarding) : chacun avec son adresse Google,
+     son étage, son temps d'accès et sa tournée. Rien n'est écrit avant
+     « Créer le bureau » ; le serveur crée une ligne de site par entrée. */
+  obXAdd(){ this.setState(s=>({obSitesX:[...(s.obSitesX||[]),{key:'x'+Date.now(),office:'',adr:'',cp:'',localite:'',etage:'',acc:'',tour:s.ob.tour||'',geo:null}]})); }
+  obXRemove(i){ return ()=>this.setState(s=>({obSitesX:(s.obSitesX||[]).filter((_,j)=>j!==i)})); }
+  obXSet(i,k){ return e=>{ const v=(e&&e.target)?e.target.value:e; this.setState(s=>({obSitesX:(s.obSitesX||[]).map((x,j)=>j===i?{...x,[k]:v}:x)})); }; }
+  obXAdrType(i){ return e=>{ const v=e.target.value; const key=((this.state.obSitesX||[])[i]||{}).key;
+    this.setState(s=>({obSitesX:(s.obSitesX||[]).map((x,j)=>j===i?{...x,adr:v,geo:null}:x)})); if(key) this.geoType('obx'+key,v); }; }
+  obXAdrPick(i,id){ const key=((this.state.obSitesX||[])[i]||{}).key; if(!key) return;
+    this.geoPick('obx'+key,id,j=>this.setState(s=>({obSitesX:(s.obSitesX||[]).map((x,jj)=>jj===i?{...x,adr:this.geoLigne(j),cp:j.zip||x.cp,localite:j.city||x.localite,
+      geo:{lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''}}:x)}))); }
   obDeptToggle(name){ return ()=>this.setState(s=>{ const k=this.obDeptKey(name); const has=s.obDepts.some(d=>this.obDeptKey(d.dept)===k);
     return {obDepts:has?s.obDepts.filter(d=>this.obDeptKey(d.dept)!==k):[...s.obDepts,{dept:String(name).trim(),effectif:null}]}; }); }
 
@@ -3954,8 +4015,12 @@ class Component extends DCLogic {
   obSetCp(e){ const v=e.target.value; const locs=this.obLocsOf(v);
     this.setState(s=>({ob:{...s.ob,cp:v,localite:locs.length===1?locs[0]:(locs.indexOf(s.ob.localite)>=0?s.ob.localite:'')}})); }
   obSet(k){ return (e)=>{ const v=(e&&e.target)?e.target.value:e; this.setState(s=>({ob:{...s.ob,[k]:v}})); }; }
-  obNext(){ this.setState(s=>(
-    this.obManqueA(s.obStep,s.ob) ? {} : {obStep:Math.min(this.OB_STEPS.length-1,s.obStep+1)})); }
+  /* On passe à l'étape suivante même si un champ manque : le motif reste
+     affiché sous les boutons, et « Créer le bureau » refait le contrôle de
+     TOUTES les étapes et ramène à la première incomplète. Bloquer la
+     navigation obligeait à tout remplir dans l'ordre, sans pouvoir aller
+     voir la suite. */
+  obNext(){ this.setState(s=>({obStep:Math.min(this.OB_STEPS.length-1,s.obStep+1)})); }
   obPrev(){ this.setState(s=>({obStep:Math.max(0,s.obStep-1)})); }
   /* CE QUI MANQUE à l'étape i — UNE seule définition, lue par le rendu (pour
      afficher le motif) ET par la navigation (pour ne pas sauter l'étape). Deux
@@ -3999,11 +4064,7 @@ class Component extends DCLogic {
      adresse, et « Créer » écrivait alors cinq tables avec des trous. Revenir
      en arrière reste libre ; aller en avant s'arrête à la première étape
      incomplète, dont le motif s'affiche aussitôt en pied d'assistant. */
-  obGo(n){ this.setState(s=>{
-    if(n<=s.obStep) return {obStep:n};
-    for(let i=s.obStep;i<n;i++) if(this.obManqueA(i,s.ob)) return {obStep:i};
-    return {obStep:n};
-  }); }
+  obGo(n){ this.setState({obStep:Math.max(0,Math.min(this.OB_STEPS.length-1,n))}); }
   /* Un jour desservi se coche ou se décoche. La liste est ordonnée comme la
      semaine, pas comme l'ordre des clics : « L Ma Me J V » se lit, « V L Me »
      non. */
@@ -4080,6 +4141,9 @@ class Component extends DCLogic {
     const add=[]; rows.forEach(l=>{ const parts=l.split(/[,\t]/).map(x=>x.trim()); let name='',email=''; parts.forEach(p=>{ if(/@/.test(p)) email=p; else if(p&&!name) name=p; }); if(email) add.push({name:name||email.split('@')[0],email}); });
     if(add.length) this.setState(s=>({obStaff:[...s.obStaff,...add],obCsv:''})); this.printJob('✔ '+add.length+' contact(s) importé(s) depuis le CSV'); }
   obCreate(){ const S=this.state, o=S.ob; if(!window.BOServer) return;
+    // Contrôle de TOUTES les étapes (les étapes se franchissent librement) :
+    // retour à la première incomplète, avec son motif.
+    for(let i=0;i<this.OB_STEPS.length;i++){ const m=this.obManqueA(i,o); if(m){ this.setState({obStep:i}); this.printJob('⚠ '+m); return; } }
     /* CONDITIONS COMMERCIALES REQUISES. Elles naissaient pré-remplies
        (plafond 5 000 €, 30 j fin de mois, remise 10 %, franco 250 €) et
        partaient en base si l'opérateur ne les touchait pas : des engagements
@@ -4202,6 +4266,9 @@ class Component extends DCLogic {
           ...((o.geo&&o.geo.lat!=null)?{lat:o.geo.lat,lng:o.geo.lng,place_id:o.geo.place_id||'',formatted:o.geo.formatted||'',street:o.geo.street||'',street_number:o.geo.street_number||'',postal_code:o.geo.postal_code||'',city:o.geo.city||''}:{}),
           fenetre:obFenetre,jours:obJours,validation:o.validation,
           departements:S.obDepts,staff:S.obStaff,
+          // Autres sites de la société : une ligne de site par entrée (adresse Google, étage, accès, tournée).
+          sitesExtra:(S.obSitesX||[]).filter(x=>String(x.adr||'').trim()).map(x=>({office:x.office,adr:x.adr,cp:x.cp,localite:x.localite,etage:x.etage,acc:x.acc,tour:x.tour,
+            ...((x.geo&&x.geo.lat!=null)?{lat:x.geo.lat,lng:x.geo.lng,place_id:x.geo.place_id,formatted:x.geo.formatted,street:x.geo.street,street_number:x.geo.street_number,postal_code:x.geo.postal_code,city:x.geo.city}:{})})),
           /* LES DEUX INTERRUPTEURS DE L'ÉCRAN. Ils n'étaient pas postés : le
              serveur n'envoyait rien, et « Envoyer l'e-mail récapitulatif au
              contact » ne commandait rien du tout. Un franchisé croyait le
@@ -7843,7 +7910,11 @@ class Component extends DCLogic {
       const soloScreen = single ? g.items[0][0] : null;
       return {
         label:g.label, open, single,
-        toggle: single ? this.go(soloScreen) : (()=>{ const cur=S.openGroups[g.id]!==undefined?S.openGroups[g.id]:hasActive; this.setState(st=>({openGroups:{...st.openGroups,[g.id]:!cur}})); }),
+        // Un groupe fermé s'ouvre ET mène directement à son premier écran (un
+        // clic, pas deux) ; un groupe ouvert se replie.
+        toggle: single ? this.go(soloScreen) : (()=>{ const cur=S.openGroups[g.id]!==undefined?S.openGroups[g.id]:hasActive;
+          if(!hasActive){ this.setState(st=>({openGroups:{...st.openGroups,[g.id]:true}})); this.go(g.items[0][0])(); }
+          else this.setState(st=>({openGroups:{...st.openGroups,[g.id]:!cur}})); }),
         headStyle:'display:flex;align-items:center;gap:8px;width:100%;padding:9px 12px;border:none;border-radius:8px;cursor:pointer;font:600 12px/1 var(--font-ui);text-align:left;background:'+(single&&hasActive?'var(--color-background-secondary)':'transparent')+';margin-top:2px;color:'+(hasActive?'var(--color-primary)':'var(--color-text)'),
         chevStyle:'flex:none;transition:transform .15s'+(single?';opacity:0;width:0':'')+(open?';transform:rotate(90deg)':''),
         items:g.items.map(([s,label])=>({label,go:this.go(s),style:navSub(s),addr:this.addrTitle(s)})),
@@ -9479,6 +9550,19 @@ class Component extends DCLogic {
       obVOpts:obVList.map(v=>{ const code=String(v.code||'').toUpperCase(); const deja=(S.obVouchers||[]).some(x=>x.code===code);
         return {value:String(v.code||''),label:code+' — '+(v.valeur||v.type||'')+(v.validite?(' · '+v.validite):'')+(v.loc?'':' · réseau')+(deja?' (déjà attribué)':'')}; }),
       obVSelPh:(obVList.length?'— Choisir un bon —':'— Aucun bon actif servi par ws-vouchers-local —'),
+      // Autres sites de la société
+      obSitesX:(S.obSitesX||[]).map((x,i)=>({num:String(i+2),key:x.key,office:x.office||'',adr:x.adr||'',cp:x.cp||'',localite:x.localite||'',etage:x.etage||'',acc:(x.acc==null?'':String(x.acc)),tour:x.tour||'',
+        setOffice:this.obXSet(i,'office'),setEtage:this.obXSet(i,'etage'),setAcc:this.obXSet(i,'acc'),setTour:this.obXSet(i,'tour'),adrType:this.obXAdrType(i),remove:this.obXRemove(i),
+        tourOpts:[{value:'',label:obTours.length?'— Tournée du bureau —':'— Aucune tournée définie —'}].concat(obTours.map(t=>({value:t,label:t}))),
+        ...(()=>{ const g=this.geoView('obx'+x.key,!!(x.geo&&x.geo.lat!=null),{pick:(id)=>this.obXAdrPick(i,id)}); return {geoOpen:g.geoOpen,geoBusy:g.geoBusy,geoHasMsg:g.geoHasMsg,geoMsgTxt:g.geoMsgTxt,geoSug:g.geoSug,geoBadge:g.geoBadge,geoBadgeStyle:g.geoBadgeStyle}; })()})),
+      obXAdd:()=>this.obXAdd(), obXEmpty:!(S.obSitesX||[]).length,
+      // Conditions de paiement : les moyens de paiement du webshop ouverts aux
+      // bureaux (ws_payment_methods, profil « bureau »), jamais du texte libre.
+      // Sur compte = crédit : la facture est établie à la société.
+      obPayOpts:(()=>{ const all=SRV('ws_payment_methods')||[]; let l=all.filter(m=>m.db!==false&&m.db!==0).map(m=>String(m.nom||'')).filter(Boolean); if(!l.length) l=all.map(m=>String(m.nom||'')).filter(Boolean);
+        const cur=String(O.paiement||'').trim(); if(cur&&!l.includes(cur)) l=[cur].concat(l); return l.map(n=>({value:n,label:n})); })(),
+      obPayPh:((SRV('ws_payment_methods')||[]).length?'— Choisir un moyen de paiement du webshop —':'— Aucun moyen de paiement servi (ws-payment-methods) —'),
+      obPayCredit:/compte|factur|diff[ée]r|cr[ée]dit/i.test(String(O.paiement||'')),
       obVAddStyle:(obVList.length?'':'opacity:.5'),
       obVSrcTxt:(obVList.length?(obVList.length+' bon(s) actif(s) — boutique et réseau (ws_vouchers). Un bon se crée dans Paramétrage › Bons, jamais ici ; un bon déjà attribué ne se rajoute pas.'):'Aucun bon actif : créez-en un dans Paramétrage › Bons avant l’onboarding — aucun bon n’est inventé ici.'),
       obStep0:obStep===0,obHasLogo:!!(S.ob&&S.ob.logo),obLogoSrc:(S.ob&&S.ob.logo)||'',obStep1:obStep===1,obStep2:obStep===2,obStep3:obStep===3,obStep4:obStep===4,obStep5:obStep===5,obStep6:obStep===6,
@@ -9549,7 +9633,7 @@ class Component extends DCLogic {
       obStepValid, obBlocked:!!obManque, obBlockedMsg:obManque||'',
       // opacity SEULE : pointer-events:none rendait le bouton totalement inerte,
       // donc impossible d'y accrocher la moindre explication.
-      obNextDisabledStyle:obStepValid?'':'opacity:.45;cursor:not-allowed',
+      obNextDisabledStyle:'',
       obInvPrelie:obInvPrelie,
       obIsFirst:obStep===0, obIsLast:obLast, obNotFirst:obStep>0, obNotLast:!obLast,
     };
