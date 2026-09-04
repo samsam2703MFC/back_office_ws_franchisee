@@ -3339,7 +3339,7 @@
         <sc-for list="{{ formFields }}" as="f" hint-placeholder-count="4">
           <div style="{{ f.wrapStyle }}">
             <sc-if value="{{ f.hasSection }}" hint-placeholder-val="{{ false }}"><div style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-primary);border-bottom:.5px solid var(--color-border-tertiary);padding-bottom:6px;margin-bottom:10px">{{ f.sectionLabel }}</div></sc-if>
-            <label style="display:flex;align-items:center;gap:6px;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">{{ f.label }}<sc-if value="{{ f.hasInfo }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph" style="position:relative;display:inline-flex"><span style="width:14px;height:14px;border-radius:50%;background:#E8A15C;color:#fff;font:700 9px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;cursor:help;flex:none">i</span><span class="bo-tip" style="position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);background:var(--color-text);color:var(--color-surface);font:400 11px/1.5 var(--font-ui);padding:8px 11px;border-radius:8px;width:240px;z-index:60;text-transform:none;letter-spacing:0;box-shadow:0 8px 24px rgba(0,0,0,.25)">{{ f.infoTxt }}</span></span></sc-if></label>
+            <label style="display:flex;align-items:center;gap:6px;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px"><sc-if value="{{ f.manque }}" hint-placeholder-val="{{ false }}"><span style="width:7px;height:7px;border-radius:50%;background:var(--color-primary);flex:none"></span></sc-if>{{ f.label }}<sc-if value="{{ f.hasInfo }}" hint-placeholder-val="{{ false }}"><span class="bo-tiph" style="position:relative;display:inline-flex"><span style="width:14px;height:14px;border-radius:50%;background:#E8A15C;color:#fff;font:700 9px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;cursor:help;flex:none">i</span><span class="bo-tip" style="position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);background:var(--color-text);color:var(--color-surface);font:400 11px/1.5 var(--font-ui);padding:8px 11px;border-radius:8px;width:240px;z-index:60;text-transform:none;letter-spacing:0;box-shadow:0 8px 24px rgba(0,0,0,.25)">{{ f.infoTxt }}</span></span></sc-if></label>
             <sc-if value="{{ f.isSelect }}" hint-placeholder-val="{{ false }}">
               <select value="{{ f.value }}" onChange="{{ f.onInput }}" style="{{ f.inputStyle }}">
                 <sc-for list="{{ f.options }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
@@ -3352,6 +3352,9 @@
             </sc-if>
             <sc-if value="{{ f.isReadonly }}" hint-placeholder-val="{{ false }}">
               <input type="text" value="{{ f.value }}" placeholder="{{ f.ph }}" disabled style="{{ f.inputStyle }};background:var(--color-background-secondary);color:var(--color-text-muted);cursor:not-allowed"/>
+            </sc-if>
+            <sc-if value="{{ f.manque }}" hint-placeholder-val="{{ false }}">
+              <div style="font:500 11px/1.4 var(--font-ui);color:var(--color-primary);margin-top:5px">⚠ {{ f.manqueTxt }}</div>
             </sc-if>
             <sc-if value="{{ f.hasLien }}" hint-placeholder-val="{{ false }}">
               <button type="button" onClick="{{ f.lienGo }}" style="margin-top:7px;border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:8px;padding:7px 12px;font:600 11.5px var(--font-ui);cursor:pointer">{{ f.lienTxt }}</button>
@@ -5200,6 +5203,12 @@ class Component extends DCLogic {
           {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],info:'La tournée impose le cut-off de commande et les jours autorisés (champs grisés ci-dessous).',section:'Livraison (ws_office_delivery_settings)'},
           {k:'allowed_days',label:'Jours autorisés — hérités de la tournée',readonly:true,ph:'choisissez une tournée',section:'Livraison (ws_office_delivery_settings)'},
           {k:'delivery_cutoff',label:'Cut-off commande — hérité de la tournée',readonly:true,ph:'choisissez une tournée',section:'Livraison (ws_office_delivery_settings)'},
+          /* Le temps sur place vit dans ws_office_delivery_settings, mais il se
+             règle ICI : c'est sur la fiche du bureau qu'on arrive quand une
+             heure d'arrivée manque. Trois durées, jamais vide. */
+          {k:'drop',label:'Temps de dépôt sur place',type:'toggle',def:5,
+           options:[{value:5,label:'5 min'},{value:10,label:'10 min'},{value:15,label:'15 min'}],
+           info:'Durée sur place : accès, badge, étage. Elle entre dans l’heure d’arrivée annoncée aux bureaux suivants de la tournée. Minimum 5 minutes — un dépôt à zéro n’est pas une mesure.',section:'Livraison (ws_office_delivery_settings)'},
           {k:'delivery_notes',label:'Consignes de livraison',type:'text',ph:'ex. Accès quai côté rue',section:'Livraison (ws_office_delivery_settings)'},
           {k:'deferred_billing_enabled',label:'Facturation différée',type:'toggle',options:[{value:'Oui',label:'Oui'},{value:'Non',label:'Non'}],def:'Oui',info:'Oui = le bureau commande sur compte et la boutique facture en fin de mois (deferral, table client).',section:'Facturation'},
           /* TOUS LES CHAMPS DE L'ONBOARDING, RETROUVABLES ICI. Ceux qui vivent
@@ -5352,6 +5361,11 @@ class Component extends DCLogic {
     };
   }
   // Office : la tournée choisie impose cut-off + jours autorisés (ws_tour_availability).
+  /* Le temps de dépôt enregistré d'un bureau, relu à l'ouverture de sa fiche :
+     sans cela, un bureau à 15 min rouvrirait sur le standard de 5. */
+  officeDropLire(v,id){ if(id==null) return v;
+    const b=((window.BOServer?window.BOServer.table('ws_office_delivery_settings'):[])||[]).find(x=>x&&x.officeId!=null&&String(x.officeId)===String(id));
+    if(b&&+b.drop>0) v.drop=+b.drop; return v; }
   officeAutofill(v){ const av=(window.BOServer?window.BOServer.table('ws_tour_availability'):[]).find(a=>a.tour===v.tour); if(av){ v.delivery_cutoff=av.cut||''; v.allowed_days=av.jour||''; } return v; }
   /* URL servie d'un fichier du webshop (assets/…) : la base de l'API moins /php-api. */
   assetUrl(rel){ const r=String(rel||''); if(!r||/^(https?:)?\/\//.test(r)||r.indexOf('data:')===0) return r;
@@ -5377,7 +5391,7 @@ class Component extends DCLogic {
      bureau ») et les écritures (bpWrite lit officeId) le lisent. Sans lui, un
      formulaire ouvert par ce chemin gardait le formRow PÉRIMÉ du formulaire
      précédent — renvoi vers « » et « bureau inconnu » à l'enregistrement. */
-  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure();
+  openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office'){ this.officeAutofill(v); this.officeDropLire(v, extra&&extra.id); } if(key==='site') this.zfGeoEnsure();
     /* Paramètres d'un bureau ouverts depuis un raccourci : les réglages DÉJÀ
        enregistrés sont relus. Sans cela, un bureau à 15 min de dépôt rouvrait
        sur le standard de 5 et repartait à 5 au premier enregistrement. */
@@ -5387,7 +5401,7 @@ class Component extends DCLogic {
     // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
     // Le statut ne se remet plus « en attente » à chaque modification : il se
     // recalcule sur les champs remplis.
-    if(key==='office'){ this.officeAutofill(v); }
+    if(key==='office'){ this.officeAutofill(v); this.officeDropLire(v, vals&&vals.id); }
     // Site : l'adresse stockée est redécoupée dans les champs structurés.
     if(key==='site'){ this.zfGeoEnsure(); v.bureau=(vals&&vals.office&&vals.office!=='—')?vals.office:''; const adr=String((vals&&(vals.adr!=='—'?vals.adr:''))||'');
       const mm=adr.match(/^(.*?),?\s*(\d{4})\s*(.*)$/);
@@ -5477,6 +5491,13 @@ class Component extends DCLogic {
     // Après un save OFFICE ou SITE : refetch des tables serveur → la ligne
     // locale récupère son id DB (évite un doublon si on ré-édite/renomme
     // avant reload) et la liste reflète l'état réellement écrit.
+    /* Le temps de dépôt appartient à une AUTRE table : la fiche l'écrit par sa
+       propre route, sinon le badge choisi n'atteignait personne. */
+    if(S.formKey==='office'&&+v.drop>0){ const oid=(S.formRow&&S.formRow.id!=null)?S.formRow.id:null;
+      const fr2=window.__FR||{};
+      if(oid!=null&&fr2.base){ const b0=((window.BOServer?window.BOServer.table('ws_office_delivery_settings'):[])||[]).find(x=>x&&x.officeId!=null&&String(x.officeId)===String(oid))||{};
+        if(+b0.drop!==+v.drop) fetch(fr2.base+'/franchisee/office-delivery-setting'+(fr2.shop?('?shop='+encodeURIComponent(fr2.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
+          body:JSON.stringify({officeId:oid,cutHeure:b0.cutHeure||'',cutDecal:b0.cutDecal!=null?b0.cutDecal:1,drop:+v.drop})}).catch(()=>null); } }
     if(S.formKey==='office'||S.formKey==='site'){ setTimeout(()=>this.bcRefreshOffices(),150); }
     // Modale « livraison au bureau » : si la création de SITE vient du bouton
     // « + Créer un site » de la modale, on la rouvre avec le nouveau site
@@ -9430,6 +9451,18 @@ class Component extends DCLogic {
 
     // ===== modale formulaire générique =====
     const fCfg=S.formKey?this.formDefs()[S.formKey]:null;
+    /* CE QUI MANQUE dans la fiche ouverte, champ par champ — même règle que
+       le statut du bureau : sans ces champs, aucune heure d'arrivée. */
+    const fManque=(()=>{ const o={}; if(S.formKey!=='office') return o;
+      const fv=S.formVals||{}; const vide=v=>String(v==null?'':v).trim()===''||String(v).trim()==='—';
+      if(vide(fv.name)) o.name='indispensable';
+      if(vide(fv.address)) o.address='indispensable';
+      else if(fv.lat==null||fv.lng==null) o.address='à choisir dans la liste Google — sans position, l’itinéraire ne passe pas par ce bureau';
+      if(vide(fv.postal_code)) o.postal_code='indispensable';
+      if(vide(fv.city)) o.city='indispensable';
+      if(vide(fv.tour)||fv.tour==='—') o.tour='indispensable — sans tournée, aucune livraison';
+      if(!(+fv.drop>0)) o.drop='indispensable — les heures d’arrivée en dépendent';
+      return o; })();
     const inputBase='width:100%;padding:11px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface);box-sizing:border-box';
     const formFields=fCfg?fCfg.fields.map((f,i)=>{
       const val=S.formVals[f.k]!==undefined?S.formVals[f.k]:'';
@@ -9533,7 +9566,11 @@ class Component extends DCLogic {
         viesStyle:'font:500 12px var(--font-ui);color:'+(S.viesOk===true?'#2d7a3e':(S.viesOk===false?'var(--color-primary)':'var(--color-text-muted)')),
         wrapStyle:(f.half?'min-width:0':'grid-column:1/-1;min-width:0'),
         hasInfo:!!f.info, infoTxt:f.info||'',
-        options:(f.options||[]), inputStyle:inputBase };
+        // Un champ INDISPENSABLE encore vide se voit : bord rouge et mention
+        // sous le champ. Chercher lequel manque dans une fiche de vingt
+        // champs, c'est le temps qu'on voulait justement faire gagner.
+        manque:!!fManque[f.k], manqueTxt:fManque[f.k]||'',
+        options:(f.options||[]), inputStyle:inputBase+(fManque[f.k]?';border:1.5px solid var(--color-primary);background:#fffaf8':'') };
     }):[];
 
     const feeRules=SRV('ws_delivery_fee_rules').map((r,i)=>{ const bg={Site:'#fbe9eb',Bureau:'#fff4e5','Tournée':'var(--color-background-secondary)',Boutique:'#eef3fb'}[r.niveau]; const c={Site:'var(--color-primary)',Bureau:'#b26a00','Tournée':'var(--color-text-muted)',Boutique:'#2a5a9e'}[r.niveau]; return {...r,rank:String(i+1),edit:this.editForm('fee',{...r,offert:r.vOffert?'Oui':'Non',toujours:r.vToujours?'Oui':'Non',montant:r.vMontant,franco:r.vFranco,paiement:r.paiement&&r.paiement!=='\u2014'?r.paiement:'Selon bureau'},i),del:(()=>this.feeWrite({delete:true,id:r.id})),pill:'display:inline-flex;align-items:center;justify-self:start;width:fit-content;font:600 11px var(--font-ui);border-radius:5px;padding:1px 7px;background:'+bg+';color:'+c}; });
