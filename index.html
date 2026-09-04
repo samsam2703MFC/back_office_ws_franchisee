@@ -778,12 +778,28 @@
             <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:14px">Clients localisés par plage bpost · % de ma clientèle</div>
             <div style="display:grid;grid-template-columns:1.6fr .55fr .55fr 1.3fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Arrondissement</span><span class="t-admin-label" style="text-align:right">Clients</span><span class="t-admin-label" style="text-align:right">% masse</span><span></span></div>
             <sc-for list="{{ geoAArr }}" as="r" hint-placeholder-count="4">
-              <div style="display:grid;grid-template-columns:1.6fr .55fr .55fr 1.3fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
-                <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ r.name }}</span>
+              <div onClick="{{ r.toggle }}" title="Cliquer : la liste des clients de cet arrondissement" style="display:grid;grid-template-columns:1.6fr .55fr .55fr 1.3fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary);cursor:pointer">
+                <span style="font:500 12.5px var(--font-ui);color:var(--color-text)"><span style="display:inline-block;width:14px;color:var(--color-text-muted);font-size:11px">{{ r.caret }}</span>{{ r.name }}</span>
                 <span style="font:600 12.5px var(--font-ui);color:var(--color-text);text-align:right">{{ r.n }}</span>
                 <span style="font:600 12px var(--font-ui);color:var(--color-primary);text-align:right">{{ r.pctTxt }}</span>
                 <div style="padding-left:18px"><div style="height:7px;border-radius:999px;background:var(--color-background-secondary);overflow:hidden"><div style="{{ r.barStyle }}"></div></div></div>
               </div>
+              <!-- Les clients de l'arrondissement, dépliés au clic : nom, type, CP · commune, commandes, CA. -->
+              <sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+                <div style="background:var(--color-background-secondary);border-bottom:.5px solid var(--color-border-tertiary);padding:6px 6px 8px 20px">
+                  <div style="display:grid;grid-template-columns:1.6fr .8fr 1.2fr .5fr .7fr;padding:6px 8px"><span class="t-admin-label">Client</span><span class="t-admin-label">Type</span><span class="t-admin-label">CP · commune</span><span class="t-admin-label" style="text-align:right">Cmd</span><span class="t-admin-label" style="text-align:right">CA</span></div>
+                  <sc-for list="{{ r.clients }}" as="c" hint-placeholder-count="3">
+                    <div style="display:grid;grid-template-columns:1.6fr .8fr 1.2fr .5fr .7fr;align-items:center;padding:7px 8px;background:var(--color-surface);border-radius:7px;margin-top:4px">
+                      <span style="font:500 12px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+                      <span><span style="{{ c.typeStyle }}">{{ c.type }}</span></span>
+                      <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ c.lieu }}</span>
+                      <span style="text-align:right;font:500 12px var(--font-ui);color:var(--color-text)">{{ c.n }}</span>
+                      <span style="text-align:right;font:600 12px var(--font-ui);color:var(--color-text)">{{ c.ca }}</span>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ r.clientsEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:8px;font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Aucun client localisé dans cet arrondissement.</div></sc-if>
+                </div>
+              </sc-if>
             </sc-for>
             <sc-if value="{{ geoAArrEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 6px;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun client localisé.</div></sc-if>
           </div>
@@ -1116,11 +1132,11 @@
               </div>
             </div>
           </sc-if>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:10px">Marge = CA − coûts (accès site + dépôt) · même logique que le tableau de bord</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:10px">Marge = CA − coûts par commande (préparation, emballage) − coût de la tournée (personnel + km, par sortie × sorties de la période)</div>
           <div style="display:grid;grid-template-columns:1fr 90px 90px 100px 78px;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Niveau</span><span class="t-admin-label" style="text-align:right">CA</span><span class="t-admin-label" style="text-align:right">Coûts</span><span class="t-admin-label" style="text-align:right">Marge</span><span class="t-admin-label" style="text-align:right">Marge %</span></div>
           <sc-for list="{{ rentaTree }}" as="t" hint-placeholder-count="3">
             <div onClick="{{ t.toggle }}" style="display:grid;grid-template-columns:1fr 90px 90px 100px 78px;align-items:center;padding:9px 6px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary);cursor:pointer">
-              <div style="display:flex;align-items:center;gap:8px"><span style="width:16px;color:var(--color-text-muted);flex:none;font-size:11px">{{ t.caret }}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.7"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 9h4l3 3v5h-7z"/><circle cx="6" cy="19" r="1.8"/><circle cx="18" cy="19" r="1.8"/></svg><span style="font:600 13px var(--font-ui);color:var(--color-text)">{{ t.nom }}</span></div>
+              <div style="display:flex;align-items:center;gap:8px"><span style="width:16px;color:var(--color-text-muted);flex:none;font-size:11px">{{ t.caret }}</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.7"><rect x="1" y="6" width="15" height="11" rx="1.5"/><path d="M16 9h4l3 3v5h-7z"/><circle cx="6" cy="19" r="1.8"/><circle cx="18" cy="19" r="1.8"/></svg><span style="font:600 13px var(--font-ui);color:var(--color-text)">{{ t.nom }}</span><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ t.tourneeTxt }}">{{ t.tourneeTxt }}</span></div>
               <span style="text-align:right;font:500 12px var(--font-ui);color:var(--color-text-muted)">{{ t.ca }}</span>
               <span style="text-align:right;font:500 12px var(--font-ui);color:var(--color-text-muted)">{{ t.couts }}</span>
               <span style="text-align:right;font:700 12.5px var(--font-ui);color:{{ t.margeColor }}">{{ t.marge }}</span>
@@ -1325,7 +1341,7 @@
             <div style="display:grid;grid-template-columns:1.4fr 1fr .7fr 1.1fr 1.1fr .45fr .45fr 1.2fr;align-items:center;padding:13px 18px;border-bottom:.5px solid var(--color-border-tertiary)">
               <div style="min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ o.contact }} · {{ o.billLabel }}</div></div>
               <div style="min-width:0"><div style="font:400 12px var(--font-ui);color:var(--color-text)">{{ o.postal_code }} {{ o.city }}</div><div style="font:400 10.5px var(--font-mono,monospace);color:var(--color-text-muted);margin-top:2px">{{ o.vat }}</div></div>
-              <span style="justify-self:start;{{ o.statusStyle }}">{{ o.statusLabel }}</span>
+              <button type="button" onClick="{{ o.validate }}" title="{{ o.statusTitle }}" style="justify-self:start;border:none;cursor:{{ o.statusCursor }};{{ o.statusStyle }}">{{ o.statusLabel }}</button>
               <!-- Assortiment et prix (0113) : lus ici, édités par l'icône « assortiment » de la rangée d'actions. -->
               <div style="min-width:0"><div style="font:600 12px var(--font-ui);color:{{ o.assortColor }}">{{ o.assortLabel }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ o.assortDetail }}">{{ o.assortDetail }}</div></div>
               <div style="min-width:0"><div style="font:600 12px var(--font-ui);color:{{ o.prixColor }}">{{ o.prixLabel }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ o.prixDetail }}">{{ o.prixDetail }}</div></div>
@@ -5490,6 +5506,16 @@ class Component extends DCLogic {
   // Reflète en mémoire les tables serveur touchées par le toggle « livraison
   // au bureau » (office créé/validé + pairing site) → l'office apparaît
   // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
+  /* Validation d'un bureau en un clic (pastille « En attente ») : écriture
+     réelle ws_offices.status='validated' par validation-decide, puis relecture. */
+  officeValider(o){ const fr=window.__FR||{}; if(!o||o.id==null) return;
+    if(!fr.base){ this.printJob('⚠ API indisponible — validation non enregistrée'); return; }
+    this.printJob('Validation de « '+o.name+' »…');
+    fetch(fr.base+'/franchisee/validation-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({id:o.id,action:'accept'})})
+      .then(r=>r.json().then(j=>({ok:r.ok&&j&&j.ok,j}),()=>({ok:false,j:null})))
+      .then(({ok,j})=>{ if(ok){ this.printJob('✓ Bureau « '+o.name+' » validé — livraison ouverte'); setTimeout(()=>this.bcRefreshOffices(),120); }
+        else this.printJob('⚠ Validation refusée'+(j&&j.error?(' — '+j.error):'')); })
+      .catch(()=>this.printJob('⚠ Réseau indisponible — validation non enregistrée')); }
   bcRefreshOffices(){ const fr=window.__FR||{}; if(!fr.base){ this.setState(s=>({_rev:(s._rev||0)+1})); return; }
     const qs=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H={headers:FRH(),credentials:'omit'};
     // ATTENDRE d'abord que les écritures en vol soient commitées (flush) —
@@ -7805,8 +7831,14 @@ class Component extends DCLogic {
           toggle:()=>this.setState(st=>({rentaOpen:{...st.rentaOpen,[sk]:!(st.rentaOpen&&st.rentaOpen[sk]!==undefined?st.rentaOpen[sk]:false)}}))};
       });
       const tca=t.sites.reduce((a,s)=>a+s.offices.reduce((x,o)=>x+o.ca,0),0);
-      const tco=t.sites.reduce((a,s)=>a+s.offices.reduce((x,o)=>x+o.couts,0),0);
-      return {nom:t.nom,ca:this.eur(tca),couts:this.eur(tco),marge:this.eur(tca-tco),pct:pctTxt(tca,tco),margeColor:mColor(tca,tco),
+      // Coût de la tournée (personnel + km) servi par fr-rentabilite : entre dans
+      // les coûts du niveau tournée ; absent, il est dit pourquoi, jamais supposé.
+      const tt=t.tournee||null; const tcost=(tt&&tt.total!=null)?+tt.total:0;
+      const tco=t.sites.reduce((a,s)=>a+s.offices.reduce((x,o)=>x+o.couts,0),0)+tcost;
+      const tourneeTxt=!tt?'':(tt.total!=null
+        ?(tt.runs+' sortie(s) · tournée '+this.eur(tt.total)+' = '+tt.runs+' × ('+this.eur(tt.personnel)+' personnel '+(tt.min!=null?Math.round(tt.min)+' min':'')+' + '+this.eur(tt.kms)+' pour '+String(tt.km).replace('.',',')+' km)')
+        :('coût de tournée non calculé — '+(tt.manque||[]).join(' · ')));
+      return {nom:t.nom,tourneeTxt,ca:this.eur(tca),couts:this.eur(tco),marge:this.eur(tca-tco),pct:pctTxt(tca,tco),margeColor:mColor(tca,tco),
         open:tOpen,caret:tOpen?'▾':'▸',sites,
         toggle:()=>this.setState(st=>({rentaOpen:{...st.rentaOpen,[tk]:!(st.rentaOpen&&st.rentaOpen[tk]!==undefined?st.rentaOpen[tk]:(i===0))}}))};
     });
@@ -7820,7 +7852,7 @@ class Component extends DCLogic {
       tblCols='1.2fr .8fr .8fr .8fr';
       tblHead=[{label:'Tournée',align:''},{label:'CA',align:R},{label:'Coûts',align:R},{label:'Marge %',align:R}];
       tblRows=SRV('fr_rentabilite').map(t=>{ const tca=(t.sites||[]).reduce((a,s)=>a+(s.offices||[]).reduce((x,o)=>x+(+o.ca||0),0),0);
-        const tco=(t.sites||[]).reduce((a,s)=>a+(s.offices||[]).reduce((x,o)=>x+(+o.couts||0),0),0);
+        const tco=(t.sites||[]).reduce((a,s)=>a+(s.offices||[]).reduce((x,o)=>x+(+o.couts||0),0),0)+((t.tournee&&t.tournee.total!=null)?+t.tournee.total:0);
         const pc=tca>0?Math.round(100*(tca-tco)/tca):0;
         return {cells:[cell(t.nom||'\u2014',{font:rf}),cell(this.eur(tca),{align:R}),cell(this.eur(tco),{align:R}),cell(pc+' %',{font:'600 12px var(--font-ui)',color:pc>=0?'#2d7a3e':'var(--color-primary)',align:R})]}; });
     } else if(A==='chauffeur'){
@@ -7878,6 +7910,9 @@ class Component extends DCLogic {
       {key:'charg', label:'Taux horaire chargement',    unit:'€/h', step:'0.5'},
       {key:'struct',label:'Coût structure / tournée',   unit:'€',   step:'1'},
       {key:'carb',  label:'Coût carburant / litre',     unit:'€/L', step:'0.01'},
+      // Coût de tournée (rentabilité) : taux horaire du chauffeur × durée de la
+      // tournée (itinéraire Google + accès + dépôts) + km × prix au km.
+      {key:'driver_hour', label:'Taux horaire chauffeur (coût de tournée)', unit:'€/h', step:'0.5'},
     ];
     const coutSrv=SRV('fr_cout_params');
     const coutParams=(coutSrv.length?coutSrv:COUT_LIGNES).map(p=>({...p,
@@ -8088,6 +8123,11 @@ class Component extends DCLogic {
         ob_depts:depts.map(d=>d.dept||d.departement||d.name).filter(Boolean).join(', ')};
       return {...o, sitesCount:String(oSites.length), deptCount:String(depts.length),
         statusLabel:validated?'Validé':'En attente',
+        // Un clic sur « En attente » VALIDE le bureau (validation-decide) — même
+        // écriture que l'écran Validations, sans passer par la modale.
+        validate:validated?(()=>{}):(()=>this.officeValider(o)),
+        statusTitle:validated?'Bureau validé — livraison ouverte':'En attente — cliquer pour valider ce bureau d’un clic (ouvre la livraison)',
+        statusCursor:validated?'default':'pointer',
         statusStyle:pill2(validated?'#eaf5ec':'#fff4e5',validated?'#2d7a3e':'#b26a00'),
         billLabel:(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui')?'Facturation différée':'Paiement immédiat',
         // Assortiment (fusion de l'ancien écran « Assortiment par bureau ») : '—' tant que le serveur ne sert rien pour ce bureau.
@@ -10749,9 +10789,17 @@ class Component extends DCLogic {
       geoAArr:(function(self){ const F=self.geoAFiltered(); const G=window.__CPGEO; const tot=F.list.length;
         if(!G||!G.groups||!G.groups.length||!tot) return [];
         const cnt={}; F.list.forEach(c=>{ const k=String(c.cp).trim(); cnt[k]=(cnt[k]||0)+1; });
+        const openMap=self.state.geoArrOpen||{};
         return G.groups.map(gr=>{ let n=0; gr.cps.forEach(cp=>{ n+=cnt[cp]||0; });
             const pct=Math.round(n*1000/tot)/10;
-            return {name:gr.name,n,pct,pctTxt:(pct+'').replace('.',',')+' %',
+            const open=!!openMap[gr.name];
+            const cpsSet=new Set((gr.cps||[]).map(String));
+            const clients=open?F.list.filter(c=>cpsSet.has(String(c.cp).trim())).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).map(c=>({
+              name:c.name||'(sans nom)', type:c.type==='office'?'Office':'Particulier',
+              typeStyle:'display:inline-flex;padding:2px 8px;border-radius:999px;font:600 10px var(--font-ui);'+(c.type==='office'?'background:#eef3fb;color:#2a5a9e':'background:var(--color-background-secondary);color:var(--color-text-muted)'),
+              lieu:[c.cp,c.city].filter(Boolean).join(' '), n:(c.n!=null?String(c.n):'—'), ca:(c.ca!=null?self.eur(c.ca):'—')})):[];
+            return {name:gr.name,n,pct,pctTxt:(pct+'').replace('.',',')+' %',open,caret:open?'▾':'▸',clients,clientsEmpty:open&&!clients.length,
+              toggle:()=>self.setState(s=>({geoArrOpen:{...(s.geoArrOpen||{}),[gr.name]:!(s.geoArrOpen||{})[gr.name]}})),
               barStyle:'height:100%;width:'+Math.max(2,Math.round(pct))+'%;border-radius:999px;background:var(--color-primary)'};})
           .filter(r=>r.n>0).sort((a,b)=>b.n-a.n); })(this),
       geoAArrEmpty:(function(self){ const F=self.geoAFiltered(); const G=window.__CPGEO;
