@@ -3081,6 +3081,28 @@
         <div class="t-admin-label" style="margin:16px 0 6px">Validation de la tournée par le chauffeur</div>
         <span style="{{ tabStatusPill }}">{{ tabStatusTxt }}</span>
         <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:10px">Chaque envoi remet la validation à zéro : le chauffeur reçoit la tournée sur sa tablette et la valide — le statut passe alors en « ✓ Validée ».</div>
+
+        <!-- APPLICATION CHAUFFEUR : l'adresse se CALCULE sur l'hôte servi, elle
+             ne se retient pas. Le QR évite de la taper sur un téléphone. -->
+        <div class="t-admin-label" style="margin:16px 0 6px">Application chauffeur (téléphone)</div>
+        <div style="background:var(--color-background-secondary);border-radius:10px;padding:12px 14px">
+          <div style="font:600 12px var(--font-ui);color:var(--color-text);word-break:break-all">{{ pwaUrl }}</div>
+          <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:6px">Le chauffeur ouvre cette adresse et l'ajoute à son écran d'accueil. {{ pwaScopeTxt }}</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button onClick="{{ pwaCopy }}" class="btn-secondary" style="flex:1;font-size:12px">Copier l'adresse</button>
+            <button onClick="{{ pwaQrToggle }}" class="btn-secondary" style="flex:1;font-size:12px">{{ pwaQrLabel }}</button>
+          </div>
+          <sc-if value="{{ pwaQrOn }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+            <img src="{{ pwaQrSrc }}" alt="QR — application chauffeur" style="width:132px;height:132px;border-radius:8px;background:#fff;flex:none"/>
+            <div style="font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted)">{{ pwaQrNote }}</div>
+          </div>
+          </sc-if>
+          <sc-if value="{{ pwaTokOn }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fbe9eb;border:.5px solid #f0c4ca;border-radius:9px;padding:10px 12px;font:500 11px/1.5 var(--font-ui);color:var(--color-primary);margin-top:10px">⚠ Ce QR porte le <b>jeton admin</b> — mode test, en attendant les comptes chauffeur. Il ouvre TOUTES les boutiques : ne l'affichez pas devant n'importe qui, et retirez-le du téléphone (bouton « Oublier le jeton » dans l'app) dès qu'un PIN existe.</div>
+          </sc-if>
+          <button onClick="{{ pwaTokToggle }}" style="background:none;border:none;padding:8px 0 0;font:600 11px var(--font-ui);color:var(--color-primary);cursor:pointer">{{ pwaTokLabel }}</button>
+        </div>
       </div>
       <div style="padding:0 26px 20px;display:flex;gap:10px">
         <button onClick="{{ tabClose }}" class="btn-secondary" style="flex:1;font-size:13px">Fermer</button>
@@ -7677,6 +7699,45 @@ class Component extends DCLogic {
       if(v==='__new') this.setState({tabDriverNew:true,tabDriver:''});
       else this.setState({tabDriver:v,tabDriverNew:false}); };
     const tabClose=()=>this.setState({tabModal:null,tabDriver:null,tabDriverNew:null});
+
+    /* ── APPLICATION CHAUFFEUR (/webshop/driver) ────────────────────────────
+       L'adresse est CALCULÉE depuis celle de la console : même origine, dossier
+       voisin. Rien à retenir ni à saisir, et elle reste juste sur n'importe quel
+       hôte (production, préproduction, poste local).
+
+       Le QR vient de l'API (/franchisee/tour-qr, encodeur autonome du serveur)
+       et se télécharge AVEC le jeton — un <img src> n'emporte pas d'en-tête,
+       d'où le fetch puis l'incrustation en data:.
+
+       Le jeton n'est JAMAIS écrit dans le texte affiché : il n'entre que dans
+       le QR, et seulement si on le demande explicitement. */
+    const frPwa=window.__FR||{};
+    const pwaBase=(()=>{ const p=location.pathname;
+      return location.origin+(/backoffice_franchisee/.test(p) ? p.replace(/backoffice_franchisee\/.*$/,'driver/') : p.replace(/[^/]*$/,'')+'driver/'); })();
+    const pwaShopQs=frPwa.shop?('?shop='+encodeURIComponent(frPwa.shop)):'';
+    const pwaUrl=pwaBase+pwaShopQs;
+    const pwaTokOn=!!S.pwaTok&&!!frPwa.token;
+    const pwaQrData=pwaUrl+(pwaTokOn?((pwaShopQs?'&':'?')+'token='+encodeURIComponent(frPwa.token)):'');
+    const pwaScopeTxt=frPwa.shop?('Portée : boutique '+frPwa.shop+'.')
+      :'⚠ Aucune boutique dans l\'adresse de la console : rouvrez-la avec ?shop=<id>, sinon l\'app n\'a pas de portée.';
+    const pwaQrOn=!!S.pwaQr;
+    const pwaQrNote=(pwaTokOn?'QR avec jeton : le téléphone entre directement, sans PIN.':'QR sans jeton : le chauffeur se connecte avec son PIN.')
+      +' Le jeton n\'apparaît jamais en clair à l\'écran.';
+    const pwaQrLabel=pwaQrOn?'Masquer le QR':'Afficher le QR';
+    const pwaTokLabel=pwaTokOn?'Retirer le jeton du QR':'Inclure le jeton admin (mode test)';
+    const pwaFetchQr=(data)=>{ const b=frPwa.base; if(!b){ this.printJob('⚠ API indisponible — QR impossible'); return; }
+      fetch(b+'/franchisee/tour-qr?d='+encodeURIComponent(data),{headers:FRH(),credentials:'omit'})
+        .then(r=>r.ok?r.blob():Promise.reject(new Error('HTTP '+r.status)))
+        .then(bl=>new Promise(res=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.readAsDataURL(bl); }))
+        .then(src=>this.setState({pwaQrSrc:src}))
+        .catch(e=>{ this.setState({pwaQr:false}); this.printJob('⚠ QR non généré : '+(e&&e.message||e)); }); };
+    const pwaQrToggle=()=>{ const on=!S.pwaQr; this.setState({pwaQr:on,pwaQrSrc:null}); if(on) pwaFetchQr(pwaQrData); };
+    const pwaTokToggle=()=>{ const on=!S.pwaTok;
+      if(on&&!frPwa.token){ this.printJob('⚠ Aucun jeton admin dans cette session'); return; }
+      this.setState({pwaTok:on,pwaQrSrc:null});
+      if(S.pwaQr) pwaFetchQr(pwaUrl+(on?((pwaShopQs?'&':'?')+'token='+encodeURIComponent(frPwa.token)):'')); };
+    const pwaCopy=()=>{ try{ navigator.clipboard.writeText(pwaUrl).then(()=>this.printJob('✓ Adresse copiée : '+pwaUrl),
+      ()=>this.printJob('Adresse : '+pwaUrl)); }catch(e){ this.printJob('Adresse : '+pwaUrl); } };
     const tabSend=()=>{ const fr=window.__FR||{}; if(!fr.base){ this.printJob('⚠ API indisponible — envoi impossible'); return; }
       const qs2=fr.shop?('?shop='+encodeURIComponent(fr.shop)):''; const H2=FRH({'Content-Type':'application/json'});
       fetch(fr.base+'/franchisee/tour-dispatch'+qs2,{method:'POST',headers:H2,credentials:'omit',body:JSON.stringify({tour:tabTour,driver:String(tabDriver).trim()})})
@@ -10713,6 +10774,7 @@ class Component extends DCLogic {
       ordListTitle:tdbView==='collect'?'Commandes Collect':'Commandes',
       ordRangeChips,prepDayBadges,prepDayOrders,prepDayEmpty,prepProdLines,prepProdEmpty,
       tabModalOn,tabTour,tabDriver,tabDriverSet,tabClose,tabSend,tabStatusTxt,tabStatusPill,tabCanSend,tabInfo,
+      pwaUrl,pwaScopeTxt,pwaQrOn,pwaQrSrc:(S.pwaQrSrc||''),pwaQrLabel,pwaQrNote,pwaTokOn,pwaTokLabel,pwaQrToggle,pwaTokToggle,pwaCopy,
       tabHasList,tabNewMode,tabDriverOpts,tabDriverVal,tabDriverPick,
       isStockJour:screen==='stockJour',stockRows,stockEmpty,stockBadges,
       // (i) de la colonne « Min. » : la regle de calcul du seuil doit etre
