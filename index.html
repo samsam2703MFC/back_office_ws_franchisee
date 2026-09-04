@@ -1213,9 +1213,8 @@
       <sc-if value="{{ isOffices }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
-          <div style="font:400 12px/1.5 var(--font-ui);color:var(--color-text-muted)">Bureaux clients (ws_offices) + config livraison. Un office regroupe un ou plusieurs delivery sites ; seuls les offices <strong>validés</strong> sont livrables.<br><strong>Onboarder un bureau</strong> fait le tour complet — société, contact, site &amp; engagement de livraison, départements, conditions webshop, vouchers — puis émet le lien d'invitation que le bureau transfère à son personnel. <strong>Office seul</strong> n'écrit que la ligne ws_offices.</div>
+          <div style="font:400 12px/1.5 var(--font-ui);color:var(--color-text-muted)">Bureaux clients (ws_offices) + config livraison. Un office regroupe un ou plusieurs delivery sites ; seuls les offices <strong>validés</strong> sont livrables.<br><strong>Onboarder un bureau</strong> fait le tour complet — société, contact, site &amp; engagement de livraison, départements, conditions webshop, vouchers — puis émet le lien d'invitation que le bureau transfère à son personnel.</div>
           <div style="display:flex;gap:8px;flex:none">
-            <button onClick="{{ addOffice }}" class="btn-secondary" style="padding:9px 14px;font-size:12.5px;white-space:nowrap">+ Office seul</button>
             <button onClick="{{ onboardOffice }}" class="btn-primary" style="padding:9px 16px;font-size:12.5px;white-space:nowrap">+ Onboarder un bureau</button>
           </div>
         </div>
