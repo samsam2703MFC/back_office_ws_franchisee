@@ -616,7 +616,7 @@
             <div onClick="{{ r.dropHere }}" style="{{ r.tileStyle }}">
               <div style="display:flex;align-items:center;gap:9px;min-width:0">
                 <span style="{{ r.colDot }}"></span>
-                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="départ {{ r.start }} · {{ r.duree }}">départ {{ r.start }} · {{ r.duree }}</div></div>
+                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.duree }} · départ {{ r.start }}">{{ r.duree }}</div></div>
                 <div style="flex:none;display:flex;gap:5px">
                   <button onClick="{{ r.toggleOn }}" title="{{ r.tOnTitle }}" style="{{ r.tOnStyle }}">{{ r.tOnLabel }}</button>
                   <button onClick="{{ r.itin }}" title="Voir l'itinéraire sur la carte (ordre des arrêts)" style="{{ r.itinStyle }}">🗺 Itinéraire</button>
@@ -8194,11 +8194,11 @@ class Component extends DCLogic {
     // retour). Sans heure calculable, la carte dit ce qui manque.
     const dureeDe={}; try{ const cb=this.chronoBuild(this.chronoTours(),this.state.chrono||{legs:{},busy:0,err:''},null);
       (cb.chronoLanes||[]).forEach(l=>{ dureeDe[tNorm(l.name)]=l; }); }catch(e){}
-    const fmtDuree=(m)=>{ m=Math.round(m); const h=Math.floor(m/60), mn=m%60; return h?(h+' h '+String(mn).padStart(2,'0')):(mn+' min'); };
+    const fmtDuree=(m)=>{ m=Math.round(m); const h=Math.floor(m/60), mn=m%60; return String(h).padStart(2,'0')+'h'+String(mn).padStart(2,'0'); };
     const tourTiles=rMeta.filter(t=>t.name).map((t,ti)=>{
       const ln=dureeDe[tNorm(t.name)]||null;
-      const duree=(ln&&ln.start!=null&&ln.fin!=null)?('durée estimée '+(ln.google?'':'≈ ')+fmtDuree(ln.fin-ln.start)+' · retour '+this.hhmm(ln.fin)+(ln.km?(' · '+ln.km.toFixed(1).replace('.',',')+' km'):''))
-        :(ln&&ln.warn?('durée non calculable : '+ln.warn):'durée non calculable');
+      const duree=(ln&&ln.start!=null&&ln.fin!=null)?('Durée estimée '+(ln.google?'':'≈ ')+fmtDuree(ln.fin-ln.start)+(ln.km?(' - '+Math.round(ln.km)+' km'):''))
+        :(ln&&ln.warn?('Durée non calculable : '+ln.warn):'Durée non calculable');
       const sites=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(t.name))
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
       const nbOff=sites.reduce((a,b)=>a+b.offices.length,0);
