@@ -4568,7 +4568,13 @@ class Component extends DCLogic {
     // Bloquant : sites sans bureau, tournées sans départ, bureaux en attente / demandes reçues.
     sites.filter(r=>r.office_client_id==null).forEach(r=>{ const t=tourByName[norm(r.tour)]; B.push({what:r.name||r.adr||'Site',why:'Site sans bureau (société) — le client peut le choisir sans effet',ctx:(t?('Tournée '+t.name+(r.stop!=null?(' · arrêt '+r.stop):'')+' · '):'Sans tournée · ')+(r.adr&&r.adr!=='—'?r.adr:'adresse absente'),lien:t?('Rattacher un bureau → assistant '+t.name):'Rattacher un bureau → fiche site',go:t?goWizard(t):goSite(r)}); });
     tours.filter(t=>t.start==null||t.start==='').forEach(t=>B.push({what:t.name,why:'Tournée sans heure de départ — aucune heure annoncée, aucun créneau proposé',ctx:(sites.filter(r=>norm(r.tour)===norm(t.name)).length)+' site(s)',lien:'Fixer le départ → assistant tournée',go:goWizard(t)}));
-    const pend=offices.filter(o=>o.status!=='validated'); if(pend.length) B.push({what:pend.map(o=>o.name).join(' · '),why:'Bureau(x) en attente de validation — livraison fermée tant que non validé(s)',ctx:pend.length+' bureau(x) · un clic sur la pastille « En attente » valide',lien:'Valider d’un clic → Offices',go:goScreen('offices')});
+    // Un bureau incomplet, c'est un bureau dont il MANQUE des champs — la
+    // livraison reste fermée tant qu'ils ne sont pas remplis. Plus de
+    // « validation » à cliquer : c'est le remplissage qui ouvre.
+    const goOfficeFiche=(o)=>()=>{ this.dcClose(); this.goTo('offices'); setTimeout(()=>{ const rows=T('ws_offices'); const i=rows.findIndex(x=>String(x.id)===String(o.id)); if(i>=0) this.editForm('office',rows[i],i)(); },80); };
+    offices.forEach(o=>{ const mq=this.officeManques(o).filter(x=>x!=='temps de dépôt'&&x.indexOf('Google')<0);
+      if(!mq.length) return;
+      B.push({what:o.name,why:'Bureau incomplet — livraison fermée tant que les champs indispensables manquent',ctx:'Manque : '+mq.join(', '),lien:'Compléter → fiche bureau',go:goOfficeFiche(o)}); });
     const join=T('fr_join_requests').filter(r=>r&&!(this.state.jrHandled||{})[r.id]); if(join.length) B.push({what:join.length+' demande(s) de rattachement bureau',why:'Des collaborateurs demandent à rejoindre un bureau — sans décision, ils ne commandent pas',ctx:join.slice(0,3).map(r=>r.email||r.nom||r.name||'').filter(Boolean).join(' · '),lien:'Décider → Demandes de rattachement',go:goScreen('demandesBureau')});
     // Heures d'arrivée : adresses non vérifiées, temps d'accès, temps de dépôt, fenêtres.
     sites.filter(r=>r.tour&&r.tour!=='—'&&(r.lat==null||r.lng==null)).forEach(r=>H.push({what:r.name||'Site',why:'Adresse non vérifiée par Google — hors itinéraire, trajet estimé à vol d’oiseau',ctx:(r.adr&&r.adr!=='—'?r.adr:'adresse absente'),lien:'Choisir l’adresse Google → fiche site',go:goSite(r)}));
@@ -4577,13 +4583,13 @@ class Component extends DCLogic {
     // position, l'itinéraire ne peut pas passer par lui — il est livré « au
     // site », quelle que soit son adresse réelle.
     const goOffice=(o)=>()=>{ this.dcClose(); this.goTo('offices'); setTimeout(()=>{ const rows=T('ws_offices'); const i=rows.findIndex(x=>String(x.id)===String(o.id)); if(i>=0) this.editForm('office',rows[i],i)(); },80); };
-    offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&(o.lat==null||o.lng==null)).forEach(o=>H.push({what:o.name,why:'Adresse du bureau non vérifiée par Google — l’itinéraire ne passe pas par lui, il est compté à l’adresse de son site',ctx:(o.address||'adresse absente')+(o.postal_code?(' · '+o.postal_code):''),lien:'Choisir l’adresse Google → fiche bureau',go:goOffice(o)}));
+    offices.filter(o=>o.tour&&o.tour!=='—'&&(o.lat==null||o.lng==null)).forEach(o=>H.push({what:o.name,why:'Adresse du bureau non vérifiée par Google — l’itinéraire ne passe pas par lui, il est compté à l’adresse de son site',ctx:(o.address||'adresse absente')+(o.postal_code?(' · '+o.postal_code):''),lien:'Choisir l’adresse Google → fiche bureau',go:goOffice(o)}));
     // Clients B2B : même règle. La fiche s'ouvre par la raison sociale.
     const goClient=(c)=>()=>{ this.dcClose(); const nm=c.company_name||c.name||''; const cls=T('fr_clients'); const i2=cls.findIndex(x=>x&&x.raison===nm);
       this.goTo('clients'); if(i2>=0) setTimeout(()=>this.editForm('clientEdit',{...cls[i2]},i2)(),80); };
     T('b2b_clients').filter(c=>c&&(c.street||c.zip)&&(c.lat==null||c.lng==null)).forEach(c=>H.push({what:c.company_name||c.name||'Client',why:'Adresse du client non vérifiée par Google — aucune position en base',
       ctx:[c.street,[c.zip,c.city||c.locality].filter(Boolean).join(' ')].filter(Boolean).join(', ')||'adresse absente',lien:'Choisir l’adresse Google → fiche client',go:goClient(c)}));
-    offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—').forEach(o=>{ const d=dset[String(o.id)]; if(!d||d.drop==null||d.drop===''){ H.push({what:o.name,why:'Temps de dépôt du bureau non renseigné — l’heure de départ de l’arrêt est inconnue',ctx:'Tournée '+o.tour,lien:'Saisir → paramètres du bureau',go:goParam(o)}); } });
+    offices.filter(o=>o.tour&&o.tour!=='—').forEach(o=>{ const d=dset[String(o.id)]; if(!d||d.drop==null||d.drop===''){ H.push({what:o.name,why:'Temps de dépôt du bureau non renseigné — l’heure de départ de l’arrêt est inconnue',ctx:'Tournée '+o.tour,lien:'Saisir → paramètres du bureau',go:goParam(o)}); } });
     offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&!fen(o.name)).forEach(o=>H.push({what:o.name,why:'Pas de fenêtre d’engagement — impossible de dire si la livraison est à l’heure',ctx:'Bureau validé · tournée '+o.tour,lien:'Voir la fiche → Clients',go:goScreen('clients')}));
     // Coûts et validation : taux horaire, prix au km, doublons de sites.
     if(gp('cost_driver_hour')==null) C.push({what:'Taux horaire chauffeur',why:'Non paramétré — aucun coût de tournée dans la rentabilité',ctx:'Paramètres de coûts · clé cost_driver_hour',lien:'Paramétrer → Paramètres de coûts',go:goScreen('params')});
@@ -5158,7 +5164,7 @@ class Component extends DCLogic {
       office:{ title:'Office (bureau)', table:'ws_offices', tbl:'ws_offices', save:'Enregistrer l\'office',
         fields:[
           {k:'name',label:'Nom de l\'office (lieu de livraison)',type:'text',ph:'ex. KBC — Cafétéria HQ',info:'Un office est un LIEU DE LIVRAISON d\'un client. Un site (building) peut regrouper plusieurs offices ; un office contient plusieurs départements, auxquels se rattachent les clients (personnes) qui commandent.',section:'Identité'},
-          {k:'status',label:'Statut',type:'toggle',options:[{value:'pending',label:'En attente'},{value:'validated',label:'Validé'}],def:'validated',info:'À la création : Validé. Toute MODIFICATION repasse l\'office « En attente » jusqu\'à re-validation.',section:'Identité'},
+          {k:'statut_auto',label:'Statut',readonly:true,ph:'se calcule sur les champs remplis',info:'Le statut ne se décide pas : il CONSTATE que les champs indispensables sont remplis — nom, adresse validée par la liste Google (position), code postal, ville, tournée et temps de dépôt. Complet, la livraison s\'ouvre d\'elle-même.',section:'Identité'},
           {k:'vat',label:'N° TVA',type:'text',ph:'BE0123456789',info:'TVA du bureau — sert au contrôle de conflit (un même CP déjà desservi sous une autre TVA).',section:'Identité'},
           {k:'logo_url',label:'Logo de l\'entreprise (bureau)',type:'image',info:'Figure sur la couverture du dossier imprimé de ce bureau, à côté du logo L\'Atelier. PNG, JPG ou WebP ; réduit à 600 px avant envoi. Sans logo, la couverture n\'en montre pas.',section:'Identité'},
           {k:'site',label:'Site (building) du bureau',type:'select',options:[{value:'',label:'— Aucun building (site à créer) —'},...buildings.map(b=>({value:b,label:b}))],info:'Sens du paramétrage : c\'est le BUREAU qui choisit son building (site). Un site peut regrouper plusieurs bureaux — c\'est l\'arrêt physique de la tournée.',section:'Identité'},
@@ -5347,7 +5353,9 @@ class Component extends DCLogic {
   openFormWith(key,extra){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(extra&&extra[f.k]!==undefined)?extra[f.k]:(f.def!==undefined?f.def:''); }); if(key==='office') this.officeAutofill(v); if(key==='site') this.zfGeoEnsure(); this.setState({formKey:key,formVals:v,formRow:(extra||null),formEdit:false,formIndex:null,viesOk:null,viesMsg:'',osq:'',osAdr:'',osNote:'',oeOpen:false,oeMail:''}); }; }
   editForm(key,vals,idx){ return ()=>{ const cfg=this.formDefs()[key]; const v={}; cfg.fields.forEach(f=>{ v[f.k]=(vals&&vals[f.k]!==undefined&&vals[f.k]!=='')?vals[f.k]:(f.def!==undefined?f.def:''); });
     // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
-    if(key==='office'){ v.status='pending'; this.officeAutofill(v); }
+    // Le statut ne se remet plus « en attente » à chaque modification : il se
+    // recalcule sur les champs remplis.
+    if(key==='office'){ this.officeAutofill(v); }
     // Site : l'adresse stockée est redécoupée dans les champs structurés.
     if(key==='site'){ this.zfGeoEnsure(); v.bureau=(vals&&vals.office&&vals.office!=='—')?vals.office:''; const adr=String((vals&&(vals.adr!=='—'?vals.adr:''))||'');
       const mm=adr.match(/^(.*?),?\s*(\d{4})\s*(.*)$/);
@@ -6198,6 +6206,35 @@ class Component extends DCLogic {
   // IMMÉDIATEMENT dans la liste des clients office, sans recharger la page.
   /* Validation d'un bureau en un clic (pastille « En attente ») : écriture
      réelle ws_offices.status='validated' par validation-decide, puis relecture. */
+  /* CE QUI MANQUE à un bureau pour être livrable. Le statut n'est plus une
+     décision qu'on prend, c'est un CONSTAT : tant qu'un champ indispensable
+     manque — l'adresse validée par Google en tête — la livraison ne peut pas
+     être annoncée. Rend la liste des libellés manquants, vide = complet. */
+  officeManques(o){
+    if(!o) return [];
+    const SRV=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
+    const vide=v=>{ const x=String(v==null?'':v).trim(); return x===''||x==='—'; };
+    const m=[];
+    if(vide(o.name)) m.push('nom');
+    if(vide(o.address)) m.push('adresse');
+    if(vide(o.postal_code)) m.push('code postal');
+    if(vide(o.city)) m.push('ville');
+    if(o.lat==null||o.lng==null) m.push('adresse non validée par Google');
+    if(vide(o.tour)) m.push('tournée');
+    const bp=SRV('ws_office_delivery_settings').find(b=>b&&b.officeId!=null&&String(b.officeId)===String(o.id));
+    if(!bp||bp.drop==null||bp.drop==='') m.push('temps de dépôt');
+    return m; }
+  /* Le statut SUIT le constat : un bureau devenu complet ouvre sa livraison
+     de lui-même, sans clic. Une seule écriture par bureau et par session. */
+  officeStatutSync(list){
+    const fr=window.__FR||{}; if(!fr.base) return;
+    const vus=this._offSync||(this._offSync={});
+    (list||[]).forEach(o=>{ if(!o||o.id==null||o.status==='validated') return;
+      if(this.officeManques(o).length||vus[o.id]) return;
+      vus[o.id]=1;
+      fetch(fr.base+'/franchisee/validation-decide'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({id:o.id,action:'accept'})})
+        .then(r=>r.json().catch(()=>null)).then(j=>{ if(j&&j.ok){ this.printJob('✓ « '+o.name+' » complet — livraison ouverte'); setTimeout(()=>this.bcRefreshOffices(),120); } })
+        .catch(()=>{}); }); }
   officeValider(o){ const fr=window.__FR||{}; if(!o||o.id==null) return;
     if(!fr.base){ this.printJob('⚠ API indisponible — validation non enregistrée'); return; }
     this.printJob('Validation de « '+o.name+' »…');
@@ -8915,6 +8952,7 @@ class Component extends DCLogic {
       const oSites=SRV('ws_office_delivery_sites').filter(s=>(s.office_client_id===o.id)||(s.office===o.name)||(s.bureau===o.name));
       const cid=(oSites[0]||{}).client_id;
       const depts=deptRowsAll.filter(d=>(cid!=null&&((d.id_client===cid)||(d.client_id===cid)))||d.office===o.name||d.company===o.name);
+      const manques=this.officeManques(o); const complet=!manques.length;
       const validated=o.status==='validated';
       /* CHAMPS D'ONBOARDING RÉSOLUS pour la fiche bureau — lus dans les tables
          où l'assistant les a écrits (fr_clients par raison sociale, son point
@@ -8929,13 +8967,14 @@ class Component extends DCLogic {
         ob_validation:obPt&&obPt.validation?obPt.validation:'',
         ob_depts:depts.map(d=>d.dept||d.departement||d.name).filter(Boolean).join(', ')};
       return {...o, sitesCount:String(oSites.length), deptCount:String(depts.length),
-        statusLabel:validated?'Validé':'En attente',
-        // Un clic sur « En attente » VALIDE le bureau (validation-decide) — même
-        // écriture que l'écran Validations, sans passer par la modale.
-        validate:validated?(()=>{}):(()=>this.officeValider(o)),
-        statusTitle:validated?'Bureau validé — livraison ouverte':'En attente — cliquer pour valider ce bureau d’un clic (ouvre la livraison)',
-        statusCursor:validated?'default':'pointer',
-        statusStyle:pill2(validated?'#eaf5ec':'#fff4e5',validated?'#2d7a3e':'#b26a00'),
+        statut_auto:complet?'Complet — livraison ouverte':('Incomplet — '+manques.join(', ')),
+        // Le statut est un CONSTAT : complet, ou la liste de ce qui manque.
+        // Un clic ouvre la fiche là où ça se remplit, il ne « valide » plus rien.
+        statusLabel:complet?'Complet':('Incomplet · '+manques.length),
+        validate:()=>this.editForm('office',{...o,...obx},i)(),
+        statusTitle:complet?('Tous les champs indispensables sont remplis'+(validated?' — livraison ouverte':' — ouverture de la livraison en cours')):('Manque : '+manques.join(', ')+' — cliquer pour compléter la fiche'),
+        statusCursor:'pointer',
+        statusStyle:pill2(complet?'#eaf5ec':'#fff4e5',complet?'#2d7a3e':'#b26a00'),
         billLabel:(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui')?'Facturation différée':'Paiement immédiat',
         // Assortiment (fusion de l'ancien écran « Assortiment par bureau ») : '—' tant que le serveur ne sert rien pour ce bureau.
         assortLabel:bp?(bp.assortmentMode==='custom'?'Réduit':'Complet'):'—',
@@ -8966,6 +9005,7 @@ class Component extends DCLogic {
     // Étape 3 du sens de paramétrage : les offices VALIDÉS s'assignent aux
     // sites — cartes visuelles : chips bureaux avec « × » pour retirer,
     // sélecteur « + Ajouter un bureau » par site, dépôt au clic après saisie.
+    this.officeStatutSync(SRV('ws_offices'));
     const offValid=SRV('ws_offices').filter(o=>o.status==='validated');
     const offKey=(o)=>String(o.id!=null?o.id:o.name);
     /* ÉTAPE 3 ne montre que les sites RATTACHÉS À UNE TOURNÉE. Un site sans
