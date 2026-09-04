@@ -4100,6 +4100,7 @@ class Component extends DCLogic {
         fields:[
           {k:'name',label:'Nom du site / bâtiment',type:'text',ph:'ex. Tour Bastion, Zoning Fleming',info:'Un site est un BUILDING (ou groupement de bureaux) : l\'arrêt physique de la tournée. Les bureaux (offices) s\'y rattachent depuis leur propre formulaire.',section:'Rattachement'},
           {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Rattachement'},
+          {k:'bureau',label:'Société / bureau desservi',type:'select',options:[{value:'',label:'— Aucune (site seul, non livrable) —'},...bureaux.map(b=>({value:b,label:b}))],info:'Le bureau (personne morale) livré à ce site. Un site sans société n\'est pas livrable : le client peut le choisir sans effet. Le même site peut être partagé par plusieurs sociétés : une ligne par société.',section:'Site'},
           // Adresse STRUCTURÉE (rue+n° / CP / ville) : recomposée en `adr` à
           // l'enregistrement — garantit un CP exploitable par la carte
           // (géolocalisation via le référentiel CP→GPS, pas d'API externe).
@@ -4319,7 +4320,7 @@ class Component extends DCLogic {
     // Règle métier : MODIFIER un office le repasse « En attente » jusqu'à re-validation.
     if(key==='office'){ v.status='pending'; this.officeAutofill(v); }
     // Site : l'adresse stockée est redécoupée dans les champs structurés.
-    if(key==='site'){ this.zfGeoEnsure(); const adr=String((vals&&(vals.adr!=='—'?vals.adr:''))||'');
+    if(key==='site'){ this.zfGeoEnsure(); v.bureau=(vals&&vals.office&&vals.office!=='—')?vals.office:''; const adr=String((vals&&(vals.adr!=='—'?vals.adr:''))||'');
       const mm=adr.match(/^(.*?),?\s*(\d{4})\s*(.*)$/);
       if(mm){ v.adr_rue=mm[1].trim(); v.adr_cp=mm[2]; v.adr_ville=(mm[3]||'').trim(); }
       else { v.adr_rue=adr; v.adr_cp=''; v.adr_ville=''; } }
@@ -7056,7 +7057,7 @@ class Component extends DCLogic {
     const rfCanSubmit=!!(rForm.name.trim()&&rForm.short.trim()&&String(rForm.start||'').trim());
     const RF_RESET={name:'',short:'',start:'06:00',max:10,forfait:45,driver:'',vehicule:'',postcodes:[],ret:true,days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}};
     const rfSubmit=()=>{ if(!rfCanSubmit) return; const p=String(rForm.start).split(':'); const startMin=(+p[0])*60+(+(p[1]||0)); const editing=S.rfEditId; const newId='rn'+Date.now();
-      const base={name:rForm.name,short:rForm.short||rForm.name.slice(0,8),driver:rForm.driver||'— non assigné',start:startMin,max:(String(rForm.max||'').trim()===''?null:parseInt(rForm.max,10)),
+      const base={name:String(rForm.name||'').trim(),short:String(rForm.short||rForm.name.slice(0,8)).trim(),driver:rForm.driver||'— non assigné',start:startMin,max:(String(rForm.max||'').trim()===''?null:parseInt(rForm.max,10)),
         forfait:(String(rForm.forfait||'').trim()===''?null:parseFloat(rForm.forfait)),ret:rForm.ret,vehicule:rForm.vehicule||'',days:rForm.days,postcodes:(rForm.postcodes||[]).slice(),cp:(rForm.postcodes||[]).join(' · ')};
       if(window.BOServer){ const rows=window.BOServer.table('ws_tours'); const i=editing?rows.findIndex(t=>t.id===editing):-1; if(i>=0){ rows[i]={...rows[i],...base}; } else { rows.push({id:newId,amplitude:null,decharge:null,trajet:null,used:0,...base}); } window.BOServer.save('ws_tours',rows); }
       if(editing){ this.setState(s=>({rfEditId:null,rfOpen:false,_rev:(s._rev||0)+1,rf:{...RF_RESET}}),()=>this.drawRoute()); }
