@@ -8495,7 +8495,7 @@ class Component extends DCLogic {
     const twStart=/^\d{1,2}:\d{2}$/.test(String(T.start||''))?this.toMin(T.start):null;
     const twOffById={}; (SRV('ws_offices')||[]).forEach(o=>{ twOffById[String(o.id)]=o; });
     const twDset={}; (SRV('ws_office_delivery_settings')||[]).forEach(b=>{ const k=String(b.bureau||'').trim(); if(k) twDset[k]=b; });
-    const twDropOf=(officeId)=>{ const o=twOffById[String(officeId||'')]; if(!o) return null; const c=twDset[String(o.name||'').trim()]; const v=(c&&c.drop!=null&&c.drop!=='')?parseFloat(c.drop):NaN; return isNaN(v)?null:v; };
+    const twDropOf=(officeId)=>{ const o=twOffById[String(officeId||'')]; if(!o) return this.DROP_STD; const c=twDset[String(o.name||'').trim()]; const v=(c&&c.drop!=null&&c.drop!=='')?parseFloat(c.drop):NaN; return (isNaN(v)||v<=0)?this.DROP_STD:v; };
     const twDep=this.depot(); let twCur=twStart; let twPrev=(twDep&&twDep.lat!=null)?{lat:twDep.lat,lng:twDep.lng}:null;
     const twLegs=(T.route&&Array.isArray(T.route.legs))?T.route.legs:null;
     const twNumStyle='width:22px;height:22px;border-radius:50%;background:var(--color-primary);color:#fff;font:700 11px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;flex:none';
@@ -11582,7 +11582,7 @@ class Component extends DCLogic {
              save:this.alSave(cleO,{objet:'office',officeId:o&&o.id,tourId:edO.tourId,days:joursSel,cutoff:edO.cutoff}),
              saveActif:this.alEditDirty(cleO)&&!!o,
              ouvrirLbl:'Réglages avancés (cut-off J-1 · temps de dépôt)…',
-             ouvrir:()=>{ if(o) this.openFormWith('bureauParam',{bureau:o.nom,tour:o.tourNom})(); }},
+             ouvrir:()=>{ if(o) this.openFormWith('bureauParam',{bureau:o.nom,tour:o.tourNom,officeId:(o.id!=null?o.id:null)})(); }},
           ];
         }
         const alSections=sections.map(sec=>({
