@@ -506,6 +506,19 @@ jobs:
           esac
           if printf '%s' "$TRJ" | grep -q '"pricePerKm"'; then echo "  OK       ws-tours sert pricePerKm / routeKm (migration 0120 passée)"
           else echo "  ✗ ws-tours ne sert pas pricePerKm — migration 0120 non passée ou ancien code"; fi
+          # 2c. Trafic en direct et position des chauffeurs (0122). Corps vide :
+          #     400 = la route existe et refuse l'appel (attendu) ; 404 = code
+          #     non déployé ; 501 = clé Google (tour-trace) ou migration 0122
+          #     (driver-position) absente.
+          for R in tour-trace driver-position; do
+            RC=$(curl -s -o /tmp/r.json -w '%{http_code}' --max-time 12 "${HDR[@]}" -H 'Content-Type: application/json' -X POST -d '{}' "$BASE/franchisee/$R$QS" 2>/dev/null)
+            case "$RC" in
+              400) echo "  OK       $R : route présente (400 sur corps vide, attendu)";;
+              501) echo "  ⚠ $R : 501 — $(grep -o '"error":"[^"]*"' /tmp/r.json | head -c 160)";;
+              404) echo "  ✗ $R : 404 — le serveur n'a pas le code (déployer le webshop)";;
+              *)   echo "  ✗ $R : HTTP $RC $(head -c 200 /tmp/r.json 2>/dev/null)";;
+            esac
+          done
 
           # 3. Temps d'accès et de dépôt des sites. Ils entrent dans chaque heure
           #    d'arrivée : il en manque un et la tournée entière perd ses heures.
