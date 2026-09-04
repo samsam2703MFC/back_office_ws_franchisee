@@ -1640,6 +1640,56 @@
       </div>
       </sc-if>
 
+      <!-- ===================== PROSPECTION (CRM) =====================
+           Un tableau par campagne. Prendre une carte, cliquer une colonne :
+           le même geste qu'ailleurs dans la console, et il marche au doigt. -->
+      <sc-if value="{{ isCrm }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <select onChange="{{ crmSetCamp }}" value="{{ crmCamp }}" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 11px;font:500 13px var(--font-ui);background:var(--color-surface);color:var(--color-text);min-width:250px">
+            <sc-for list="{{ crmCampOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+          <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);flex:1;min-width:0">{{ crmCampInfo }}</span>
+          <select onChange="{{ crmAjouter }}" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 11px;font:500 12.5px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:250px">
+            <sc-for list="{{ crmAjoutOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+          <button onClick="{{ crmProspect }}" class="btn-secondary" style="font-size:12px">+ Prospect libre</button>
+          <button onClick="{{ crmColOuvrir }}" class="btn-secondary" style="font-size:12px" title="Renommer, réordonner, ajouter ou retirer des étapes">⚙ Étapes</button>
+        </div>
+        <sc-if value="{{ crmGrabTxt }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff4e5;border:.5px solid #f0d5ac;border-radius:10px;padding:9px 14px;font:500 12px var(--font-ui);color:#b26a00;display:flex;align-items:center;gap:12px">{{ crmGrabTxt }}<button onClick="{{ crmAnnuler }}" class="btn-secondary" style="font-size:11.5px;margin-left:auto">Annuler</button></div>
+        </sc-if>
+        <sc-if value="{{ crmPret }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;align-items:flex-start">
+          <sc-for list="{{ crmColonnes }}" as="c" hint-placeholder-count="4">
+            <div onClick="{{ c.poser }}" style="{{ c.colStyle }}">
+              <div style="{{ c.entete }}"><span style="font:700 12px var(--font-ui);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</span><span style="font:700 11px var(--font-ui);background:rgba(255,255,255,.25);border-radius:999px;padding:1px 8px">{{ c.n }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:10px">
+                <sc-for list="{{ c.cartes }}" as="k" hint-placeholder-count="2">
+                  <div style="{{ k.style }}">
+                    <div style="display:flex;align-items:flex-start;gap:8px">
+                      <button onClick="{{ k.prendre }}" title="Prendre cette carte, puis cliquer la colonne d'arrivée" style="border:none;background:none;padding:0;cursor:grab;font-size:13px;line-height:1.2;color:var(--color-text-muted)">⠿</button>
+                      <button onClick="{{ k.ouvrir }}" style="border:none;background:none;padding:0;cursor:pointer;text-align:left;flex:1;min-width:0">
+                        <div style="font:600 12.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.nom }}</div>
+                        <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.sous }}</div>
+                      </button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:7px;flex-wrap:wrap">
+                      <sc-if value="{{ k.gestes }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;letter-spacing:2px">{{ k.gestes }}</span></sc-if>
+                      <sc-if value="{{ k.voucher }}" hint-placeholder-val="{{ false }}"><span style="font:600 10px var(--font-ui);color:#b26a00;background:#fff4e5;border-radius:999px;padding:2px 7px">{{ k.voucher }}</span></sc-if>
+                      <sc-if value="{{ k.prochaine }}" hint-placeholder-val="{{ false }}"><span style="{{ k.prochaineStyle }}">⏱ {{ k.prochaine }}</span></sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+        <sc-if value="{{ crmMsg }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ crmMsg }}</div></sc-if>
+      </div>
+      </sc-if>
+
       <!-- ===================== SITES DE LIVRAISON ===================== -->
       <sc-if value="{{ isSites }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:16px">
@@ -2929,6 +2979,67 @@
   <sc-if value="{{ dcHas }}" hint-placeholder-val="{{ false }}">
   <button onClick="{{ dcOpenFn }}" title="{{ dcBadgeTitle }}" style="position:fixed;left:14px;bottom:104px;z-index:1500;display:inline-flex;align-items:center;gap:8px;background:var(--color-surface);border:.5px solid var(--color-border-secondary);border-radius:999px;padding:7px 12px 7px 8px;font:600 12px var(--font-ui);color:var(--color-text);cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.14)"><span style="{{ dcBadgeStyle }}">{{ dcCount }}</span>Données à compléter</button>
   </sc-if>
+  <!-- FICHE D'UNE CARTE : le contact, le bon, la prochaine action, et les
+       gestes déjà faits — mail, bon, assortiment, visite, appel. -->
+  <sc-if value="{{ crmDet }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:1990;padding:24px">
+    <div class="lz" style="background:var(--color-surface);border-radius:16px;width:640px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+      <div style="padding:18px 24px 12px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+        <div><div class="t-page-title" style="font-size:17px">{{ crmDet.nom }}</div><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ crmDet.sous }}</div></div>
+        <button onClick="{{ crmDet.fermer }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button>
+      </div>
+      <div style="padding:16px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <sc-for list="{{ crmDet.gestes }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.poser }}" class="btn-secondary" style="font-size:12px">{{ g.label }}</button></sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px 13px">
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Contact</span><input value="{{ crmDet.contactNom }}" onInput="{{ crmDet.setContactNom }}" placeholder="nom" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Fonction</span><input value="{{ crmDet.contactRole }}" onInput="{{ crmDet.setContactRole }}" placeholder="secrétariat, RH…" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Téléphone</span><input value="{{ crmDet.contactTel }}" onInput="{{ crmDet.setContactTel }}" placeholder="+32 …" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">E-mail</span><input value="{{ crmDet.contactEmail }}" onInput="{{ crmDet.setContactEmail }}" placeholder="contact@…" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Bon / code</span><input value="{{ crmDet.voucher }}" onInput="{{ crmDet.setVoucher }}" placeholder="code du bon remis" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Prochaine action</span><input type="date" value="{{ crmDet.prochaine }}" onChange="{{ crmDet.setProchaine }}" style="{{ crmInp }}"/></label>
+        </div>
+        <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Note</span><textarea onInput="{{ crmDet.setNote }}" rows="3" placeholder="ce qui s'est dit, ce qu'il faut refaire…" style="{{ crmInp }};resize:vertical">{{ crmDet.note }}</textarea></label>
+        <div>
+          <div style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Ce qui a été fait</div>
+          <sc-if value="{{ crmDet.journalVide }}" hint-placeholder-val="{{ false }}"><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Rien encore.</div></sc-if>
+          <sc-for list="{{ crmDet.journal }}" as="j" hint-placeholder-count="2"><div style="display:flex;gap:10px;padding:4px 0;border-top:.5px dashed var(--color-border-tertiary);font:400 11.5px var(--font-ui)"><span style="width:104px;flex:none;color:var(--color-text-muted);font-variant-numeric:tabular-nums">{{ j.quand }}</span><span>{{ j.txt }}</span></div></sc-for>
+        </div>
+      </div>
+      <div style="padding:12px 24px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;gap:10px">
+        <button onClick="{{ crmDet.supprimer }}" class="btn-secondary" style="font-size:12.5px;color:var(--color-primary)">Retirer du tableau</button>
+        <div style="display:flex;gap:8px"><button onClick="{{ crmDet.fermer }}" class="btn-secondary" style="font-size:12.5px">Fermer</button><button onClick="{{ crmDet.enregistrer }}" class="btn-primary" style="font-size:12.5px">Enregistrer</button></div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- LES ÉTAPES : renommer, réordonner, ajouter, retirer. Le cycle change
+       d'une saison à l'autre, le tableau doit suivre. -->
+  <sc-if value="{{ crmColEditOn }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:1991;padding:24px">
+    <div class="lz" style="background:var(--color-surface);border-radius:16px;width:520px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+      <div style="padding:18px 24px 12px;border-bottom:.5px solid var(--color-border-tertiary)"><div class="t-page-title" style="font-size:17px">Étapes du tableau</div><div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">Une étape retirée n'emporte pas ses cartes : elles rejoignent la première.</div></div>
+      <div style="padding:14px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ crmColLignes }}" as="c" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:7px">
+            <input value="{{ c.label }}" onInput="{{ c.setLabel }}" style="{{ crmInp }};margin:0;flex:1"/>
+            <button onClick="{{ c.monter }}" class="btn-secondary" style="font-size:11px;padding:6px 9px">↑</button>
+            <button onClick="{{ c.descendre }}" class="btn-secondary" style="font-size:11px;padding:6px 9px">↓</button>
+            <button onClick="{{ c.retirer }}" class="btn-secondary" style="font-size:11px;padding:6px 9px;color:var(--color-primary)">×</button>
+          </div>
+        </sc-for>
+        <button onClick="{{ crmColAjouter }}" class="btn-secondary" style="font-size:12px;align-self:flex-start">+ Étape</button>
+      </div>
+      <div style="padding:12px 24px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:flex-end;gap:8px">
+        <button onClick="{{ crmColFermer }}" class="btn-secondary" style="font-size:12.5px">Annuler</button>
+        <button onClick="{{ crmColEnregistrer }}" class="btn-primary" style="font-size:12.5px">Enregistrer les étapes</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
   <sc-if value="{{ dcOpen }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:1995;padding:24px">
     <div class="lz" style="background:var(--color-surface);border-radius:16px;width:860px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
@@ -5075,6 +5186,7 @@ class Component extends DCLogic {
     {s:'offices',act:'ob',g:'Paramétrage › Livraison',grp:'g_liv',label:'Nouveau bureau B2B (onboarding)',
      desc:'Création complète en 7 étapes : société, contact, site, départements, webshop, personnel',
      k:'wizard onboarding creation creer nouveau bureau societe raison sociale tournee site departements voucher invitation lien magique'},
+    {s:'crm',g:'Paramétrage › Prospection',grp:'g_crm',label:'Prospection (CRM) — tableau par campagne',k:'crm prospection kanban campagne bon voucher assortiment mail visite relance telephone rendez-vous secretaire rh pipeline'},
     {s:'sites',g:'Paramétrage › Livraison',grp:'g_liv',label:'Sites de livraison',k:'adresse etage local temps acces quai reception chaine tournee zone'},
     {s:'offices',g:'Paramétrage › Livraison',grp:'g_liv',label:'Contacts email d’un bureau',k:'mail role principal facturation livraison destinataire notification contact'},
     // ---- Paramétrage › Boutique ----
@@ -6278,6 +6390,148 @@ class Component extends DCLogic {
      manque — l'adresse validée par Google en tête — la livraison ne peut pas
      être annoncée. Rend la liste des libellés manquants, vide = complet. */
   DROP_STD = 5;
+  /* ═══ CRM DE PROSPECTION ═══════════════════════════════════════════════
+     Un tableau par campagne : la marque décide la campagne, le franchisé y
+     pose ses cibles et les fait avancer. Prendre une carte, poser sur une
+     colonne — le même geste que l'assignation des bureaux, qui marche à la
+     souris comme au doigt sur une tablette. */
+  crmCharger(force){ const fr=window.__FR||{}; if(!fr.base) return;
+    if(this._crmBusy) return; if(this.state.crm&&!force) return;
+    this._crmBusy=true;
+    fetch(fr.base+'/franchisee/crm'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ this._crmBusy=false;
+        if(st===200&&j&&j.ok) this.setState({crm:j,crmErr:''});
+        else this.setState({crmErr:(j&&j.error)||('CRM indisponible (HTTP '+st+')')}); })
+      .catch(()=>{ this._crmBusy=false; this.setState({crmErr:'Réseau indisponible'}); }); }
+  /* Une écriture, puis relecture : le tableau montre ce que la base a accepté,
+     jamais ce que l'écran espérait. */
+  crmEcrire(corps,msg){ const fr=window.__FR||{}; if(!fr.base) return Promise.resolve(false);
+    return fetch(fr.base+'/franchisee/crm-carte'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(corps)})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        if(st===200&&j&&j.ok){ if(msg) this.printJob(msg); this.crmCharger(true); return true; }
+        this.printJob('⚠ '+((j&&j.error)||('Refus du serveur (HTTP '+st+')'))); return false; })
+      .catch(()=>{ this.printJob('⚠ Réseau indisponible'); return false; }); }
+  crmColonnesEcrire(cols){ const fr=window.__FR||{}; if(!fr.base) return;
+    fetch(fr.base+'/franchisee/crm-colonnes'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({colonnes:cols})})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        if(st===200&&j&&j.ok){ this.printJob('✓ Colonnes enregistrées'); this.setState({crmCols:null}); this.crmCharger(true); }
+        else this.printJob('⚠ '+((j&&j.error)||'Colonnes non enregistrées')); })
+      .catch(()=>this.printJob('⚠ Réseau indisponible')); }
+  crmVals(){
+    const S=this.state, D=this.state.crm||null;
+    const SRV=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
+    const base={isCrm:S.screen==='crm'};
+    if(S.screen!=='crm') return base;
+    this.crmCharger(false);
+    if(!D) return {...base,crmPret:false,crmMsg:S.crmErr||'Chargement du tableau…',crmCols:[],crmCampOpts:[],crmColonnes:[],crmAjoutOpts:[],crmDet:null,crmColEdit:null};
+
+    // La campagne en cours : celle choisie, sinon la première active.
+    const camps=D.campagnes||[];
+    const campDef=(camps.find(c=>c.active)||camps[0]||null);
+    const campId=S.crmCamp!==undefined?S.crmCamp:(campDef?String(campDef.id):'');
+    const campObj=camps.find(c=>String(c.id)===String(campId))||null;
+    const cartes=(D.cartes||[]).filter(c=>!campId||String(c.campagneId||'')===String(campId));
+
+    // Prendre / poser : une carte prise attend une colonne.
+    const pris=S.crmGrab!=null?String(S.crmGrab):null;
+    const gesteDe={mail:'✉',visite:'📍',tel:'☎',bon:'🎟',assort:'🗒'};
+    const auj=new Date().toISOString().slice(0,10);
+
+    const colonnes=(D.colonnes||[]).map(col=>{
+      const dedans=cartes.filter(c=>c.colonne===col.cle).sort((a,b)=>(a.ordre-b.ordre)||(a.id-b.id));
+      return { cle:col.cle, label:col.label, n:String(dedans.length),
+        couleur:col.couleur||'var(--color-text-muted)',
+        entete:'display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px 10px 0 0;background:'+(col.couleur||'var(--color-background-secondary)')+';color:#fff',
+        colStyle:'flex:none;width:264px;display:flex;flex-direction:column;background:var(--color-background-secondary);border:'+(pris?'1.5px dashed var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:12px;min-height:180px',
+        poser:()=>{ if(!pris) return; const c=cartes.find(x=>String(x.id)===pris); if(!c||c.colonne===col.cle){ this.setState({crmGrab:null}); return; }
+          this.setState({crmGrab:null});
+          this.crmEcrire({id:+pris,colonne:col.cle,geste:'colonne',gesteTexte:'→ '+col.label},'✓ « '+c.nom+' » → '+col.label); },
+        cartes:dedans.map(c=>{
+          const g=(c.gestes||[]).map(x=>gesteDe[x.type]).filter(Boolean);
+          const retard=c.prochaine&&c.prochaine<auj;
+          return { id:String(c.id), nom:c.nom,
+            sous:[c.contactNom,c.contactRole].filter(Boolean).join(' · ')||(c.adresse||''),
+            tel:c.contactTel||'', mail:c.contactEmail||'', voucher:c.voucher||'',
+            prochaine:c.prochaine?(c.prochaine.slice(8,10)+'/'+c.prochaine.slice(5,7)):'',
+            prochaineStyle:'font:600 10px var(--font-ui);border-radius:999px;padding:2px 7px;background:'+(retard?'#fbe9eb':'var(--color-surface)')+';color:'+(retard?'var(--color-primary)':'var(--color-text-muted)'),
+            gestes:[...new Set(g)].join(' '),
+            pris:pris===String(c.id),
+            style:'background:var(--color-surface);border:'+(pris===String(c.id)?'1.5px solid var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:10px;padding:9px 11px;cursor:pointer;text-align:left;width:100%;display:block',
+            prendre:()=>this.setState(st=>({crmGrab:(st.crmGrab!=null&&String(st.crmGrab)===String(c.id))?null:c.id})),
+            ouvrir:()=>this.setState({crmDet:{...c}}) }; }) };
+    });
+
+    // Ajouter des cibles : les bureaux et clients qui ne sont pas déjà au
+    // tableau de CETTE campagne. Rien n'est inventé — ce sont les fiches.
+    const dejaOff=new Set(cartes.filter(c=>c.cibleType==='office').map(c=>String(c.cibleId)));
+    const dejaCli=new Set(cartes.filter(c=>c.cibleType==='client').map(c=>String(c.cibleId)));
+    const prem=(D.colonnes||[])[0]||{cle:'a_contacter'};
+    const ajout=[];
+    SRV('ws_offices').forEach(o=>{ if(!o||o.id==null||dejaOff.has(String(o.id))) return;
+      ajout.push({value:'o'+o.id,label:'Bureau · '+o.name+(o.city?(' — '+o.city):'')}); });
+    SRV('b2b_clients').forEach(c=>{ if(!c||c.id==null||dejaCli.has(String(c.id))) return;
+      const nom=c.company_name||c.name||''; if(!nom) return;
+      ajout.push({value:'c'+c.id,label:'Client · '+nom+(c.city?(' — '+c.city):'')}); });
+    ajout.sort((a,b)=>a.label.localeCompare(b.label,'fr'));
+
+    const det=S.crmDet||null;
+    const majDet=(pl)=>this.setState(st=>({crmDet:{...st.crmDet,...pl}}));
+
+    return {...base, crmPret:true, crmMsg:S.crmErr||'',
+      crmCampOpts:[{value:'',label:'— Toutes les campagnes —'},...camps.map(c=>({value:String(c.id),
+        label:(c.reseau?'Réseau · ':'Locale · ')+c.nom+(c.active?'':' (close)')}))],
+      crmCamp:campId, crmSetCamp:(e)=>this.setState({crmCamp:e.target.value,crmGrab:null}),
+      crmCampInfo:campObj?((campObj.reseau?'Campagne du réseau':'Campagne locale')+(campObj.du?(' · '+String(campObj.du).slice(0,10)+' → '+String(campObj.au||'').slice(0,10)):'')):'Aucune campagne choisie — les cartes de toutes les campagnes sont affichées',
+      crmColonnes:colonnes, crmTotal:String(cartes.length),
+      crmGrabTxt:pris?('Carte prise — cliquez une colonne pour l’y poser'):'',
+      crmAnnuler:()=>this.setState({crmGrab:null}),
+      crmAjoutOpts:[{value:'',label:'+ Ajouter une cible…'},...ajout.slice(0,300)],
+      crmAjouter:(e)=>{ const v=e.target.value; if(!v) return;
+        const type=v[0]==='o'?'office':'client'; const id=+v.slice(1);
+        const src=type==='office'?SRV('ws_offices').find(x=>String(x.id)===String(id)):SRV('b2b_clients').find(x=>String(x.id)===String(id));
+        if(!src) return;
+        const nom=type==='office'?src.name:(src.company_name||src.name);
+        this.crmEcrire({campagneId:campId||null,campagneNom:campObj?campObj.nom:null,cibleType:type,cibleId:id,nom,
+          colonne:prem.cle,contactNom:src.contact||'',contactTel:src.phone||'',contactEmail:src.email||'',
+          adresse:[src.address||src.street,[src.postal_code||src.zip,src.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')},
+          '✓ « '+nom+' » ajouté au tableau'); },
+      crmProspect:()=>{ const nom=(window.prompt&&window.prompt('Nom de l’entreprise à prospecter'))||''; if(!String(nom).trim()) return;
+        this.crmEcrire({campagneId:campId||null,campagneNom:campObj?campObj.nom:null,cibleType:'prospect',nom:String(nom).trim(),colonne:prem.cle},'✓ Prospect ajouté'); },
+
+      // La fiche d'une carte : le contact, le bon, la prochaine action, les
+      // gestes déjà faits. Tout se modifie, rien n'est obligatoire.
+      crmDet:det?{ nom:det.nom, sous:det.campagneNom||'', id:String(det.id),
+        contactNom:det.contactNom||'', setContactNom:(e)=>majDet({contactNom:e.target.value}),
+        contactRole:det.contactRole||'', setContactRole:(e)=>majDet({contactRole:e.target.value}),
+        contactTel:det.contactTel||'', setContactTel:(e)=>majDet({contactTel:e.target.value}),
+        contactEmail:det.contactEmail||'', setContactEmail:(e)=>majDet({contactEmail:e.target.value}),
+        voucher:det.voucher||'', setVoucher:(e)=>majDet({voucher:e.target.value}),
+        prochaine:det.prochaine||'', setProchaine:(e)=>majDet({prochaine:e.target.value}),
+        note:det.note||'', setNote:(e)=>majDet({note:e.target.value}),
+        journal:(det.gestes||[]).slice(0,12).map(g=>({txt:(gesteDe[g.type]||'•')+' '+(g.texte||g.type),quand:String(g.quand||'').slice(0,16).replace('T',' ')})),
+        journalVide:!(det.gestes||[]).length,
+        gestes:[['mail','✉ Mail envoyé'],['bon','🎟 Bon remis'],['assort','🗒 Assortiment imprimé'],['visite','📍 Visite faite'],['tel','☎ Appel passé']]
+          .map(([k,lab])=>({label:lab,poser:()=>{ this.crmEcrire({id:det.id,geste:k,gesteTexte:lab},'✓ '+lab); this.setState({crmDet:null}); }})),
+        enregistrer:()=>{ this.crmEcrire({id:det.id,contactNom:det.contactNom||'',contactRole:det.contactRole||'',
+          contactTel:det.contactTel||'',contactEmail:det.contactEmail||'',voucher:det.voucher||'',
+          prochaine:det.prochaine||'',note:det.note||''},'✓ Fiche enregistrée'); this.setState({crmDet:null}); },
+        supprimer:()=>{ this.crmEcrire({id:det.id,supprimer:true},'Carte retirée du tableau'); this.setState({crmDet:null}); },
+        fermer:()=>this.setState({crmDet:null}) }:null,
+
+      // Les colonnes, modifiables : nom, ordre, ajout, retrait.
+      crmColEditOn:!!S.crmCols,
+      crmColOuvrir:()=>this.setState({crmCols:(D.colonnes||[]).map(c=>({cle:c.cle,label:c.label,couleur:c.couleur||''}))}),
+      crmColFermer:()=>this.setState({crmCols:null}),
+      crmColLignes:(S.crmCols||[]).map((c,i,arr)=>({ label:c.label,
+        setLabel:(e)=>this.setState(st=>{ const l=st.crmCols.slice(); l[i]={...l[i],label:e.target.value}; return {crmCols:l}; }),
+        monter:()=>this.setState(st=>{ const l=st.crmCols.slice(); if(i<=0) return {}; [l[i-1],l[i]]=[l[i],l[i-1]]; return {crmCols:l}; }),
+        descendre:()=>this.setState(st=>{ const l=st.crmCols.slice(); if(i>=l.length-1) return {}; [l[i+1],l[i]]=[l[i],l[i+1]]; return {crmCols:l}; }),
+        retirer:()=>this.setState(st=>({crmCols:st.crmCols.filter((_,j)=>j!==i)})) })),
+      crmColAjouter:()=>this.setState(st=>({crmCols:[...(st.crmCols||[]),{cle:'col'+Date.now(),label:'Nouvelle étape',couleur:''}]})),
+      crmColEnregistrer:()=>{ const l=(this.state.crmCols||[]).filter(c=>String(c.label||'').trim());
+        if(!l.length){ this.printJob('⚠ Gardez au moins une colonne'); return; }
+        this.crmColonnesEcrire(l); } };
+  }
   /* LES SITES ACTIFS, et eux seuls. Un site désactivé n'est plus un lieu de
      livraison : ni à assigner à un bureau, ni à poser sur une tournée, ni à
      compter dans une chronologie. Le serveur ne sert déjà que les actifs,
@@ -7054,7 +7308,7 @@ class Component extends DCLogic {
   // rendu ; elles remontent ici pour être lues AUSSI par les adresses — une
   // seule définition, sinon un écran ajouté au menu n'aurait pas d'adresse.
   NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis'];
-  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','tabletteKitchen'];
+  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','tabletteKitchen','crm'];
 
   // Groupes dépliants du menu « Paramétrage ». Définis ici et non dans le rendu,
   // parce que l'adresse doit savoir quel groupe déplier à l'arrivée sur un de
@@ -7071,6 +7325,10 @@ class Component extends DCLogic {
       // « Coûts · temps · frais » sort du menu : accessible via l'ENGRENAGE de
       // l'écran Tournées (l'entrée de menu se réduit au mot « Tournées »).
       {id:'g_liv',label:'Livraison',items:[['atelierLiv','Livraison']]},
+      // La prospection est un CYCLE : chaque saison, la marque ouvre une
+      // campagne et le franchisé refait le tour de ses cibles. Son tableau
+      // vit donc à côté des clients, pas dans un module à part.
+      {id:'g_crm',label:'Prospection (CRM)',items:[['crm','Prospection (CRM)']]},
       // « Bureaux & sites » (écran clients) et « Contacts email » (emailsBureau)
       // sortent du menu : doublons — la création B2B vit dans Clients, les
       // contacts email dans le formulaire d'édition de l'Office (engrenage).
@@ -8106,7 +8364,7 @@ class Component extends DCLogic {
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams'),navAvis:this.tr('navAvis'),navFidelite:this.tr('navFidelite') };
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',bureauAssortiment:'Assortiment d\'un bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
-      commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
+      crm:'Prospection (CRM)',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
     const subs={avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',bureauAssortiment:'Produits proposés et affichage des prix — pour un bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
@@ -10932,6 +11190,8 @@ class Component extends DCLogic {
       ...obVals,
       ...profileVals,
       isLivProcess,livSteps,grpTabsOn,grpTabs,grpTabsTitre,
+      crmInp:'width:100%;box-sizing:border-box;margin-top:5px;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface)',
+      ...this.crmVals(),
       pencilStyle:'background:transparent;border:.5px solid var(--color-border-tertiary);border-radius:7px;cursor:pointer;color:var(--color-text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none',
       paramsOpen,toggleParams,paramsHeadStyle,paramsChevStyle,
       formOpen:!!fCfg, formTitle:fCfg?fCfg.title:'', formTable:fCfg?fCfg.table:'', formSaveLabel:fCfg?fCfg.save:'', formFields,
