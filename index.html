@@ -4121,7 +4121,7 @@ class Component extends DCLogic {
     this._geoT[slot]=setTimeout(()=>{ const fr=window.__FR||{}; const seq=(this._geoSeq[slot]=(this._geoSeq[slot]||0)+1);
       fetch((fr.base||'')+'/franchisee/geo-suggest?q='+encodeURIComponent(v.trim())+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
         .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ if(seq!==this._geoSeq[slot]) return;
-          if(st===200&&j&&j.ok){ const sug=Array.isArray(j.suggestions)?j.suggestions:[]; this.geoSet(slot,{busy:false,sug,open:true,msg:sug.length?'':('Aucune adresse trouvée par Google pour « '+v.trim()+' » — précisez le n° ou la localité.')}); }
+          if(st===200&&j&&j.ok){ const sug=Array.isArray(j.suggestions)?j.suggestions:[]; this.geoSet(slot,{busy:false,sug,open:true,msg:sug.length?'':('Google ne trouve ni adresse ni entreprise pour « '+v.trim()+' » — précisez le n° ou la localité, ou tapez le nom de l’entreprise.')}); }
           else this.geoSet(slot,{busy:false,sug:[],open:true,msg:(j&&j.error)||('Liste Google indisponible (HTTP '+st+')')}); })
         .catch(()=>{ if(seq===this._geoSeq[slot]) this.geoSet(slot,{busy:false,sug:[],open:true,msg:'Réseau indisponible'}); }); },280); }
   geoPick(slot,id,apply){ const fr=window.__FR||{}; this.geoSet(slot,{busy:true,msg:''});
@@ -4145,6 +4145,19 @@ class Component extends DCLogic {
     this.setState(s=>{ const fv={...(s.formVals||{}),[f.k]:v,lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:''};
       if(f.cp!=='postal_code') fv.postal_code=''; if(f.ville!=='city') fv.city=''; return {formVals:fv}; });
     this.geoType('form',v); }
+  /* Validation AUTOMATIQUE par Google : on cherche le texte reçu (nom
+     d'entreprise + adresse VIES, ou ce qui est encodé), et si Google répond,
+     la première proposition est prise comme si on l'avait cliquée — position,
+     rue, n°, CP et ville d'un coup. Sans réponse, la liste reste ouverte
+     avec le message, rien n'est inventé. */
+  geoAutoValider(f,q){ const fr=window.__FR||{}; q=String(q||'').replace(/\s+/g,' ').trim(); if(!fr.base||q.length<3) return;
+    this.geoSet('form',{busy:true,open:true,msg:'Validation Google de « '+q+' »…'});
+    fetch(fr.base+'/franchisee/geo-suggest?q='+encodeURIComponent(q)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        const sug=(st===200&&j&&j.ok&&Array.isArray(j.suggestions))?j.suggestions:[];
+        if(sug.length){ this.geoSet('form',{sug,msg:''}); this.fGeoPick(f,sug[0].id); }
+        else this.geoSet('form',{busy:false,open:true,sug:[],msg:(j&&!j.ok&&j.error)||('Google ne trouve pas « '+q+' » — choisissez l’adresse dans la liste.')}); })
+      .catch(()=>this.geoSet('form',{busy:false,open:true,msg:'Réseau indisponible'})); }
   fGeoPick(f,id){ this.geoPick('form',id,j=>this.setState(s=>{
       const fv={...(s.formVals||{}),[f.k]:this.geoLigne(j),lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''};
       if(f.cp&&j.zip) fv[f.cp]=j.zip; if(f.ville&&j.city) fv[f.ville]=j.city; return {formVals:fv}; })); }
@@ -9315,6 +9328,16 @@ class Component extends DCLogic {
               // encodée devient un lieu de livraison) » ou « garder le site ».
               const enc=String(fv[kCp]||'').replace(/\D/g,'');
               if(j.zip&&enc&&enc!==String(j.zip)){ st.siegeChoice={zip:j.zip,city:j.city||'',street:j.street||'',encAdr:fv[kAdr]||'',encZip:enc,encCity:fv[kCity]||'',kAdr,kCp,kCity}; }
+              // Adresse VIDE : l'adresse VIES la pré-remplit, puis Google la
+              // valide (position). Adresse encodée mais NON VÉRIFIÉE : Google
+              // valide ce qui est encodé, avec le nom de l'entreprise en appui.
+              // Une adresse déjà vérifiée n'est jamais touchée.
+              const cfg=this.formDefs()[s.formKey]; const fa=cfg&&cfg.fields.find(x=>x.type==='adresse');
+              if(fa&&fv.lat==null){ const vide=!String(fv[fa.k]||'').trim();
+                if(vide&&(j.street||j.zip)){ if(j.street) fv[fa.k]=j.street; if(fa.cp&&j.zip) fv[fa.cp]=j.zip; if(fa.ville&&j.city) fv[fa.ville]=j.city; }
+                const q=vide?[j.name,j.street,j.zip,j.city].filter(Boolean).join(' ')
+                            :[j.name,fv[fa.k],fa.cp?fv[fa.cp]:'',fa.ville?fv[fa.ville]:''].filter(Boolean).join(' ');
+                st.formVals=fv; setTimeout(()=>this.geoAutoValider(fa,q),60); }
               return st; }); }
             else if(j&&j.error==='vies_unavailable'){ this.setState({viesOk:false,viesMsg:'Service VIES indisponible — réessayez'}); }
             else { this.setState({viesOk:false,viesMsg:'✕ N° TVA introuvable via VIES'}); } })
