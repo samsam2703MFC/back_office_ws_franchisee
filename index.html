@@ -2943,7 +2943,7 @@
       </div>
       <div style="padding:12px 26px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
         <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted)">Revient à l'ouverture de la console tant qu'il reste un point bloquant ; la bulle « Données à compléter » reste visible dans le rail.<sc-if value="{{ dcGeoTxt }}" hint-placeholder-val="{{ false }}"><br><b>{{ dcGeoTxt }}</b></sc-if><sc-if value="{{ dcDropTxt }}" hint-placeholder-val="{{ false }}"><br><b>{{ dcDropTxt }}</b></sc-if></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ dcDrop }}" class="btn-secondary" title="Pose le standard de 5 minutes sur place à chaque bureau qui n'a pas de temps de dépôt — à ajuster ensuite à 10 ou 15 min sur les fiches concernées" style="font-size:12.5px;{{ dcDropStyle }}">5 min de dépôt partout (standard)</button><button onClick="{{ dcGeo }}" class="btn-secondary" title="Google situe d'un coup chaque bureau, site et client qui a une adresse mais pas de position ; ce qu'il ne situe qu'à la rue ou à la localité reste à choisir à la main" style="font-size:12.5px;{{ dcGeoStyle }}">Situer les adresses manquantes (Google)</button><button onClick="{{ dcLater }}" class="btn-secondary" style="font-size:12.5px">Plus tard</button><button onClick="{{ dcFirst }}" class="btn-primary" style="font-size:12.5px">Commencer par le premier point</button></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button onClick="{{ dcDrop }}" class="btn-secondary" title="Le standard de 5 minutes s'applique déjà de lui-même aux bureaux sans temps saisi ; ce bouton l'inscrit noir sur blanc sur chacun d'eux, à ajuster ensuite à 10 ou 15 min sur les fiches concernées" style="font-size:12.5px;{{ dcDropStyle }}">Inscrire le standard 5 min sur chaque bureau</button><button onClick="{{ dcGeo }}" class="btn-secondary" title="Google situe d'un coup chaque bureau, site et client qui a une adresse mais pas de position ; ce qu'il ne situe qu'à la rue ou à la localité reste à choisir à la main" style="font-size:12.5px;{{ dcGeoStyle }}">Situer les adresses manquantes (Google)</button><button onClick="{{ dcLater }}" class="btn-secondary" style="font-size:12.5px">Plus tard</button><button onClick="{{ dcFirst }}" class="btn-primary" style="font-size:12.5px">Commencer par le premier point</button></div>
       </div>
     </div>
   </div>
@@ -4440,8 +4440,9 @@ class Component extends DCLogic {
           let brk=false;
           for(const o of offs){ const f=this.chronoFen(o.name); const short=String(o.name).split(/\s+/).slice(0,2).join(' ');
             if(f){ const ko=cur>f.we; if(ko) late++; wins.push({t0:f.ws,t1:f.we,label:short+' '+f.txt,cls:ko?'ko':'',title:o.name+' — fenêtre '+f.txt+(ko?' — dépôt '+this.hhmm(cur)+' hors fenêtre':'')}); }
-            if(!(+o.drop>0)){ segs.push({t0:cur,t1:cur+6,cls:'',style:'background:'+color+';opacity:.45',label:short+' ?',title:o.name+' : temps de dépôt '+(o.drop==null?'non renseigné':'à zéro — ce n’est pas une mesure')}); warn='« '+o.name+' » : temps de dépôt à saisir (Paramètres livraison — bureau)'; fix=fixOffice(o); fixLbl='Saisir le temps de dépôt →'; brk=true; break; }
-            const ko=f?(cur>f.we):false; segs.push({t0:cur,t1:cur+o.drop,cls:ko?'ch-ko':'',style:'background:'+color,label:short,title:o.name+' : dépôt '+this.hhmm(cur)+' → '+this.hhmm(cur+o.drop)+(f?(' · fenêtre '+f.txt+(ko?' — HORS FENÊTRE':'')):' · pas de fenêtre d’engagement')}); cur+=o.drop; nbOff++; }
+            const dp=(+o.drop>0)?+o.drop:this.DROP_STD;
+            const ko=f?(cur>f.we):false; segs.push({t0:cur,t1:cur+dp,cls:ko?'ch-ko':'',style:'background:'+color+(o.dropStd?';opacity:.85':''),label:short,
+              title:o.name+' : dépôt '+this.hhmm(cur)+' → '+this.hhmm(cur+dp)+(o.dropStd?' (standard '+this.DROP_STD+' min)':'')+(f?(' · fenêtre '+f.txt+(ko?' — HORS FENÊTRE':'')):' · pas de fenêtre d’engagement')}); cur+=dp; nbOff++; }
           if(brk){ fin=null; break; }
           if(s.lat!=null&&s.lng!=null) prev={lat:+s.lat,lng:+s.lng}; fin=cur; }
         if(fin!=null&&t.ret!==false&&prev){ let lg=null; const n=x.points.length; if(legs&&legs[n]) lg={min:+legs[n].min||0,km:+legs[n].km||0,g:true}; else { const h=this.travelMin(prev,{lat:d.lat,lng:d.lng}); lg={min:h.min,km:h.km,g:false}; }
@@ -4595,7 +4596,9 @@ class Component extends DCLogic {
       this.goTo('clients'); if(i2>=0) setTimeout(()=>this.editForm('clientEdit',{...cls[i2]},i2)(),80); };
     T('b2b_clients').filter(c=>c&&(c.street||c.zip)&&(c.lat==null||c.lng==null)).forEach(c=>H.push({what:c.company_name||c.name||'Client',why:'Adresse du client non vérifiée par Google — aucune position en base',
       ctx:[c.street,[c.zip,c.city||c.locality].filter(Boolean).join(' ')].filter(Boolean).join(', ')||'adresse absente',lien:'Choisir l’adresse Google → fiche client',go:goClient(c)}));
-    offices.filter(o=>o.tour&&o.tour!=='—').forEach(o=>{ const d=dset[String(o.id)]; if(!d||!(+d.drop>0)){ H.push({what:o.name,why:'Temps de dépôt du bureau non renseigné — l’heure de départ de l’arrêt est inconnue',ctx:'Tournée '+o.tour,lien:'Saisir → paramètres du bureau',go:goParam(o)}); } });
+    // Le temps de dépôt n'est plus un manque : sans saisie, le standard de
+    // cinq minutes s'applique — la fiche du bureau permet de le porter à
+    // 10 ou 15 quand l'accès le demande.
     offices.filter(o=>o.status==='validated'&&o.tour&&o.tour!=='—'&&!fen(o.name)).forEach(o=>H.push({what:o.name,why:'Pas de fenêtre d’engagement — impossible de dire si la livraison est à l’heure',ctx:'Bureau validé · tournée '+o.tour,lien:'Voir la fiche → Clients',go:goScreen('clients')}));
     // Coûts et validation : taux horaire, prix au km, doublons de sites.
     if(gp('cost_driver_hour')==null) C.push({what:'Taux horaire chauffeur',why:'Non paramétré — aucun coût de tournée dans la rentabilité',ctx:'Paramètres de coûts · clé cost_driver_hour',lien:'Paramétrer → Paramètres de coûts',go:goScreen('params')});
@@ -6265,9 +6268,9 @@ class Component extends DCLogic {
      décision qu'on prend, c'est un CONSTAT : tant qu'un champ indispensable
      manque — l'adresse validée par Google en tête — la livraison ne peut pas
      être annoncée. Rend la liste des libellés manquants, vide = complet. */
+  DROP_STD = 5;
   officeManques(o){
     if(!o) return [];
-    const SRV=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
     const vide=v=>{ const x=String(v==null?'':v).trim(); return x===''||x==='—'; };
     const m=[];
     if(vide(o.name)) m.push('nom');
@@ -6276,8 +6279,9 @@ class Component extends DCLogic {
     if(vide(o.city)) m.push('ville');
     if(o.lat==null||o.lng==null) m.push('adresse non validée par Google');
     if(vide(o.tour)) m.push('tournée');
-    const bp=SRV('ws_office_delivery_settings').find(b=>b&&b.officeId!=null&&String(b.officeId)===String(o.id));
-    if(!bp||!(+bp.drop>0)) m.push('temps de dépôt');
+    // Le temps de dépôt ne manque JAMAIS : sans saisie, c'est le standard de
+    // cinq minutes du réseau. Un bureau n'est pas incomplet parce qu'il suit
+    // la règle commune.
     return m; }
   /* Le statut SUIT le constat : un bureau devenu complet ouvre sa livraison
      de lui-même, sans clic. Une seule écriture par bureau et par session. */
@@ -6575,9 +6579,17 @@ class Component extends DCLogic {
        le trouver — toutes les heures d'arrivée passaient à « — ». */
     const dset={}; (window.BOServer?window.BOServer.table('ws_office_delivery_settings'):[])
       .forEach(b=>{ const k=String(b.bureau||'').trim(); if(k) dset[k]=b; });
+    /* CINQ MINUTES est le standard du réseau : un bureau sans temps saisi
+       n'est pas un bureau inconnu, c'est un bureau au standard. Seul un temps
+       explicitement saisi (5, 10 ou 15) s'y substitue. `dropStd` dit lequel
+       des deux s'applique, pour que la chronologie ne fasse pas passer une
+       convention pour une mesure. */
     const dropDe=(nom,ligne)=>{ const c=dset[String(nom||'').trim()];
       const v=(c&&c.drop!=null&&c.drop!=='')?c.drop:((ligne&&ligne.drop!=null&&ligne.drop!=='')?ligne.drop:null);
-      const n=parseFloat(v); return (v==null||isNaN(n))?null:n; };
+      const n=parseFloat(v); return (v==null||isNaN(n)||n<=0)?this.DROP_STD:n; };
+    const dropSaisi=(nom,ligne)=>{ const c=dset[String(nom||'').trim()];
+      const v=(c&&c.drop!=null&&c.drop!=='')?c.drop:((ligne&&ligne.drop!=null&&ligne.drop!=='')?ligne.drop:null);
+      const n=parseFloat(v); return !(v==null||isNaN(n)||n<=0); };
     const seen={}; const out=[];
     rows.forEach(r=>{ const adr=(r.adr&&r.adr!=='—')?r.adr:null; if(!adr) return;
       if(seen[adr]===undefined){
@@ -6616,7 +6628,7 @@ class Component extends DCLogic {
         const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
         // Temps de dépôt : celui paramétré pour CE bureau, ou inconnu — pas
         // 5 minutes décidées par la page et additionnées à chaque arrêt.
-        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||'adresse non renseignée',drop:dropDe(b,r),
+        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||'adresse non renseignée',drop:dropDe(b,r),dropStd:!dropSaisi(b,r),
           // Position Google du bureau (ws_offices, 0123) : avec elle, un bureau à
           // une autre adresse que son site devient un ARRÊT à part entière.
           lat:(r.office_lat!=null&&!isNaN(parseFloat(r.office_lat)))?parseFloat(r.office_lat):null,
@@ -9461,7 +9473,6 @@ class Component extends DCLogic {
       if(vide(fv.postal_code)) o.postal_code='indispensable';
       if(vide(fv.city)) o.city='indispensable';
       if(vide(fv.tour)||fv.tour==='—') o.tour='indispensable — sans tournée, aucune livraison';
-      if(!(+fv.drop>0)) o.drop='indispensable — les heures d’arrivée en dépendent';
       return o; })();
     const inputBase='width:100%;padding:11px 12px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 13px var(--font-ui);color:var(--color-text);background:var(--color-surface);box-sizing:border-box';
     const formFields=fCfg?fCfg.fields.map((f,i)=>{
