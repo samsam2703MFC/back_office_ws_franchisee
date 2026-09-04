@@ -616,7 +616,7 @@
             <div onClick="{{ r.dropHere }}" style="{{ r.tileStyle }}">
               <div style="display:flex;align-items:center;gap:9px;min-width:0">
                 <span style="{{ r.colDot }}"></span>
-                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.duree }} · départ {{ r.start }}">{{ r.duree }}</div></div>
+                <div style="flex:1;min-width:0"><div title="{{ r.name }}" style="font:600 13.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div></div>
                 <div style="flex:none;display:flex;gap:5px">
                   <button onClick="{{ r.toggleOn }}" title="{{ r.tOnTitle }}" style="{{ r.tOnStyle }}">{{ r.tOnLabel }}</button>
                   <button onClick="{{ r.itin }}" title="Voir l'itinéraire sur la carte (ordre des arrêts)" style="{{ r.itinStyle }}">🗺 Itinéraire</button>
@@ -624,6 +624,9 @@
                   <button onClick="{{ r.delTile }}" title="Supprimer la tournée" style="width:27px;height:27px;border-radius:7px;border:.5px solid var(--color-border-secondary);background:var(--color-surface);cursor:pointer;color:var(--color-primary);display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
                 </div>
               </div>
+              <!-- La durée sur SA ligne, pleine largeur : à côté du nom, les
+                   boutons la rognaient à « 01h30 - 3… ». -->
+              <div style="font:400 11px/1.45 var(--font-ui);color:var(--color-text-muted);margin:2px 0 2px" title="{{ r.duree }} · départ {{ r.start }}">{{ r.duree }}</div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
                 <span style="{{ r.capPill }}">{{ r.capTxt }}</span>
                 <span style="display:inline-flex;align-items:center;height:20px;border-radius:20px;padding:0 9px;font:600 10px/1 var(--font-ui);background:var(--color-background-secondary);color:var(--color-text-muted)">{{ r.nbSites }} site(s)</span>
@@ -8341,7 +8344,7 @@ class Component extends DCLogic {
         capPill:tvPill(over?'#fbe9eb':((max!=null&&nbOff/max>=0.8)?'#fff4e5':'#eaf5ec'),over?'var(--color-primary)':((max!=null&&nbOff/max>=0.8)?'#b26a00':'#2d7a3e')),
         capTxt:nbOff+'/'+(max==null?'—':max)+' bureaux',
         overWarn:over,
-        tileStyle:'display:flex;flex-direction:column;gap:12px;background:var(--color-surface);border:'+(tvArmOn?'1.5px dashed var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:14px;padding:18px 20px;min-height:190px;cursor:'+(tvArmOn?'copy':'default'),
+        tileStyle:'display:flex;flex-direction:column;gap:11px;background:var(--color-surface);border:'+(tvArmOn?'1.5px dashed var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:14px;padding:18px 20px 22px;min-height:214px;cursor:'+(tvArmOn?'copy':'default'),
         dropHere:()=>{ if(!tvArmOn) return; const b=tvBlds[armKey]; if(b) tourSetBld(b,t.name); },
         canDrop:tvArmOn,
         sites:sites.map((b,si)=>({nom:b.name,num:String(si+1),
