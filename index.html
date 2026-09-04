@@ -4333,21 +4333,47 @@ class Component extends DCLogic {
      la carte garde ses lignes droites (pointillées) et le dit. */
   traceSig(t,pts){ return pts.map(p=>p.id).join(',')+'|'+(t.ret!==false?'r':'n'); }
   traceFor(t,pts){ const c=((this.state.trace||{}).byTour||{})[String(t.id)]; return (c&&c.sig===this.traceSig(t,pts)&&Array.isArray(c.points)&&c.points.length>1)?c:null; }
+  /* Demande DIFFÉRÉE du tracé : appelée par les cartes chaque fois qu'une
+     tournée se dessine à vol d'oiseau. Regroupée à 350 ms, jamais pendant
+     une demande en cours — la carte n'attend plus l'entrée sur l'écran ni le
+     minuteur des deux minutes : dès que les sites sont là, Google est appelé. */
+  traceAsk(){ if(this._traceAskT) return;
+    this._traceAskT=setTimeout(()=>{ this._traceAskT=null; const T=this.state.trace||{}; if(T.busy) return; this.traceRefresh(false); },350); }
   traceRefresh(force){ const fr=window.__FR||{}; if(!fr.base) return; const d=this.depot(); if(!d||d.lat==null) return;
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim(); const sites=this.sitesData();
+    // Un tronçon refusé par Google ne se redemande pas avant 60 s : sans ce
+    // délai, chaque redessin de la carte relancerait l'appel en boucle.
+    const fails=this._traceFail||(this._traceFail={}); const now=Date.now();
     const jobs=(this.routesMeta()||[]).filter(t=>t&&t.name&&t.active!==false).map(t=>{ const pts=sites.filter(s=>norm(s.zone)===norm(t.name)&&s.lat!=null).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))); return {t,pts,sig:this.traceSig(t,pts)}; })
-      .filter(x=>x.pts.length&&(force||!this.traceFor(x.t,x.pts)));
+      .filter(x=>x.pts.length&&(force||!this.traceFor(x.t,x.pts))&&(force||!fails[x.sig]||now-fails[x.sig]>60000));
     if(!jobs.length) return;
     this.setState(s=>({trace:{...s.trace,busy:jobs.length,err:''}}));
     jobs.forEach(x=>{ fetch(fr.base+'/franchisee/tour-trace'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',
         body:JSON.stringify({returnToDepot:x.t.ret!==false,stops:x.pts.map(p=>({lat:p.lat,lng:p.lng,label:p.name}))})})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
         this.setState(s=>{ const byTour={...(s.trace.byTour||{})}; let err=s.trace.err;
-          if(st===200&&j&&j.ok) byTour[String(x.t.id)]={sig:x.sig,points:j.points||[],intervals:j.intervals||[],legs:j.legs||[],km:+j.km,minutes:+j.minutes,minutesSans:+j.minutesSans,trafic:j.trafic||null,at:new Date()};
-          else err=(j&&j.error)||('Tracé Google indisponible (HTTP '+st+')');
+          if(st===200&&j&&j.ok){ byTour[String(x.t.id)]={sig:x.sig,points:j.points||[],intervals:j.intervals||[],legs:j.legs||[],km:+j.km,minutes:+j.minutes,minutesSans:+j.minutesSans,trafic:j.trafic||null,at:new Date()}; delete fails[x.sig]; }
+          else { err=(j&&j.error)||(st===404?'POST /franchisee/tour-trace absent du serveur — déployez le webshop.':st===401?'Session expirée — reconnectez-vous.':('Tracé Google indisponible (HTTP '+st+')')); fails[x.sig]=Date.now(); }
           // Pas de redessin ici : le rendu qui suit ce setState redessine les cartes (ensureMaps).
           return {trace:{...s.trace,byTour,busy:Math.max(0,s.trace.busy-1),err,at:new Date()}}; }); })
-      .catch(()=>this.setState(s=>({trace:{...s.trace,busy:Math.max(0,s.trace.busy-1),err:'Réseau indisponible'}}))); }); }
+      .catch(()=>{ fails[x.sig]=Date.now(); this.setState(s=>({trace:{...s.trace,busy:Math.max(0,s.trace.busy-1),err:'Réseau indisponible'}})); }); }); }
+  /* Ce que vaut la ligne droite : le tracé Google est en route, ou refusé —
+     et pourquoi. Sert aux info-bulles des lignes à vol d'oiseau et au bandeau. */
+  traceEtatTxt(){ const T=this.state.trace||{}; if(T.busy) return 'tracé Google en cours…'; if(T.err) return 'tracé Google indisponible : '+T.err; return 'tracé Google en attente'; }
+  /* Bandeau sur la carte quand une tournée reste à vol d'oiseau : la ligne
+     droite ne doit jamais passer pour un itinéraire. Retiré dès que tout est tracé. */
+  traceBanner(elId, manque){
+    if(typeof document==='undefined') return;
+    const el=document.getElementById(elId); if(!el) return;
+    const id=elId+'-tracewarn'; let b=document.getElementById(id);
+    if(!manque){ if(b&&b.parentNode) b.parentNode.removeChild(b); return; }
+    if(!b){ b=document.createElement('div'); b.id=id;
+      b.style.cssText='position:absolute;z-index:500;bottom:10px;left:50%;transform:translateX(-50%);max-width:92%;padding:6px 11px;border-radius:8px;'
+        +'background:rgba(255,255,255,.94);color:#6b4420;font:500 11.5px sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);text-align:center;pointer-events:none';
+      try { if(window.getComputedStyle(el).position==='static') el.style.position='relative'; } catch(e){}
+      el.appendChild(b); }
+    const T=this.state.trace||{};
+    b.textContent=(T.err?'⚠ ':'')+'Lignes à vol d’oiseau — '+this.traceEtatTxt(); }
   traceDraw(L,g,t,pts,col,o,tip){ const tr=this.traceFor(t,pts); if(!tr) return false;
     const P=tr.points; const COL={NORMAL:'#2e9e44',SLOW:'#f2a900',TRAFFIC_JAM:'#c62828'};
     const w=o.focus?6:4.5, op=o.dim?0.15:0.95;
@@ -7316,7 +7342,7 @@ class Component extends DCLogic {
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
     const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     const sites=this.sitesData(); const tours=this.routesMeta();
-    const focus=this.state.mapFocusTour||null;
+    const focus=this.state.mapFocusTour||null; let manqueTrace=false;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
     const sitePopup=(p,t,k)=>'<div style="font:12.5px/1.5 sans-serif;min-width:210px"><b>'+esc(p.name)+'</b>'
       +(t?('<br><span style="color:#666">'+esc(t)+' · arrêt n°'+k+'</span>'):'<br><span style="color:#666">Sans tournée</span>')
@@ -7347,11 +7373,13 @@ class Component extends DCLogic {
       if(t.ret!==false&&depC.length) coords.push(depC[0]);
       const itin=pts.map((p,k)=>(k+1)+'. '+p.name).join(' → ');
       if(!this.traceDraw(L,g,t,pts,col,{focus:isFocus,dim},'<b>'+esc(t.name)+'</b><br>'+esc(itin))){
+        manqueTrace=true; this.traceAsk();
         const line=L.polyline(coords,{color:col,weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}).addTo(g);
-        line.bindTooltip('<b>'+esc(t.name)+'</b><br>'+esc(itin),{sticky:true});
+        line.bindTooltip('<b>'+esc(t.name)+'</b><br>'+esc(itin)+'<br><span style="color:#666">à vol d’oiseau · '+esc(this.traceEtatTxt())+'</span>',{sticky:true});
         line.on('mouseover',function(){ this.setStyle({weight:6,opacity:1,dashArray:null}); });
         line.on('mouseout',function(){ this.setStyle({weight:isFocus?5:3,opacity:dim?0.15:(isFocus?0.95:0.7),dashArray:isFocus?null:'6 5'}); }); }
       if(isFocus) focusBounds=L.latLngBounds(coords);
+      this.traceBanner('map-tournees', manqueTrace);
       pts.forEach((p,k)=>{
         const icon=L.divIcon({className:'',html:`<div style="width:26px;height:26px;border-radius:50%;background:${col};color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);opacity:${dim?0.25:1}">${k+1}</div>`,iconSize:[26,26],iconAnchor:[13,13]});
         L.marker([p.lat,p.lng],{icon}).addTo(g).bindPopup(sitePopup(p,t.name,k+1));
@@ -7413,7 +7441,7 @@ class Component extends DCLogic {
     const norm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
     const esc=v=>String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     const sites=this.sitesData(); const tours=this.routesMeta(); const etas=this.tourEtas();
-    const focus=this.state.mapFocusTour||null;
+    const focus=this.state.mapFocusTour||null; let manqueTrace=false;
     const colors=['#8D1D2C','#3B3468','#2d7a3e','#b26a00','#2a5a9e','#8C4A2F'];
     const shopIcon=L.divIcon({className:'',html:'<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--color-primary);border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center"><span style="transform:rotate(45deg);color:#fff;font:700 13px sans-serif">🏪</span></div>',iconSize:[30,30],iconAnchor:[15,30]});
     /* Position seulement approximative (centroïde du CP, résolu par le
@@ -7437,8 +7465,10 @@ class Component extends DCLogic {
       const et=etas[k]||{stops:{},dep:'—',fin:'—'};
       const coords=[...depC,...pts.map(p=>[p.lat,p.lng]),...depC];
       if(!this.traceDraw(L,g,t,pts,col,{focus:isFocus,dim},'<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin))){
-        const line=L.polyline(coords,{color:col,weight:isFocus?5:3.5,opacity:dim?0.15:0.8}).addTo(g);
-        line.bindTooltip('<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin),{sticky:true}); }
+        manqueTrace=true; this.traceAsk();
+        const line=L.polyline(coords,{color:col,weight:isFocus?5:3.5,opacity:dim?0.15:0.8,dashArray:'6 5'}).addTo(g);
+        line.bindTooltip('<b>'+esc(t.name)+'</b><br>Départ '+esc(et.dep)+' · retour ~'+esc(et.fin)+'<br><span style="color:#666">à vol d’oiseau · '+esc(this.traceEtatTxt())+'</span>',{sticky:true}); }
+      this.traceBanner('map-suivi', manqueTrace);
       pts.forEach((p,kk)=>{
         const no=p.offices.filter(o=>o.name&&o.name.charAt(0)!=='—').length;
         const eta=et.stops[p.id]||'—';
