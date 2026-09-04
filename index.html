@@ -7332,7 +7332,7 @@ class Component extends DCLogic {
         // départ gardait l'ancienne jusqu'au rechargement.
         const dep=this.depot();
         const sig=JSON.stringify([(window.__CPGEO?1:0),dep.lat,dep.lng,dep.libelle,this.state.mapFocusTour||'',
-          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
+          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop,r.latitude!=null?r.latitude:r.lat,r.longitude!=null?r.longitude:r.lng,r.adr||r.address||''])]);
         if(this._suiviSig!==sig){ this._suiviSig=sig; this.drawSuiviMap(); }
       }
       this.drawSuiviMap();
@@ -7358,7 +7358,7 @@ class Component extends DCLogic {
         // départ gardait l'ancienne jusqu'au rechargement.
         const dep=this.depot();
         const sig=JSON.stringify([(window.__CPGEO?1:0),dep.lat,dep.lng,dep.libelle,this.state.mapFocusTour||'',
-          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop])]);
+          (window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[]).map(r=>[r.id,r.tour,r.stop,r.latitude!=null?r.latitude:r.lat,r.longitude!=null?r.longitude:r.lng,r.adr||r.address||''])]);
         if(this._routeSig!==sig){ this._routeSig=sig; this.drawRoute(); }
       }
       this.drawRoute();
