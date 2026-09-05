@@ -6956,7 +6956,7 @@ class Component extends DCLogic {
             adresse:c.adresse||'adresse non renseignée', nature:n[0],
             style:'background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-left:3px solid '+n[1]+';border-radius:9px;padding:8px 10px',
             tagStyle:'display:inline-block;font:600 9px var(--font-ui);border-radius:999px;padding:1px 7px;margin-top:4px;background:'+n[2]+';color:'+n[1],
-            ouvrir:()=>this.setState({crmDet:{...c}}), google:url }; }) });
+            ouvrir:()=>this.setState({crmDet:{...c},crmActErr:''}), google:url }; }) });
     }
     const fin=new Date(lundi); fin.setDate(fin.getDate()+4);
     return { crmJours:jours,
@@ -7074,7 +7074,7 @@ class Component extends DCLogic {
             style:'background:var(--color-surface);border:'+(pris===String(c.id)?'1.5px solid var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:10px;padding:9px 11px;cursor:pointer;text-align:left;width:100%;display:block',
             prendre:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation();
               this.setState(st=>({crmGrab:(st.crmGrab!=null&&String(st.crmGrab)===String(c.id))?null:c.id})); },
-            ouvrir:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.setState({crmDet:{...c}}); } }; }) };
+            ouvrir:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.setState({crmDet:{...c},crmActErr:''}); } }; }) };
     });
 
     // Ajouter des cibles : les bureaux et clients qui ne sont pas déjà au
