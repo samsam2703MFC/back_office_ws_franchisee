@@ -1732,7 +1732,7 @@
       <sc-if value="{{ isCrm }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <span style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;flex:none"><button onClick="{{ crmSetVue('tableau') }}" style="{{ crmVueTabStyle }}">▦ Tableau</button><button onClick="{{ crmSetVue('agenda') }}" style="{{ crmVueAgStyle }}">🗓 Agenda</button></span>
+          <span style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;flex:none"><button onClick="{{ crmVueTab }}" style="{{ crmVueTabStyle }}">▦ Tableau</button><button onClick="{{ crmVueAg }}" style="{{ crmVueAgStyle }}">🗓 Agenda</button></span>
           <select onChange="{{ crmSetCamp }}" value="{{ crmCamp }}" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 11px;font:500 13px var(--font-ui);background:var(--color-surface);color:var(--color-text);min-width:250px">
             <sc-for list="{{ crmCampOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
           </select>
@@ -1743,6 +1743,9 @@
           <button onClick="{{ crmProspect }}" class="btn-secondary" style="font-size:12px">+ Prospect libre</button>
           <button onClick="{{ crmColOuvrir }}" class="btn-secondary" style="font-size:12px" title="Renommer, réordonner, ajouter ou retirer des étapes">⚙ Étapes</button>
         </div>
+        <sc-if value="{{ crmEcritErr }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fbe9eb;border:.5px solid #e8b4bb;border-radius:10px;padding:9px 14px;font:500 12px var(--font-ui);color:var(--color-primary);display:flex;align-items:center;gap:12px">⚠ Modification refusée : {{ crmEcritErr }}<button onClick="{{ crmEcritOk }}" class="btn-secondary" style="font-size:11.5px;margin-left:auto">Fermer</button></div>
+        </sc-if>
         <sc-if value="{{ crmGrabTxt }}" hint-placeholder-val="{{ false }}">
           <div style="background:#fff4e5;border:.5px solid #f0d5ac;border-radius:10px;padding:9px 14px;font:500 12px var(--font-ui);color:#b26a00;display:flex;align-items:center;gap:12px">{{ crmGrabTxt }}<button onClick="{{ crmAnnuler }}" class="btn-secondary" style="font-size:11.5px;margin-left:auto">Annuler</button></div>
         </sc-if>
@@ -3121,10 +3124,10 @@
         <button onClick="{{ crmDet.fermer }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button>
       </div>
       <div style="padding:16px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
-        <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Étape</span>
-          <select value="{{ crmDet.etape }}" onChange="{{ crmDet.setEtape }}" style="{{ crmInp }}">
-            <sc-for list="{{ crmDet.etapeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
-          </select></label>
+        <div><div style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Étape — cliquer pour déplacer</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">
+            <sc-for list="{{ crmDet.etapes }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.aller }}" disabled="{{ o.actuelle }}" title="{{ o.titre }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
+          </div></div>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
           <sc-for list="{{ crmDet.gestes }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.poser }}" class="btn-secondary" style="font-size:12px">{{ g.label }}</button></sc-for>
         </div>
@@ -3141,7 +3144,7 @@
               <sc-for list="{{ crmDet.typeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
             </select></label>
         </div>
-        <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Note</span><textarea onInput="{{ crmDet.setNote }}" rows="3" placeholder="ce qui s'est dit, ce qu'il faut refaire…" style="{{ crmInp }};resize:vertical">{{ crmDet.note }}</textarea></label>
+        <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Note</span><textarea value="{{ crmDet.note }}" onInput="{{ crmDet.setNote }}" rows="3" placeholder="ce qui s'est dit, ce qu'il faut refaire…" style="{{ crmInp }};resize:vertical"></textarea></label>
         <div>
           <div style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Ce qui a été fait</div>
           <sc-if value="{{ crmDet.journalVide }}" hint-placeholder-val="{{ false }}"><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Rien encore.</div></sc-if>
@@ -6579,21 +6582,22 @@ class Component extends DCLogic {
      colonne — le même geste que l'assignation des bureaux, qui marche à la
      souris comme au doigt sur une tablette. */
   crmCharger(force){ const fr=window.__FR||{}; if(!fr.base) return;
-    if(this._crmBusy) return; if(this.state.crm&&!force) return;
-    this._crmBusy=true;
+    if(this._crmBusy){ if(force) this._crmAgain=true; return; } if(this.state.crm&&!force) return;
+    this._crmBusy=true; const fini=()=>{ this._crmBusy=false; if(this._crmAgain){ this._crmAgain=false; this.crmCharger(true); } };
     fetch(fr.base+'/franchisee/crm'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
-      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ this._crmBusy=false;
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ fini();
         if(st===200&&j&&j.ok) this.setState({crm:j,crmErr:''});
         else this.setState({crmErr:(j&&j.error)||('CRM indisponible (HTTP '+st+')')}); })
-      .catch(()=>{ this._crmBusy=false; this.setState({crmErr:'Réseau indisponible'}); }); }
+      .catch(()=>{ fini(); this.setState({crmErr:'Réseau indisponible'}); }); }
   /* Une écriture, puis relecture : le tableau montre ce que la base a accepté,
      jamais ce que l'écran espérait. */
   crmEcrire(corps,msg){ const fr=window.__FR||{}; if(!fr.base) return Promise.resolve(false);
     return fetch(fr.base+'/franchisee/crm-carte'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(corps)})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
-        if(st===200&&j&&j.ok){ if(msg) this.printJob(msg); this.crmCharger(true); return true; }
-        this.printJob('⚠ '+((j&&j.error)||('Refus du serveur (HTTP '+st+')'))); return false; })
-      .catch(()=>{ this.printJob('⚠ Réseau indisponible'); return false; }); }
+        if(st===200&&j&&j.ok){ if(msg) this.printJob(msg); if(this.state.crmEcritErr) this.setState({crmEcritErr:''}); this.crmCharger(true); return true; }
+        const why=(j&&j.error)||('Refus du serveur (HTTP '+st+')');
+        this.printJob('⚠ '+why); this.setState({crmEcritErr:why}); return false; })
+      .catch(()=>{ this.printJob('⚠ Réseau indisponible'); this.setState({crmEcritErr:'Réseau indisponible — la modification n’est pas enregistrée'}); return false; }); }
   crmColonnesEcrire(cols){ const fr=window.__FR||{}; if(!fr.base) return;
     fetch(fr.base+'/franchisee/crm-colonnes'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify({colonnes:cols})})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
@@ -6609,7 +6613,10 @@ class Component extends DCLogic {
     const S=this.state;
     const dec=+(S.crmSem||0);
     const auj=new Date(); auj.setHours(0,0,0,0);
-    const lundi=new Date(auj); lundi.setDate(lundi.getDate()-((lundi.getDay()+6)%7)+dec*7);
+    // Le week-end, la semaine « en cours » est finie : on ouvre sur celle qui
+    // vient, là où sont les actions à préparer.
+    const wk=auj.getDay()===0||auj.getDay()===6?1:0;
+    const lundi=new Date(auj); lundi.setDate(lundi.getDate()-((lundi.getDay()+6)%7)+(dec+wk)*7);
     const iso=d=>d.toISOString().slice(0,10);
     const JOURS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
     const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
@@ -6714,7 +6721,13 @@ class Component extends DCLogic {
     const base={isCrm:S.screen==='crm'};
     if(S.screen!=='crm') return base;
     this.crmCharger(false);
-    if(!D) return {...base,crmPret:false,crmMsg:S.crmErr||'Chargement du tableau…',crmCols:[],crmCampOpts:[],crmColonnes:[],crmAjoutOpts:[],crmDet:null,crmColEdit:null};
+    const vue=S.crmVue||'tableau';
+    const bascule={ crmVue:vue, crmVueTableau:vue==='tableau', crmVueAgenda:vue==='agenda',
+      crmVueTab:()=>this.setState({crmVue:'tableau',crmGrab:null}), crmVueAg:()=>this.setState({crmVue:'agenda',crmGrab:null}),
+      crmVueTabStyle:'border:none;border-radius:8px;padding:7px 15px;font:600 12.5px var(--font-ui);cursor:pointer;background:'+(vue==='tableau'?'var(--color-primary)':'transparent')+';color:'+(vue==='tableau'?'#fff':'var(--color-text-muted)'),
+      crmVueAgStyle:'border:none;border-radius:8px;padding:7px 15px;font:600 12.5px var(--font-ui);cursor:pointer;background:'+(vue==='agenda'?'var(--color-primary)':'transparent')+';color:'+(vue==='agenda'?'#fff':'var(--color-text-muted)'),
+      crmEcritErr:S.crmEcritErr||'', crmEcritOk:()=>this.setState({crmEcritErr:''}) };
+    if(!D) return {...base,...bascule,crmPret:false,crmMsg:S.crmErr||'Chargement du tableau…',crmCols:[],crmCampOpts:[],crmColonnes:[],crmAjoutOpts:[],crmDet:null,crmColEdit:null};
 
     // La campagne en cours : celle choisie, sinon la première active.
     const camps=D.campagnes||[];
@@ -6802,12 +6815,14 @@ class Component extends DCLogic {
       // La fiche d'une carte : le contact, le bon, la prochaine action, les
       // gestes déjà faits. Tout se modifie, rien n'est obligatoire.
       crmDet:det?{ nom:det.nom, sous:det.campagneNom||'', id:String(det.id),
-        // Déplacer sans prendre : un menu déroulant, qui marche partout.
-        etape:det.colonne||'', etapeOpts:(D.colonnes||[]).map(c=>({value:c.cle,label:c.label})),
-        setEtape:(e)=>{ const v=e.target.value; const col=(D.colonnes||[]).find(x=>x.cle===v);
-          if(!col||v===det.colonne) return;
-          this.crmEcrire({id:det.id,colonne:v,geste:'colonne',gesteTexte:'→ '+col.label},'✓ « '+det.nom+' » → '+col.label);
-          this.setState({crmDet:null}); },
+        // Déplacer depuis la fiche : un bouton par étape, l'actuelle en plein.
+        // Un bouton se voit et se touche ; une liste déroulante se cherche.
+        etapes:(D.colonnes||[]).map(col=>{ const act=col.cle===det.colonne, coul=col.couleur||'var(--color-text-muted)';
+          return { label:col.label, actuelle:act, titre:act?'Étape actuelle':('Passer en « '+col.label+' »'),
+            style:'border:1.5px solid '+coul+';border-radius:999px;padding:6px 12px;font:600 11.5px var(--font-ui);cursor:'+(act?'default':'pointer')+';background:'+(act?coul:'var(--color-surface)')+';color:'+(act?'#fff':coul)+(act?';opacity:1':''),
+            aller:()=>{ if(act) return;
+              this.crmEcrire({id:det.id,colonne:col.cle,geste:'colonne',gesteTexte:'→ '+col.label},'✓ « '+det.nom+' » → '+col.label);
+              this.setState({crmDet:null}); } }; }),
         contactNom:det.contactNom||'', setContactNom:(e)=>majDet({contactNom:e.target.value}),
         contactRole:det.contactRole||'', setContactRole:(e)=>majDet({contactRole:e.target.value}),
         contactTel:det.contactTel||'', setContactTel:(e)=>majDet({contactTel:e.target.value}),
@@ -6832,12 +6847,7 @@ class Component extends DCLogic {
       // ── AGENDA : la semaine des actions à venir ───────────────────────
       // Ce qui est prévu, quel jour, à quelle heure et où. Une action sans
       // heure se pose en tête de journée et le dit : on n'invente pas 09:00.
-      crmVue:S.crmVue||'tableau',
-      crmVueTableau:(S.crmVue||'tableau')==='tableau',
-      crmVueAgenda:(S.crmVue||'tableau')==='agenda',
-      crmSetVue:(v)=>()=>this.setState({crmVue:v,crmGrab:null}),
-      crmVueTabStyle:'border:none;border-radius:8px;padding:7px 15px;font:600 12.5px var(--font-ui);cursor:pointer;background:'+((S.crmVue||'tableau')==='tableau'?'var(--color-primary)':'transparent')+';color:'+((S.crmVue||'tableau')==='tableau'?'#fff':'var(--color-text-muted)'),
-      crmVueAgStyle:'border:none;border-radius:8px;padding:7px 15px;font:600 12.5px var(--font-ui);cursor:pointer;background:'+((S.crmVue||'tableau')==='agenda'?'var(--color-primary)':'transparent')+';color:'+((S.crmVue||'tableau')==='agenda'?'#fff':'var(--color-text-muted)'),
+      ...bascule,
       ...this.crmAgenda(cartes,D),
       // Les colonnes, modifiables : nom, ordre, ajout, retrait.
       crmColEditOn:!!S.crmCols,
