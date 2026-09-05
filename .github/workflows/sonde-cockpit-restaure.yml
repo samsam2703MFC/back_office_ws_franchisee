@@ -1,0 +1,194 @@
+name: Sonde — cockpit, restauration des référentiels de l'assistant (écriture)
+
+# Suite de sonde-cockpit-assistant.yml (run 33961563898, 05/09) : le nettoyage
+# du module marketing du 27/08 09:22 (37 objets) a emporté 20 des 24 tables
+# que ReferenceRepository::all() lit au démarrage de l'assistant — la première
+# qui tombe est mar_lead_status — et /references répond depuis « Erreur
+# interne du module marketing. » (journal Apache : SQLSTATE[42S02] … Table
+# 'atelierby_db.mar_lead_status' doesn't exist).
+#
+# Le cockpit possède déjà la réparation : POST /api/cockpit/admin/marketing-
+# restaure (public/api/index.php:330 → writes.php:2553), qu'aucun bouton
+# n'appelle. Elle rejoue sql/mar-referentiels.sql — CREATE TABLE IF NOT EXISTS,
+# seeds seulement sur tables vides, migrations du module (les ALTER qui
+# échouent sont ignorés) — puis reprend le catalogue d'offres depuis l'ERP,
+# exactement comme les onze restaurations du 20/08.
+#
+# Cette sonde ÉCRIT, à la demande explicite de l'utilisateur (05/09) :
+#  0. AVANT — /references en loopback et état des tables (lecture seule) ;
+#  1. la restauration, par le chemin exact du bouton (HTTP loopback ; repli
+#     CLI sur la même fonction wr_mar_restaure() si l'auth intégrée du cockpit
+#     répond 401) — jusqu'à trois passes, arrêt dès que /references rend 200.
+#     Deux passes sont attendues avec le code actuel : mar_offer_template_item
+#     (mar-referentiels.sql:314) référence mar_offer_item, créée APRÈS elle
+#     (l.327) ; la passe 1 la manque, la passe 2 la crée ;
+#  2. APRÈS — même état, /references, lignes [marketing] apparues, journal.
+# Elle ne supprime rien elle-même ; les seuls DELETE de wr_mar_restaure visent
+# les doublons du catalogue d'offres (writes.php:2582-2600). Aucun secret en
+# URL ni au log : le mot de passe MySQL n'est jamais imprimé.
+#
+# LECTURE DU RÉSULTAT
+#  - « passe N : HTTP 200 » puis le JSON {instructions, ignorees, offres,
+#    reprise} : instructions = énoncés SQL passés, ignorees = énoncés refusés
+#    ou seeds sur table garnie (le code actuel ne distingue pas les deux) ;
+#  - APRÈS : « tables lues par /references ABSENTES : aucune », « OK all() »
+#    et « GET /references : HTTP 200 » = l'assistant est réparé ;
+#  - un ABSENT qui reste après trois passes est un énoncé refusé par MySQL :
+#    à lire dans mar-referentiels.sql, la sonde ne force rien.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  restaurer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Restaurer les référentiels de l'assistant et vérifier
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh -p ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "bash -s" <<'EOSH'
+          set -u
+          R=/var/www/consulant_bo
+          BASE=http://127.0.0.1/consulant_bo
+          PHP=$(command -v php || command -v php8.3 || command -v php8.2 || command -v php8.1)
+          echo "date serveur : $(date '+%Y-%m-%d %H:%M:%S %Z') — php CLI : $PHP"
+          [ -d "$R" ] || { echo "cockpit introuvable : $R"; exit 2; }
+          [ -f "$R/sql/mar-referentiels.sql" ] || { echo "sql/mar-referentiels.sql absent : rien a rejouer"; exit 2; }
+          echo "md5 sql/mar-referentiels.sql : $(md5sum "$R/sql/mar-referentiels.sql" | cut -c1-32) (attendu acf0e3ad0e1a7d3ea91cd2047749427d)"
+          echo "auth integree du cockpit : $($PHP -r "require '$R/src/Db.php'; echo (Db::config()['auth'] ?? false) ? 'activee' : 'desactivee (defaut)';")"
+
+          # ---- outils -------------------------------------------------------
+          cat > /tmp/sonde_etat.php <<'EOPHP'
+          <?php
+          declare(strict_types=1);
+          $R = '/var/www/consulant_bo';
+          require $R . '/src/Db.php';
+          require $R . '/public/api/marketing/src/autoload.php';
+          $pdo = Db::pdo();
+          // Lecture seule garantie par le SERVEUR : toute ecriture leverait 1792.
+          $pdo->exec('SET SESSION TRANSACTION READ ONLY');
+          $pdo->beginTransaction();
+          // Les 24 tables lues par ReferenceRepository::all(), dans son ordre.
+          $lues = [
+              'mar_lever', 'mar_campaign_status', 'mar_campaign_type', 'mar_lead_status',
+              'mar_b2b_sector', 'mar_b2b_prospect_sector', 'mar_b2b_prospect', 'mar_format',
+              'mar_position', 'mar_channel', 'mar_uniform', 'mar_offer_template',
+              'mar_offer_template_item', 'mar_tone', 'mar_agency_ask', 'mar_b2b_option',
+              'mar_retroplanning_default', 'mar_client_target', 'mar_cost_kind', 'mar_fund_source',
+              'mar_review_platform', 'mar_sales_channel', 'mar_promotion_mechanic', 'mar_pos_answer_type',
+          ];
+          $autres = ['mar_brand', 'mar_shop', 'mar_offer_item', 'mar_offer_item_season', 'mar_schema_migration',
+              'mar_v_fund_ledger_by_period', 'mar_v_lever_performance', 'mar_v_campaign_monitor',
+              'mar_v_lead_funnel', 'mar_v_lead_funnel_by_shop', 'mar_v_roi_quarterly'];
+          $obj = [];
+          foreach ($pdo->query("SELECT TABLE_NAME n, TABLE_TYPE t, CREATE_TIME c FROM information_schema.TABLES
+                                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'mar\\_%'") as $o) { $obj[$o['n']] = $o; }
+          printf("   base %s : %d objet(s) mar_\n", (string) $pdo->query('SELECT DATABASE()')->fetchColumn(), count($obj));
+          $abs = array_values(array_filter($lues, static fn ($t) => !isset($obj[$t])));
+          echo '   tables lues par /references ABSENTES : ', $abs === [] ? 'aucune' : count($abs) . ' — ' . implode(', ', $abs), "\n";
+          foreach (array_merge($lues, $autres) as $t) {
+              if (!isset($obj[$t])) { printf("   ABSENT  %s\n", $t); continue; }
+              $o = $obj[$t];
+              try { $n = (string) $pdo->query("SELECT COUNT(*) FROM `$t`")->fetchColumn(); }
+              catch (Throwable $e) { $n = 'KO'; }
+              printf("   %-6s  %-28s %6s ligne(s)  %s\n", $o['t'] === 'VIEW' ? 'vue' : 'table', $t, $n, $o['c'] ? 'cree ' . $o['c'] : '');
+          }
+          \Marketing\Support\Database::setConnection($pdo);
+          \Marketing\Support\AuthContext::set(1, 'BRAND_ADMIN');
+          try { $r = (new \Marketing\Repository\ReferenceRepository())->all(); echo '   OK  all() : ', count($r), " jeu(x) de references => GET /references doit rendre 200\n"; }
+          catch (Throwable $e) { echo '   KO  all() : ', $e->getMessage(), "\n"; }
+          if (($argv[1] ?? '') === 'apres') {
+              foreach ($pdo->query("SELECT happened_at, message FROM ceo_journal_entry WHERE kind = 'Maintenance' ORDER BY id DESC LIMIT 4") as $j) {
+                  echo '   journal ', $j['happened_at'], ' : ', mb_substr((string) $j['message'], 0, 200), "\n";
+              }
+          }
+          $pdo->rollBack();
+          EOPHP
+
+          # Repli si l'auth integree repond 401 : la MEME fonction que l'endpoint,
+          # chargee avec les memes fichiers que public/api/index.php.
+          cat > /tmp/sonde_restaure_cli.php <<'EOPHP'
+          <?php
+          declare(strict_types=1);
+          $R = '/var/www/consulant_bo';
+          foreach (file($R . '/public/api/index.php') as $l) {
+              if (preg_match("#^require __DIR__ \\. '(/[^']+)';#", $l, $m)) { require $R . '/public/api' . $m[1]; }
+          }
+          ensureInstalled();
+          echo json_encode(wr_mar_restaure(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+          EOPHP
+
+          references() {  # code HTTP + taille de GET /references, l'appel exact de l'assistant
+            local h
+            h=$(curl -sS --max-time 60 -o /tmp/sonde_ref.json -w '%{http_code}' -H 'Accept: application/json' "$BASE/api/v1/marketing/references" 2>/dev/null || echo 000)
+            echo "   GET /references : HTTP $h — $(wc -c < /tmp/sonde_ref.json) octets — $(head -c 160 /tmp/sonde_ref.json | tr '\n' ' ')"
+            REF_HTTP=$h
+          }
+
+          montrer_json() {
+            $PHP -r '$s = (string) file_get_contents($argv[1]); $j = json_decode($s, true);
+              if (!is_array($j)) { echo "   (reponse non JSON) ", substr($s, 0, 800), "\n"; exit; }
+              foreach (explode("\n", json_encode($j, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) as $l) { echo "   ", $l, "\n"; }' "$1"
+          }
+
+          restaurer() {  # $1 = numero de passe
+            local t0 h
+            t0=$(date +%s)
+            h=$(curl -sS --max-time 900 -o "/tmp/sonde_rest$1.json" -w '%{http_code}' -X POST \
+                  -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{}' \
+                  "$BASE/api/cockpit/admin/marketing-restaure" 2>/tmp/sonde_curl.err || echo 000)
+            echo "   passe $1 : HTTP $h en $(( $(date +%s) - t0 )) s — $(wc -c < "/tmp/sonde_rest$1.json") octets"
+            [ -s /tmp/sonde_curl.err ] && echo "   curl : $(cat /tmp/sonde_curl.err)"
+            if [ "$h" = "401" ]; then
+              echo "   auth integree activee : repli CLI, meme fonction wr_mar_restaure()"
+              t0=$(date +%s)
+              $PHP /tmp/sonde_restaure_cli.php > "/tmp/sonde_rest$1.json" 2>/tmp/sonde_cli.err
+              echo "   CLI : sortie $(wc -c < "/tmp/sonde_rest$1.json") octets en $(( $(date +%s) - t0 )) s"
+              [ -s /tmp/sonde_cli.err ] && { echo "   CLI stderr :"; head -c 1500 /tmp/sonde_cli.err; echo; }
+            fi
+            montrer_json "/tmp/sonde_rest$1.json"
+          }
+
+          # ---- journaux [marketing] : compte de depart, pour n'afficher que le nouveau
+          JOURNAUX=$( { ls /var/log/apache2/error.log /var/log/apache2/*error*.log /var/log/php*-fpm.log 2>/dev/null; } | sort -u )
+          declare -A N0
+          for f in $JOURNAUX; do [ -r "$f" ] && N0[$f]=$(grep -ac '\[marketing\]' "$f" 2>/dev/null || true); done
+
+          echo
+          echo "===== 0. AVANT ====="
+          references
+          $PHP /tmp/sonde_etat.php avant
+
+          echo
+          echo "===== 1. RESTAURATION (POST /api/cockpit/admin/marketing-restaure, le chemin du bouton absent) ====="
+          REF_HTTP=000
+          for p in 1 2 3; do
+            restaurer "$p"
+            references
+            if [ "$REF_HTTP" = "200" ] && [ "$p" -ge 2 ]; then echo "   /references rend 200 apres la passe $p : arret."; break; fi
+            if [ "$REF_HTTP" = "200" ]; then echo "   /references rend deja 200 ; une passe de plus pour mar_offer_template_item (FK vers mar_offer_item)."; fi
+          done
+
+          echo
+          echo "===== 2. APRES ====="
+          references
+          $PHP /tmp/sonde_etat.php apres
+          echo "-- lignes [marketing] apparues pendant la sonde :"
+          NOUV=0
+          for f in $JOURNAUX; do
+            [ -r "$f" ] || continue
+            n=$(grep -ac '\[marketing\]' "$f" 2>/dev/null || true); d=$(( n - ${N0[$f]:-0} ))
+            if [ "$d" -gt 0 ]; then NOUV=$(( NOUV + d )); echo "   $f (+$d) :"; grep -a '\[marketing\]' "$f" | tail -n "$d" | cut -c1-300; fi
+          done
+          [ "$NOUV" -eq 0 ] && echo "   aucune"
+
+          rm -f /tmp/sonde_etat.php /tmp/sonde_restaure_cli.php /tmp/sonde_ref.json /tmp/sonde_rest*.json /tmp/sonde_curl.err /tmp/sonde_cli.err
+          echo
+          echo "(fin — fichiers temporaires retires)"
+          EOSH
