@@ -1662,6 +1662,7 @@
       <sc-if value="{{ isCrm }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;flex:none"><button onClick="{{ crmSetVue('tableau') }}" style="{{ crmVueTabStyle }}">▦ Tableau</button><button onClick="{{ crmSetVue('agenda') }}" style="{{ crmVueAgStyle }}">🗓 Agenda</button></span>
           <select onChange="{{ crmSetCamp }}" value="{{ crmCamp }}" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 11px;font:500 13px var(--font-ui);background:var(--color-surface);color:var(--color-text);min-width:250px">
             <sc-for list="{{ crmCampOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
           </select>
@@ -1675,11 +1676,48 @@
         <sc-if value="{{ crmGrabTxt }}" hint-placeholder-val="{{ false }}">
           <div style="background:#fff4e5;border:.5px solid #f0d5ac;border-radius:10px;padding:9px 14px;font:500 12px var(--font-ui);color:#b26a00;display:flex;align-items:center;gap:12px">{{ crmGrabTxt }}<button onClick="{{ crmAnnuler }}" class="btn-secondary" style="font-size:11.5px;margin-left:auto">Annuler</button></div>
         </sc-if>
+        <!-- AGENDA : la semaine des actions datées, avec le lieu et le lien
+             vers Google Agenda. Une action sans heure se pose en tête de
+             journée et le dit — on n'invente pas un horaire. -->
+        <sc-if value="{{ crmVueAgenda }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <button onClick="{{ crmSemPrec }}" class="btn-secondary" style="font-size:12px">‹ Semaine</button>
+            <button onClick="{{ crmSemAuj }}" class="btn-secondary" style="font-size:12px">Cette semaine</button>
+            <button onClick="{{ crmSemSuiv }}" class="btn-secondary" style="font-size:12px">Semaine ›</button>
+            <span style="font:600 12.5px var(--font-ui);color:var(--color-text)">{{ crmSemTxt }}</span>
+            <span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-left:auto">{{ crmAgTotal }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:start">
+            <sc-for list="{{ crmJours }}" as="j" hint-placeholder-count="5">
+              <div style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:12px;min-height:230px">
+                <div style="{{ j.entete }}"><span>{{ j.nom }} {{ j.date }}</span><span>{{ j.n }}</span></div>
+                <div style="padding:9px;display:flex;flex-direction:column;gap:8px">
+                  <sc-for list="{{ j.events }}" as="e" hint-placeholder-count="2">
+                    <div style="{{ e.style }}">
+                      <div style="font:700 10.5px var(--font-ui);color:var(--color-text-muted)">{{ e.quand }}</div>
+                      <button onClick="{{ e.ouvrir }}" style="border:none;background:none;padding:0;cursor:pointer;text-align:left;width:100%;font:600 12px var(--font-ui);color:var(--color-text);margin:1px 0 2px">{{ e.nom }}</button>
+                      <div style="font:400 10.5px/1.35 var(--font-ui);color:var(--color-text-muted)">{{ e.adresse }}</div>
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="{{ e.tagStyle }}">{{ e.nature }}</span><a href="{{ e.google }}" target="_blank" rel="noopener" style="margin-top:4px;font:600 9px var(--font-ui);border:.5px solid #4285F4;color:#4285F4;border-radius:999px;padding:1px 7px;text-decoration:none">＋ Google</a></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ crmAgVide }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucune action datée cette semaine. La date se pose sur la fiche d’une carte, champ « Prochaine action ».</div></sc-if>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ crmVueTableau }}" hint-placeholder-val="{{ true }}">
         <sc-if value="{{ crmPret }}" hint-placeholder-val="{{ true }}">
         <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;align-items:flex-start">
           <sc-for list="{{ crmColonnes }}" as="c" hint-placeholder-count="4">
-            <div onClick="{{ c.poser }}" style="{{ c.colStyle }}">
+            <div style="{{ c.colStyle }}">
               <div style="{{ c.entete }}"><span style="font:700 12px var(--font-ui);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.label }}</span><span style="font:700 11px var(--font-ui);background:rgba(255,255,255,.25);border-radius:999px;padding:1px 8px">{{ c.n }}</span></div>
+              <sc-if value="{{ c.poserOn }}" hint-placeholder-val="{{ false }}">
+                <button onClick="{{ c.poser }}" style="margin:8px 10px 0;border:1.5px dashed var(--color-primary);background:#fbe9eb;color:var(--color-primary);border-radius:9px;padding:9px;font:600 11.5px var(--font-ui);cursor:pointer">Poser ici</button>
+              </sc-if>
               <div style="display:flex;flex-direction:column;gap:8px;padding:10px">
                 <sc-for list="{{ c.cartes }}" as="k" hint-placeholder-count="2">
                   <div style="{{ k.style }}">
@@ -1701,6 +1739,7 @@
             </div>
           </sc-for>
         </div>
+        </sc-if>
         </sc-if>
         <sc-if value="{{ crmMsg }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ crmMsg }}</div></sc-if>
       </div>
@@ -3012,6 +3051,10 @@
         <button onClick="{{ crmDet.fermer }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button>
       </div>
       <div style="padding:16px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
+        <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Étape</span>
+          <select value="{{ crmDet.etape }}" onChange="{{ crmDet.setEtape }}" style="{{ crmInp }}">
+            <sc-for list="{{ crmDet.etapeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select></label>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
           <sc-for list="{{ crmDet.gestes }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.poser }}" class="btn-secondary" style="font-size:12px">{{ g.label }}</button></sc-for>
         </div>
@@ -3021,7 +3064,12 @@
           <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Téléphone</span><input value="{{ crmDet.contactTel }}" onInput="{{ crmDet.setContactTel }}" placeholder="+32 …" style="{{ crmInp }}"/></label>
           <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">E-mail</span><input value="{{ crmDet.contactEmail }}" onInput="{{ crmDet.setContactEmail }}" placeholder="contact@…" style="{{ crmInp }}"/></label>
           <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Bon / code</span><input value="{{ crmDet.voucher }}" onInput="{{ crmDet.setVoucher }}" placeholder="code du bon remis" style="{{ crmInp }}"/></label>
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Prochaine action</span><input type="date" value="{{ crmDet.prochaine }}" onChange="{{ crmDet.setProchaine }}" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Prochaine action — date</span><input type="date" value="{{ crmDet.prochaine }}" onChange="{{ crmDet.setProchaine }}" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">… heure (facultative)</span><input type="time" value="{{ crmDet.prochaineHeure }}" onChange="{{ crmDet.setProchaineHeure }}" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">… nature</span>
+            <select value="{{ crmDet.prochaineType }}" onChange="{{ crmDet.setProchaineType }}" style="{{ crmInp }}">
+              <sc-for list="{{ crmDet.typeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+            </select></label>
         </div>
         <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Note</span><textarea onInput="{{ crmDet.setNote }}" rows="3" placeholder="ce qui s'est dit, ce qu'il faut refaire…" style="{{ crmInp }};resize:vertical">{{ crmDet.note }}</textarea></label>
         <div>
@@ -6482,6 +6530,58 @@ class Component extends DCLogic {
         if(st===200&&j&&j.ok){ this.printJob('✓ Colonnes enregistrées'); this.setState({crmCols:null}); this.crmCharger(true); }
         else this.printJob('⚠ '+((j&&j.error)||'Colonnes non enregistrées')); })
       .catch(()=>this.printJob('⚠ Réseau indisponible')); }
+  /* La semaine d'agenda : cinq jours ouvrés à partir du lundi de la semaine
+     affichée. Chaque action porte sa nature (visite, appel, envoi), son heure
+     si elle est fixée, et l'adresse — c'est le « où » qu'on vient chercher.
+     Le lien Google ouvre l'agenda du navigateur avec l'événement pré-rempli :
+     rien à connecter, rien à écrire chez un tiers sans le demander. */
+  crmAgenda(cartes,D){
+    const S=this.state;
+    const dec=+(S.crmSem||0);
+    const auj=new Date(); auj.setHours(0,0,0,0);
+    const lundi=new Date(auj); lundi.setDate(lundi.getDate()-((lundi.getDay()+6)%7)+dec*7);
+    const iso=d=>d.toISOString().slice(0,10);
+    const JOURS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+    const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+    const NAT={visite:['Visite','#6b4fa8','#efe9fa'],tel:['Relance','#b26a00','#fff4e5'],mail:['Envoi mail','#2a5a9e','#eef3fb'],
+      bon:['Bon à remettre','#C17A2A','#fff4e5'],assort:['Assortiment','#8b8177','var(--color-background-secondary)']};
+    const avec=cartes.filter(c=>c.prochaine);
+    const jours=[];
+    for(let i=0;i<5;i++){
+      const d=new Date(lundi); d.setDate(d.getDate()+i); const k=iso(d);
+      const dedans=avec.filter(c=>String(c.prochaine).slice(0,10)===k)
+        .sort((a,b)=>String(a.prochaineHeure||'99:99').localeCompare(String(b.prochaineHeure||'99:99')));
+      jours.push({ nom:JOURS[i], date:d.getDate()+' '+MOIS[d.getMonth()], n:String(dedans.length),
+        auj:k===iso(auj),
+        entete:'margin:0;padding:9px 12px;font:700 11.5px var(--font-ui);border-radius:11px 11px 0 0;display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--color-border-tertiary);background:'+(k===iso(auj)?'#fbe9eb':'var(--color-surface)')+';color:'+(k===iso(auj)?'var(--color-primary)':'var(--color-text)'),
+        events:dedans.map(c=>{ const n=NAT[c.prochaineType]||['Action','var(--color-text-muted)','var(--color-background-secondary)'];
+          const quand=c.prochaineHeure||'';
+          // Lien Google Agenda : l'événement pré-rempli, rien de plus. Le
+          // franchisé décide de l'enregistrer, on n'écrit pas chez lui.
+          const dt=String(c.prochaine).replace(/-/g,'');
+          const h=(c.prochaineHeure||'09:00').replace(':','')+'00';
+          const fin=String((+(c.prochaineHeure||'09:00').slice(0,2)+1)).padStart(2,'0')+(c.prochaineHeure||'09:00').slice(3,5)+'00';
+          const url='https://calendar.google.com/calendar/render?action=TEMPLATE'
+            +'&text='+encodeURIComponent(n[0]+' — '+c.nom)
+            +'&dates='+dt+'T'+h+'/'+dt+'T'+fin
+            +'&location='+encodeURIComponent(c.adresse||'')
+            +'&details='+encodeURIComponent([c.contactNom&&('Contact : '+c.contactNom+(c.contactRole?(' ('+c.contactRole+')'):'')),
+                c.contactTel&&('Tél : '+c.contactTel),c.contactEmail&&('E-mail : '+c.contactEmail),
+                c.voucher&&('Bon : '+c.voucher),c.note].filter(Boolean).join('\n'));
+          return { nom:c.nom, quand:quand||'heure à fixer', sansHeure:!quand,
+            adresse:c.adresse||'adresse non renseignée', nature:n[0],
+            style:'background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-left:3px solid '+n[1]+';border-radius:9px;padding:8px 10px',
+            tagStyle:'display:inline-block;font:600 9px var(--font-ui);border-radius:999px;padding:1px 7px;margin-top:4px;background:'+n[2]+';color:'+n[1],
+            ouvrir:()=>this.setState({crmDet:{...c}}), google:url }; }) });
+    }
+    const fin=new Date(lundi); fin.setDate(fin.getDate()+4);
+    return { crmJours:jours,
+      crmSemTxt:'Semaine du '+lundi.getDate()+' '+MOIS[lundi.getMonth()]+' au '+fin.getDate()+' '+MOIS[fin.getMonth()],
+      crmSemPrec:()=>this.setState({crmSem:dec-1}), crmSemSuiv:()=>this.setState({crmSem:dec+1}),
+      crmSemAuj:()=>this.setState({crmSem:0}),
+      crmAgVide:!jours.some(j=>j.events.length),
+      crmAgTotal:String(avec.length)+' action(s) datée(s) sur le tableau' };
+  }
   crmVals(){
     const S=this.state, D=this.state.crm||null;
     const SRV=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
@@ -6508,7 +6608,10 @@ class Component extends DCLogic {
         couleur:col.couleur||'var(--color-text-muted)',
         entete:'display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px 10px 0 0;background:'+(col.couleur||'var(--color-background-secondary)')+';color:#fff',
         colStyle:'flex:none;width:264px;display:flex;flex-direction:column;background:var(--color-background-secondary);border:'+(pris?'1.5px dashed var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:12px;min-height:180px',
-        poser:()=>{ if(!pris) return; const c=cartes.find(x=>String(x.id)===pris); if(!c||c.colonne===col.cle){ this.setState({crmGrab:null}); return; }
+        poserOn:!!pris&&!cartes.some(x=>String(x.id)===pris&&x.colonne===col.cle),
+        poser:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation();
+          if(!pris) return; const c=cartes.find(x=>String(x.id)===pris);
+          if(!c||c.colonne===col.cle){ this.setState({crmGrab:null}); return; }
           this.setState({crmGrab:null});
           this.crmEcrire({id:+pris,colonne:col.cle,geste:'colonne',gesteTexte:'→ '+col.label},'✓ « '+c.nom+' » → '+col.label); },
         cartes:dedans.map(c=>{
@@ -6522,8 +6625,9 @@ class Component extends DCLogic {
             gestes:[...new Set(g)].join(' '),
             pris:pris===String(c.id),
             style:'background:var(--color-surface);border:'+(pris===String(c.id)?'1.5px solid var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:10px;padding:9px 11px;cursor:pointer;text-align:left;width:100%;display:block',
-            prendre:()=>this.setState(st=>({crmGrab:(st.crmGrab!=null&&String(st.crmGrab)===String(c.id))?null:c.id})),
-            ouvrir:()=>this.setState({crmDet:{...c}}) }; }) };
+            prendre:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation();
+              this.setState(st=>({crmGrab:(st.crmGrab!=null&&String(st.crmGrab)===String(c.id))?null:c.id})); },
+            ouvrir:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.setState({crmDet:{...c}}); } }; }) };
     });
 
     // Ajouter des cibles : les bureaux et clients qui ne sont pas déjà au
@@ -6572,12 +6676,21 @@ class Component extends DCLogic {
       // La fiche d'une carte : le contact, le bon, la prochaine action, les
       // gestes déjà faits. Tout se modifie, rien n'est obligatoire.
       crmDet:det?{ nom:det.nom, sous:det.campagneNom||'', id:String(det.id),
+        // Déplacer sans prendre : un menu déroulant, qui marche partout.
+        etape:det.colonne||'', etapeOpts:(D.colonnes||[]).map(c=>({value:c.cle,label:c.label})),
+        setEtape:(e)=>{ const v=e.target.value; const col=(D.colonnes||[]).find(x=>x.cle===v);
+          if(!col||v===det.colonne) return;
+          this.crmEcrire({id:det.id,colonne:v,geste:'colonne',gesteTexte:'→ '+col.label},'✓ « '+det.nom+' » → '+col.label);
+          this.setState({crmDet:null}); },
         contactNom:det.contactNom||'', setContactNom:(e)=>majDet({contactNom:e.target.value}),
         contactRole:det.contactRole||'', setContactRole:(e)=>majDet({contactRole:e.target.value}),
         contactTel:det.contactTel||'', setContactTel:(e)=>majDet({contactTel:e.target.value}),
         contactEmail:det.contactEmail||'', setContactEmail:(e)=>majDet({contactEmail:e.target.value}),
         voucher:det.voucher||'', setVoucher:(e)=>majDet({voucher:e.target.value}),
         prochaine:det.prochaine||'', setProchaine:(e)=>majDet({prochaine:e.target.value}),
+        prochaineHeure:det.prochaineHeure||'', setProchaineHeure:(e)=>majDet({prochaineHeure:e.target.value}),
+        prochaineType:det.prochaineType||'', setProchaineType:(e)=>majDet({prochaineType:e.target.value}),
+        typeOpts:[{value:'',label:'— nature —'},{value:'visite',label:'Visite sur place'},{value:'tel',label:'Appel'},{value:'mail',label:'Envoi mail'},{value:'bon',label:'Remise du bon'},{value:'assort',label:'Assortiment'}],
         note:det.note||'', setNote:(e)=>majDet({note:e.target.value}),
         journal:(det.gestes||[]).slice(0,12).map(g=>({txt:(gesteDe[g.type]||'•')+' '+(g.texte||g.type),quand:String(g.quand||'').slice(0,16).replace('T',' ')})),
         journalVide:!(det.gestes||[]).length,
@@ -6585,10 +6698,21 @@ class Component extends DCLogic {
           .map(([k,lab])=>({label:lab,poser:()=>{ this.crmEcrire({id:det.id,geste:k,gesteTexte:lab},'✓ '+lab); this.setState({crmDet:null}); }})),
         enregistrer:()=>{ this.crmEcrire({id:det.id,contactNom:det.contactNom||'',contactRole:det.contactRole||'',
           contactTel:det.contactTel||'',contactEmail:det.contactEmail||'',voucher:det.voucher||'',
-          prochaine:det.prochaine||'',note:det.note||''},'✓ Fiche enregistrée'); this.setState({crmDet:null}); },
+          prochaine:det.prochaine||'',prochaineHeure:det.prochaineHeure||'',prochaineType:det.prochaineType||'',
+          note:det.note||''},'✓ Fiche enregistrée'); this.setState({crmDet:null}); },
         supprimer:()=>{ this.crmEcrire({id:det.id,supprimer:true},'Carte retirée du tableau'); this.setState({crmDet:null}); },
         fermer:()=>this.setState({crmDet:null}) }:null,
 
+      // ── AGENDA : la semaine des actions à venir ───────────────────────
+      // Ce qui est prévu, quel jour, à quelle heure et où. Une action sans
+      // heure se pose en tête de journée et le dit : on n'invente pas 09:00.
+      crmVue:S.crmVue||'tableau',
+      crmVueTableau:(S.crmVue||'tableau')==='tableau',
+      crmVueAgenda:(S.crmVue||'tableau')==='agenda',
+      crmSetVue:(v)=>()=>this.setState({crmVue:v,crmGrab:null}),
+      crmVueTabStyle:'border:none;border-radius:8px;padding:7px 15px;font:600 12.5px var(--font-ui);cursor:pointer;background:'+((S.crmVue||'tableau')==='tableau'?'var(--color-primary)':'transparent')+';color:'+((S.crmVue||'tableau')==='tableau'?'#fff':'var(--color-text-muted)'),
+      crmVueAgStyle:'border:none;border-radius:8px;padding:7px 15px;font:600 12.5px var(--font-ui);cursor:pointer;background:'+((S.crmVue||'tableau')==='agenda'?'var(--color-primary)':'transparent')+';color:'+((S.crmVue||'tableau')==='agenda'?'#fff':'var(--color-text-muted)'),
+      ...this.crmAgenda(cartes,D),
       // Les colonnes, modifiables : nom, ordre, ajout, retrait.
       crmColEditOn:!!S.crmCols,
       crmColOuvrir:()=>this.setState({crmCols:(D.colonnes||[]).map(c=>({cle:c.cle,label:c.label,couleur:c.couleur||''}))}),
