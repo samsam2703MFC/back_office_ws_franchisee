@@ -7111,11 +7111,23 @@ class Component extends DCLogic {
       crmEcritErr:S.crmEcritErr||'', crmEcritOk:()=>this.setState({crmEcritErr:''}) };
     if(!D) return {...base,...bascule,crmPret:false,crmMsg:S.crmErr||'Chargement du tableau…',crmCols:[],crmCampOpts:[],crmColonnes:[],crmAjoutOpts:[],crmDet:null,crmColEdit:null};
 
+    // Le sélecteur ne propose QUE les campagnes dont la clientèle cible est
+    // « B2B » : ce tableau équipe des bureaux et des sociétés, une campagne
+    // grand public n'a rien à y filtrer. Celles qui visent une autre
+    // clientèle ne disparaissent pas en silence — le texte à côté du
+    // sélecteur les compte.
+    const campsTous=D.campagnes||[];
+    const camps=campsTous.filter(c=>String((c&&c.audience)||'').trim().toLowerCase()==='b2b');
+    const campsAutres=campsTous.length-camps.length;
+
     // La campagne en cours : celle choisie, sinon la première active.
-    const camps=D.campagnes||[];
     const campDef=(camps.find(c=>c.active)||camps[0]||null);
-    const campId=S.crmCamp!==undefined?S.crmCamp:(campDef?String(campDef.id):'');
-    const campObj=camps.find(c=>String(c.id)===String(campId))||null;
+    const campVoulu=S.crmCamp!==undefined?String(S.crmCamp):(campDef?String(campDef.id):'');
+    const campObj=camps.find(c=>String(c.id)===campVoulu)||null;
+    // Une campagne que le sélecteur ne propose plus (sa cible n'est plus
+    // B2B) ne filtre plus rien : le tableau retombe sur « toutes » plutôt
+    // que de se vider sans dire pourquoi.
+    const campId=campObj?campVoulu:'';
     const cartes=(D.cartes||[]).filter(c=>!campId||String(c.campagneId||'')===String(campId));
 
     // Prendre / poser : une carte prise attend une colonne.
@@ -7173,11 +7185,14 @@ class Component extends DCLogic {
 
     return {...base, crmPret:true, crmMsg:S.crmErr||'',
       crmCampOpts:[{value:'',label:'— Toutes les campagnes B2B —'},...camps.map(c=>({value:String(c.id),
-        label:(c.reseau?'Réseau · ':'Locale · ')+c.nom+(c.audience==='b2b'?'':' · cible non précisée')+(c.active?'':' (close)')}))],
+        label:(c.reseau?'Réseau · ':'Locale · ')+c.nom+(c.active?'':' (close)')}))],
       crmCamp:campId, crmSetCamp:(e)=>this.setState({crmCamp:e.target.value,crmGrab:null}),
-      crmCampInfo:campObj?((campObj.reseau?'Campagne du réseau':'Campagne locale')
-        +(campObj.audience==='b2b'?' · clientèle B2B':' · clientèle cible non précisée sur la campagne')
-        +(campObj.du?(' · '+String(campObj.du).slice(0,10)+' → '+String(campObj.au||'').slice(0,10)):'')):(camps.length?'Aucune campagne choisie — les cartes de toutes les campagnes B2B sont affichées':'Aucune campagne B2B ouverte : la marque en déclare une avec la clientèle cible « B2B ».'),
+      crmCampInfo:campObj?((campObj.reseau?'Campagne du réseau':'Campagne locale')+' · clientèle B2B'
+        +(campObj.du?(' · '+String(campObj.du).slice(0,10)+' → '+String(campObj.au||'').slice(0,10)):''))
+        :(camps.length?('Aucune campagne choisie — les cartes du tableau sont toutes affichées'
+            +(campsAutres?(' · '+campsAutres+' campagne(s) visant une autre clientèle que le B2B ne sont pas proposées'):''))
+          :(campsTous.length?(campsTous.length+' campagne(s) ouverte(s), aucune dont la clientèle cible est « B2B » : le sélecteur n’en propose donc aucune.')
+            :'Aucune campagne B2B ouverte : la marque en déclare une avec la clientèle cible « B2B ».')),
       crmColonnes:colonnes, crmTotal:String(cartes.length),
       crmGrabTxt:pris?('Carte prise — cliquez une colonne pour l’y poser'):'',
       crmAnnuler:()=>this.setState({crmGrab:null}),
