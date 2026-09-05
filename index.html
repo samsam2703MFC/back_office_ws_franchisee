@@ -218,6 +218,47 @@
   input[type="range"]{height:30px}
   ::-webkit-scrollbar{width:14px;height:14px}
   ::-webkit-scrollbar-thumb{background:rgba(34,34,34,.22);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+  /* Guide « Bien démarrer » (#onboarding). Typo et couleurs = design system :
+     Vank pour les titres, Gotham pour le texte, Playwrite pour le mot d'accueil ;
+     rouge de marque pour l'actif, beige clair pour les surfaces secondaires,
+     abricot pour la pastille « Nouveau ». Aucune couleur nouvelle. */
+  .onb-hero{background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:26px 30px;display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+  .onb-kicker{font:300 22px/1.2 var(--font-accent);color:var(--color-primary);margin-bottom:6px}
+  .onb-title{font:400 30px/1.15 var(--font-display);color:var(--color-text);margin:0}
+  .onb-lead{font:400 13px/1.6 var(--font-ui);color:var(--color-text-muted);margin-top:10px;max-width:720px}
+  .onb-ver{display:inline-flex;align-items:center;gap:8px;border:.5px solid var(--color-border-secondary);border-radius:999px;padding:6px 12px;font:600 11px var(--font-ui);color:var(--color-text);background:var(--color-background-secondary);white-space:nowrap}
+  .onb-tabs{display:flex;gap:4px;flex-wrap:wrap;background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:8px 10px;margin:16px 0}
+  .onb-tab{border:none;border-radius:9px;padding:9px 14px;font:500 12.5px var(--font-ui);cursor:pointer;background:transparent;color:var(--color-text-muted);display:inline-flex;align-items:center;gap:8px;min-height:40px}
+  .onb-tab:hover{color:var(--color-text)}
+  .onb-tab.on{background:var(--color-primary);color:#fff;font-weight:700}
+  .onb-tab .n{width:20px;height:20px;border-radius:50%;background:var(--color-background-secondary);color:var(--color-text-muted);font:700 10.5px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;flex:none}
+  .onb-tab.on .n{background:rgba(255,255,255,.22);color:#fff}
+  .onb-card{background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+  .onb-card h3{font:400 18px/1.3 var(--font-display);color:var(--color-text);margin:0 0 4px}
+  .onb-card .sub{font:400 12px/1.55 var(--font-ui);color:var(--color-text-muted);margin-bottom:8px}
+  .onb-step{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-top:.5px solid var(--color-border-tertiary)}
+  .onb-step:first-of-type{border-top:none}
+  .onb-num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--color-primary);color:#fff;font:700 12.5px var(--font-ui);display:inline-flex;align-items:center;justify-content:center}
+  .onb-num.ok{background:var(--st-good-bg);color:var(--st-good)}
+  .onb-num.todo{background:var(--color-background-secondary);color:var(--color-text-muted)}
+  .onb-body{flex:1;min-width:0}
+  .onb-t{font:600 13.5px/1.3 var(--font-ui);color:var(--color-text)}
+  .onb-d{font:400 12px/1.55 var(--font-ui);color:var(--color-text-muted);margin-top:3px;word-break:break-word}
+  .onb-go{flex:none;align-self:center;border:.5px solid var(--color-border-secondary);background:var(--color-surface);color:var(--color-primary);border-radius:8px;padding:8px 12px;font:600 11.5px var(--font-ui);cursor:pointer;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:36px}
+  .onb-go:hover{background:var(--color-background-secondary);color:var(--color-primary)}
+  .onb-map{display:grid;grid-template-columns:1fr 1.4fr;gap:0 18px}
+  .onb-map>div{padding:10px 0;border-top:.5px solid var(--color-border-tertiary);font:400 12px/1.5 var(--font-ui);color:var(--color-text)}
+  .onb-map .h{font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted);border-top:none;padding-top:0}
+  .onb-map .voit{font-weight:600}
+  .onb-map .regle{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .onb-note{display:flex;gap:10px;align-items:flex-start;background:var(--color-background-secondary);border-radius:10px;padding:11px 14px;font:400 12px/1.55 var(--font-ui);color:var(--color-text);margin-top:12px}
+  .onb-note.onb-warn{background:var(--st-warn-bg);color:var(--st-warn)}
+  .onb-pill{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font:600 10.5px var(--font-ui);white-space:nowrap}
+  .onb-rel{border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .onb-rel.cur{border-color:var(--color-primary)}
+  .onb-rel ul{margin:8px 0 0;padding-left:18px;font:400 12px/1.6 var(--font-ui);color:var(--color-text)}
+  .onb-foot{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px}
+  .onb-badge{margin-left:auto;flex:none;background:var(--color-secondary);color:var(--color-on-abricot);font:700 8.5px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;border-radius:9px;height:16px;display:inline-flex;align-items:center;padding:0 5px}
 </style>
 </helmet>
 <div style="display:grid;grid-template-columns:246px 1fr;height:100vh;background:var(--color-bg);overflow:hidden">
@@ -253,7 +294,13 @@
           </sc-if>
         </div>
       </sc-if>
-      <div style="margin:4px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">Exploitation</div>
+      <!-- AIDE : le guide du franchisé — bien démarrer, le webshop, la journée,
+           les outils pour développer, les applications, les nouveautés de chaque
+           version. La pastille « Nouveau » reste tant que la version courante du
+           guide n'a pas été ouverte sur ce navigateur. -->
+      <div style="margin:4px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">Aide</div>
+      <button onClick="{{ nav.onboarding }}" title="{{ navTitles.onboarding }}" style="{{ navStyles.onboarding }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20"/><path d="M9 8h7M9 11.5h5"/></svg><span style="white-space:nowrap">{{ t.navGuide }}</span><sc-if value="{{ onbNew }}" hint-placeholder-val="{{ false }}"><span class="onb-badge">{{ onbBadge }}</span></sc-if></button>
+      <div style="margin:14px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">Exploitation</div>
       <button onClick="{{ nav.tdb }}" title="{{ navTitles.tdb }}" style="{{ navStyles.tdb }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>{{ t.navTdb }}</span></button>
       <button onClick="{{ nav.prep }}" title="{{ navTitles.prep }}" style="{{ navStyles.prep }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg><span>{{ t.navPrep }}</span></button>
       <button onClick="{{ nav.suivi }}" title="{{ navTitles.suivi }}" style="{{ navStyles.suivi }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Livraison du jour</span></button>
@@ -359,6 +406,81 @@
             </button>
             <sc-if value="{{ s.showArrow }}" hint-placeholder-val="{{ true }}"><span style="{{ s.arrowStyle }}"></span></sc-if>
           </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== BIEN DÉMARRER (GUIDE DU FRANCHISÉ) =====================
+           Le contenu vit dans le script (ONB_VERSION, ONB_NOTES, onbChapters) :
+           le guide se met à jour en éditant ces trois-là, jamais ce gabarit.
+           Chaque étape renvoie à l'écran réel, par la navigation du menu. -->
+      <sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div class="onb-hero">
+          <div style="flex:1;min-width:280px">
+            <div class="onb-kicker">Bienvenue</div>
+            <h1 class="onb-title">{{ onbTitre }}</h1>
+            <div class="onb-lead">{{ onbLead }}</div>
+            <div class="onb-foot" style="margin-top:16px">
+              <button onClick="{{ onbStart }}" class="btn-primary" style="font-size:13px">Commencer — tableau de bord</button>
+              <button onClick="{{ onbGoNews }}" class="btn-secondary" style="font-size:13px">Nouveautés de cette version</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;flex:none">
+            <span class="onb-ver">Guide · version {{ onbVersion }}</span>
+            <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">mis à jour le {{ onbDate }}</span>
+          </div>
+        </div>
+
+        <div class="onb-tabs">
+          <sc-for list="{{ onbTabs }}" as="c" hint-placeholder-count="7">
+            <button onClick="{{ c.pick }}" class="onb-tab {{ c.cls }}"><span class="n">{{ c.n }}</span>{{ c.label }}</button>
+          </sc-for>
+        </div>
+
+        <!-- Nouveautés : une carte par version, la courante en tête. -->
+        <sc-if value="{{ onbTabNews }}" hint-placeholder-val="{{ false }}">
+          <div class="onb-card">
+            <h3>Ce qui change, version après version</h3>
+            <div class="sub">{{ onbNewsSub }}</div>
+            <sc-for list="{{ onbNotes }}" as="r" hint-placeholder-count="2">
+              <div class="onb-rel {{ r.cls }}">
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="onb-pill" style="{{ r.pillStyle }}">{{ r.version }}</span><span style="font:600 13px var(--font-ui);color:var(--color-text)">{{ r.titre }}</span><span style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-left:auto">{{ r.date }}</span></div>
+                <ul><sc-for list="{{ r.points }}" as="p" hint-placeholder-count="3"><li>{{ p }}</li></sc-for></ul>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- Chapitres : cartes → étapes → écran à ouvrir. -->
+        <sc-for list="{{ onbCards }}" as="k" hint-placeholder-count="3">
+          <div class="onb-card">
+            <h3>{{ k.titre }}</h3>
+            <sc-if value="{{ k.sub }}" hint-placeholder-val="{{ false }}"><div class="sub">{{ k.sub }}</div></sc-if>
+            <sc-for list="{{ k.steps }}" as="s" hint-placeholder-count="3">
+              <div class="onb-step">
+                <span class="onb-num {{ s.cls }}">{{ s.n }}</span>
+                <div class="onb-body"><div class="onb-t">{{ s.t }}</div><div class="onb-d">{{ s.d }}</div></div>
+                <sc-if value="{{ s.go }}" hint-placeholder-val="{{ false }}"><button onClick="{{ s.go }}" class="onb-go" title="{{ s.goTitle }}">{{ s.goLabel }} →</button></sc-if>
+                <sc-if value="{{ s.href }}" hint-placeholder-val="{{ false }}"><a href="{{ s.href }}" target="_blank" rel="noopener" class="onb-go">{{ s.goLabel }} ↗</a></sc-if>
+              </div>
+            </sc-for>
+            <sc-if value="{{ k.map }}" hint-placeholder-val="{{ false }}">
+              <div class="onb-map">
+                <div class="h">Ce que le client voit</div><div class="h">Où vous le réglez</div>
+                <sc-for list="{{ k.map }}" as="m" hint-placeholder-count="3">
+                  <div class="voit">{{ m.voit }}</div>
+                  <div class="regle"><span>{{ m.regle }}</span><sc-if value="{{ m.go }}" hint-placeholder-val="{{ false }}"><button onClick="{{ m.go }}" class="onb-go">{{ m.goLabel }} →</button></sc-if></div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ k.note }}" hint-placeholder-val="{{ false }}"><div class="onb-note {{ k.noteCls }}">{{ k.note }}</div></sc-if>
+          </div>
+        </sc-for>
+
+        <div class="onb-foot" style="justify-content:space-between;margin-top:4px">
+          <button onClick="{{ onbPrev }}" class="btn-secondary" style="font-size:12.5px;{{ onbPrevStyle }}">← {{ onbPrevLabel }}</button>
+          <button onClick="{{ onbNext }}" class="btn-primary" style="font-size:12.5px">{{ onbNextLabel }} →</button>
         </div>
       </div>
       </sc-if>
@@ -5284,6 +5406,7 @@ class Component extends DCLogic {
     commandes:{table:'ws_orders',origin:'Commandes du jour · filtres livraison/retrait',calc:'Statut préparation → prête → livrée cliquable ; flags[ord_*] en mémoire',dev:'1,5 j'},
     shopParams:{table:'atelierbydb_shops (+ horaires : fr_shop_availability, en lecture)',origin:'Ligne de la boutique de la portée, servie par /franchisee/me',calc:'Édition ⇒ POST /franchisee/shop-update, puis relecture de /franchisee/me ; horaires édités dans « Disponibilité & créneaux »',dev:'1 j'},
     statsReseau:{table:'ERP consolidé (lecture seule)',origin:'Stats multi-boutiques poussées par l\'ERP',calc:'Aucun formulaire ; agrégats read-only + exports CSV',dev:'1 j'},
+    onboarding:{table:'— (guide, aucune table)',origin:'Contenu du guide : ONB_VERSION, ONB_NOTES et onbChapters() dans le script de la page',calc:'Mise en route CONSTATÉE sur les tables servies : shop (/franchisee/me), fr_shop_availability, ws_payment_methods, ws_tours, ws_office_delivery_sites, ws_offices (status = validated), ws_param cost_* — vide = « à faire »',dev:'—'},
   }; return M[screen]||{table:'ws_param · tables du module',origin:'Servi par l’API /franchisee/* via la couche BOServer',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
   // ===== Recherche profonde — index de navigation du back-office =====
   // Une entrée = un écran, ou un onglet d'écran, réellement atteignable depuis
@@ -5345,6 +5468,14 @@ class Component extends DCLogic {
     // ---- Boutique & réseau ----
     {s:'shopParams',g:'Ma boutique',label:'Paramètres du shop',k:'enseigne adresse horaires branding logo coordonnees magasin'},
     {s:'statsReseau',g:'Ma boutique',label:'Stats réseau consolidées',k:'erp multi boutiques export csv comparaison classement'},
+    // ---- Aide ----
+    {s:'onboarding',g:'Aide',label:'Bien démarrer — guide du franchisé',k:'guide onboarding aide demarrer debuter tutoriel manuel mode d emploi formation prise en main premiere connexion bienvenue'},
+    {s:'onboarding',tab:['onbTab','webshop'],g:'Aide › Bien démarrer',label:'Comment fonctionne le webshop',desc:'Deux modes de commande, ce que le client voit et où vous le réglez dans la console',k:'webshop client commande collecte livraison bureau creneau panier paiement parcours'},
+    {s:'onboarding',tab:['onbTab','day'],g:'Aide › Bien démarrer',label:'Votre journée dans la console',desc:'Du tableau de bord aux incidents, dans l’ordre de la journée',k:'journee routine matin cut-off preparation livraison quotidien'},
+    {s:'onboarding',tab:['onbTab','grow'],g:'Aide › Bien démarrer',label:'Les outils pour développer',desc:'Prospection, campagnes, bureaux B2B, bons et remises, avis, analyse géo',k:'developper developpement prospection crm campagne bons remise avis outils croissance vendre'},
+    {s:'onboarding',tab:['onbTab','apps'],g:'Aide › Bien démarrer',label:'Applications compagnons',desc:'Application chauffeur, tablette Kitchen, boutique en ligne',k:'application chauffeur pwa tablette kitchen telephone qr installer'},
+    {s:'onboarding',tab:['onbTab','news'],g:'Aide › Bien démarrer',label:'Nouveautés et versions',desc:'Ce qui change à chaque version de la console',k:'nouveautes nouveau version mise a jour changelog quoi de neuf notes'},
+    {s:'onboarding',tab:['onbTab','help'],g:'Aide › Bien démarrer',label:'Aide et contact',desc:'Support, bandeau d’erreur, écran vide, origine des données',k:'aide contact support erreur bandeau vide probleme question'},
   ]; }
   formDefs(){
     const toursReal=(window.BOServer?window.BOServer.table('ws_tours'):[]).map(t=>t.name).filter(Boolean);
@@ -7518,6 +7649,7 @@ class Component extends DCLogic {
     navDeveloppement:{FR:'Développement',NL:'Ontwikkeling',EN:'Development',PL:'Rozwój',DE:'Entwicklung'},
     navCrm:{FR:'Prospection (CRM)',NL:'Prospectie (CRM)',EN:'Prospecting (CRM)',PL:'Prospecting (CRM)',DE:'Akquise (CRM)'},
     navCrmRapport:{FR:'Rapport de campagne',NL:'Campagnerapport',EN:'Campaign report',PL:'Raport kampanii',DE:'Kampagnenbericht'},
+    navGuide:{FR:'Bien démarrer',NL:'Aan de slag',EN:'Getting started',PL:'Pierwsze kroki',DE:'Erste Schritte'},
     navAvis:{FR:'Avis clients',NL:'Klantbeoordelingen',EN:'Customer reviews',PL:'Opinie klientów',DE:'Kundenbewertungen'},
     avisSub:{FR:'Notes et commentaires laissés par les clients de la boutique',
              NL:'Beoordelingen en opmerkingen van de klanten van de winkel',
@@ -7583,6 +7715,9 @@ class Component extends DCLogic {
   // l'adresse (addrApply) l'appelle sans l'empiler — sinon le bouton
   // « Précédent » rajouterait une entrée d'historique à chaque pas en arrière.
   goTo(s,extra){ const st=Object.assign({screen:s},extra||{});
+    // Bien démarrer : ouvrir le guide marque sa version comme vue — la
+    // pastille « Nouveau » du menu s'éteint jusqu'à la prochaine version.
+    if(s==='onboarding') this.onbMarkSeen();
     // Stock du jour : à l'ARRIVÉE sur l'écran, si des produits sont sous le
     // seuil bas, la modale d'alerte se rouvre (état null = automatique).
     if(s==='stockJour') st.stkAlert=null;
@@ -7631,7 +7766,7 @@ class Component extends DCLogic {
   // et écrans du bloc « Paramétrage ». Ces deux listes existaient déjà dans le
   // rendu ; elles remontent ici pour être lues AUSSI par les adresses — une
   // seule définition, sinon un écran ajouté au menu n'aurait pas d'adresse.
-  NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis','crm','crmRapport'];
+  NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis','crm','crmRapport','onboarding'];
   PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','tabletteKitchen','crm','crmRapport'];
 
   // Groupes dépliants du menu « Paramétrage ». Définis ici et non dans le rendu,
@@ -8555,11 +8690,252 @@ class Component extends DCLogic {
     // ADRESSE : on ouvre sur la section demandée par le fragment (#écran), et
     // les boutons Précédent / Suivant du navigateur redeviennent utilisables.
     // pushState/replaceState n'émettent pas 'hashchange' : pas de boucle.
+    // PREMIÈRE OUVERTURE : sans adresse de section et sans version du guide
+    // déjà vue sur ce navigateur, la console s'ouvre sur « Bien démarrer ».
+    // Le fragment se lit AVANT addrApply, qui aligne l'adresse sur l'écran
+    // affiché (#tdb) quand elle est muette. Une adresse explicite (#tournees…)
+    // est toujours respectée ; l'adresse suit (addrSync au prochain rendu).
+    let onbFirst=false;
+    try { onbFirst=!String(location.hash||'').replace(/^#\/?/,'')&&!this.onbSeen(); } catch(e){}
     this.addrApply();
+    if(onbFirst) this.goTo('onboarding');
     this._addrHash=()=>this.addrApply();
     window.addEventListener('hashchange',this._addrHash);
   }
   componentDidUpdate(){ this.ensureMaps(); this.addrSync(); }
+
+  /* ══ BIEN DÉMARRER — le guide du franchisé (#onboarding) ═══════════════════
+     Un écran, un numéro de version, une liste de notes. Le guide se met à jour
+     en trois gestes — dans les DEUX fichiers (index.html et .dc.html) :
+       1. monter ONB_VERSION (et ONB_DATE) ;
+       2. ajouter une entrée EN TÊTE d'ONB_NOTES : ce qui change pour le
+          franchisé, pas comment c'est fait ;
+       3. retoucher, dans onbChapters(), les chapitres que la version change.
+     La pastille « Nouveau » du menu s'affiche d'elle-même : elle compare
+     ONB_VERSION à la dernière version ouverte sur ce navigateur (localStorage
+     ONB_LS). À la toute première ouverture (aucune version vue, aucune adresse
+     de section), la console s'ouvre sur ce guide. Voir docs/ONBOARDING.md.
+
+     Le guide DÉCRIT la console, il n'invente aucune donnée : la liste de mise
+     en route CONSTATE les tables servies par l'API pour la boutique en portée —
+     une table vide vaut « à faire », jamais un « ✓ » supposé — et, sans portée,
+     elle le dit au lieu de coter. Chaque étape renvoie à l'écran réel, par la
+     même navigation que le menu et la recherche (écran + onglet + groupe). ── */
+  ONB_VERSION='2026.09.05';
+  ONB_DATE='05/09/2026';
+  ONB_LS='ws_bo_onb_seen';
+  ONB_SUPPORT='aide@latelierby.be';
+  ONB_NOTES=[
+    {version:'2026.09.05', date:'05/09/2026', titre:'Développement : prospection et rapport de campagne', points:[
+      'Ce guide « Bien démarrer », versionné : le webshop, votre journée, les outils pour développer, et la liste de mise en route constatée sur vos données.',
+      'Section « Développement » du menu : Prospection (CRM) — un tableau par campagne, des étapes paramétrables, l’agenda de la semaine — et le Rapport de campagne (gestes, entonnoir, clients gagnés et chiffre développé).',
+      'Clients B2B : colonnes fixes et contrôle TVA (VIES) sur chaque ligne ; le paiement différé se donne désormais sur la fiche du bureau.',
+      'Paramétrage : trois entrées au lieu de dix, les écrans voisins en onglets ; chaque réglage n’a plus qu’une seule adresse dans la recherche.',
+    ]},
+    {version:'2026.09.04', date:'04/09/2026', titre:'Application chauffeur et tournées', points:[
+      'Application chauffeur (téléphone) : prise de tournée au QR, chargement et remise des colis, installation sur l’écran d’accueil, feuille de route lisible hors réseau. Son adresse et son QR sont en tête de l’écran Tournées.',
+      'Liste de livraison imprimable avec les QR, pour essayer le scan sans attendre les bons de l’ERP.',
+      'Tournées et Livraison du jour : tracé Google avec le trafic, position des chauffeurs, bascule Carte / Chronologie, durée estimée sur chaque tournée.',
+      'Assistant tournée : « Proposer un ordre (Google) », adresses reliées à la liste Google, temps de dépôt standard de 5 minutes.',
+      'Bureaux : le statut constate les champs remplis ; « Données à compléter » mène à l’écran où corriger.',
+    ]},
+    {version:'2026.09.03', date:'03/09/2026', titre:'Dossier imprimé et fiche bureau', points:[
+      'Dossier « Carte & tarifs » : saisons cochables et ordre des sous-catégories réglable dans la modale d’impression.',
+      'Fiche bureau et onboarding : le logo de l’entreprise.',
+    ]},
+  ];
+  onbSeen(){ try { return localStorage.getItem(this.ONB_LS)||''; } catch(e){ return ''; } }
+  onbMarkSeen(){ try { localStorage.setItem(this.ONB_LS,this.ONB_VERSION); } catch(e){} }
+  onbIsNew(){ return this.onbSeen()!==this.ONB_VERSION; }
+  /* Adresses des deux autres surfaces, CALCULÉES sur l'hôte servi — la même
+     règle qu'api-config.js (la boutique vit sous …/webshop/, la console sous
+     …/webshop/backoffice_franchisee/) et que la carte « Application chauffeur »
+     de l'écran Tournées (…/webshop/driver/). Rien n'est écrit en dur. */
+  webshopUrl(){ try { const p=location.pathname; const m=p.match(/^(.*?)\/backoffice_franchisee(?:\/|$)/);
+      return location.origin+(m?m[1]:p.replace(/[^/]*$/,'').replace(/\/$/,''))+'/'; } catch(e){ return ''; } }
+  driverUrl(){ try { const p=location.pathname; const fr=window.__FR||{};
+      const base=location.origin+(/backoffice_franchisee/.test(p)?p.replace(/backoffice_franchisee\/.*$/,'driver/'):p.replace(/[^/]*$/,'')+'driver/');
+      return base+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''); } catch(e){ return ''; } }
+  /* Ouvrir un écran depuis le guide : le geste d'un résultat de recherche —
+     écran, onglet, groupe de menu déplié, action éventuelle (wizard, compte). */
+  onbOpen(e){ return ()=>{ const st={}; if(e.tab) st[e.tab[0]]=e.tab[1];
+      const g=e.grp||this.navGroupOf(e.s);
+      if(g){ st.paramsOpen=true; st.openGroups=Object.assign({},this.state.openGroups,{[g]:true}); }
+      if(e.act==='profile'){ this.setState({profileOpen:true,paramDrafts:{}}); return; }
+      this.goTo(e.s,st); this.addrPush(e.s);
+      if(e.act==='ob') setTimeout(()=>this.obOpen(),0); }; }
+  /* La mise en route, constatée. `ok` vaut true/false sur les tables servies
+     pour la boutique en portée, et null sans portée (rien à constater). */
+  onbChecklist(){ const T=(n)=>(window.BOServer?window.BOServer.table(n):[])||[];
+    const scoped=!!this.shopScopeId(); const si=this.shopInfo();
+    const st=(v)=>scoped?!!v:null;
+    return [
+      {t:'La fiche de la boutique : enseigne, adresse, position', d:'L’adresse est le départ et le retour de vos tournées ; sans position connue du serveur, aucune heure d’arrivée n’est calculée.', s:'shopParams', goLabel:'Ma boutique', ok:st(si&&si.name&&si.address&&si.lat!=null&&si.lng!=null)},
+      {t:'La disponibilité : jours, heures, créneaux, cut-off', d:'La source unique que le webshop lit pour fabriquer ses créneaux, en collecte comme en livraison.', s:'reglesBoutique', tab:['dispoTab','dispo'], goLabel:'Disponibilité', ok:st(T('fr_shop_availability').length)},
+      {t:'Les moyens de paiement, par profil de client', d:'Webshop, comptoir, B2B : ce qui n’est pas activé ici n’est pas proposé au client.', s:'paiements', goLabel:'Paiements', ok:st(T('ws_payment_methods').length)},
+      {t:'Au moins une tournée', d:'La tournée porte les horaires, le cut-off et la capacité de livraison ; les sites s’y rattachent.', s:'tournees', goLabel:'Tournées', ok:st(T('ws_tours').length)},
+      {t:'Les sites de livraison (bâtiments)', d:'Adresse, étage, temps d’accès ; chaque site est assigné à une tournée.', s:'sites', goLabel:'Sites', ok:st(T('ws_office_delivery_sites').length)},
+      {t:'Au moins un bureau validé', d:'Seuls les bureaux validés sont livrables. L’onboarding en 7 étapes crée la société, le contact, le site, les départements et le lien d’invitation.', s:'offices', goLabel:'Bureaux', ok:st(T('ws_offices').some(o=>o.status==='validated'))},
+      {t:'Les coûts de la boutique', d:'Coût horaire de préparation, emballage par colis, chargement, minutes par colis : sans eux, la rentabilité n’a rien à afficher.', s:'params', goLabel:'Coûts', ok:st(this.costParams()!=null)},
+    ]; }
+  onbChapters(){
+    const si=this.shopInfo(); const id=this.shopScopeId();
+    const scopeTxt=id?('Boutique en portée : '+((si&&(si.name||si.nom))||'—')+' (#'+id+').')
+      :String((typeof window!=='undefined'&&window.__SHOPREASON)||'Aucune boutique sélectionnée : rouvrez la console avec ?shop=<id>.');
+    const check=this.onbChecklist(); const scoped=!!id;
+    const reste=check.filter(c=>c.ok===false).length;
+    const checkNote=!scoped?scopeTxt
+      :(reste?(reste+' étape'+(reste>1?'s restent':' reste')+' à faire. Si le bandeau rouge est affiché, une ligne « à faire » peut simplement ne pas avoir été chargée.')
+        :'✓ Tout est en place : le webshop a ce qu’il lui faut pour vendre et livrer.');
+    return [
+      {k:'start', label:'Démarrer', cards:[
+        {titre:'Votre accès et vos repères', sub:'Ce qui vaut sur tous les écrans.', steps:[
+          {t:'Une adresse par écran', d:'Votre console : '+this.addrFull('tdb')+' — chaque section a la sienne (#tournees, #stockJour…). Mettez-la en favori, envoyez-la à un collègue ; Précédent et Suivant fonctionnent, et le survol d’une entrée du menu montre son adresse.'},
+          {t:'La boutique en portée', d:scopeTxt+' L’identifiant ?shop= de l’adresse décide de tout ce que la console montre — clients, tournées, bureaux, facturation — et il est rappelé en bas du menu.'},
+          {t:'Le jeton d’accès', d:'Il vous est remis par la marque. Dès la première ouverture, la console le retire de l’adresse et le garde sur ce navigateur : ne partagez jamais un lien qui contient ?token=.'},
+          {t:'Rechercher un écran', d:'Le champ en tête du menu cherche dans les écrans, leurs onglets et leurs explications. Tapez « cut-off », « franco », « bon » ou « rupture » : vous arrivez au bon réglage sans connaître l’arborescence.'},
+          {t:'Rien n’est inventé', d:'Un écran vide est vide parce que le serveur n’a rien servi. Le bandeau rouge « ERREUR — PLEASE DEBUG » liste les chargements qui ont échoué et n’apparaît que sur un vrai échec.'},
+          {t:'Votre compte et les paramètres du site', d:'Le rond en bas du menu ouvre votre compte : coordonnées de la boutique, horaires en lecture, paramètres du site — bo_show_source affiche l’origine des données de chaque page, bo_show_help ajoute les « i » d’aide sur les interrupteurs.', act:'profile', s:'tdb', goLabel:'Mon compte'},
+        ]},
+        {titre:'Mise en route — dans cet ordre', sub:'L’état est constaté sur les données que le serveur sert pour votre boutique : une ligne « à faire » signifie que la table est vide.', note:checkNote, noteCls:(!scoped||reste)?'onb-warn':'',
+          steps:check.map(c=>({t:c.t, d:c.d, s:c.s, tab:c.tab, goLabel:c.goLabel, ok:c.ok}))},
+        {titre:'Le sens de paramétrage de la livraison', sub:'Le fil d’ariane en tête des écrans de livraison suit cet ordre ; chaque étape hérite de la précédente.', steps:[
+          {t:'Tournées · horaires', d:'Circuits, fenêtres horaires, cut-off, capacité, fermetures. L’assistant « Atelier livraison » guide la création tournée → zones → bureaux.', s:'tournees', goLabel:'Tournées'},
+          {t:'Sites (bâtiments)', d:'Adresse reliée à la liste Google, étage, temps d’accès. Un site est assigné à une tournée ; toutes ses lignes suivent.', s:'sites', goLabel:'Sites'},
+          {t:'Bureaux (offices)', d:'Les bureaux clients, assignés aux sites : ils héritent de la tournée du site. Statut, départements, contacts, assortiment, paiement différé.', s:'offices', goLabel:'Bureaux'},
+          {t:'Clients', d:'Les personnes rattachées à leur bureau, chacune avec sa fiche.', s:'b2bClients', goLabel:'Clients'},
+        ]},
+      ]},
+      {k:'webshop', label:'Le webshop', cards:[
+        {titre:'Comment un client commande', sub:'Le parcours en ligne, et ce qui le nourrit dans la console.', steps:[
+          {t:'Il choisit son mode', d:'Collecte en magasin (retrait) ou Livraison au bureau. Les jours, heures et créneaux de chaque mode viennent de votre écran Disponibilité & créneaux.'},
+          {t:'Il compose son panier', d:'Le catalogue est celui que la marque ouvre à votre boutique (assortiment, en lecture) ; la disponibilité du jour est celle que vous saisissez dans Stock du jour. Prix et portions viennent de l’ERP, complétés par vos règles locales.'},
+          {t:'Il choisit un créneau', d:'Seuls les créneaux réellement ouverts sont proposés : jours, heures, durée de créneau, capacité, cut-off, délai — et les fermetures exceptionnelles par date.'},
+          {t:'Il paie', d:'Avec les moyens activés pour son profil (webshop, comptoir, B2B). Un bureau autorisé au paiement différé règle sur facture. Le montant est recalculé par le serveur au moment de la commande.'},
+          {t:'La commande arrive dans la console', d:'Au tableau de bord et dans la liste des commandes, avec son statut : préparation → prête → livrée. Cliquer le statut le fait avancer ; les écrans de commandes se rafraîchissent seuls toutes les 60 secondes.', s:'tdb', goLabel:'Tableau de bord'},
+        ]},
+        {titre:'Ce que le client voit, et où vous le réglez', sub:'Une ligne par élément visible en ligne.', map:[
+          {voit:'Les créneaux de collecte et de livraison', regle:'Boutique › Disponibilité & créneaux — jours, heures, durée, capacité, cut-off, délai', s:'reglesBoutique', tab:['dispoTab','dispo'], goLabel:'Disponibilité'},
+          {voit:'Les jours fermés et les horaires spéciaux', regle:'Boutique › Jours exceptionnels — les exceptions par date écrasent la semaine type', s:'reglesBoutique', tab:['dispoTab','except'], goLabel:'Jours exceptionnels'},
+          {voit:'Les produits disponibles aujourd’hui', regle:'Stock du jour — stock online, en shop et seuil d’alerte ; l’assortiment lui-même est décidé par la marque', s:'stockJour', goLabel:'Stock du jour'},
+          {voit:'Les prix, promotions et codes', regle:'Boutique › Promotions & bons — règles de prix locales, bons boutique, bons Marque en lecture', s:'pricingRules', tab:['promoTab','prix'], goLabel:'Promotions & bons'},
+          {voit:'Une remise automatique sur le panier', regle:'Promotions & bons › Remise webshop — taux et panier minimum', s:'pricingRules', tab:['promoTab','remise'], goLabel:'Remise webshop'},
+          {voit:'Les frais de livraison et le franco', regle:'Livraison › Frais — cascade site → bureau → tournée → boutique, la règle la plus précise gagne', s:'frais', goLabel:'Frais'},
+          {voit:'Les moyens de paiement', regle:'Boutique › Paiements — activés par profil : webshop, comptoir, B2B', s:'paiements', goLabel:'Paiements'},
+          {voit:'La livraison de son bureau : tournée, jours, cut-off', regle:'Tournées → Sites → Bureaux, puis Paramètres livraison par bureau', s:'bureauParams', goLabel:'Par bureau'},
+          {voit:'Le compte de son bureau', regle:'Demandes B2B — accès, rattachements, nouveaux bureaux', s:'demandesB2B', goLabel:'Demandes B2B'},
+        ]},
+        {titre:'Le cut-off rythme la journée', sub:'L’heure limite sépare ce qui part aujourd’hui de ce qui partira demain.', steps:[
+          {t:'Avant le cut-off', d:'Les commandes de livraison du jour entrent ; le tableau de bord affiche le temps restant.'},
+          {t:'Au cut-off', d:'La console le signale et arme le run d’impression de l’écran Préparation : un seul document, une feuille A4 par tournée puis toutes les étiquettes. Le run part d’un clic — un navigateur n’imprime jamais seul.', s:'prep', goLabel:'Préparation'},
+          {t:'Où il se règle', d:'Par mode dans Disponibilité & créneaux, et par bureau dans Paramètres livraison par bureau.', s:'reglesBoutique', tab:['dispoTab','dispo'], goLabel:'Disponibilité'},
+        ]},
+        {titre:'Les bureaux : vos clients entreprises', sub:'Un bureau est une entreprise livrée ; ses collaborateurs commandent avec leur compte.', steps:[
+          {t:'Un bureau validé est livrable', d:'Société, contact, site de livraison, départements, conditions webshop et bon : l’onboarding en 7 étapes fait le tour, puis émet le lien d’invitation.', s:'offices', act:'ob', goLabel:'Onboarder un bureau'},
+          {t:'Son personnel crée ses comptes', d:'Par le lien d’invitation — e-mail au contact, ou affiche avec QR à imprimer : chaque collaborateur arrive avec son bureau et son site déjà rattachés. Chaque compte reste à valider.', s:'demandesB2B', tab:['b2bTab','acces'], goLabel:'Comptes à valider'},
+          {t:'Les demandes arrivent chez vous', d:'Accès aux comptes Office (validation, contrôle TVA VIES), rattachement d’une personne à un bureau existant, rattachement d’une fiche client, demande de nouveau bureau.', s:'demandesB2B', tab:['b2bTab','nouveau'], goLabel:'Nouveaux bureaux'},
+        ]},
+      ]},
+      {k:'day', label:'Votre journée', cards:[
+        {titre:'Le matin', steps:[
+          {t:'Tableau de bord', d:'Commandes à préparer, cut-off restant, tournées du jour. Trois vues : par tournée (tournée › zone › site › office), Collect, et la liste des commandes avec ses filtres de période et de mode.', s:'tdb', goLabel:'Tableau de bord'},
+          {t:'Stock du jour', d:'Saisissez le stock online (webshop) et en shop (comptoir). Le seuil minimum déclenche l’alerte stock bas ; ∿ le calcule d’après les six dernières semaines. Cliquer un produit montre ses commandes du jour.', s:'stockJour', goLabel:'Stock du jour'},
+          {t:'Capacité · remplissage', d:'Réservé / maximum par date et par créneau : rouge = complet, orange = tension. C’est ce qui empêche d’accepter en ligne ce que la cuisine ne peut pas produire.', s:'capacite', goLabel:'Capacité'},
+        ]},
+        {titre:'Au cut-off', steps:[
+          {t:'Préparation', d:'Lancez le run d’impression (feuille A4 par tournée + étiquettes), imprimez les listes de production par produit ou par tournée, suivez l’arbre à préparer tournée › site › office.', s:'prep', goLabel:'Préparation'},
+          {t:'Tournées', d:'Vérifiez les tournées du jour : sites assignés, chronologie, tracé et trafic Google. Envoyez chaque tournée à son chauffeur (bouton 📲) ; l’adresse et le QR de l’application chauffeur sont en tête de l’écran.', s:'tournees', goLabel:'Tournées'},
+        ]},
+        {titre:'Pendant la livraison', steps:[
+          {t:'Livraison du jour', d:'Position des chauffeurs en temps réel, chronologie prévue, liste des livraisons : vous répondez au client sans appeler le chauffeur. Sans télémétrie, la carte le dit au lieu de deviner.', s:'suivi', goLabel:'Livraison du jour'},
+          {t:'Incidents', d:'Colis manquant, client absent, litige : chaque incident arrive avec sa preuve, son horodatage et son chauffeur. Décision : avoir, relivraison, refus / clore.', s:'incidents', goLabel:'Incidents'},
+        ]},
+        {titre:'En fin de journée, et chaque semaine', note:'Les écrans de commandes se rafraîchissent seuls toutes les 60 secondes tant que l’onglet est visible, le catalogue toutes les 30 secondes. Après une mise à jour de la console, rechargez avec Ctrl+Maj+R.', steps:[
+          {t:'Demandes B2B', d:'Validez les comptes Office en attente, liez le personnel à son bureau, traitez les demandes de nouveau bureau.', s:'demandesB2B', goLabel:'Demandes B2B'},
+          {t:'Rentabilité', d:'Ce que rapporte une tournée ou un client une fois les coûts posés en face : CA → marge, évolution, points en perte. Les coûts se paramètrent depuis l’engrenage de l’écran Tournées.', s:'rentabilite', goLabel:'Rentabilité'},
+          {t:'Analyse géo', d:'La carte de vos clients — bureaux et particuliers — et leur répartition par arrondissement.', s:'geoAnalyse', goLabel:'Analyse géo'},
+          {t:'Avis clients', d:'Notes et commentaires, moyenne par produit (les moins bien notés d’abord), derniers avis négatifs.', s:'avis', goLabel:'Avis'},
+          {t:'Stats réseau', d:'Le consolidé multi-boutiques poussé par l’ERP, en lecture, par semaine ou par mois.', s:'statsReseau', goLabel:'Stats réseau'},
+        ]},
+      ]},
+      {k:'grow', label:'Développer', cards:[
+        {titre:'Gagner des bureaux', sub:'Les outils de la section « Développement » du menu, et ceux qui les prolongent.', steps:[
+          {t:'Prospection (CRM)', d:'Un tableau par campagne : ajoutez vos cibles (bureaux, sociétés, prospect libre), prenez une carte et cliquez la colonne d’arrivée. Les étapes se renomment, se réordonnent, s’ajoutent (⚙ Étapes). La fiche d’une carte porte le contact, le bon, la prochaine action et les gestes faits — mail, bon, assortiment, visite, appel.', s:'crm', goLabel:'Prospection'},
+          {t:'L’agenda de la semaine', d:'Vue Agenda du même écran : les actions datées de la semaine, avec le lieu et le lien vers Google Agenda. Une action sans heure se pose en tête de journée et le dit.', s:'crm', goLabel:'Prospection'},
+          {t:'Rapport de campagne', d:'Ce que la campagne a coûté en gestes, l’entonnoir étape par étape, les clients gagnés et ce qu’ils commandent depuis, la comparaison entre campagnes. Aucune estimation.', s:'crmRapport', goLabel:'Rapport'},
+          {t:'Onboarder un bureau', d:'Quand le bureau dit oui : société, contact, site, départements, webshop & voucher, personnel & adhésion, récapitulatif — 7 étapes, puis le lien d’invitation.', s:'offices', act:'ob', goLabel:'Onboarder'},
+          {t:'Le lien d’invitation, l’affiche, le dossier', d:'Sur la fiche du bureau : e-mail au contact, affiche à imprimer avec son QR, dossier « Carte & tarifs » de la boutique ou du bureau.', s:'offices', goLabel:'Bureaux'},
+        ]},
+        {titre:'Vendre plus à chaque commande', steps:[
+          {t:'Règles de prix', d:'Vos règles locales ; celles du réseau (marque) sont en lecture seule.', s:'pricingRules', tab:['promoTab','prix'], goLabel:'Règles de prix'},
+          {t:'Bons / codes', d:'Vos bons boutique : cible (un client, un bureau) et portée (produits) ; les bons Marque sont en lecture seule. L’onboarding d’un bureau crée le sien.', s:'pricingRules', tab:['promoTab','bons'], goLabel:'Bons'},
+          {t:'Remise automatique webshop', d:'Un taux et un panier minimum, appliqués au panier en ligne.', s:'pricingRules', tab:['promoTab','remise'], goLabel:'Remise'},
+          {t:'Assortiment par bureau', d:'Les produits proposés et l’affichage des prix pour un bureau donné — icône « assortiment » sur la ligne du bureau.', s:'offices', goLabel:'Bureaux'},
+          {t:'Paiement différé', d:'Se donne sur la fiche du bureau, où l’on voit aussi son contrat et son encours ; l’écran Paiements en donne la vue d’ensemble.', s:'paiements', goLabel:'Paiements'},
+        ]},
+        {titre:'Mesurer, puis décider', steps:[
+          {t:'Rentabilité', d:'La discussion sur les frais de livraison se fait sur des chiffres : marge par tournée et par client, coûts en face du CA.', s:'rentabilite', goLabel:'Rentabilité'},
+          {t:'Analyse géo', d:'Où sont vos clients, où il n’y en a pas : les arrondissements à prospecter.', s:'geoAnalyse', goLabel:'Analyse géo'},
+          {t:'Avis clients', d:'Les produits les moins bien notés d’abord : ce qu’il faut corriger avant de prospecter.', s:'avis', goLabel:'Avis'},
+          {t:'Capacité', d:'Avant d’ouvrir un nouveau bureau, vérifiez que les créneaux et les tournées l’absorbent.', s:'capacite', goLabel:'Capacité'},
+        ]},
+      ]},
+      {k:'apps', label:'Applications', cards:[
+        {titre:'Application chauffeur (téléphone)', sub:'Le chauffeur prend sa tournée, charge, livre et rentre — avec son téléphone.', steps:[
+          {t:'L’adresse', d:this.driverUrl()+' — le chauffeur l’ouvre et l’ajoute à son écran d’accueil : installable, feuille de route lisible hors réseau. La même adresse et son QR sont en tête de l’écran Tournées.', href:this.driverUrl(), goLabel:'Ouvrir l’app'},
+          {t:'Connexion', d:'Boutique + PIN à 4 chiffres — le compte tablette, borné par le serveur à sa boutique. Le jeton d’accès de la console ne va jamais sur un téléphone ; un mode test avec ce jeton existe en attendant les profils chauffeur, à retirer dès qu’un PIN existe.'},
+          {t:'Le parcours', d:'Prendre sa tournée (scan du QR du bon, ou choix dans la liste) → chargement (un scan par colis, jamais de « tout cocher ») → feuille de route → en route (Google Maps ou Waze, position envoyée vers Livraison du jour) → remise et SMS d’arrivée → retour dépôt (km, note, étoiles).'},
+          {t:'Ce qui remonte au dépôt aujourd’hui', d:'La prise de tournée (le nom du chauffeur s’affiche sur la tournée) et la position en route. Les scans, notes, étoiles et incidents restent sur le téléphone tant que le serveur ne les reçoit pas : l’écran « Ce que le dépôt reçoit » le dit.'},
+          {t:'Pour essayer', d:'Imprimez la liste de livraison du jour depuis l’écran Tournées : le QR de la tournée en tête, puis un QR par colis. La caméra exige une adresse en https.', s:'tournees', goLabel:'Tournées'},
+        ]},
+        {titre:'Tablette Kitchen (comptoir)', steps:[
+          {t:'Deux valeurs à saisir', d:'L’URL du back-office et un jeton d’appareil, dans Paramètres › Mode WebShop de la tablette. Le jeton est propre à la boutique et révocable : le révoquer ferme aussitôt toutes les tablettes qui l’utilisent.', s:'tabletteKitchen', goLabel:'Tablette Kitchen'},
+          {t:'Ce qu’il ouvre', d:'Les données du comptoir de cette boutique seulement — jamais les marges, les coûts ni les paramètres réseau. Il ne remplace pas le jeton administrateur.'},
+        ]},
+        {titre:'La boutique en ligne', steps:[
+          {t:'Voir ce que vos clients voient', d:this.webshopUrl()+' — ouvrez-la après chaque réglage important : créneaux, stock, promotions, frais.', href:this.webshopUrl(), goLabel:'Ouvrir le webshop'},
+          {t:'Ce qui vient de la marque', d:'Le catalogue, l’assortiment ouvert à votre boutique, les règles de prix réseau, les bons Marque et les offres croisées sont décidés dans la console marque et arrivent d’en haut. Ce qui est local reste local.', s:'assortiment', goLabel:'Assortiment'},
+        ]},
+      ]},
+      {k:'news', label:'Nouveautés', cards:[
+        {titre:'Comment ce guide évolue', steps:[
+          {t:'Un numéro de version', d:'Chaque mise à jour de la console porte un numéro — sa date de publication. L’entrée « Bien démarrer » du menu affiche « Nouveau » tant que la version courante n’a pas été ouverte sur ce navigateur.'},
+          {t:'Après une mise à jour', d:'Rechargez la page avec Ctrl+Maj+R (⌘+Maj+R sur Mac) : un navigateur peut garder l’ancienne page en cache alors que le serveur a la nouvelle.'},
+          {t:'Ce guide', d:'Il est relu à chaque version : les chapitres qui changent sont retouchés, et la note de version dit ce qui change pour vous — pas comment c’est fait.'},
+        ]},
+      ]},
+      {k:'help', label:'Aide', cards:[
+        {titre:'Besoin d’aide', steps:[
+          {t:'Écrire au support', d:this.ONB_SUPPORT+' — décrivez l’écran, l’heure et, si un bandeau rouge est affiché, recopiez son texte.', href:'mailto:'+this.ONB_SUPPORT, goLabel:'Écrire'},
+          {t:'Un écran vide ?', d:'Sans boutique en portée, tout est vide et le bas du menu dit pourquoi : rouvrez la console avec ?shop=<id>. Sinon, un écran vide est un écran dont la table n’a pas été servie — le bandeau rouge, s’il est présent, nomme la route en échec.'},
+          {t:'Le bandeau rouge', d:'« ERREUR — PLEASE DEBUG » liste les chargements ou écritures qui ont échoué. Rechargez (Ctrl+Maj+R) ; s’il revient, envoyez son texte au support.'},
+          {t:'D’où vient ce chiffre ?', d:'Activez bo_show_source dans votre compte : un bouton « i » en bas du menu explique, pour chaque page, la table source, l’origine de la donnée et son calcul.', act:'profile', s:'tdb', goLabel:'Mon compte'},
+          {t:'Le mot que je cherche', d:'Le champ « Rechercher un écran… » : chaque résultat affiche son chemin dans le menu et l’adresse de l’écran.'},
+        ]},
+      ]},
+    ]; }
+  onbVals(){ const S=this.state; const chapters=this.onbChapters();
+    const idx=Math.max(0,chapters.findIndex(c=>c.k===(S.onbTab||'start'))); const cur=chapters[idx];
+    const top=()=>{ try { const m=document.querySelector('main'); if(m) m.scrollTop=0; } catch(e){} };
+    const pick=(k)=>()=>{ this.setState({onbTab:k}); top(); };
+    const start=()=>{ this.goTo('tdb'); this.addrPush('tdb'); };
+    const onbTabs=chapters.map((c,i)=>({n:String(i+1),label:c.label,cls:c.k===cur.k?'on':'',pick:pick(c.k)}));
+    const onbCards=(cur.cards||[]).map(k=>({ titre:k.titre, sub:k.sub||'', note:k.note||'', noteCls:k.noteCls||'',
+      map:(k.map&&k.map.length)?k.map.map(m=>({voit:m.voit,regle:m.regle,go:m.s?this.onbOpen(m):null,goLabel:m.goLabel||'Ouvrir'})):null,
+      steps:(k.steps||[]).map((s,i)=>({ n:s.ok===true?'✓':String(i+1), cls:s.ok===true?'ok':(s.ok===false?'todo':''), t:s.t, d:s.d,
+        go:s.s?this.onbOpen(s):null, goLabel:s.goLabel||'Ouvrir', goTitle:s.s?this.addrTitle(s.s):'', href:s.href||'' })) }));
+    const onbNotes=this.ONB_NOTES.map((r,i)=>({ version:r.version, date:r.date, titre:r.titre, points:r.points, cls:i===0?'cur':'',
+      pillStyle:i===0?'background:var(--color-primary);color:#fff':'background:var(--color-background-secondary);color:var(--color-text-muted)' }));
+    const prev=chapters[idx-1]||null, next=chapters[idx+1]||null;
+    return { isOnboarding:S.screen==='onboarding',
+      onbTitre:'Bien démarrer avec votre console',
+      onbLead:'Comment le webshop travaille pour vos clients, comment se déroule votre journée dans la console, quels outils vous avez pour développer votre activité — et ce qui change à chaque version.',
+      onbVersion:this.ONB_VERSION, onbDate:this.ONB_DATE, onbNew:this.onbIsNew(), onbBadge:'Nouveau',
+      onbTabs, onbCards, onbTabNews:cur.k==='news', onbNotes,
+      onbNewsSub:'La version en tête est celle que vous utilisez. Chaque note dit ce qui change pour vous.',
+      onbStart:start, onbGoNews:pick('news'),
+      onbPrev:prev?pick(prev.k):()=>{}, onbPrevLabel:prev?prev.label:'', onbPrevStyle:prev?'':'visibility:hidden',
+      onbNext:next?pick(next.k):start, onbNextLabel:next?next.label:'Commencer — tableau de bord' }; }
 
   /* ══ TABLETTE KITCHEN (Réglages) ═══════════════════════════════════════════
      Le mode tablette (PIN, comptes, profils) a été retiré de ce back-office :
@@ -8681,14 +9057,14 @@ class Component extends DCLogic {
     ['FR','NL','EN','DE','PL'].forEach(l=>{ setLang[l]=()=>this.setState({lang:l}); langStyles[l]=this.langStyle(l); });
     const langList=['FR','NL','EN','DE','PL'].map(l=>({code:l,pick:setLang[l],style:langStyles[l]}));
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams'),navAvis:this.tr('navAvis'),navFidelite:this.tr('navFidelite'),
-      navDeveloppement:this.tr('navDeveloppement'),navCrm:this.tr('navCrm'),navCrmRapport:this.tr('navCrmRapport') };
+      navDeveloppement:this.tr('navDeveloppement'),navCrm:this.tr('navCrm'),navCrmRapport:this.tr('navCrmRapport'),navGuide:this.tr('navGuide') };
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',bureauAssortiment:'Assortiment d\'un bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
-      crm:'Prospection (CRM) — aide à la prospection',crmRapport:'Rapport de campagne',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
+      crm:'Prospection (CRM) — aide à la prospection',crmRapport:'Rapport de campagne',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen',onboarding:'Bien démarrer — guide du franchisé'};
     const subs={crm:'Choisir la campagne, poser ses cibles, les faire avancer jusqu’au rendez-vous',
       crmRapport:'Gestes, clients gagnés et chiffre développé depuis le gain',avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',bureauAssortiment:'Produits proposés et affichage des prix — pour un bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
-      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
+      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette',onboarding:'Le webshop, votre journée, les outils pour développer, les applications, les nouveautés de chaque version'};
 
     // ===== Recherche profonde (barre de nav) =====
     // Cherche dans les menus, les sous-menus (onglets) ET les explications :
@@ -12415,6 +12791,7 @@ class Component extends DCLogic {
       ...this.suiviChronoVals(),
       ...this.dcVals(),
       ...this.traceVals(),
+      ...this.onbVals(),
       rfOpen:S.rfOpen,rf:S.rf,rfClose:()=>this.setState({rfOpen:false,rfEditId:null}),
       rfTitle:(S.rfEditId?'Modifier la tournée':'Nouvelle tournée'),rfSubmitLabel:(S.rfEditId?'Enregistrer':'Créer la tournée'),
       editRoute:(()=>{ const byId=(id)=>{ const t=(this.routesMeta()||[]).find(x=>x.id===id); if(!t){ this.printJob('Sélectionnez une tournée à modifier'); return; } const tpAll=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; const k=String(t.id).replace(/^r/,''); let cps=tpAll.filter(r=>String(r.tour_id)===k||String(r.tour_id)===String(t.id)).map(r=>String(r.postcode)); if(!cps.length){ const raw=t.postcodes||t.cp; cps=Array.isArray(raw)?raw.map(String):String(raw||'').split(/[^0-9]+/).filter(x=>/^\d{4}$/.test(x)); } this.setState({rfEditId:id,rfOpen:true,rf:{name:t.name||'',short:t.short||'',start:this.hhmm(t.start!=null?t.start:360),max:(t.max!=null?t.max:''),forfait:(t.forfait!=null?t.forfait:''),pricePerKm:(t.pricePerKm!=null?t.pricePerKm:''),driver:t.driver||'',vehicule:t.vehicule||'',postcodes:[...new Set(cps)],ret:(t.ret!==false),days:t.days||{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false}}}); };

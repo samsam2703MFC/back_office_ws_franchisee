@@ -39,6 +39,17 @@ false address. The address is corrected to the screen actually displayed.
 Addresses never carry `?token=` (or `pin`/`secret`/`key`/`pass`): they are meant
 to be shown, hovered and pasted.
 
+## Onboarding — « Bien démarrer » (`#onboarding`)
+
+The franchisee's guide lives in the console itself (section **Aide** of the
+nav): how the webshop works for their customers, their day screen by screen,
+the tools to grow the business, the companion apps, and **what changes in each
+version**. It opens by itself on a browser's first visit, and the nav entry
+carries a **Nouveau** badge whenever a newer guide version has not been opened
+yet. Content, version number and release notes are in the page script
+(`ONB_VERSION`, `ONB_NOTES`, `onbChapters()`); the update procedure is in
+[`docs/ONBOARDING.md`](docs/ONBOARDING.md).
+
 ## Architecture — identical to the franchisor
 
 - **`back_office_ws_franchisee.dc.html`** — the pristine Claude Design export

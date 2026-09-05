@@ -111,3 +111,21 @@ test('le statut d\'une commande avance ET persiste', async ({ page }) => {
   const corps = await page.locator('body').innerText();
   expect(corps, 'le nouveau statut doit survivre au rechargement').not.toContain(avant + ' →' + avant);
 });
+
+test('le guide « Bien démarrer » s\'ouvre à son adresse, et ses liens mènent aux écrans', async ({ page }) => {
+  const url = new URL(BO); url.hash = '#onboarding';
+  await page.goto(url.toString(), { waitUntil: 'networkidle' });
+  await expect(page.getByText('Bien démarrer avec votre console')).toBeVisible();
+  // Sept chapitres, dont les nouveautés de la version affichée dans l'en-tête.
+  await expect(page.locator('.onb-tab')).toHaveCount(7);
+  await page.locator('.onb-tab', { hasText: 'Nouveautés' }).click();
+  const version = (await page.locator('.onb-ver').innerText()).replace(/.*version\s*/, '').trim();
+  await expect(page.locator('.onb-rel.cur .onb-pill')).toHaveText(version);
+  // Un « Ouvrir » du chapitre webshop ouvre l'écran ET son onglet.
+  await page.locator('.onb-tab', { hasText: 'Le webshop' }).click();
+  await page.locator('.onb-go', { hasText: 'Remise webshop' }).first().click();
+  await expect(page).toHaveURL(/#pricingRules$/);
+  await expect(page.getByText('Remise automatique webshop').first()).toBeVisible();
+  // Ouvert une fois, le guide ne porte plus la pastille « Nouveau ».
+  await expect(page.locator('.onb-badge')).toHaveCount(0);
+});
