@@ -2966,7 +2966,7 @@
           <label style="display:flex;flex-direction:column;gap:5px">
             <span class="t-admin-label">URL du back-office</span>
             <div style="display:flex;gap:8px">
-              <input value="{{ tkUrl }}" readonly style="flex:1;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 12.5px var(--font-mono, var(--font-ui));background:var(--color-background-secondary)"/>
+              <input value="{{ tkUrl }}" readOnly="{{ true }}" style="flex:1;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 12.5px var(--font-mono, var(--font-ui));background:var(--color-background-secondary)"/>
               <button onClick="{{ tkCopyUrl }}" class="btn-secondary" style="font-size:12px;flex:none">Copier</button>
             </div>
           </label>
@@ -2974,7 +2974,7 @@
           <label style="display:flex;flex-direction:column;gap:5px">
             <span class="t-admin-label">Jeton d'appareil</span>
             <div style="display:flex;gap:8px">
-              <input value="{{ tkToken }}" readonly style="flex:1;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 12.5px var(--font-mono, var(--font-ui));background:var(--color-background-secondary);letter-spacing:.04em"/>
+              <input value="{{ tkToken }}" readOnly="{{ true }}" style="flex:1;border:.5px solid var(--color-border-secondary);border-radius:8px;padding:9px 10px;font:500 12.5px var(--font-mono, var(--font-ui));background:var(--color-background-secondary);letter-spacing:.04em"/>
               <button onClick="{{ tkCopyToken }}" class="btn-secondary" style="font-size:12px;flex:none">Copier</button>
             </div>
             <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ tkTokenHint }}</span>
@@ -3154,7 +3154,28 @@
             <div style="{{ crmChampIco }}"><a href="{{ crmDet.mailtoContact }}" title="Écrire à cette adresse" style="{{ crmIco }}">✉</a><input value="{{ crmDet.contactEmail }}" onInput="{{ crmDet.setContactEmail }}" title="{{ crmDet.contactEmail }}" placeholder="contact@…" style="{{ crmInpNu }}"/></div>
           </div>
         </div>
-        <div><div style="{{ crmLab }}">Bon remis</div><input value="{{ crmDet.voucher }}" onInput="{{ crmDet.setVoucher }}" placeholder="code du bon" style="{{ crmInp }}"/></div>
+        <!-- LES BONS : ils se CHOISISSENT dans la liste servie par
+             /franchisee/ws-vouchers-local, comme sur la fiche bureau — un bon
+             se crée dans Paramétrage › Bons, jamais en le tapant ici. Une
+             cible peut en porter plusieurs (bienvenue, découverte, geste). -->
+        <div><div style="{{ crmLab }}">Bons remis</div>
+          <div style="display:flex;gap:6px;margin-top:7px">
+            <select value="{{ crmDet.bonSel }}" onChange="{{ crmDet.setBonSel }}" style="{{ crmInp }};margin-top:0;flex:1;min-width:0">
+              <sc-for list="{{ crmDet.bonOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+            </select>
+            <button onClick="{{ crmDet.bonAjouter }}" class="btn-secondary" style="flex:none;font-size:11.5px;padding:0 12px;min-height:0" title="Attribuer ce bon à la cible">+</button>
+          </div>
+          <sc-if value="{{ crmDet.bonsVide }}" hint-placeholder-val="{{ true }}"><div style="font:400 10.5px/1.4 var(--font-ui);color:var(--color-text-muted);margin-top:6px">{{ crmDet.bonsNote }}</div></sc-if>
+          <div style="display:flex;flex-direction:column;gap:5px;margin-top:7px">
+            <sc-for list="{{ crmDet.bons }}" as="v" hint-placeholder-count="2">
+              <div style="display:flex;align-items:center;gap:8px;padding:6px 9px;border:.5px solid var(--color-border-tertiary);border-radius:9px;background:var(--color-surface)">
+                <span style="flex:none;font:700 10.5px var(--font-mono,monospace);letter-spacing:.05em;color:var(--color-primary);background:#fbf1e3;border-radius:6px;padding:4px 7px">{{ v.code }}</span>
+                <span style="flex:1;min-width:0;font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ v.detail }}</span>
+                <button onClick="{{ v.retirer }}" title="Retirer ce bon de la cible" style="border:none;background:none;cursor:pointer;color:var(--color-text-muted);font-size:15px;line-height:1;padding:0">✕</button>
+              </div>
+            </sc-for>
+          </div>
+        </div>
         <div><div style="{{ crmLab }}">Prochaine action</div>
           <div style="display:grid;grid-template-columns:1fr 96px;gap:7px">
             <input type="date" value="{{ crmDet.prochaine }}" onChange="{{ crmDet.setProchaine }}" style="{{ crmInp }}"/>
@@ -4126,7 +4147,7 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div style="grid-column:1/-1"><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Nom de l'entreprise *</label>
-            <sc-if value="{{ obViesLocked }}" hint-placeholder-val="{{ false }}"><input value="{{ ob.raison }}" readonly style="{{ obInStyle }};background:var(--color-background-secondary);color:#2d7a3e;font-weight:600"/><div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;font:400 11px var(--font-ui);color:var(--color-text-muted)"><span>Nom officiel confirmé par VIES depuis le n° TVA.</span><button type="button" onClick="{{ obViesUnlock }}" style="border:none;background:transparent;color:var(--color-primary);font:600 11px var(--font-ui);cursor:pointer;padding:0">Modifier quand même</button></div></sc-if>
+            <sc-if value="{{ obViesLocked }}" hint-placeholder-val="{{ false }}"><input value="{{ ob.raison }}" readOnly="{{ true }}" style="{{ obInStyle }};background:var(--color-background-secondary);color:#2d7a3e;font-weight:600"/><div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;font:400 11px var(--font-ui);color:var(--color-text-muted)"><span>Nom officiel confirmé par VIES depuis le n° TVA.</span><button type="button" onClick="{{ obViesUnlock }}" style="border:none;background:transparent;color:var(--color-primary);font:600 11px var(--font-ui);cursor:pointer;padding:0">Modifier quand même</button></div></sc-if>
             <sc-if value="{{ obViesFree }}" hint-placeholder-val="{{ true }}"><input value="{{ ob.raison }}" onInput="{{ obSetRaison }}" placeholder="raison sociale du client" style="{{ obInStyle }}"/></sc-if>
           </div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">N° TVA — validé par VIES</label><div style="display:flex;gap:8px"><input value="{{ ob.tva }}" onInput="{{ obSetTva }}" placeholder="BE 0xxx.xxx.xxx" style="{{ obInStyle }}"/><button type="button" onClick="{{ obViesCheck }}" style="flex:none;border:1.5px solid var(--color-primary);background:transparent;color:var(--color-primary);border-radius:8px;padding:0 12px;font:600 11.5px var(--font-ui);cursor:pointer">Vérifier (VIES)</button></div><div style="margin-top:5px;{{ obViesStyle }}">{{ obViesMsg }}</div></div>
@@ -4170,7 +4191,7 @@
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Code postal *</label><input value="{{ ob.cp }}" onInput="{{ obSetCp }}" placeholder="1000" maxlength="4" inputmode="numeric" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Localité</label>
             <sc-if value="{{ obCpLocMulti }}" hint-placeholder-val="{{ false }}"><select value="{{ ob.localite }}" onChange="{{ obSetLocalite }}" style="{{ obInStyle }}"><option value="">— Choisir la localité —</option><sc-for list="{{ obCpLocs }}" as="c" hint-placeholder-count="2"><option value="{{ c.v }}">{{ c.v }}</option></sc-for></select></sc-if>
-            <sc-if value="{{ obCpLocMono }}" hint-placeholder-val="{{ true }}"><input value="{{ obCpLocDisplay }}" readonly placeholder="— automatique dès le CP saisi —" style="{{ obInStyle }}"/></sc-if>
+            <sc-if value="{{ obCpLocMono }}" hint-placeholder-val="{{ true }}"><input value="{{ obCpLocDisplay }}" readOnly="{{ true }}" placeholder="— automatique dès le CP saisi —" style="{{ obInStyle }}"/></sc-if>
           </div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Office / bâtiment</label><input value="{{ ob.office }}" onInput="{{ obSetOffice }}" placeholder="nom de l'office" style="{{ obInStyle }}"/></div>
           <div><label style="display:block;font:600 11px var(--font-ui);letter-spacing:.04em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Étage / local</label><input value="{{ ob.etage }}" onInput="{{ obSetEtage }}" placeholder="ex. Sous-sol / quai" style="{{ obInStyle }}"/></div>
@@ -6821,7 +6842,7 @@ class Component extends DCLogic {
   /* Les champs de la fiche tels que tapés — joints à tout envoi pour qu'une
      retouche du contact ne se perde pas quand la fiche se ferme. */
   crmFiche(d){ return {id:d.id,contactNom:d.contactNom||'',contactRole:d.contactRole||'',contactTel:d.contactTel||'',contactEmail:d.contactEmail||'',
-      voucher:d.voucher||'',prochaine:d.prochaine||'',prochaineHeure:d.prochaineHeure||'',prochaineType:d.prochaineType||'',note:d.note||''}; }
+      prochaine:d.prochaine||'',prochaineHeure:d.prochaineHeure||'',prochaineType:d.prochaineType||'',note:d.note||''}; }
   crmMailEnvoyer(d){ if(this.state.crmEnvoi) return; const to=String(d.mTo||'').trim();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){ this.setState({crmActErr:'Adresse e-mail du destinataire absente ou invalide.'}); return; }
     if(!String(d.mSujet||'').trim()||!String(d.mCorps||'').trim()){ this.setState({crmActErr:'Objet ou message vide.'}); return; }
@@ -7203,7 +7224,30 @@ class Component extends DCLogic {
         contactTel:det.contactTel||'', setContactTel:(e)=>majDet({contactTel:e.target.value}),
         contactEmail:det.contactEmail||'', setContactEmail:(e)=>majDet({contactEmail:e.target.value}),
         telContact:'tel:'+this.crmTel(det.contactTel), mailtoContact:'mailto:'+encodeURIComponent(det.contactEmail||''),
-        voucher:det.voucher||'', setVoucher:(e)=>majDet({voucher:e.target.value}),
+        // Les bons attribués : un tableau de codes servi par l'API (0130),
+        // avec repli sur l'ancien champ texte pour les cartes d'avant.
+        ...(()=>{ const dispo=SRV('ws_vouchers_local')||[];
+          const pris=Array.isArray(det.bons)?det.bons.slice():String(det.voucher||'').split(',').map(x=>x.trim().toUpperCase()).filter(Boolean);
+          const carte=(c)=>dispo.find(x=>String(x.code||'').toUpperCase()===c)||null;
+          const ecrire=(l)=>{ majDet({bons:l,voucher:l.join(', ')});
+            this.crmEcrire({id:det.id,bons:l},l.length?'✓ Bons : '+l.join(', '):'Bon retiré'); };
+          return {
+            bons:pris.map(c=>{ const v=carte(c);
+              return { code:c, detail:v?[v.valeur,v.validite].filter(Boolean).join(' · '):'bon inconnu de la liste — créé ailleurs, ou retiré',
+                retirer:()=>ecrire(pris.filter(x=>x!==c)) }; }),
+            bonsVide:!pris.length,
+            bonsNote:dispo.length?'Aucun bon attribué — la campagne s’annonce sans geste commercial.'
+              :'Aucun bon actif dans la boutique : créez-en un dans Paramétrage › Bons, il apparaîtra ici.',
+            bonSel:S.crmBonSel||'',
+            setBonSel:(e)=>this.setState({crmBonSel:e.target.value}),
+            bonOpts:[{value:'',label:dispo.length?'— choisir un bon —':'— aucun bon actif —'},
+              ...dispo.filter(v=>pris.indexOf(String(v.code||'').toUpperCase())<0)
+                .map(v=>({value:String(v.code||'').toUpperCase(),
+                  label:String(v.code||'').toUpperCase()+' · '+[v.valeur,v.validite].filter(Boolean).join(' · ')+(v.loc?'':' · réseau')}))],
+            bonAjouter:()=>{ const c=String(S.crmBonSel||'').trim().toUpperCase();
+              if(!c){ this.printJob('⚠ Choisissez un bon dans la liste'); return; }
+              if(pris.indexOf(c)>=0){ this.printJob('⚠ Le bon '+c+' est déjà attribué à cette cible'); return; }
+              this.setState({crmBonSel:''}); ecrire([...pris,c]); } }; })(),
         prochaine:det.prochaine||'', setProchaine:(e)=>majDet({prochaine:e.target.value}),
         prochaineHeure:det.prochaineHeure||'', setProchaineHeure:(e)=>majDet({prochaineHeure:e.target.value}),
         prochaineType:det.prochaineType||'', setProchaineType:(e)=>majDet({prochaineType:e.target.value}),
@@ -7219,7 +7263,7 @@ class Component extends DCLogic {
         gestes:[['mail','✉ Mail envoyé'],['bon','🎟 Bon remis'],['assort','🗒 Assortiment imprimé'],['visite','📍 Visite faite'],['tel','☎ Appel passé']]
           .map(([k,lab])=>({label:lab,poser:()=>{ this.crmEcrire({id:det.id,geste:k,gesteTexte:lab},'✓ '+lab); this.setState({crmDet:null}); }})),
         enregistrer:()=>{ this.crmEcrire({id:det.id,contactNom:det.contactNom||'',contactRole:det.contactRole||'',
-          contactTel:det.contactTel||'',contactEmail:det.contactEmail||'',voucher:det.voucher||'',
+          contactTel:det.contactTel||'',contactEmail:det.contactEmail||'',
           prochaine:det.prochaine||'',prochaineHeure:det.prochaineHeure||'',prochaineType:det.prochaineType||'',
           note:det.note||''},'✓ Fiche enregistrée'); this.setState({crmDet:null}); },
         supprimer:()=>{ this.crmEcrire({id:det.id,supprimer:true},'Carte retirée du tableau'); this.setState({crmDet:null}); },
