@@ -544,3 +544,46 @@ saisissant l'id de boutique. Sortie attendue :
 Vérifié en local contre le VRAI `erp_alias.php` et un faux ERP : jeton posé,
 jeton refusé (401), ERP injoignable, ERP non configuré — et aucun montant,
 client, référence ni jeton dans la sortie.
+
+## Un site, plusieurs bureaux (assistant tournée, étape 3)
+
+`ws_office_delivery_sites` porte **une ligne par couple (site, bureau)** : un
+immeuble qui livre trois sociétés y occupe trois lignes, avec le même nom et la
+même adresse. C'est la forme que `sitesData()` lit déjà — elle regroupe par
+adresse et publie `offices[]` — mais l'assistant tournée, lui, lisait ces lignes
+telles quelles. Conséquences vues à l'écran : le même bâtiment listé deux fois
+dans les arrêts, un menu déroulant qui n'acceptait **qu'un** bureau par ligne,
+« 3 site(s) » pour deux bâtiments, et trois trajets, trois temps d'accès et
+trois temps de dépôt comptés dans l'ETA pour un seul arrêt. L'ordre d'arrêts
+proposé par Google s'écrivait sur ces doublons.
+
+L'assistant regroupe désormais les lignes d'un même site (même nom **et** même
+adresse, sans accents ni casse ; une ligne sans nom ni adresse n'est jamais
+fusionnée) en **un arrêt** qui porte :
+
+- `officeIds[]` — les bureaux livrés à ce site, ajoutés et retirés un par un ;
+- `rowIds[]` / `rowByOffice{}` — les lignes de la table qui le composent.
+
+À l'enregistrement, l'arrêt est **redéployé** en lignes : une par bureau, une
+seule s'il n'en a aucun. Chaque bureau reprend la ligne qui le portait déjà
+(mise à jour, pas suppression + création) ; un bureau nouvellement rattaché
+prend une ligne libre du site, sinon une ligne neuve. Les lignes qu'aucun
+bureau ne réclame plus partent dans `removeSites`.
+
+**Le corps posté à `POST /franchisee/tour-wizard` garde exactement la forme que
+le serveur connaît** (`sites[]` avec `id` et `officeId`) : il y a seulement
+autant d'entrées que de couples. Aucun changement côté WebShop.
+
+Deux conséquences visibles, voulues :
+
+- le temps de dépôt d'un arrêt est la **somme** de ceux de ses bureaux (le
+  chauffeur qui livre trois sociétés dans le même hall s'y arrête trois fois) ;
+  un site sans bureau garde le standard réseau (`DROP_STD`) ;
+- un site déjà dédoublé en base perd ses lignes en trop à l'enregistrement.
+  Ce n'est pas silencieux : l'étape 3 l'annonce, ligne par ligne, **avant** que
+  l'on enregistre.
+
+Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : 3 lignes
+→ 2 arrêts, rattachement d'un second bureau, détachement, pied de modale, et le
+corps réellement posté — 3 lignes pour 2 sites, `removeSites` vide, la ligne en
+double reprise pour le bureau ajouté.

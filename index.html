@@ -3494,13 +3494,21 @@
 
         <!-- 3 · BUREAUX -->
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px 20px">
-          <div class="tw-head"><span class="tw-num">3</span><div><div class="tw-title">Bureaux livrés à chaque site</div><div class="tw-sub">Le bureau (société) desservi à chaque arrêt. Un site sans bureau n'est pas livrable — le lien se fait ici, jamais deviné.</div></div></div>
+          <div class="tw-head"><span class="tw-num">3</span><div><div class="tw-title">Bureaux livrés à chaque site</div><div class="tw-sub">Les bureaux (sociétés) desservis à chaque arrêt — un site en compte autant qu'il en héberge. Un site sans bureau n'est pas livrable — le lien se fait ici, jamais deviné.</div></div></div>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
             <sc-for list="{{ twSiteOffices }}" as="s" hint-placeholder-count="2">
-              <div style="display:grid;grid-template-columns:34px 1.4fr 2fr;gap:10px;align-items:center;border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 14px">
-                <span style="{{ s.numStyle }}">{{ s.num }}</span>
-                <div style="min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.address }}</div></div>
-                <select value="{{ s.officeId }}" onChange="{{ s.setOffice }}" class="tw-in"><option value="">— Aucun bureau (site seul, non livrable) —</option><sc-for list="{{ s.officeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+              <div style="display:grid;grid-template-columns:34px 1.4fr 2fr;gap:10px;align-items:start;border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 14px">
+                <span style="{{ s.numStyle }};margin-top:5px">{{ s.num }}</span>
+                <div style="min-width:0;padding-top:3px"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.address }}</div></div>
+                <div style="min-width:0;display:flex;flex-direction:column;gap:6px">
+                  <sc-for list="{{ s.offices }}" as="o" hint-placeholder-count="1">
+                    <span style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--color-primary);background:var(--color-background-secondary);color:var(--color-primary);border-radius:8px;padding:7px 10px;font:600 12px var(--font-ui)"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span><span title="Temps de dépôt de ce bureau — il entre dans l'heure d'arrivée des arrêts suivants" style="flex:none;font-weight:400;color:var(--color-text-muted)">{{ o.drop }}</span><button type="button" onClick="{{ o.remove }}" title="Détacher ce bureau du site" style="border:none;background:transparent;color:var(--color-primary);cursor:pointer;font-size:15px;line-height:1;padding:0;flex:none">×</button></span>
+                  </sc-for>
+                  <sc-if value="{{ s.noOffice }}" hint-placeholder-val="{{ false }}"><div style="font:500 12px var(--font-ui);color:var(--color-text-muted);padding:5px 0 1px">— Aucun bureau (site seul, non livrable) —</div></sc-if>
+                  <sc-if value="{{ s.canAdd }}" hint-placeholder-val="{{ true }}"><select value="" onChange="{{ s.addOffice }}" class="tw-in"><option value="">{{ s.addLabel }}</option><sc-for list="{{ s.addOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></sc-if>
+                  <sc-if value="{{ s.allTaken }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Tous les bureaux connus sont déjà rattachés à ce site.</div></sc-if>
+                  <sc-if value="{{ s.dblShow }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px/1.5 var(--font-ui);color:var(--color-primary)">{{ s.dblTxt }}</div></sc-if>
+                </div>
               </div>
             </sc-for>
             <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Les bureaux se rattachent aux sites de l'étape 2.</div></sc-if>
@@ -4669,10 +4677,45 @@ class Component extends DCLogic {
      tables sont RELUES depuis l'API — jamais mises à jour de mémoire. */
   twVide(){ return {open:false,tourId:null,name:'',start:'06:00',max:'',vehicule:'',ret:true,forfait:'',pricePerKm:'',
     days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false},postcodes:[],cpQ:'',sites:[],removed:[],route:null,routeBusy:false,routeErr:'',saving:false,err:'',exist:'',opt:null,optBusy:false,optErr:''}; }
-  twSiteDe(r){ return {key:'s'+(r.id!=null?r.id:Math.random().toString(36).slice(2)),id:(r.id!=null?r.id:null),
+  /* UN SITE, PLUSIEURS BUREAUX. `ws_office_delivery_sites` porte une ligne par
+     COUPLE (site, bureau) : un bâtiment qui livre trois sociétés y occupe trois
+     lignes, avec la même adresse et le même nom. L'assistant lisait ces lignes
+     telles quelles — le même immeuble revenait trois fois dans les arrêts, il
+     comptait trois trajets, trois temps d'accès et trois temps de dépôt, et
+     l'ordre d'arrêts proposé par Google s'écrivait sur des doublons. Les lignes
+     d'un même site sont donc REGROUPÉES en un arrêt qui porte la liste de ses
+     bureaux (`officeIds`) et l'identifiant de chacune de ses lignes (`rowIds`,
+     `rowByOffice`) ; l'enregistrement les redéploie ligne par ligne, de sorte
+     que la table garde exactement la forme que le serveur lui connaît. */
+  twSiteKey(r){ const n=v=>String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+    const nom=n((r.name&&r.name!=='—')?r.name:''), adr=n((r.adr&&r.adr!=='—')?r.adr:'');
+    // Sans nom NI adresse, rien ne dit que deux lignes sont le même site : elles restent séparées.
+    return (nom||adr)?(nom+'|'+adr):('#'+(r.id!=null?r.id:Math.random().toString(36).slice(2))); }
+  twSiteDe(r){ const oid=(r.office_client_id!=null?String(r.office_client_id):'');
+    return {key:'s'+(r.id!=null?r.id:Math.random().toString(36).slice(2)),id:(r.id!=null?r.id:null),
+    rowIds:(r.id!=null?[r.id]:[]),rowByOffice:(oid&&r.id!=null?{[oid]:r.id}:{}),
     name:(r.name&&r.name!=='—')?r.name:'',address:(r.adr&&r.adr!=='—')?r.adr:'',acc:(r.acc!=null?String(r.acc):''),
-    officeId:(r.office_client_id!=null?String(r.office_client_id):''),lat:(r.lat!=null?+r.lat:null),lng:(r.lng!=null?+r.lng:null),
+    officeIds:(oid?[oid]:[]),lat:(r.lat!=null?+r.lat:null),lng:(r.lng!=null?+r.lng:null),
     place_id:r.place_id||'',formatted:'',street:r.street||'',street_number:r.street_number||'',postal_code:r.postal_code||'',city:r.city||''}; }
+  /* Le regroupement complète l'arrêt avec ce que la première ligne n'avait pas :
+     une ligne sans position ni temps d'accès n'efface pas ceux d'une autre ligne
+     du même bâtiment. */
+  twSitesDe(rows){ const out=[], idx={};
+    (rows||[]).forEach(r=>{ const k=this.twSiteKey(r); const j=idx[k];
+      if(j===undefined){ idx[k]=out.length; out.push(this.twSiteDe(r)); return; }
+      const s=out[j];
+      if(r.id!=null&&!s.rowIds.some(x=>String(x)===String(r.id))) s.rowIds.push(r.id);
+      if(s.id==null&&r.id!=null) s.id=r.id;
+      const oid=(r.office_client_id!=null?String(r.office_client_id):'');
+      if(oid){ if(!s.officeIds.includes(oid)) s.officeIds.push(oid); if(r.id!=null&&s.rowByOffice[oid]==null) s.rowByOffice[oid]=r.id; }
+      if(s.lat==null&&r.lat!=null&&r.lng!=null){ s.lat=+r.lat; s.lng=+r.lng; }
+      if(s.acc===''&&r.acc!=null) s.acc=String(r.acc);
+      if(!s.place_id&&r.place_id) s.place_id=r.place_id;
+      if(!s.street&&r.street) s.street=r.street;
+      if(!s.street_number&&r.street_number) s.street_number=r.street_number;
+      if(!s.postal_code&&r.postal_code) s.postal_code=r.postal_code;
+      if(!s.city&&r.city) s.city=r.city; });
+    return out; }
   twOpen(tourId){ const T=this.twVide(); T.open=true; this.zfGeoEnsure();
     if(tourId){ const t=(this.routesMeta()||[]).find(x=>String(x.id)===String(tourId));
       if(t){ const k=String(t.id).replace(/^r/,'');
@@ -4680,7 +4723,7 @@ class Component extends DCLogic {
         T.forfait=(t.forfait!=null?String(t.forfait):''); T.pricePerKm=(t.pricePerKm!=null?String(t.pricePerKm):''); T.days=t.days||T.days;
         const tp=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; T.postcodes=[...new Set(tp.filter(r=>String(r.tour_id)===k).map(r=>String(r.postcode)))];
         const sites=(window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[];
-        T.sites=sites.filter(r=>r.tournee_id!=null&&String(r.tournee_id)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))).map(r=>this.twSiteDe(r));
+        T.sites=this.twSitesDe(sites.filter(r=>r.tournee_id!=null&&String(r.tournee_id)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))));
         if(t.routeKm!=null&&t.routeMin!=null) T.route={km:+t.routeKm,minutes:+t.routeMin,legs:null,at:t.routeAt||null}; }
       else { this.printJob('⚠ Tournée introuvable — rechargez la page'); return; } }
     this.setState({tw:T}); }
@@ -4695,11 +4738,21 @@ class Component extends DCLogic {
       address:this.geoLigne(j)+((j.zip||j.city)?(', '+[j.zip,j.city].filter(Boolean).join(' ')):''),name:x.name||this.geoLigne(j),
       lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''}:x),route:null}))); }
   twSiteMove(i,d){ this.twPatch(t=>{ const a=t.sites.slice(); const j=i+d; if(j<0||j>=a.length) return {}; const x=a[i]; a[i]=a[j]; a[j]=x; return {sites:a,route:null}; }); }
-  twSiteRemove(i){ this.twPatch(t=>{ const x=t.sites[i]; return {sites:t.sites.filter((_,j)=>j!==i),removed:(x&&x.id!=null)?[...t.removed,x.id]:t.removed,route:null}; }); }
-  twAddSite(){ this.twPatch(t=>({sites:[...t.sites,{key:'n'+Date.now(),id:null,name:'',address:'',acc:'',officeId:'',lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}],route:null})); }
+  twSiteRemove(i){ this.twPatch(t=>{ const x=t.sites[i]; const ids=(x&&x.rowIds&&x.rowIds.length)?x.rowIds:((x&&x.id!=null)?[x.id]:[]);
+      return {sites:t.sites.filter((_,j)=>j!==i),removed:ids.length?[...t.removed,...ids]:t.removed,route:null}; }); }
+  /* Rattacher / détacher un bureau : le lien vit dans le brouillon, il n'est
+     écrit qu'à l'enregistrement — comme le reste de l'assistant. */
+  twOfficeAdd(i){ return e=>{ const v=String((e&&e.target)?e.target.value:e||''); if(!v) return;
+    this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,officeIds:((x.officeIds||[]).some(o=>String(o)===v)?x.officeIds:[...(x.officeIds||[]),v])}:x),err:''})); }; }
+  twOfficeRemove(i,id){ return ()=>this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,officeIds:(x.officeIds||[]).filter(o=>String(o)!==String(id))}:x),err:''})); }
+  twAddSite(){ this.twPatch(t=>({sites:[...t.sites,{key:'n'+Date.now(),id:null,rowIds:[],rowByOffice:{},name:'',address:'',acc:'',officeIds:[],lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}],route:null})); }
   twAddExisting(e){ const id=e.target.value; if(!id) return;
-    const r=((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[]).find(x=>String(x.id)===String(id)); if(!r) return;
-    this.twPatch(t=>t.sites.some(x=>String(x.id)===String(id))?{exist:''}:{sites:[...t.sites,this.twSiteDe(r)],removed:t.removed.filter(x=>String(x)!==String(id)),route:null,exist:''}); }
+    const rows=((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[]);
+    const r=rows.find(x=>String(x.id)===String(id)); if(!r) return;
+    // Un site repris arrive avec ses bureaux : ils sont sur ses AUTRES lignes.
+    const k=this.twSiteKey(r); const s=this.twSitesDe(rows.filter(x=>this.twSiteKey(x)===k))[0]; if(!s) return;
+    const deja=(x)=>(x.rowIds||[]).some(v=>(s.rowIds||[]).some(w=>String(v)===String(w)));
+    this.twPatch(t=>t.sites.some(deja)?{exist:''}:{sites:[...t.sites,s],removed:t.removed.filter(v=>!(s.rowIds||[]).some(w=>String(w)===String(v))),route:null,exist:''}); }
   twCpAdd(cp){ this.twPatch(t=>({postcodes:t.postcodes.includes(cp)?t.postcodes:[...t.postcodes,cp],cpQ:'',err:''})); }
   twCpRemove(cp){ this.twPatch(t=>({postcodes:t.postcodes.filter(x=>x!==cp)})); }
   twRoute(){ const T=this.state.tw||this.twVide(); const fr=window.__FR||{};
@@ -4741,15 +4794,31 @@ class Component extends DCLogic {
     if(!fr.base){ this.twPatch({err:'API non configurée — rien ne peut être enregistré.'}); return; }
     this.twPatch({saving:true,err:''});
     const num=v=>{ const n=parseFloat(String(v==null?'':v).replace(',','.')); return isNaN(n)?null:n; };
+    /* REDÉPLOIEMENT : un arrêt à trois bureaux redevient trois lignes de
+       `ws_office_delivery_sites`, une par couple (site, bureau) — la forme que
+       le serveur écrit déjà. Chaque bureau reprend LA LIGNE qui le portait
+       (`rowByOffice`) pour que l'enregistrement soit une mise à jour et non une
+       suppression suivie d'une création ; un bureau nouvellement rattaché prend
+       une ligne libre du site, sinon une ligne neuve (`id:null`). Les lignes
+       qu'aucun bureau ne réclame plus — bureau détaché — sont supprimées. */
+    const twRows=[], twOrphelines=[];
+    T.sites.forEach(x=>{ const pris={}; const libres=(x.rowIds||[]).slice(); const parBureau=x.rowByOffice||{};
+      const prendre=(oid)=>{ const r=(oid!=null&&parBureau[oid]!=null)?parBureau[oid]:null;
+        if(r!=null&&!pris[String(r)]){ pris[String(r)]=1; return r; }
+        const libre=libres.find(v=>!pris[String(v)]); if(libre!=null){ pris[String(libre)]=1; return libre; } return null; };
+      const base={name:String(x.name||'').trim(),address:String(x.address||'').trim(),acc:num(x.acc),
+        lat:x.lat,lng:x.lng,place_id:x.place_id||'',formatted:x.formatted||'',street:x.street||'',street_number:x.street_number||'',postal_code:x.postal_code||'',city:x.city||''};
+      const bureaux=(x.officeIds||[]).filter(Boolean);
+      // Un site sans bureau garde UNE ligne : il existe comme arrêt, il n'est simplement pas livrable.
+      (bureaux.length?bureaux:[null]).forEach(oid=>{ twRows.push({...base,id:prendre(oid),officeId:(oid?+oid:null)}); });
+      libres.forEach(v=>{ if(!pris[String(v)]) twOrphelines.push(v); }); });
     const payload={tour:{id:(T.tourId?+T.tourId:null),name:String(T.name).trim(),start:T.start,max:(String(T.max||'').trim()===''?null:parseInt(T.max,10)),vehicule:T.vehicule||'',ret:!!T.ret,
         forfait:num(T.forfait),pricePerKm:num(T.pricePerKm),days:T.days,postcodes:T.postcodes,routeKm:(T.route?T.route.km:null),routeMin:(T.route?T.route.minutes:null)},
-      sites:T.sites.map(x=>({id:x.id,name:String(x.name||'').trim(),address:String(x.address||'').trim(),acc:num(x.acc),officeId:(x.officeId?+x.officeId:null),
-        lat:x.lat,lng:x.lng,place_id:x.place_id||'',formatted:x.formatted||'',street:x.street||'',street_number:x.street_number||'',postal_code:x.postal_code||'',city:x.city||''})),
-      removeSites:T.removed};
+      sites:twRows,removeSites:[...T.removed,...twOrphelines]};
     fetch(fr.base+'/franchisee/tour-wizard'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(payload)})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
         if(st===200&&j&&j.ok){
-          this.printJob('✓ Tournée « '+payload.tour.name+' » enregistrée — '+T.sites.length+' site(s), '+T.postcodes.length+' code(s) postal(aux)');
+          this.printJob('✓ Tournée « '+payload.tour.name+' » enregistrée — '+T.sites.length+' site(s), '+twRows.filter(r=>r.officeId!=null).length+' bureau(x), '+T.postcodes.length+' code(s) postal(aux)');
           this.twReload().then(()=>this.setState(s=>({tw:{...(s.tw||this.twVide()),open:false,saving:false},_rev:(s._rev||0)+1}),()=>{ if(this.drawRoute) this.drawRoute(); })); }
         else this.twPatch({saving:false,err:(j&&j.error)||(st===404?'POST /franchisee/tour-wizard absent du serveur — déployez le webshop.':('Enregistrement refusé (HTTP '+st+')'))}); })
       .catch(()=>this.twPatch({saving:false,err:'Réseau indisponible — rien n’a été enregistré.'})); }
@@ -9540,7 +9609,13 @@ class Component extends DCLogic {
     const twStart=/^\d{1,2}:\d{2}$/.test(String(T.start||''))?this.toMin(T.start):null;
     const twOffById={}; (SRV('ws_offices')||[]).forEach(o=>{ twOffById[String(o.id)]=o; });
     const twDset={}; (SRV('ws_office_delivery_settings')||[]).forEach(b=>{ const k=String(b.bureau||'').trim(); if(k) twDset[k]=b; });
-    const twDropOf=(officeId)=>{ const o=twOffById[String(officeId||'')]; if(!o) return this.DROP_STD; const c=twDset[String(o.name||'').trim()]; const v=(c&&c.drop!=null&&c.drop!=='')?parseFloat(c.drop):NaN; return (isNaN(v)||v<=0)?this.DROP_STD:v; };
+    const twDropUn=(officeId)=>{ const o=twOffById[String(officeId||'')]; if(!o) return this.DROP_STD; const c=twDset[String(o.name||'').trim()]; const v=(c&&c.drop!=null&&c.drop!=='')?parseFloat(c.drop):NaN; return (isNaN(v)||v<=0)?this.DROP_STD:v; };
+    /* Le temps de dépôt d'un ARRÊT est la somme de ceux de ses bureaux : le
+       chauffeur qui livre trois sociétés dans le même immeuble s'y arrête trois
+       fois. Un site sans bureau garde le standard réseau — c'est le temps de
+       l'arrêt lui-même, pas celui d'un bureau inconnu. */
+    const twDropOf=(officeIds)=>{ const l=(officeIds||[]).filter(Boolean); if(!l.length) return this.DROP_STD;
+      return l.reduce((n,id)=>n+twDropUn(id),0); };
     const twDep=this.depot(); let twCur=twStart; let twPrev=(twDep&&twDep.lat!=null)?{lat:twDep.lat,lng:twDep.lng}:null;
     const twLegs=(T.route&&Array.isArray(T.route.legs))?T.route.legs:null;
     const twNumStyle='width:22px;height:22px;border-radius:50%;background:var(--color-primary);color:#fff;font:700 11px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;flex:none';
@@ -9549,7 +9624,7 @@ class Component extends DCLogic {
       else if(twLegs&&twLegs[i]){ twCur+=(+twLegs[i].min||0); eta=this.hhmm(twCur); why='Trajet Google'; }
       else if(twPrev&&x.lat!=null&&x.lng!=null){ twCur+=this.travelMin(twPrev,{lat:+x.lat,lng:+x.lng}).min; eta='≈ '+this.hhmm(twCur); why='Estimation à vol d’oiseau — calculez l’itinéraire Google'; }
       else { why=(x.lat==null?'Adresse non vérifiée (à choisir dans la liste Google)':'Boutique non positionnée'); twCur=null; }
-      if(twCur!=null){ const acc=parseFloat(x.acc); if(isNaN(acc)){ twCur=null; why='Temps d’accès à saisir — les arrêts suivants n’ont pas d’heure'; } else { twCur+=acc; const dr=twDropOf(x.officeId); if(dr!=null) twCur+=dr; } }
+      if(twCur!=null){ const acc=parseFloat(x.acc); if(isNaN(acc)){ twCur=null; why='Temps d’accès à saisir — les arrêts suivants n’ont pas d’heure'; } else { twCur+=acc; const dr=twDropOf(x.officeIds); if(dr!=null) twCur+=dr; } }
       if(x.lat!=null&&x.lng!=null) twPrev={lat:+x.lat,lng:+x.lng};
       return {num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),eta,why,color:(eta==='—'?'var(--color-text-muted)':'var(--color-primary)')}; });
     let twRetEta='—', twRetWhy='';
@@ -9560,16 +9635,37 @@ class Component extends DCLogic {
     const twPpk=parseFloat(String(T.pricePerKm||'').replace(',','.'));
     const twKmTxt=(T.route&&T.route.km!=null)?(String(T.route.km).replace('.',',')+' km'):'—';
     const twRouteCost=(T.route&&T.route.km!=null&&!isNaN(twPpk))?((T.route.km*twPpk).toFixed(2).replace('.',',')+' €'):'—';
-    const twExistOpts=(SRV('ws_office_delivery_sites')||[]).filter(r=>r.id!=null&&!(T.sites||[]).some(x=>String(x.id)===String(r.id)))
-      .map(r=>({value:String(r.id),label:((r.name&&r.name!=='—')?r.name:'(sans nom)')+((r.adr&&r.adr!=='—')?(' — '+r.adr):'')+((r.tour&&r.tour!=='—')?(' · tournée '+r.tour):' · sans tournée')}));
+    /* La liste des sites reprenables se dédoublonne elle aussi : une même
+       adresse à trois bureaux y apparaissait trois fois, et les trois entrées
+       ramenaient le même arrêt. Le nombre de bureaux est dit dans le libellé. */
+    const twDejaPris=new Set(); (T.sites||[]).forEach(x=>(x.rowIds||[]).forEach(v=>twDejaPris.add(String(v))));
+    const twExistVus={}; const twExistOpts=[];
+    (SRV('ws_office_delivery_sites')||[]).filter(r=>r.id!=null&&!twDejaPris.has(String(r.id))).forEach(r=>{
+      const k=this.twSiteKey(r); if(twExistVus[k]!=null){ twExistOpts[twExistVus[k]]._n+=(r.office_client_id!=null?1:0); return; }
+      twExistVus[k]=twExistOpts.length;
+      twExistOpts.push({value:String(r.id),_n:(r.office_client_id!=null?1:0),
+        _base:((r.name&&r.name!=='—')?r.name:'(sans nom)')+((r.adr&&r.adr!=='—')?(' — '+r.adr):'')+((r.tour&&r.tour!=='—')?(' · tournée '+r.tour):' · sans tournée')}); });
+    twExistOpts.forEach(o=>{ o.label=o._base+(o._n>1?(' · '+o._n+' bureaux'):''); });
     const twOfficeOpts=(SRV('ws_offices')||[]).filter(o=>o.active!==false&&o.active!==0&&o.name).map(o=>({value:String(o.id),label:String(o.name)+(o.city?(' · '+o.city):'')}));
     const twSitesView=(T.sites||[]).map((x,i)=>({num:String(i+1),numStyle:twNumStyle,key:x.key,name:x.name||'',address:x.address||'',acc:(x.acc==null?'':String(x.acc)),
       setName:this.twSiteSet(i,'name'),setAcc:this.twSiteSet(i,'acc'),addrType:this.twSiteType(i),
       ...this.geoView('tw'+x.key,(x.lat!=null&&x.lng!=null),{pick:(id)=>this.twSitePick(i,id)}),
       up:()=>this.twSiteMove(i,-1),down:()=>this.twSiteMove(i,1),remove:()=>this.twSiteRemove(i),
       upStyle:(i===0?'opacity:.3':''),downStyle:(i===T.sites.length-1?'opacity:.3':'')}));
-    const twSiteOffices=(T.sites||[]).map((x,i)=>({num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),address:x.address||'—',officeId:x.officeId||'',setOffice:this.twSiteSet(i,'officeId'),officeOpts:twOfficeOpts}));
-    const twNbOff=(T.sites||[]).filter(x=>x.officeId).length;
+    const twOffLabel=(id)=>{ const o=twOffById[String(id||'')]; if(!o) return 'Bureau #'+id+' — introuvable'; return String(o.name||('Bureau #'+id))+(o.city?(' · '+o.city):''); };
+    const twSiteOffices=(T.sites||[]).map((x,i)=>{ const ids=(x.officeIds||[]).filter(Boolean);
+      const reste=twOfficeOpts.filter(o=>!ids.some(v=>String(v)===String(o.value)));
+      /* Un site garde UNE ligne par bureau (une seule s'il n'en a aucun) : les
+         lignes en trop d'un site déjà dédoublé partent à l'enregistrement. Ce
+         n'est pas une suppression silencieuse — elle est annoncée ici, avant. */
+      const dbl=(x.rowIds||[]).length-Math.max(1,ids.length);
+      return {num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),address:x.address||'—',
+        dblShow:dbl>0,dblTxt:(dbl===1?'Une ligne en double pour ce site (même nom, même adresse) sera supprimée à l’enregistrement.':(dbl+' lignes en double pour ce site (même nom, même adresse) seront supprimées à l’enregistrement.')),
+        offices:ids.map(id=>({key:String(id),label:twOffLabel(id),drop:(String(twDropUn(id)).replace('.',',')+' min'),remove:this.twOfficeRemove(i,id)})),
+        noOffice:ids.length===0, addOffice:this.twOfficeAdd(i), addOpts:reste, canAdd:reste.length>0,
+        addLabel:(ids.length?'+ Rattacher un autre bureau…':'+ Rattacher un bureau…'),
+        allTaken:reste.length===0&&twOfficeOpts.length>0}; });
+    const twNbOff=(T.sites||[]).reduce((n,x)=>n+((x.officeIds||[]).filter(Boolean).length),0);
     const twVals={
       twOpen:!!(S.tw&&S.tw.open), twTitle:(T.tourId?('Assistant — tournée « '+(T.name||'')+' »'):'Assistant — nouvelle tournée'),
       twClose:()=>this.twClose(), twSave:()=>this.twSave(), twNew:()=>this.twOpen(null),
