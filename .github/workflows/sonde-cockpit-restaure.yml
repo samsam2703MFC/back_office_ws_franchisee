@@ -1,7 +1,3 @@
-# NOTE TEMPORAIRE (05/09) — ce fichier porte le nom d'une sonde connue de main
-# pour être lançable (workflow_dispatch) depuis cette branche sans toucher main.
-# Son contenu réel : sonde-cockpit-restaure.yml. Il reprend son contenu de main
-# dès la sonde lue.
 name: Sonde — cockpit, restauration des référentiels de l'assistant (écriture)
 
 # Suite de sonde-cockpit-assistant.yml (run 33961563898, 05/09) : le nettoyage
