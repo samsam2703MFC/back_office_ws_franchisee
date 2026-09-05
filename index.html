@@ -197,6 +197,18 @@
   ::-webkit-scrollbar-thumb{background:rgba(34,34,34,.18);border-radius:6px}
   ::-webkit-scrollbar-track{background:transparent}
   .lz{scrollbar-width:thin}
+  /* FICHE DE PROSPECTION EN DEUX COLONNES : la fiche à gauche (qui, où en
+     est-on, quand), l'action à droite. Chaque colonne défile pour elle-même,
+     de sorte que le numéro reste sous les yeux pendant qu'on écrit le mail.
+     Sous 900 px il n'y a plus la place : les colonnes s'empilent. */
+  .crm2{display:grid;grid-template-columns:300px 1fr;flex:1;min-height:0}
+  .crm2-g{border-right:.5px solid var(--color-border-tertiary);background:#FCFAF7;padding:15px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+  .crm2-d{padding:15px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:13px}
+  @media (max-width:900px){
+    .crm2{grid-template-columns:1fr;overflow-y:auto}
+    .crm2-g{border-right:none;border-bottom:.5px solid var(--color-border-tertiary);overflow:visible}
+    .crm2-d{overflow:visible}
+  }
   /* Vignette localité au survol d'un code postal (formulaire Tournée) */
   .cpchip{position:relative}
   .cpchip[data-loc]:not([data-loc=""]):hover::after{content:attr(data-loc);position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);background:var(--color-text);color:var(--color-surface);font:600 11px var(--font-ui);white-space:nowrap;padding:5px 9px;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,.22);pointer-events:none;z-index:50}
@@ -3118,28 +3130,65 @@
        gestes déjà faits — mail, bon, assortiment, visite, appel. -->
   <sc-if value="{{ crmDet }}" hint-placeholder-val="{{ false }}">
   <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:1990;padding:24px">
-    <div class="lz" style="background:var(--color-surface);border-radius:16px;width:640px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+    <div class="lz" style="background:var(--color-surface);border-radius:16px;width:940px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
       <div style="padding:18px 24px 12px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
         <div><div class="t-page-title" style="font-size:17px">{{ crmDet.nom }}</div><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ crmDet.sous }}</div></div>
         <button onClick="{{ crmDet.fermer }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button>
       </div>
-      <div style="padding:16px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px">
-        <div><div style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Étape — cliquer pour déplacer</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">
-            <sc-for list="{{ crmDet.etapes }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.aller }}" disabled="{{ o.actuelle }}" title="{{ o.titre }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
-          </div></div>
-        <!-- ACTIONS : écrire, envoyer, appeler — depuis un modèle dont les
-             variables se remplissent seules. Le geste se consigne tout seul
-             au journal ; « consigner sans envoyer » reste là pour ce qui
-             s'est fait ailleurs (un bon remis en main propre, une visite). -->
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="crm2">
+      <!-- LA FICHE : où en est ce dossier, qui contacter, ce qui suit.
+           Les étapes sont une SUITE — numérotées, dans l'ordre, la faite
+           cochée — et non sept pastilles en vrac dont on ne lisait ni
+           l'ordre ni la position. Les fins se tiennent à part. -->
+      <div class="crm2-g">
+        <div><div style="{{ crmLab }}">Étape</div>
+          <div style="display:flex;flex-direction:column;gap:2px;margin-top:7px">
+            <sc-for list="{{ crmDet.etapes }}" as="o" hint-placeholder-count="6"><button onClick="{{ o.aller }}" disabled="{{ o.actuelle }}" title="{{ o.titre }}" style="{{ o.style }}"><span style="{{ o.dot }}">{{ o.num }}</span>{{ o.label }}</button></sc-for>
+          </div>
+        </div>
+        <div><div style="{{ crmLab }}">Contact</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:7px">
+            <input value="{{ crmDet.contactNom }}" onInput="{{ crmDet.setContactNom }}" placeholder="nom du contact" style="{{ crmInp }};margin-top:0"/>
+            <input value="{{ crmDet.contactRole }}" onInput="{{ crmDet.setContactRole }}" placeholder="secrétariat, RH…" style="{{ crmInp }};margin-top:0"/>
+            <div style="{{ crmChampIco }}"><a href="{{ crmDet.telContact }}" title="Appeler ce numéro" style="{{ crmIco }}">☎</a><input value="{{ crmDet.contactTel }}" onInput="{{ crmDet.setContactTel }}" placeholder="+32 …" style="{{ crmInpNu }}"/></div>
+            <div style="{{ crmChampIco }}"><a href="{{ crmDet.mailtoContact }}" title="Écrire à cette adresse" style="{{ crmIco }}">✉</a><input value="{{ crmDet.contactEmail }}" onInput="{{ crmDet.setContactEmail }}" placeholder="contact@…" style="{{ crmInpNu }}"/></div>
+          </div>
+        </div>
+        <div><div style="{{ crmLab }}">Bon remis</div><input value="{{ crmDet.voucher }}" onInput="{{ crmDet.setVoucher }}" placeholder="code du bon" style="{{ crmInp }}"/></div>
+        <div><div style="{{ crmLab }}">Prochaine action</div>
+          <div style="display:grid;grid-template-columns:1fr 96px;gap:7px">
+            <input type="date" value="{{ crmDet.prochaine }}" onChange="{{ crmDet.setProchaine }}" style="{{ crmInp }}"/>
+            <input type="time" value="{{ crmDet.prochaineHeure }}" onChange="{{ crmDet.setProchaineHeure }}" style="{{ crmInp }}"/>
+          </div>
+          <select value="{{ crmDet.prochaineType }}" onChange="{{ crmDet.setProchaineType }}" style="{{ crmInp }}">
+            <sc-for list="{{ crmDet.typeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+          <div style="font:400 10px/1.4 var(--font-ui);color:var(--color-text-muted);margin-top:5px">Ces trois champs font une seule chose : l’action se pose dans l’agenda de la semaine, au bon jour.</div>
+        </div>
+        <div style="flex:1;min-height:4px"></div>
+        <div><div style="{{ crmLab }}">Note</div><textarea value="{{ crmDet.note }}" onInput="{{ crmDet.setNote }}" rows="3" placeholder="ce qui s’est dit, ce qu’il faut refaire…" style="{{ crmInp }};resize:vertical"></textarea></div>
+      </div>
+      <div class="crm2-d">
+        <!-- AGIR : écrire, envoyer, appeler — depuis un modèle dont les
+             variables se remplissent seules. « Consigner sans envoyer » se
+             replie : cinq boutons de plus écrasaient les trois vraies
+             actions, au point de les faire lire comme désactivées. -->
+        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
           <span style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;flex:none">
             <button onClick="{{ crmDet.actMail }}" style="{{ crmDet.actMailStyle }}">✉ E-mail</button><button onClick="{{ crmDet.actSms }}" style="{{ crmDet.actSmsStyle }}">💬 SMS</button><button onClick="{{ crmDet.actTel }}" style="{{ crmDet.actTelStyle }}">☎ Appel</button>
           </span>
-          <sc-if value="{{ crmDet.act }}" hint-placeholder-val="{{ false }}"><button onClick="{{ crmDet.modOuvrir }}" class="btn-secondary" style="font-size:11.5px;padding:6px 10px;min-height:0" title="Créer, modifier ou retirer les modèles de mail, de SMS et de script d'appel">✎ Modèles</button></sc-if>
-          <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">ou consigner sans envoyer :</span>
-          <sc-for list="{{ crmDet.gestes }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.poser }}" class="btn-secondary" style="font-size:11.5px;padding:6px 10px;min-height:0">{{ g.label }}</button></sc-for>
+          <span style="flex:1;min-width:0"></span>
+          <sc-if value="{{ crmDet.act }}" hint-placeholder-val="{{ false }}"><button onClick="{{ crmDet.modOuvrir }}" class="btn-secondary" style="font-size:11.5px;padding:6px 10px;min-height:0" title="Créer, modifier ou retirer les modèles">✎ Modèles</button></sc-if>
+          <button onClick="{{ crmDet.gestesBascule }}" style="{{ crmDet.gestesStyle }}" title="Consigner un geste déjà fait ailleurs, sans rien envoyer d’ici">⋯ Consigner</button>
         </div>
+        <sc-if value="{{ crmDet.gestesOn }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:11px;padding:10px 12px">
+            <div style="{{ crmLab }}">Consigner sans envoyer — ce qui s’est fait ailleurs</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">
+              <sc-for list="{{ crmDet.gestes }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.poser }}" class="btn-secondary" style="font-size:11.5px;padding:6px 10px;min-height:0">{{ g.label }}</button></sc-for>
+            </div>
+          </div>
+        </sc-if>
         <sc-if value="{{ crmDet.actErr }}" hint-placeholder-val="{{ false }}"><div style="background:#fbe9eb;border:.5px solid #e8b4bb;border-radius:10px;padding:9px 14px;font:500 12px var(--font-ui);color:var(--color-primary)">⚠ {{ crmDet.actErr }}</div></sc-if>
 
         <!-- E-MAIL : modèle, destinataire, objet, message rendu, pièces. -->
@@ -3179,7 +3228,7 @@
             <label style="display:block"><span style="{{ crmLab }}">Numéro</span><input value="{{ crmDet.sTo }}" onInput="{{ crmDet.setSTo }}" placeholder="+32 …" style="{{ crmInp }}"/></label>
           </div>
           <label style="display:block"><span style="{{ crmLab }}">Message</span><textarea value="{{ crmDet.sCorps }}" onInput="{{ crmDet.setSCorps }}" rows="4" style="{{ crmInp }};resize:vertical;line-height:1.45"></textarea></label>
-          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;font:400 10.5px var(--font-ui);color:var(--color-text-muted)"><span>{{ crmDet.varsTxt }}</span><span style="flex:none;font-weight:600;text-align:right">{{ crmDet.sCompte }}<sc-if value="{{ crmDet.sUniOn }}" hint-placeholder-val="{{ false }}"> <button onClick="{{ crmDet.sSimplifier }}" title="Remplace ç ê â ô À ’ « » — par leur équivalent GSM : le SMS repasse à 160 caractères" style="border:1.5px solid var(--color-primary);background:#fbe9eb;color:var(--color-primary);border-radius:999px;padding:2px 9px;font:600 10.5px var(--font-ui);cursor:pointer;margin-left:6px">Simplifier</button></sc-if></span></div>
+          <div style="display:flex;flex-direction:column;gap:5px;font:400 10.5px/1.45 var(--font-ui);color:var(--color-text-muted)"><span>{{ crmDet.varsTxt }}</span><span style="font-weight:600">{{ crmDet.sCompte }}<sc-if value="{{ crmDet.sUniOn }}" hint-placeholder-val="{{ false }}"> <button onClick="{{ crmDet.sSimplifier }}" title="Remplace ç ê â ô À ’ « » — par leur équivalent GSM : le SMS repasse à 160 caractères" style="border:1.5px solid var(--color-primary);background:#fbe9eb;color:var(--color-primary);border-radius:999px;padding:2px 9px;font:600 10.5px var(--font-ui);cursor:pointer;margin-left:6px">Simplifier</button></sc-if></span></div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <sc-if value="{{ crmDet.smsPret }}" hint-placeholder-val="{{ false }}"><button onClick="{{ crmDet.smsEnvoyer }}" class="btn-primary" style="font-size:12.5px;min-height:0;padding:10px 16px">{{ crmDet.smsBtn }}</button></sc-if>
             <a href="{{ crmDet.smsHref }}" onClick="{{ crmDet.smsTel }}" class="btn-secondary" style="font-size:12px;min-height:0;padding:9px 14px;text-decoration:none;display:inline-block">Ouvrir sur le téléphone</a>
@@ -3213,25 +3262,12 @@
           </div>
         </div>
         </sc-if>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px 13px">
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Contact</span><input value="{{ crmDet.contactNom }}" onInput="{{ crmDet.setContactNom }}" placeholder="nom" style="{{ crmInp }}"/></label>
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Fonction</span><input value="{{ crmDet.contactRole }}" onInput="{{ crmDet.setContactRole }}" placeholder="secrétariat, RH…" style="{{ crmInp }}"/></label>
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Téléphone</span><input value="{{ crmDet.contactTel }}" onInput="{{ crmDet.setContactTel }}" placeholder="+32 …" style="{{ crmInp }}"/></label>
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">E-mail</span><input value="{{ crmDet.contactEmail }}" onInput="{{ crmDet.setContactEmail }}" placeholder="contact@…" style="{{ crmInp }}"/></label>
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Bon / code</span><input value="{{ crmDet.voucher }}" onInput="{{ crmDet.setVoucher }}" placeholder="code du bon remis" style="{{ crmInp }}"/></label>
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Prochaine action — date</span><input type="date" value="{{ crmDet.prochaine }}" onChange="{{ crmDet.setProchaine }}" style="{{ crmInp }}"/></label>
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">… heure (facultative)</span><input type="time" value="{{ crmDet.prochaineHeure }}" onChange="{{ crmDet.setProchaineHeure }}" style="{{ crmInp }}"/></label>
-          <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">… nature</span>
-            <select value="{{ crmDet.prochaineType }}" onChange="{{ crmDet.setProchaineType }}" style="{{ crmInp }}">
-              <sc-for list="{{ crmDet.typeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
-            </select></label>
-        </div>
-        <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Note</span><textarea value="{{ crmDet.note }}" onInput="{{ crmDet.setNote }}" rows="3" placeholder="ce qui s'est dit, ce qu'il faut refaire…" style="{{ crmInp }};resize:vertical"></textarea></label>
-        <div>
+        <div style="border-top:.5px solid var(--color-border-tertiary);padding-top:11px;margin-top:2px">
           <div style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Ce qui a été fait</div>
           <sc-if value="{{ crmDet.journalVide }}" hint-placeholder-val="{{ false }}"><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Rien encore.</div></sc-if>
           <sc-for list="{{ crmDet.journal }}" as="j" hint-placeholder-count="2"><div style="display:flex;gap:10px;padding:4px 0;border-top:.5px dashed var(--color-border-tertiary);font:400 11.5px var(--font-ui)"><span style="width:104px;flex:none;color:var(--color-text-muted);font-variant-numeric:tabular-nums">{{ j.quand }}</span><span>{{ j.txt }}</span></div></sc-for>
         </div>
+      </div>
       </div>
       <div style="padding:12px 24px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;gap:10px">
         <button onClick="{{ crmDet.supprimer }}" class="btn-secondary" style="font-size:12.5px;color:var(--color-primary)">Retirer du tableau</button>
@@ -6840,6 +6876,10 @@ class Component extends DCLogic {
       act, actMail:()=>this.crmActOuvrir('mail'), actSms:()=>this.crmActOuvrir('sms'), actTel:()=>this.crmActOuvrir('tel'),
       actMailStyle:sty(act==='mail'), actSmsStyle:sty(act==='sms'), actTelStyle:sty(act==='tel'),
       actOnMail:act==='mail', actOnSms:act==='sms', actOnTel:act==='tel', actErr:S.crmActErr||'',
+      // La consignation se replie : c'est le cas rare (un bon remis en main
+      // propre), pas le geste courant. Déplié, il reste sous la main.
+      gestesOn:!!S.crmGestes, gestesBascule:()=>this.setState(st=>({crmGestes:!st.crmGestes})),
+      gestesStyle:'border:.5px solid '+(S.crmGestes?'var(--color-primary)':'var(--color-border-secondary)')+';background:'+(S.crmGestes?'#fbe9eb':'var(--color-surface)')+';color:'+(S.crmGestes?'var(--color-primary)':'var(--color-text)')+';border-radius:9px;padding:6px 10px;font:500 11.5px var(--font-ui);cursor:pointer;min-height:0',
       modOuvrir:()=>this.setState({crmModEdit:{type:act||'mail',id:0,nom:'',sujet:'',corps:''}}),
       varsTxt,
       // E-mail
@@ -7135,19 +7175,34 @@ class Component extends DCLogic {
 
       // La fiche d'une carte : le contact, le bon, la prochaine action, les
       // gestes déjà faits. Tout se modifie, rien n'est obligatoire.
-      crmDet:det?{ nom:det.nom, sous:det.campagneNom||'', id:String(det.id),
+      crmDet:det?{ nom:det.nom, id:String(det.id),
+        // L'en-tête porte la campagne ET l'adresse : c'est là qu'on ira.
+        sous:[det.campagneNom,det.adresse].filter(Boolean).join(' · ')||'Sans campagne',
         // Déplacer depuis la fiche : un bouton par étape, l'actuelle en plein.
         // Un bouton se voit et se touche ; une liste déroulante se cherche.
-        etapes:(D.colonnes||[]).map(col=>{ const act=col.cle===det.colonne, coul=col.couleur||'var(--color-text-muted)';
-          return { label:col.label, actuelle:act, titre:act?'Étape actuelle':('Passer en « '+col.label+' »'),
-            style:'border:1.5px solid '+coul+';border-radius:999px;padding:6px 12px;font:600 11.5px var(--font-ui);cursor:'+(act?'default':'pointer')+';background:'+(act?coul:'var(--color-surface)')+';color:'+(act?'#fff':coul)+(act?';opacity:1':''),
-            aller:()=>{ if(act) return;
-              this.crmEcrire({id:det.id,colonne:col.cle,geste:'colonne',gesteTexte:'→ '+col.label},'✓ « '+det.nom+' » → '+col.label);
-              this.setState({crmDet:null}); } }; }),
+        etapes:(()=>{ const cols=(D.colonnes||[]);
+          // Le cycle d'un côté, les fins de l'autre : « Gagné » et « Sans
+          // suite » ne sont pas des étapes de plus, ce sont des sorties.
+          const suite=cols.filter(c=>!c.gagne&&!c.perdu), fins=cols.filter(c=>c.gagne||c.perdu);
+          const iCur=suite.findIndex(c=>c.cle===det.colonne);
+          const ligne=(col,i,fin)=>{ const act=col.cle===det.colonne;
+            const teinte=col.perdu?'#c92a2a':(col.gagne?'#2f9e44':(col.couleur||'var(--color-primary)'));
+            const passe=!fin&&iCur>=0&&i<iCur;
+            const encre=act?'#fff':(passe?'#2f9e44':(fin?teinte:'var(--color-text-muted)'));
+            const trait=act?'#fff':(passe?'#2f9e44':(fin?teinte:'var(--color-border-secondary)'));
+            return { label:col.label, actuelle:act, num:act?(fin?'✓':String(i+1)):(passe?'✓':''),
+              titre:act?'Étape actuelle':('Passer en « '+col.label+' »'),
+              style:'display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:none;border-radius:9px;padding:7px 9px;font:'+(act?'700':'500')+' 11.5px var(--font-ui);cursor:'+(act?'default':'pointer')+';background:'+(act?teinte:'transparent')+';color:'+encre+';opacity:1'+(fin?(';margin-top:'+(col.gagne?'9px':'2px')):''),
+              dot:'width:16px;height:16px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 8.5px var(--font-ui);border:1.5px solid '+trait+';background:'+(act?'#fff':(passe?'#2f9e44':'transparent'))+';color:'+(act?teinte:'#fff'),
+              aller:()=>{ if(act) return;
+                this.crmEcrire({id:det.id,colonne:col.cle,geste:'colonne',gesteTexte:'→ '+col.label},'✓ « '+det.nom+' » → '+col.label);
+                this.setState({crmDet:null}); } }; };
+          return [...suite.map((c,i)=>ligne(c,i,false)),...fins.map((c,i)=>ligne(c,i,true))]; })(),
         contactNom:det.contactNom||'', setContactNom:(e)=>majDet({contactNom:e.target.value}),
         contactRole:det.contactRole||'', setContactRole:(e)=>majDet({contactRole:e.target.value}),
         contactTel:det.contactTel||'', setContactTel:(e)=>majDet({contactTel:e.target.value}),
         contactEmail:det.contactEmail||'', setContactEmail:(e)=>majDet({contactEmail:e.target.value}),
+        telContact:'tel:'+this.crmTel(det.contactTel), mailtoContact:'mailto:'+encodeURIComponent(det.contactEmail||''),
         voucher:det.voucher||'', setVoucher:(e)=>majDet({voucher:e.target.value}),
         prochaine:det.prochaine||'', setProchaine:(e)=>majDet({prochaine:e.target.value}),
         prochaineHeure:det.prochaineHeure||'', setProchaineHeure:(e)=>majDet({prochaineHeure:e.target.value}),
@@ -11850,6 +11905,9 @@ class Component extends DCLogic {
       isLivProcess,livSteps,grpTabsOn,grpTabs,grpTabsTitre,
       crmInp:'width:100%;box-sizing:border-box;margin-top:5px;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface)',
       crmLab:'font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)',
+      crmChampIco:'display:flex;align-items:center;border:.5px solid var(--color-border-secondary);border-radius:9px;background:var(--color-surface);overflow:hidden',
+      crmIco:'flex:none;padding:0 3px 0 11px;font-size:13.5px;color:var(--color-text-muted);text-decoration:none;line-height:1',
+      crmInpNu:'flex:1;min-width:0;border:none;background:none;padding:9px 11px 9px 7px;font:400 12.5px var(--font-ui);color:var(--color-text);outline:none',
       crmActBox:'background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:11px',
       crmChipAjout:'display:inline-flex;align-items:center;border:1.5px dashed var(--color-border-secondary);color:var(--color-text-muted);border-radius:999px;padding:5px 11px;font:600 11.5px var(--font-ui);cursor:pointer',
       ...this.crmVals(), ...this.crmRapVals(),
