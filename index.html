@@ -3128,9 +3128,91 @@
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px">
             <sc-for list="{{ crmDet.etapes }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.aller }}" disabled="{{ o.actuelle }}" title="{{ o.titre }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
           </div></div>
-        <div style="display:flex;gap:7px;flex-wrap:wrap">
-          <sc-for list="{{ crmDet.gestes }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.poser }}" class="btn-secondary" style="font-size:12px">{{ g.label }}</button></sc-for>
+        <!-- ACTIONS : écrire, envoyer, appeler — depuis un modèle dont les
+             variables se remplissent seules. Le geste se consigne tout seul
+             au journal ; « consigner sans envoyer » reste là pour ce qui
+             s'est fait ailleurs (un bon remis en main propre, une visite). -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;flex:none">
+            <button onClick="{{ crmDet.actMail }}" style="{{ crmDet.actMailStyle }}">✉ E-mail</button><button onClick="{{ crmDet.actSms }}" style="{{ crmDet.actSmsStyle }}">💬 SMS</button><button onClick="{{ crmDet.actTel }}" style="{{ crmDet.actTelStyle }}">☎ Appel</button>
+          </span>
+          <sc-if value="{{ crmDet.act }}" hint-placeholder-val="{{ false }}"><button onClick="{{ crmDet.modOuvrir }}" class="btn-secondary" style="font-size:11.5px;padding:6px 10px;min-height:0" title="Créer, modifier ou retirer les modèles de mail, de SMS et de script d'appel">✎ Modèles</button></sc-if>
+          <span style="font:400 11px var(--font-ui);color:var(--color-text-muted)">ou consigner sans envoyer :</span>
+          <sc-for list="{{ crmDet.gestes }}" as="g" hint-placeholder-count="3"><button onClick="{{ g.poser }}" class="btn-secondary" style="font-size:11.5px;padding:6px 10px;min-height:0">{{ g.label }}</button></sc-for>
         </div>
+        <sc-if value="{{ crmDet.actErr }}" hint-placeholder-val="{{ false }}"><div style="background:#fbe9eb;border:.5px solid #e8b4bb;border-radius:10px;padding:9px 14px;font:500 12px var(--font-ui);color:var(--color-primary)">⚠ {{ crmDet.actErr }}</div></sc-if>
+
+        <!-- E-MAIL : modèle, destinataire, objet, message rendu, pièces. -->
+        <sc-if value="{{ crmDet.actOnMail }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ crmActBox }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px 13px">
+            <label style="display:block"><span style="{{ crmLab }}">Modèle</span>
+              <select value="{{ crmDet.mModele }}" onChange="{{ crmDet.setMModele }}" style="{{ crmInp }}"><sc-for list="{{ crmDet.modMail }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label>
+            <label style="display:block"><span style="{{ crmLab }}">Destinataire</span><input value="{{ crmDet.mTo }}" onInput="{{ crmDet.setMTo }}" placeholder="contact@…" style="{{ crmInp }}"/></label>
+          </div>
+          <label style="display:block"><span style="{{ crmLab }}">Objet</span><input value="{{ crmDet.mSujet }}" onInput="{{ crmDet.setMSujet }}" style="{{ crmInp }}"/></label>
+          <label style="display:block"><span style="{{ crmLab }}">Message — variables remplies, à retoucher librement</span><textarea value="{{ crmDet.mCorps }}" onInput="{{ crmDet.setMCorps }}" rows="9" style="{{ crmInp }};resize:vertical;line-height:1.45"></textarea></label>
+          <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ crmDet.varsTxt }}</div>
+          <div><div style="{{ crmLab }}">Pièces jointes</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center">
+              <sc-for list="{{ crmDet.pieces }}" as="p" hint-placeholder-count="2"><span style="{{ p.style }}"><button onClick="{{ p.toggle }}" title="{{ p.titre }}" style="border:none;background:none;padding:0;font:inherit;color:inherit;cursor:pointer">{{ p.label }}</button><button onClick="{{ p.retirer }}" title="Retirer de la bibliothèque" style="border:none;background:none;padding:0 0 0 7px;font:inherit;color:inherit;cursor:pointer;opacity:.55">×</button></span></sc-for>
+              <sc-if value="{{ crmDet.invitOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ crmDet.invitToggle }}" title="L'affiche d'invitation du bureau, avec son lien d'accès au webshop — suppose un lien émis sur la fiche du bureau" style="{{ crmDet.invitStyle }}">{{ crmDet.invitLabel }}</button></sc-if>
+              <label style="{{ crmChipAjout }}"><input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" onChange="{{ crmDet.pieceAjouter }}" style="display:none"/>+ Joindre un fichier</label>
+            </div>
+            <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-top:5px">{{ crmDet.piecesNote }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <sc-if value="{{ crmDet.mailPret }}" hint-placeholder-val="{{ true }}"><button onClick="{{ crmDet.mailEnvoyer }}" class="btn-primary" style="font-size:12.5px;min-height:0;padding:10px 16px">{{ crmDet.mailBtn }}</button></sc-if>
+            <a href="{{ crmDet.mailtoHref }}" onClick="{{ crmDet.mailtoClic }}" class="btn-secondary" style="font-size:12px;min-height:0;padding:9px 14px;text-decoration:none;display:inline-block">Ouvrir dans mon logiciel de mail</a>
+            <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);flex:1;min-width:200px">{{ crmDet.mailNote }}</span>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- SMS : court, compté, envoyé par l'opérateur du serveur ou par le
+             téléphone du franchisé quand il n'y en a pas. -->
+        <sc-if value="{{ crmDet.actOnSms }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ crmActBox }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px 13px">
+            <label style="display:block"><span style="{{ crmLab }}">Modèle</span>
+              <select value="{{ crmDet.sModele }}" onChange="{{ crmDet.setSModele }}" style="{{ crmInp }}"><sc-for list="{{ crmDet.modSms }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></label>
+            <label style="display:block"><span style="{{ crmLab }}">Numéro</span><input value="{{ crmDet.sTo }}" onInput="{{ crmDet.setSTo }}" placeholder="+32 …" style="{{ crmInp }}"/></label>
+          </div>
+          <label style="display:block"><span style="{{ crmLab }}">Message</span><textarea value="{{ crmDet.sCorps }}" onInput="{{ crmDet.setSCorps }}" rows="4" style="{{ crmInp }};resize:vertical;line-height:1.45"></textarea></label>
+          <div style="display:flex;justify-content:space-between;gap:10px;font:400 10.5px var(--font-ui);color:var(--color-text-muted)"><span>{{ crmDet.varsTxt }}</span><span style="flex:none;font-weight:600">{{ crmDet.sCompte }}</span></div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <sc-if value="{{ crmDet.smsPret }}" hint-placeholder-val="{{ false }}"><button onClick="{{ crmDet.smsEnvoyer }}" class="btn-primary" style="font-size:12.5px;min-height:0;padding:10px 16px">{{ crmDet.smsBtn }}</button></sc-if>
+            <a href="{{ crmDet.smsHref }}" onClick="{{ crmDet.smsTel }}" class="btn-secondary" style="font-size:12px;min-height:0;padding:9px 14px;text-decoration:none;display:inline-block">Ouvrir sur le téléphone</a>
+            <button onClick="{{ crmDet.smsCopier }}" class="btn-secondary" style="font-size:12px;min-height:0;padding:9px 14px">Copier le texte</button>
+            <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);flex:1;min-width:200px">{{ crmDet.smsNote }}</span>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- APPEL : le numéro, le script, et l'issue — qui se consigne et
+             pose la suite (rappel, rendez-vous). -->
+        <sc-if value="{{ crmDet.actOnTel }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ crmActBox }}">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px 13px;align-items:end">
+            <label style="display:block"><span style="{{ crmLab }}">Numéro</span><input value="{{ crmDet.tTo }}" onInput="{{ crmDet.setTTo }}" placeholder="+32 …" style="{{ crmInp }}"/></label>
+            <div style="display:flex;gap:8px;align-items:center;padding-bottom:1px">
+              <a href="{{ crmDet.telHref }}" class="btn-primary" style="font-size:12.5px;min-height:0;padding:10px 16px;text-decoration:none;display:inline-block">☎ Appeler</a>
+              <select value="{{ crmDet.tModele }}" onChange="{{ crmDet.setTModele }}" style="{{ crmInp }};margin-top:0;flex:1"><sc-for list="{{ crmDet.modTel }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+            </div>
+          </div>
+          <sc-if value="{{ crmDet.tScript }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px 14px">
+            <div style="font:600 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:6px">{{ crmDet.tObjectif }}</div>
+            <div style="font:400 12.5px/1.55 var(--font-ui);color:var(--color-text);white-space:pre-wrap">{{ crmDet.tScript }}</div>
+          </div>
+          </sc-if>
+          <div><div style="{{ crmLab }}">Issue de l'appel — se consigne et pose la suite</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+              <sc-for list="{{ crmDet.issues }}" as="i" hint-placeholder-count="4"><button onClick="{{ i.poser }}" title="{{ i.titre }}" style="{{ i.style }}">{{ i.label }}</button></sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px 13px">
           <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Contact</span><input value="{{ crmDet.contactNom }}" onInput="{{ crmDet.setContactNom }}" placeholder="nom" style="{{ crmInp }}"/></label>
           <label style="display:block"><span style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)">Fonction</span><input value="{{ crmDet.contactRole }}" onInput="{{ crmDet.setContactRole }}" placeholder="secrétariat, RH…" style="{{ crmInp }}"/></label>
@@ -3154,6 +3236,38 @@
       <div style="padding:12px 24px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;gap:10px">
         <button onClick="{{ crmDet.supprimer }}" class="btn-secondary" style="font-size:12.5px;color:var(--color-primary)">Retirer du tableau</button>
         <div style="display:flex;gap:8px"><button onClick="{{ crmDet.fermer }}" class="btn-secondary" style="font-size:12.5px">Fermer</button><button onClick="{{ crmDet.enregistrer }}" class="btn-primary" style="font-size:12.5px">Enregistrer</button></div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+  <!-- MODÈLES DE PROSPECTION : mail, SMS, script d'appel. Ceux de la boutique
+       se modifient ; ceux du réseau se dupliquent. Les variables se voient. -->
+  <sc-if value="{{ crmModEditOn }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(34,34,34,.42);display:flex;align-items:center;justify-content:center;z-index:1992;padding:24px">
+    <div class="lz" style="background:var(--color-surface);border-radius:16px;width:780px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden">
+      <div style="padding:18px 24px 12px;border-bottom:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+        <div><div class="t-page-title" style="font-size:17px">Modèles de prospection</div><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted);margin-top:2px">{{ crmModVars }}</div></div>
+        <button onClick="{{ crmModFermer }}" style="background:transparent;border:none;cursor:pointer;color:var(--color-text-muted);font-size:22px;line-height:1;padding:0">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:240px 1fr;flex:1;min-height:0">
+        <div style="border-right:.5px solid var(--color-border-tertiary);padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+          <span style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px">
+            <sc-for list="{{ crmModTabs }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.choisir }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+          </span>
+          <sc-for list="{{ crmModListe }}" as="x" hint-placeholder-count="3"><button onClick="{{ x.choisir }}" style="{{ x.style }}">{{ x.label }}</button></sc-for>
+          <button onClick="{{ crmModNouveau }}" class="btn-secondary" style="font-size:12px;min-height:0;padding:8px 12px">+ Nouveau modèle</button>
+        </div>
+        <div style="padding:16px 22px;overflow-y:auto;display:flex;flex-direction:column;gap:12px">
+          <div style="font:600 12.5px var(--font-ui);color:var(--color-text)">{{ crmModTitre }}</div>
+          <label style="display:block"><span style="{{ crmLab }}">Nom du modèle</span><input value="{{ crmModNom }}" onInput="{{ crmModSetNom }}" placeholder="ex. Relance après la visite" style="{{ crmInp }}"/></label>
+          <sc-if value="{{ crmModSujetOn }}" hint-placeholder-val="{{ true }}"><label style="display:block"><span style="{{ crmLab }}">{{ crmModSujetLab }}</span><input value="{{ crmModSujet }}" onInput="{{ crmModSetSujet }}" style="{{ crmInp }}"/></label></sc-if>
+          <label style="display:block"><span style="{{ crmLab }}">{{ crmModCorpsLab }}</span><textarea value="{{ crmModCorps }}" onInput="{{ crmModSetCorps }}" rows="11" style="{{ crmInp }};resize:vertical;line-height:1.45"></textarea></label>
+          <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ crmModAide }}</div>
+        </div>
+      </div>
+      <div style="padding:12px 24px 18px;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;gap:10px">
+        <sc-if value="{{ crmModSupprOn }}" hint-placeholder-val="{{ false }}"><button onClick="{{ crmModSupprimer }}" class="btn-secondary" style="font-size:12.5px;color:var(--color-primary)">Retirer ce modèle</button></sc-if>
+        <div style="display:flex;gap:8px;margin-left:auto"><button onClick="{{ crmModFermer }}" class="btn-secondary" style="font-size:12.5px">Fermer</button><button onClick="{{ crmModEnregistrer }}" class="btn-primary" style="font-size:12.5px">{{ crmModBtn }}</button></div>
       </div>
     </div>
   </div>
@@ -6583,12 +6697,17 @@ class Component extends DCLogic {
      souris comme au doigt sur une tablette. */
   crmCharger(force){ const fr=window.__FR||{}; if(!fr.base) return;
     if(this._crmBusy){ if(force) this._crmAgain=true; return; } if(this.state.crm&&!force) return;
+    if(!force&&this._crmKo&&Date.now()-this._crmKo<30000) return;
     this._crmBusy=true; const fini=()=>{ this._crmBusy=false; if(this._crmAgain){ this._crmAgain=false; this.crmCharger(true); } };
     fetch(fr.base+'/franchisee/crm'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ fini();
-        if(st===200&&j&&j.ok) this.setState({crm:j,crmErr:''});
-        else this.setState({crmErr:(j&&j.error)||('CRM indisponible (HTTP '+st+')')}); })
-      .catch(()=>{ fini(); this.setState({crmErr:'Réseau indisponible'}); }); }
+        if(st===200&&j&&j.ok){ this._crmKo=0;
+          // La fiche ouverte garde son brouillon, mais lit la carte fraîche :
+          // journal, colonne, date de gain. Ce que le serveur a accepté.
+          this.setState(st2=>{ const d=st2.crmDet; const f=d&&(j.cartes||[]).find(x=>String(x.id)===String(d.id));
+            return {crm:j,crmErr:'',...(f?{crmDet:{...d,gestes:f.gestes,colonne:f.colonne,gagneLe:f.gagneLe,maj:f.maj}}:{})}; }); }
+        else { this._crmKo=Date.now(); this.setState({crmErr:(j&&j.error)||('CRM indisponible (HTTP '+st+')')}); } })
+      .catch(()=>{ fini(); this._crmKo=Date.now(); this.setState({crmErr:'Réseau indisponible'}); }); }
   /* Une écriture, puis relecture : le tableau montre ce que la base a accepté,
      jamais ce que l'écran espérait. */
   crmEcrire(corps,msg){ const fr=window.__FR||{}; if(!fr.base) return Promise.resolve(false);
@@ -6604,6 +6723,194 @@ class Component extends DCLogic {
         if(st===200&&j&&j.ok){ this.printJob('✓ Colonnes enregistrées'); this.setState({crmCols:null}); this.crmCharger(true); }
         else this.printJob('⚠ '+((j&&j.error)||'Colonnes non enregistrées')); })
       .catch(()=>this.printJob('⚠ Réseau indisponible')); }
+  /* ── Actions depuis la fiche : mail, SMS, appel ─────────────────────────
+     Les modèles, la bibliothèque de pièces et ce que le serveur sait envoyer
+     viennent de /franchisee/crm-actions. Le texte montré est rendu ICI avec
+     les variables de la carte ; c'est ce texte, retouché ou non, qui part. */
+  crmActCharger(force){ const fr=window.__FR||{}; if(!fr.base) return;
+    if(this._crmActBusy){ if(force) this._crmActAgain=true; return; } if(this.state.crmAct&&!force) return;
+    if(!force&&this._crmActKo&&Date.now()-this._crmActKo<30000) return;
+    this._crmActBusy=true; const fini=()=>{ this._crmActBusy=false; if(this._crmActAgain){ this._crmActAgain=false; this.crmActCharger(true); } };
+    fetch(fr.base+'/franchisee/crm-actions'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ fini();
+        if(st===200&&j&&j.ok){ this._crmActKo=0; this.setState({crmAct:j,crmActErr:''}); }
+        else { this._crmActKo=Date.now(); this.setState({crmActErr:(j&&j.error)||('Modèles indisponibles (HTTP '+st+')')}); } })
+      .catch(()=>{ fini(); this._crmActKo=Date.now(); this.setState({crmActErr:'Réseau indisponible'}); }); }
+  /* Un POST du CRM, générique : rend la réponse JSON ou null. Un refus se lit
+     dans la fiche si elle est ouverte, sinon en bannière sur le tableau. */
+  crmPoster(chemin,corps,msg){ const fr=window.__FR||{}; if(!fr.base) return Promise.resolve(null);
+    return fetch(fr.base+chemin+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(corps)})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
+        if(st===200&&j&&j.ok){ if(msg) this.printJob(msg); return j; }
+        const why=(j&&j.error)||('Refus du serveur (HTTP '+st+')'); this.printJob('⚠ '+why);
+        this.setState(this.state.crmDet?{crmActErr:why}:{crmEcritErr:why}); return null; })
+      .catch(()=>{ const why='Réseau indisponible — rien n’est parti'; this.printJob('⚠ '+why);
+        this.setState(this.state.crmDet?{crmActErr:why}:{crmEcritErr:why}); return null; }); }
+  crmVarsDe(d,A){ const b=(A&&A.boutique)||{}; const c=String(d.contactNom||'').trim();
+    return {contact:c||'Madame, Monsieur',societe:d.nom||'',bon:d.voucher||'',campagne:d.campagneNom||'',boutique:b.nom||'',
+      tel_boutique:b.tel||'',email_boutique:b.email||'',ville_boutique:b.ville||'',adresse:d.adresse||''}; }
+  crmRendre(t,v){ return String(t||'').replace(/\{([a-z_]+)\}/g,(m,k)=>v[k]!=null?v[k]:m); }
+  /* Un numéro tel que tapé → forme composable (+32…). Belge par défaut. */
+  crmTel(t){ t=String(t||'').trim(); if(!t) return ''; if(t[0]==='+') t=t.replace(/\(0\)/g,''); const d=t.replace(/\D+/g,'');
+    if(t[0]==='+') return d.length>=8?'+'+d:''; if(/^00\d{8,}$/.test(d)) return '+'+d.slice(2);
+    const n=d.replace(/^0+/,''); return n?'+32'+n:''; }
+  /* Ouvrir un onglet d'action (ou le replier) : au premier passage, le premier
+     modèle du type se rend avec les variables de la carte. */
+  crmActOuvrir(t){ this.setState(st=>{ const d=st.crmDet; if(!d) return {}; if(d.act===t) return {crmDet:{...d,act:null},crmActErr:''};
+      const A=st.crmAct||null; const n={...d,act:t}; const prem=((A&&A.modeles)||[]).find(x=>x.type===t);
+      if(t==='mail'){ if(n.mTo==null) n.mTo=d.contactEmail||''; if(n.mModele==null&&prem) Object.assign(n,this.crmActRendu('mail',prem,n)); }
+      if(t==='sms'){ if(n.sTo==null) n.sTo=d.contactTel||''; if(n.sModele==null&&prem) Object.assign(n,this.crmActRendu('sms',prem,n)); }
+      if(t==='tel'){ if(n.tTo==null) n.tTo=d.contactTel||''; if(n.tModele==null&&prem) Object.assign(n,this.crmActRendu('tel',prem,n)); }
+      return {crmDet:n,crmActErr:''}; }); }
+  crmActRendu(t,mod,d){ const v=this.crmVarsDe(d,this.state.crmAct); const r={};
+    if(t==='mail'){ r.mModele=String(mod.id); r.mSujet=this.crmRendre(mod.sujet||'',v); r.mCorps=this.crmRendre(mod.corps||'',v); }
+    else if(t==='sms'){ r.sModele=String(mod.id); r.sCorps=this.crmRendre(mod.corps||'',v); }
+    else { r.tModele=String(mod.id); } return r; }
+  crmActModele(t,id){ this.setState(st=>{ const d=st.crmDet; if(!d) return {}; const A=st.crmAct||null;
+      const mod=((A&&A.modeles)||[]).find(x=>String(x.id)===String(id));
+      if(!mod) return {crmDet:{...d,[t==='mail'?'mModele':t==='sms'?'sModele':'tModele']:''}};
+      return {crmDet:{...d,...this.crmActRendu(t,mod,d)}}; }); }
+  /* Les champs de la fiche tels que tapés — joints à tout envoi pour qu'une
+     retouche du contact ne se perde pas quand la fiche se ferme. */
+  crmFiche(d){ return {id:d.id,contactNom:d.contactNom||'',contactRole:d.contactRole||'',contactTel:d.contactTel||'',contactEmail:d.contactEmail||'',
+      voucher:d.voucher||'',prochaine:d.prochaine||'',prochaineHeure:d.prochaineHeure||'',prochaineType:d.prochaineType||'',note:d.note||''}; }
+  crmMailEnvoyer(d){ if(this.state.crmEnvoi) return; const to=String(d.mTo||'').trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)){ this.setState({crmActErr:'Adresse e-mail du destinataire absente ou invalide.'}); return; }
+    if(!String(d.mSujet||'').trim()||!String(d.mCorps||'').trim()){ this.setState({crmActErr:'Objet ou message vide.'}); return; }
+    this.setState({crmEnvoi:true,crmActErr:''});
+    const fiche=this.crmFiche(d);
+    this.crmPoster('/franchisee/crm-mail',{id:d.id,to,sujet:d.mSujet,corps:d.mCorps,pieces:d.mPieces||[],invitation:!!d.mInvit},null).then(j=>{
+      this.setState({crmEnvoi:false}); if(!j) return;
+      this.printJob('✓ '+(j.message||'E-mail envoyé')+(j.relance?(' · relance posée au '+j.relance.slice(8,10)+'/'+j.relance.slice(5,7)):''));
+      this.setState({crmDet:null}); this.crmPoster('/franchisee/crm-carte',fiche,null).then(()=>this.crmCharger(true)); }); }
+  crmSmsEnvoyer(d){ if(this.state.crmEnvoi) return;
+    if(!this.crmTel(d.sTo)){ this.setState({crmActErr:'Numéro du destinataire absent ou invalide.'}); return; }
+    if(!String(d.sCorps||'').trim()){ this.setState({crmActErr:'Message vide.'}); return; }
+    this.setState({crmEnvoi:true,crmActErr:''});
+    const fiche=this.crmFiche(d);
+    this.crmPoster('/franchisee/crm-sms',{id:d.id,to:d.sTo,corps:d.sCorps},null).then(j=>{ this.setState({crmEnvoi:false}); if(!j) return;
+      this.printJob('✓ '+(j.message||'SMS envoyé')); this.setState({crmDet:null}); this.crmPoster('/franchisee/crm-carte',fiche,null).then(()=>this.crmCharger(true)); }); }
+  /* Un fichier déposé dans la bibliothèque (PDF ou image, 5 Mo au plus), puis
+     coché d'office sur le mail en cours. Lu tel quel : une pièce jointe ne se
+     réduit pas dans le dos de celui qui l'envoie. */
+  crmPieceAjouter(e){ const inp=e&&e.target, f=inp&&inp.files&&inp.files[0]; if(!f) return;
+    if(!/^(application\/pdf|image\/(png|jpeg|webp))$/.test(f.type)){ this.setState({crmActErr:'PDF, PNG, JPEG ou WebP attendus.'}); inp.value=''; return; }
+    if(f.size>5*1024*1024){ this.setState({crmActErr:'« '+f.name+' » dépasse 5 Mo — allégez-le avant de le déposer.'}); inp.value=''; return; }
+    const rd=new FileReader(); const nom=f.name;
+    rd.onload=()=>{ this.printJob('Dépôt de « '+nom+' »…');
+      this.crmPoster('/franchisee/crm-piece',{nom,data:String(rd.result||'')},null).then(j=>{ if(!j) return;
+        this.printJob('✓ « '+nom+' » déposé et coché'); this.setState({crmActErr:''});
+        this.setState(st=>st.crmDet?{crmDet:{...st.crmDet,mPieces:[...(st.crmDet.mPieces||[]),j.id]}}:{}); this.crmActCharger(true); }); };
+    rd.onerror=()=>this.setState({crmActErr:'Lecture du fichier impossible.'}); rd.readAsDataURL(f); inp.value=''; }
+  /* Les valeurs de la fiche pour les trois actions. */
+  crmActVals(det,majDet){
+    const S=this.state, A=S.crmAct||null, act=det.act||null;
+    const mods=(t)=>((A&&A.modeles)||[]).filter(x=>x.type===t);
+    const opts=(t,vide)=>[{value:'',label:vide},...mods(t).map(x=>({value:String(x.id),label:x.nom+(x.reseau?' · réseau':'')}))];
+    const sty=(on)=>'border:none;border-radius:8px;padding:7px 13px;font:600 12px var(--font-ui);cursor:pointer;background:'+(on?'var(--color-primary)':'transparent')+';color:'+(on?'#fff':'var(--color-text-muted)');
+    const chip=(on)=>'display:inline-flex;align-items:center;border:1.5px solid '+(on?'var(--color-primary)':'var(--color-border-secondary)')+';background:'+(on?'#fbe9eb':'var(--color-surface)')+';color:'+(on?'var(--color-primary)':'var(--color-text)')+';border-radius:999px;padding:5px 11px;font:600 11.5px var(--font-ui);cursor:pointer';
+    const ko=(n)=>n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' Mo':Math.max(1,Math.round(n/1024))+' Ko';
+    const v=this.crmVarsDe(det,A);
+    const varsTxt='Variables : '+((A&&A.variables)||[]).map(x=>'{'+x.cle+'}').join(' ')+' — remplies à l’ouverture du modèle ; ce qui part est ce que vous lisez.';
+    const pj=(A&&A.pieces)||[], coches=det.mPieces||[];
+    const sLen=String(det.sCorps||'').length, sN=sLen?(sLen<=160?1:Math.ceil(sLen/153)):0;
+    const tMod=mods('tel').find(x=>String(x.id)===String(det.tModele||''))||null;
+    const ymd=(d)=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const auj=new Date(); const plus=(n)=>{ const d=new Date(auj); d.setDate(d.getDate()+n); return ymd(d); };
+    const issue=(k,label,titre,coul,suite)=>({label,titre,style:'border:1.5px solid '+coul+';color:'+coul+';background:var(--color-surface);border-radius:999px;padding:6px 12px;font:600 11.5px var(--font-ui);cursor:pointer',
+      poser:()=>{ const corps={...this.crmFiche(det),geste:'tel',gesteTexte:'☎ '+label.replace(/^[✓✗–—] ?/,'')};
+        if(det.tTo&&!det.contactTel) corps.contactTel=det.tTo;
+        if(suite){ corps.prochaine=suite.date; corps.prochaineType=suite.type; }
+        this.crmEcrire(corps,label+(suite?(' · suite posée au '+suite.date.slice(8,10)+'/'+suite.date.slice(5,7)):''));
+        if(k==='rdv'){ this.setState(st=>({crmDet:{...st.crmDet,act:null,prochaineType:'visite',contactTel:st.crmDet.contactTel||det.tTo||''}})); this.printJob('✓ Appel consigné — posez la date du rendez-vous, puis Enregistrer'); }
+        else this.setState({crmDet:null}); } });
+    return {
+      act, actMail:()=>this.crmActOuvrir('mail'), actSms:()=>this.crmActOuvrir('sms'), actTel:()=>this.crmActOuvrir('tel'),
+      actMailStyle:sty(act==='mail'), actSmsStyle:sty(act==='sms'), actTelStyle:sty(act==='tel'),
+      actOnMail:act==='mail', actOnSms:act==='sms', actOnTel:act==='tel', actErr:S.crmActErr||'',
+      modOuvrir:()=>this.setState({crmModEdit:{type:act||'mail',id:0,nom:'',sujet:'',corps:''}}),
+      varsTxt,
+      // E-mail
+      modMail:opts('mail','— sans modèle —'), mModele:det.mModele||'', setMModele:(e)=>this.crmActModele('mail',e.target.value),
+      mTo:det.mTo||'', setMTo:(e)=>majDet({mTo:e.target.value}),
+      mSujet:det.mSujet||'', setMSujet:(e)=>majDet({mSujet:e.target.value}),
+      mCorps:det.mCorps||'', setMCorps:(e)=>majDet({mCorps:e.target.value}),
+      pieces:pj.map(p=>{ const on=coches.indexOf(p.id)>=0; return { label:(on?'✓ ':'')+p.nom+' · '+ko(p.taille), style:chip(on),
+        titre:on?'Cochée : part avec ce mail':'Cliquer pour la joindre',
+        toggle:()=>majDet({mPieces:on?coches.filter(x=>x!==p.id):[...coches,p.id]}),
+        retirer:()=>{ if(p.reseau){ this.printJob('Pièce du réseau : elle ne se retire pas d’ici'); return; }
+          if(!window.confirm('Retirer « '+p.nom+' » de la bibliothèque ? Les mails déjà partis ne changent pas.')) return;
+          this.crmPoster('/franchisee/crm-piece',{id:p.id,supprimer:true},'Pièce retirée').then(j=>{ if(j){ majDet({mPieces:coches.filter(x=>x!==p.id)}); this.crmActCharger(true); } }); } }; }),
+      invitOn:det.cibleType==='office'&&!!det.cibleId,
+      invitLabel:(det.mInvit?'✓ ':'')+'Invitation PDF du bureau', invitStyle:chip(!!det.mInvit), invitToggle:()=>majDet({mInvit:!det.mInvit}),
+      pieceAjouter:(e)=>this.crmPieceAjouter(e),
+      piecesNote:pj.length?'Cochez ce qui part. PDF, PNG, JPEG ou WebP, 5 Mo au plus — la bibliothèque sert à toutes vos cartes.'
+        :'Bibliothèque vide : déposez une fois votre carte ou l’assortiment (PDF), ils serviront à tous les mails.',
+      mailPret:!!(A&&A.mailPret), mailBtn:S.crmEnvoi?'Envoi…':'Envoyer l’e-mail',
+      mailNote:!A?'Lecture des modèles…':(A.mailPret
+        ?'Part de '+(A.mailFrom||'l’adresse du serveur')+', réponses vers '+((A.boutique&&A.boutique.email)||'la boutique')+'. L’envoi se consigne « ✉ » au journal et, si rien n’est prévu sur la carte, pose une relance téléphonique à J+7.'
+        :'Le serveur n’a pas d’adresse d’expédition (mail_from) : ouvrez le mail dans votre logiciel — les pièces sont alors à joindre à la main.'),
+      mailtoHref:'mailto:'+encodeURIComponent(det.mTo||'')+'?subject='+encodeURIComponent(det.mSujet||'')+'&body='+encodeURIComponent(det.mCorps||''),
+      mailtoClic:(e)=>{ const to=String(det.mTo||'').trim();
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)||!String(det.mSujet||'').trim()){ if(e&&e.preventDefault) e.preventDefault(); this.setState({crmActErr:'Un destinataire valide et un objet avant d’ouvrir le logiciel de mail.'}); return; }
+        this.setState({crmActErr:''}); this.crmEcrire({id:det.id,geste:'mail',gesteTexte:'✉ '+det.mSujet+' → '+to+' (depuis le logiciel de mail)'},'✓ Mail consigné — envoyez-le depuis votre logiciel'); },
+      mailEnvoyer:()=>this.crmMailEnvoyer(det),
+      // SMS
+      modSms:opts('sms','— sans modèle —'), sModele:det.sModele||'', setSModele:(e)=>this.crmActModele('sms',e.target.value),
+      sTo:det.sTo||'', setSTo:(e)=>majDet({sTo:e.target.value}),
+      sCorps:det.sCorps||'', setSCorps:(e)=>majDet({sCorps:e.target.value}),
+      sCompte:sLen+' caractère'+(sLen>1?'s':'')+' · '+sN+' SMS'+(sLen>160?' (au-delà de 160, le texte se coupe en plusieurs)':''),
+      smsPret:!!(A&&A.smsPret), smsBtn:S.crmEnvoi?'Envoi…':'Envoyer le SMS',
+      smsHref:'sms:'+this.crmTel(det.sTo)+'?&body='+encodeURIComponent(det.sCorps||''),
+      smsNote:!A?'Lecture des modèles…':(A.smsPret
+        ?'Part par l’opérateur SMS du serveur'+(A.smsFrom?(' (expéditeur « '+A.smsFrom+' »)'):'')+' et se consigne « 💬 » au journal.'
+        :'Aucun opérateur SMS configuré sur le serveur : le SMS part de votre téléphone. « Ouvrir sur le téléphone » le prépare et le consigne ici.'),
+      smsEnvoyer:()=>this.crmSmsEnvoyer(det),
+      smsTel:(e)=>{ if(!this.crmTel(det.sTo)||!String(det.sCorps||'').trim()){ if(e&&e.preventDefault) e.preventDefault(); this.setState({crmActErr:'Un numéro valide et un message avant d’ouvrir le téléphone.'}); return; }
+        this.setState({crmActErr:''}); this.crmEcrire({id:det.id,geste:'sms',gesteTexte:'💬 SMS → '+det.sTo+' (depuis le téléphone) : '+String(det.sCorps||'').slice(0,120)},'✓ SMS consigné — envoyez-le depuis le téléphone'); },
+      smsCopier:()=>this.tkCopy(String(det.sCorps||''),'✓ Texte du SMS copié'),
+      // Appel
+      modTel:opts('tel','— sans script —'), tModele:det.tModele||'', setTModele:(e)=>this.crmActModele('tel',e.target.value),
+      tTo:det.tTo||'', setTTo:(e)=>majDet({tTo:e.target.value}),
+      telHref:'tel:'+this.crmTel(det.tTo),
+      tObjectif:tMod?this.crmRendre(tMod.sujet||tMod.nom,v):'', tScript:tMod?this.crmRendre(tMod.corps||'',v):'',
+      issues:[ issue('rdv','✓ Joint · rendez-vous pris','Consigne l’appel ; à vous de poser la date du rendez-vous sur la fiche','#2f9e44',null),
+        issue('rappel','✓ Joint · à rappeler','Consigne l’appel et pose un rappel dans 2 jours','#b26a00',{date:plus(2),type:'tel'}),
+        issue('absent','— Pas de réponse','Consigne la tentative et pose un nouvel essai demain','#7b7b7b',{date:plus(1),type:'tel'}),
+        issue('refus','✗ Refus','Consigne le refus ; la carte reste où elle est, à vous de la passer en « Perdu »','#c92a2a',null) ] };
+  }
+  /* L'éditeur de modèles : la liste par type à gauche, le modèle à droite. */
+  crmModVals(){
+    const S=this.state, A=S.crmAct||null, ME=S.crmModEdit||null;
+    if(!ME) return {crmModEditOn:false};
+    const mods=((A&&A.modeles)||[]).filter(x=>x.type===ME.type);
+    const sty=(on)=>'border:none;border-radius:8px;padding:6px 10px;font:600 11.5px var(--font-ui);cursor:pointer;background:'+(on?'var(--color-primary)':'transparent')+';color:'+(on?'#fff':'var(--color-text-muted)');
+    const maj=(pl)=>this.setState(st=>({crmModEdit:{...st.crmModEdit,...pl}}));
+    return { crmModEditOn:true,
+      crmModVars:'Variables : '+((A&&A.variables)||[]).map(x=>'{'+x.cle+'} '+x.aide).join(' · '),
+      crmModTabs:[['mail','✉ E-mail'],['sms','💬 SMS'],['tel','☎ Appel']].map(([t,l])=>({label:l,style:sty(ME.type===t),choisir:()=>this.setState({crmModEdit:{type:t,id:0,nom:'',sujet:'',corps:''}})})),
+      crmModListe:mods.map(x=>({label:x.nom+(x.reseau?' · réseau':''),
+        style:'text-align:left;border:.5px solid '+(ME.id===x.id?'var(--color-primary)':'var(--color-border-tertiary)')+';background:'+(ME.id===x.id?'#fbe9eb':'var(--color-surface)')+';border-radius:9px;padding:8px 10px;font:500 12px var(--font-ui);color:var(--color-text);cursor:pointer',
+        choisir:()=>this.setState({crmModEdit:{type:x.type,id:x.id,nom:x.nom,sujet:x.sujet||'',corps:x.corps||'',reseau:!!x.reseau}})})),
+      crmModNouveau:()=>this.setState({crmModEdit:{type:ME.type,id:0,nom:'',sujet:'',corps:''}}),
+      crmModTitre:ME.id?(ME.reseau?'Modèle du réseau — « Enregistrer » en fait une copie à vous':'Modifier le modèle'):'Nouveau modèle',
+      crmModNom:ME.nom||'', crmModSetNom:(e)=>maj({nom:e.target.value}),
+      crmModSujetOn:ME.type!=='sms', crmModSujetLab:ME.type==='tel'?'Objectif de l’appel':'Objet du mail',
+      crmModSujet:ME.sujet||'', crmModSetSujet:(e)=>maj({sujet:e.target.value}),
+      crmModCorpsLab:ME.type==='tel'?'Script — les points à dérouler':(ME.type==='sms'?'Texte du SMS':'Texte du mail'),
+      crmModCorps:ME.corps||'', crmModSetCorps:(e)=>maj({corps:e.target.value}),
+      crmModAide:ME.type==='sms'?'Court : 160 caractères font un SMS, au-delà il se coupe. Les variables comptent une fois remplies.'
+        :(ME.type==='tel'?'Le script s’affiche sous le numéro pendant l’appel, variables remplies. Numérotez les points : on suit au doigt.'
+        :'Le texte part tel quel, en paragraphes, avec le logo du réseau si le serveur en a un. Signez : {boutique} · {tel_boutique}.'),
+      crmModSupprOn:!!ME.id&&!ME.reseau, crmModBtn:ME.id&&ME.reseau?'Enregistrer ma copie':'Enregistrer',
+      crmModEnregistrer:()=>{ const nom=String(ME.nom||'').trim(), corps=String(ME.corps||'').trim();
+        if(!nom||!corps){ this.printJob('⚠ Un nom et un texte'); return; }
+        this.crmPoster('/franchisee/crm-modele',{id:ME.reseau?0:(ME.id||0),type:ME.type,nom:ME.reseau&&nom===ME.nom?nom+' (ma version)':nom,sujet:ME.sujet||'',corps},'✓ Modèle enregistré')
+          .then(j=>{ if(j){ this.setState({crmModEdit:{...ME,id:j.id,reseau:false}}); this.crmActCharger(true); } }); },
+      crmModSupprimer:()=>{ if(!ME.id||ME.reseau) return; if(!window.confirm('Retirer le modèle « '+ME.nom+' » ?')) return;
+        this.crmPoster('/franchisee/crm-modele',{id:ME.id,supprimer:true},'Modèle retiré').then(j=>{ if(j){ this.setState({crmModEdit:{type:ME.type,id:0,nom:'',sujet:'',corps:''}}); this.crmActCharger(true); } }); },
+      crmModFermer:()=>this.setState({crmModEdit:null}) };
+  }
   /* La semaine d'agenda : cinq jours ouvrés à partir du lundi de la semaine
      affichée. Chaque action porte sa nature (visite, appel, envoi), son heure
      si elle est fixée, et l'adresse — c'est le « où » qu'on vient chercher.
@@ -6617,7 +6924,7 @@ class Component extends DCLogic {
     // vient, là où sont les actions à préparer.
     const wk=auj.getDay()===0||auj.getDay()===6?1:0;
     const lundi=new Date(auj); lundi.setDate(lundi.getDate()-((lundi.getDay()+6)%7)+(dec+wk)*7);
-    const iso=d=>d.toISOString().slice(0,10);
+    const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     const JOURS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
     const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
     const NAT={visite:['Visite','#6b4fa8','#efe9fa'],tel:['Relance','#b26a00','#fff4e5'],mail:['Envoi mail','#2a5a9e','#eef3fb'],
@@ -6663,14 +6970,14 @@ class Component extends DCLogic {
      a gagné, et ce que les gagnés ont commandé DEPUIS leur gain. Aucune
      estimation : un gain sans client rattachable vaut zéro, et la ligne le
      dit plutôt que de faire semblant. */
-  crmRapCharger(force){ const fr=window.__FR||{}; if(!fr.base) return;
+  crmRapCharger(force){ if(!force&&this._crmRapKo&&Date.now()-this._crmRapKo<30000) return; const fr=window.__FR||{}; if(!fr.base) return;
     if(this._rapBusy) return; if(this.state.crmRap&&!force) return;
     this._rapBusy=true;
     fetch(fr.base+'/franchisee/crm-rapport'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ this._rapBusy=false;
-        if(st===200&&j&&j.ok) this.setState({crmRap:j,crmRapErr:''});
-        else this.setState({crmRapErr:(j&&j.error)||('Rapport indisponible (HTTP '+st+')')}); })
-      .catch(()=>{ this._rapBusy=false; this.setState({crmRapErr:'Réseau indisponible'}); }); }
+        if(st===200&&j&&j.ok){ this._crmRapKo=0; this.setState({crmRap:j,crmRapErr:''}); }
+        else { this._crmRapKo=Date.now(); this.setState({crmRapErr:(j&&j.error)||('Rapport indisponible (HTTP '+st+')')}); } })
+      .catch(()=>{ this._rapBusy=false; this._crmRapKo=Date.now(); this.setState({crmRapErr:'Réseau indisponible'}); }); }
   crmRapVals(){
     const S=this.state; const base={isCrmRapport:S.screen==='crmRapport'};
     if(S.screen!=='crmRapport') return base;
@@ -6693,6 +7000,7 @@ class Component extends DCLogic {
       rapKpis:c?[
         {k:'Cibles',v:String(c.cibles),s:'bureaux et clients posés'},
         {k:'Mails',v:String(c.mail),s:pct(c.mail,c.cibles)+' des cibles'},
+        {k:'SMS',v:String(c.sms||0),s:pct(c.sms||0,c.cibles)+' des cibles'},
         {k:'Appels',v:String(c.tel),s:pct(c.tel,c.cibles)+' des cibles'},
         {k:'Visites',v:String(c.visite),s:pct(c.visite,c.cibles)+' des cibles'},
         {k:'Clients gagnés',v:String(c.gagnes),s:c.transfo+' % de transformation',vert:true},
@@ -6720,7 +7028,7 @@ class Component extends DCLogic {
     const SRV=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
     const base={isCrm:S.screen==='crm'};
     if(S.screen!=='crm') return base;
-    this.crmCharger(false);
+    this.crmCharger(false); this.crmActCharger(false);
     const vue=S.crmVue||'tableau';
     const bascule={ crmVue:vue, crmVueTableau:vue==='tableau', crmVueAgenda:vue==='agenda',
       crmVueTab:()=>this.setState({crmVue:'tableau',crmGrab:null}), crmVueAg:()=>this.setState({crmVue:'agenda',crmGrab:null}),
@@ -6738,8 +7046,8 @@ class Component extends DCLogic {
 
     // Prendre / poser : une carte prise attend une colonne.
     const pris=S.crmGrab!=null?String(S.crmGrab):null;
-    const gesteDe={mail:'✉',visite:'📍',tel:'☎',bon:'🎟',assort:'🗒'};
-    const auj=new Date().toISOString().slice(0,10);
+    const gesteDe={mail:'✉',sms:'💬',visite:'📍',tel:'☎',bon:'🎟',assort:'🗒'};
+    const auj=(d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'))(new Date());
 
     const colonnes=(D.colonnes||[]).map(col=>{
       const dedans=cartes.filter(c=>c.colonne===col.cle).sort((a,b)=>(a.ordre-b.ordre)||(a.id-b.id));
@@ -6842,7 +7150,9 @@ class Component extends DCLogic {
           prochaine:det.prochaine||'',prochaineHeure:det.prochaineHeure||'',prochaineType:det.prochaineType||'',
           note:det.note||''},'✓ Fiche enregistrée'); this.setState({crmDet:null}); },
         supprimer:()=>{ this.crmEcrire({id:det.id,supprimer:true},'Carte retirée du tableau'); this.setState({crmDet:null}); },
-        fermer:()=>this.setState({crmDet:null}) }:null,
+        fermer:()=>this.setState({crmDet:null,crmActErr:''}),
+        ...this.crmActVals(det,majDet) }:null,
+      ...this.crmModVals(),
 
       // ── AGENDA : la semaine des actions à venir ───────────────────────
       // Ce qui est prévu, quel jour, à quelle heure et où. Une action sans
@@ -11526,6 +11836,9 @@ class Component extends DCLogic {
       ...profileVals,
       isLivProcess,livSteps,grpTabsOn,grpTabs,grpTabsTitre,
       crmInp:'width:100%;box-sizing:border-box;margin-top:5px;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface)',
+      crmLab:'font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted)',
+      crmActBox:'background:var(--color-background-secondary);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:11px',
+      crmChipAjout:'display:inline-flex;align-items:center;border:1.5px dashed var(--color-border-secondary);color:var(--color-text-muted);border-radius:999px;padding:5px 11px;font:600 11.5px var(--font-ui);cursor:pointer',
       ...this.crmVals(), ...this.crmRapVals(),
       pencilStyle:'background:transparent;border:.5px solid var(--color-border-tertiary);border-radius:7px;cursor:pointer;color:var(--color-text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none',
       paramsOpen,toggleParams,paramsHeadStyle,paramsChevStyle,
