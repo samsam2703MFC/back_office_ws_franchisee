@@ -1,11 +1,5 @@
 name: Sonde — cockpit, assistant de campagne (/references en 500)
 
-# ── COPIE TEMPORAIRE, SUR CETTE BRANCHE SEULEMENT ────────────────────────────
-# « Run workflow » n'accepte qu'un nom de fichier présent sur main : celui-ci
-# l'est, sonde-cockpit-assistant.yml (le fichier de référence, même contenu)
-# pas encore. Ce fichier reprendra son contenu d'origine — la sonde « nouveau
-# run du rapport » — dès la sonde lue.
-
 # L'assistant de campagne du cockpit (/consulant_bo/assistant/) affiche
 # « Assistant injoignable : Erreur interne du module marketing. » Cette phrase
 # n'est produite qu'à deux endroits de la copie du module embarquée dans le
