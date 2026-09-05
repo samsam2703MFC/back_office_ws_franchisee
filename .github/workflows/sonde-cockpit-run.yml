@@ -1,55 +1,14 @@
-name: Sonde — cockpit, assistant de campagne (/references en 500)
+name: Sonde — nouveau run du rapport + fonds réparé + aperçu redevances
 
-# ── COPIE TEMPORAIRE, SUR CETTE BRANCHE SEULEMENT ────────────────────────────
-# « Run workflow » n'accepte qu'un nom de fichier présent sur main : celui-ci
-# l'est, sonde-cockpit-assistant.yml (le fichier de référence, même contenu)
-# pas encore. Ce fichier reprendra son contenu d'origine — la sonde « nouveau
-# run du rapport » — dès la sonde lue.
-
-# L'assistant de campagne du cockpit (/consulant_bo/assistant/) affiche
-# « Assistant injoignable : Erreur interne du module marketing. » Cette phrase
-# n'est produite qu'à deux endroits de la copie du module embarquée dans le
-# cockpit : public/api/marketing/src/Support/Router.php:87 (PDOException) et
-# :96 (Throwable), tous deux DANS le try qui n'enveloppe que le handler. Elle
-# prouve donc que PHP, la réécriture Apache, la connexion MySQL (index.php:28,
-# hors try) et l'identité (index.php:29) fonctionnent : c'est une REQUÊTE du
-# handler qui échoue — au démarrage, l'assistant appelle en parallèle
-# /session, /references et /brands (assistant-main.tsx:49-51) et affiche la
-# première erreur (l.61). Le message SQL réel est écrit par Router.php:85
-# dans le journal PHP, jamais dans la réponse.
-#
-# Quatre lectures en un passage, depuis le serveur (la sandbox n'y accède pas) :
-#  A. l'environnement : PHP CLI et SAPI web, journal d'erreurs, fichiers
-#     réellement déployés (md5 attendus) et leur syntaxe pour chaque PHP présent ;
-#  B. le REJEU HTTP en loopback des appels exacts de l'assistant (seul en-tête :
-#     Accept, http.ts:137-140) — code, type, début du corps ;
-#  C. les dernières lignes « [marketing] » du journal PHP, juste après B ;
-#  D. avec LA connexion du cockpit (celle que public/api/marketing/index.php:28
-#     injecte) : inventaire des objets mar_ et leur CREATE_TIME (qui date les
-#     restaurations), tables ABSENTES parmi celles que lisent /references,
-#     /brands et /shops, colonnes des tables gardées au nettoyage (migrations
-#     011/019/031 du module), traces du nettoyage (ceo_app_setting
-#     'marNettoyage', ceo_journal_entry kind='Maintenance'), registre
-#     mar_schema_migration, puis rejeu méthode par méthode de
-#     ReferenceRepository dans une transaction READ ONLY annulée, pour lire le
-#     message PDO exact au lieu de le deviner.
-# Aucune écriture : transaction READ ONLY + rollback ; aucun POST ; aucun
-# secret en URL ni au log (le mot de passe MySQL n'est jamais imprimé).
-#
-# LECTURE DU RÉSULTAT
-#  - B : /references (ou /brands) en 500 avec {"status":"error","description":
-#    "Erreur interne du module marketing."} reproduit l'écran ; un 200 HTML =
-#    règle public/.htaccess:23 absente ; un 500 sans enveloppe JSON = fatal
-#    hors try (index.php:25-29), autre diagnostic.
-#  - C : la ligne « [marketing] SQL: SQLSTATE[42S02] … Table '<base>.mar_xxx'
-#    doesn't exist » (table emportée par le nettoyage, jamais recréée) ou
-#    « SQLSTATE[42S22] … Unknown column 't.color_hex' » (table gardée restée
-#    avant la migration 031) nomme la cause.
-#  - D : « ABSENTES : … » et « KO <méthode> -> PDOException … » désignent le
-#    premier objet manquant dans l'ordre de ReferenceRepository::all() ;
-#    'marNettoyage' et le journal Maintenance disent combien de nettoyages et
-#    de restaurations ont eu lieu, et quand ; CREATE_TIME de mar_lead_status,
-#    mar_channel… date la dernière restauration effective.
+# v3 — le run 106 généré en CLI est sorti SANS photos : le PHP CLI n'a
+# probablement pas GD (rapImageGd teste imagecreatefromstring et rend null).
+# Cette passe :
+#  A. prouve l'état de GD en CLI ;
+#  B. génère le run par HTTP loopback — le chemin EXACT du bouton « Générer »
+#     du cockpit (contexte web, GD chargé) — avec repli CLI + `-d extension=gd`
+#     si l'API exige une session ;
+#  C. rend le PDF de CE run et le remonte en hex + sha256 ;
+#  D. retire le run 106 (essai sans photos) de l'historique.
 
 on:
   workflow_dispatch: {}
@@ -61,7 +20,7 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Sonder l'API de l'assistant et le schéma mar_
+      - name: Générer par la voie web et rendre le PDF
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
         run: |
@@ -69,232 +28,109 @@ jobs:
             -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "bash -s" <<'EOSH'
           set -u
-          R=/var/www/consulant_bo
-          BASE=http://127.0.0.1/consulant_bo
-          PHP=$(command -v php || command -v php8.3 || command -v php8.2 || command -v php8.1)
-          echo "===== A. ENVIRONNEMENT ====="
-          echo "date serveur : $(date '+%Y-%m-%d %H:%M:%S %Z')"
-          echo "php CLI : $PHP ($($PHP -v | head -1))"
-          echo "-- SAPI web installes (repertoires /etc/php/*/apache2 et /etc/php/*/fpm) :"
-          ls -d /etc/php/*/apache2 /etc/php/*/fpm 2>/dev/null || echo "   (aucun)"
-          echo "-- modules Apache lies a PHP :"
-          ls /etc/apache2/mods-enabled/ 2>/dev/null | grep -i 'php\|proxy_fcgi' || echo "   (ni phpX.Y ni proxy_fcgi)"
-          echo "-- unites php-fpm :"
-          systemctl list-units 'php*-fpm.service' --no-legend 2>/dev/null || echo "   (aucune)"
-          echo "-- directive error_log des php.ini web (vide = error_log() part dans le journal Apache) :"
-          grep -Hn '^error_log' /etc/php/*/apache2/php.ini /etc/php/*/fpm/php.ini 2>/dev/null || echo "   (non definie)"
-          echo "-- fichiers deployes ; md5 attendus (branche deployee, identiques a HEAD) :"
-          echo "   c7f36c4a863569111e344da00cc172b8  ReferenceRepository.php"
-          echo "   b5b8c71036ee9156dc7594df13c0b5fb  CampaignRepository.php"
-          echo "   6ae7bf37d8e4f31da52f07bee323dd50  Router.php"
-          echo "   bb51a04adde8551b460ce400dd5d44c8  api/marketing/index.php"
-          echo "   acf0e3ad0e1a7d3ea91cd2047749427d  sql/mar-referentiels.sql"
-          echo "   cb16be76d09998108be8c34c471d6e29  assistant-DiP4zkX7.js"
-          echo "   55a0771e65281e89c08f55becb6e3376  public/.htaccess"
-          for f in public/api/marketing/src/Repository/ReferenceRepository.php \
-                   public/api/marketing/src/Repository/CampaignRepository.php \
-                   public/api/marketing/src/Support/Router.php \
-                   public/api/marketing/index.php \
-                   sql/mar-referentiels.sql \
-                   public/assistant/assets/assistant-DiP4zkX7.js \
-                   public/.htaccess; do
-            if [ -f "$R/$f" ]; then md5sum "$R/$f"; else echo "ABSENT  $R/$f"; fi
-          done
-          echo "-- syntaxe des deux depots lus par /references, pour CHAQUE php present (le SAPI web peut differer du CLI) :"
-          for v in $PHP /usr/bin/php8.*; do
-            [ -x "$v" ] || continue
-            for f in CampaignRepository ReferenceRepository; do
-              printf '   %s : ' "$v"; "$v" -l "$R/public/api/marketing/src/Repository/$f.php" 2>&1 | head -1
-            done
-          done
+          PHP=$(command -v php || command -v php8.2 || command -v php8.1)
+          echo "===== A. GD ====="
+          echo "CLI gd : $($PHP -r 'echo function_exists("imagecreatefromstring") ? "present" : "ABSENT";')"
+          echo "CLI gd via -d extension=gd : $($PHP -d extension=gd -r 'echo function_exists("imagecreatefromstring") ? "present" : "ABSENT";' 2>/dev/null || echo 'chargement impossible')"
 
-          echo
-          echo "===== B. LOOPBACK — les appels exacts de l'assistant (Accept: application/json, sans cookie ni Bearer) ====="
-          echo "debut : $(date '+%Y-%m-%d %H:%M:%S')"
-          echo "-- GET $BASE/assistant/ : bundle servi (attendu assistant-DiP4zkX7.js, public/assistant/index.html:8)"
-          curl -sS "$BASE/assistant/" | grep -o 'assistant-[A-Za-z0-9_-]*\.js' | head -1 || echo "   (bundle introuvable dans la page)"
-          for r in session references brands shops; do
-            echo "-- GET $BASE/api/v1/marketing/$r"
-            HTTP=$(curl -sS -o "/tmp/sonde_$r.json" -w '%{http_code} %{content_type}' -H 'Accept: application/json' "$BASE/api/v1/marketing/$r" || echo "curl KO")
-            echo "   HTTP $HTTP — $(wc -c < "/tmp/sonde_$r.json") octets"
-            head -c 500 "/tmp/sonde_$r.json"; echo
-          done
-          echo "fin : $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "===== B. GENERATION PAR HTTP LOOPBACK ====="
+          REP=$(curl -s -X POST 'http://127.0.0.1/consulant_bo/api/cockpit/rapports/6/generer' \
+                -H 'Content-Type: application/json' -d '{}')
+          echo "reponse : $REP"
+          RUNID=$(echo "$REP" | $PHP -r '$j=json_decode(stream_get_contents(STDIN),true)?:[];echo (int)($j["runId"]??0);')
+          MODE=web
+          if [ "$RUNID" = "0" ]; then
+            echo "voie web refusee — repli CLI avec GD charge"
+            MODE=cli
+          fi
 
-          echo
-          echo "===== C. JOURNAL PHP — lignes [marketing] (Router.php:85 = SQL, :94 = autre Throwable) ====="
-          JOURNAUX=$( { ls /var/log/apache2/error.log /var/log/apache2/*error*.log /var/log/php*-fpm.log 2>/dev/null; \
-                        grep -h '^error_log' /etc/php/*/apache2/php.ini /etc/php/*/fpm/php.ini 2>/dev/null | sed 's/^error_log[[:space:]]*=[[:space:]]*//'; } | sort -u )
-          [ -n "$JOURNAUX" ] || echo "   (aucun journal candidat : voir journalctl -u apache2)"
-          for f in $JOURNAUX; do
-            [ -r "$f" ] || { echo "-- $f : illisible"; continue; }
-            N=$(grep -ac '\[marketing\]' "$f" 2>/dev/null || echo 0)
-            echo "-- $f — $N ligne(s) [marketing] ; les 15 dernieres :"
-            grep -a '\[marketing\]' "$f" | tail -n 15
-          done
-          echo "-- journalctl apache2 (10 dernieres minutes, lignes marketing) :"
-          journalctl -u apache2 --since '10 min ago' --no-pager 2>/dev/null | grep -a '\[marketing\]' | tail -n 10 || true
-
-          echo
-          echo "===== D. SCHEMA ET REJEU, avec la connexion du cockpit (lecture seule) ====="
-          cat > /tmp/sonde_refs.php <<'EOPHP'
+          cat > /tmp/sonde_v3.php <<'EOPHP'
           <?php
           declare(strict_types=1);
           $R = '/var/www/consulant_bo';
-          if (!is_dir($R)) { fwrite(STDERR, "cockpit introuvable : $R\n"); exit(2); }
           require $R . '/src/Db.php';
-          require $R . '/public/api/marketing/src/autoload.php';
+          require $R . '/src/installer.php';
+          require $R . '/src/mkt_types.php';
+          require $R . '/src/endpoints.php';
+          require $R . '/src/writes.php';
+          require $R . '/src/panel_api.php';
+          require $R . '/src/erp_api.php';
+          require $R . '/src/anthropic.php';
+          require $R . '/src/google_api.php';
+          require $R . '/src/smtp.php';
+          require $R . '/src/rapports.php';
+          require $R . '/src/kpis.php';
+          require $R . '/src/cadence.php';
+          require $R . '/src/connecteurs.php';
+          require $R . '/src/mesure.php';
 
-          $pdo = Db::pdo();
-          $c = Db::config()['db'];
-          echo "-- D1. connexion (celle que public/api/marketing/index.php:28 injecte)\n";
-          printf("config : %s:%s/%s user=%s (mot de passe masque)\n", $c['host'], $c['port'], $c['name'], $c['user']);
-          foreach (['DATABASE()', 'CURRENT_USER()', 'VERSION()', '@@sql_mode', '@@collation_database'] as $q) {
-              try { echo str_pad($q, 22), '= ', (string) $pdo->query('SELECT ' . $q)->fetchColumn(), "\n"; }
-              catch (Throwable $e) { echo $q, ' : ', $e->getMessage(), "\n"; }
+          $mode = (string) ($argv[1] ?? 'rendre');
+          $runId = (int) ($argv[2] ?? 0);
+          if ($mode === 'generer') {
+              $rep = Db::row('SELECT * FROM ceo_rapport WHERE id = 6');
+              if ($rep === null) { fwrite(STDERR, "rapport 6 introuvable\n"); exit(2); }
+              $g = rapportGenerer($rep);
+              echo json_encode($g, JSON_UNESCAPED_UNICODE) . "\n";
+              exit(0);
           }
-          // Lecture seule garantie par le SERVEUR : toute ecriture leverait 1792.
-          $pdo->exec('SET SESSION TRANSACTION READ ONLY');
-          $pdo->beginTransaction();
-
-          // Les 24 tables lues par ReferenceRepository::all() dans SON ordre
-          // (ReferenceRepository.php:25-58), puis /brands, /shops, et les objets
-          // dont l'absence trahit un nettoyage (registre, vues, mar_offer_item).
-          $ordreAll = [
-              'mar_lever', 'mar_campaign_status', 'mar_campaign_type', 'mar_lead_status',
-              'mar_b2b_sector', 'mar_b2b_prospect_sector', 'mar_b2b_prospect', 'mar_format',
-              'mar_position', 'mar_channel', 'mar_uniform', 'mar_offer_template',
-              'mar_offer_template_item', 'mar_tone', 'mar_agency_ask', 'mar_b2b_option',
-              'mar_retroplanning_default', 'mar_client_target', 'mar_cost_kind', 'mar_fund_source',
-              'mar_review_platform', 'mar_sales_channel', 'mar_promotion_mechanic', 'mar_pos_answer_type',
-          ];
-          $autres = ['mar_brand', 'mar_shop', 'mar_offer_item', 'mar_schema_migration', 'mar_roi_cost',
-              'mar_v_fund_ledger_by_period', 'mar_v_lever_performance', 'mar_v_campaign_monitor',
-              'mar_v_lead_funnel', 'mar_v_lead_funnel_by_shop', 'mar_v_roi_quarterly'];
-
-          echo "\n-- D2. inventaire des objets mar_ de CETTE base (CREATE_TIME = date de (re)creation : elle date la derniere restauration)\n";
-          $presents = [];
-          try {
-              $q = $pdo->query("SELECT TABLE_NAME n, TABLE_TYPE t, TABLE_ROWS r, CREATE_TIME c
-                                  FROM information_schema.TABLES
-                                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'mar\\_%' ORDER BY TABLE_NAME");
-              foreach ($q as $o) {
-                  $presents[strtolower((string) $o['n'])] = true;
-                  printf("   %-34s %-10s %8s lignes  cree %s\n", $o['n'], $o['t'] === 'VIEW' ? 'vue' : 'table',
-                      $o['t'] === 'VIEW' ? '-' : (string) $o['r'], (string) ($o['c'] ?? '?'));
-              }
-              echo '   total : ', count($presents), " objet(s) mar_\n";
-          } catch (Throwable $e) { echo 'information_schema : ', $e->getMessage(), "\n"; }
-
-          echo "\n-- D3. ABSENTES parmi les tables lues au demarrage de l'assistant\n";
-          $abs = array_values(array_filter($ordreAll, static fn ($t) => !isset($presents[$t])));
-          echo '   /references (ordre de all()) : ', $abs ? implode(', ', $abs) : 'aucune', "\n";
-          if ($abs !== []) { echo '   => premiere requete de all() qui tombe : ', $abs[0], ' (position ', array_search($abs[0], $ordreAll, true) + 1, "/24)\n"; }
-          $abs2 = array_values(array_filter($autres, static fn ($t) => !isset($presents[$t])));
-          echo '   autres objets                : ', $abs2 ? implode(', ', $abs2) : 'aucun', "\n";
-
-          echo "\n-- D4. colonnes des tables GARDEES au nettoyage (marTableGardee) ajoutees par migration apres leur creation\n";
-          $attendues = [
-              'mar_campaign_type'       => ['lever_id', 'lever_badge_label', 'color_hex', 'icon_key', 'description', 'icon_path', 'default_lever_code', 'default_kpi_label', 'is_active', 'sort_order'],
-              'mar_brand'               => ['erp_brand_id', 'logo_url', 'is_active'],
-              'mar_lever'               => ['code', 'label', 'color_hex', 'sort_order', 'is_active'],
-              'mar_campaign_status'     => ['code', 'label', 'text_hex', 'bg_rgba', 'sort_order'],
-              'mar_fund_source'         => ['code', 'label', 'sort_order'],
-              'mar_campaign_channel'    => ['is_enabled', 'budget_amount', 'agency_id'],
-              'mar_campaign_offer_item' => ['show_photo', 'image_url'],
-              'mar_fund_movement'       => ['is_investment', 'source', 'supplier_name'],
-          ];
-          foreach ($attendues as $t => $cols) {
-              try {
-                  $ont = array_map(static fn ($l) => strtolower((string) reset($l)),
-                      $pdo->query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '$t'")->fetchAll());
-                  if ($ont === []) { echo "   $t : TABLE ABSENTE\n"; continue; }
-                  $manque = array_diff($cols, $ont);
-                  echo "   $t : ", $manque ? 'MANQUE ' . implode(', ', $manque) : 'complete', ' (', count($ont), " colonnes)\n";
-              } catch (Throwable $e) { echo "   $t : ", $e->getMessage(), "\n"; }
+          if ($mode === 'menage106') {
+              // Le run 106 : essai de sonde généré en CLI SANS GD — fiches sans
+              // photos. On le retire pour ne pas polluer l'historique du rapport.
+              Db::exec('DELETE FROM ceo_rapport_run WHERE id = 106 AND statut = ?', ['genere']);
+              echo "run 106 retire (s'il etait encore la)\n";
+              exit(0);
           }
-
-          echo "\n-- D5. traces du nettoyage et des restaurations (writes.php:2536-2538 et :2690)\n";
-          try {
-              $v = $pdo->query("SELECT value FROM ceo_app_setting WHERE `key` = 'marNettoyage'")->fetchColumn();
-              if ($v === false) { echo "   ceo_app_setting.marNettoyage : absent (nettoyage jamais execute sur cette base)\n"; }
-              else {
-                  $j = json_decode((string) $v, true) ?: [];
-                  echo '   marNettoyage : fait le ', (string) ($j['fait'] ?? '?'), ' — ', count($j['supprimees'] ?? []), " objet(s) : ",
-                      implode(', ', array_slice($j['supprimees'] ?? [], 0, 80)), "\n";
-              }
-          } catch (Throwable $e) { echo '   ceo_app_setting : ', $e->getMessage(), "\n"; }
-          try {
-              $q = $pdo->query("SELECT happened_at, message FROM ceo_journal_entry WHERE kind = 'Maintenance'
-                                  AND (message LIKE 'Nettoyage du module marketing%' OR message LIKE 'R%f%rentiels de l%assistant%')
-                                ORDER BY id DESC LIMIT 12");
-              $n = 0;
-              foreach ($q as $l) { $n++; echo '   journal ', $l['happened_at'], ' : ', mb_substr((string) $l['message'], 0, 160), "\n"; }
-              if ($n === 0) { echo "   journal Maintenance : aucune entree nettoyage/restauration\n"; }
-          } catch (Throwable $e) { echo '   ceo_journal_entry : ', $e->getMessage(), "\n"; }
-          try {
-              $n = 0;
-              foreach ($pdo->query('SELECT filename, applied_at FROM mar_schema_migration ORDER BY id') as $m) {
-                  $n++; if ($n <= 3 || $n >= 36) { echo '   migration ', $m['filename'], ' ', $m['applied_at'], "\n"; } elseif ($n === 4) { echo "   …\n"; }
-              }
-              echo "   registre mar_schema_migration : $n ligne(s) (le module complet en ecrit 39 : 34 migrations + 5 seeds)\n";
-          } catch (Throwable $e) { echo '   mar_schema_migration : ', $e->getMessage(), " (registre absent = emporte par le nettoyage ; migrate.php du depot marketing ne peut plus reparer)\n"; }
-
-          echo "\n-- D6. compteurs (donnees vivantes, et empreinte des restaurations passees)\n";
-          foreach ([
-              'campagnes'                     => 'SELECT COUNT(*) FROM mar_campaign',
-              'prospects B2B'                 => 'SELECT COUNT(*) FROM mar_b2b_prospect',
-              'offer_item total'              => 'SELECT COUNT(*) FROM mar_offer_item',
-              'offer_item sku numerique (repeuplement simplifie)' => "SELECT COUNT(*) FROM mar_offer_item WHERE sku_ref REGEXP '^[0-9]+$'",
-              'offer_item erp-<id> (reprise module)'              => "SELECT COUNT(*) FROM mar_offer_item WHERE sku_ref LIKE 'erp-%' AND sku_ref NOT LIKE 'erp-saison-%'",
-              'offer_item erp-saison-<id>'    => "SELECT COUNT(*) FROM mar_offer_item WHERE sku_ref LIKE 'erp-saison-%'",
-              'offer_template_item'           => 'SELECT COUNT(*) FROM mar_offer_template_item',
-              'mouvements du fonds'           => 'SELECT COUNT(*) FROM mar_fund_movement',
-          ] as $lib => $sql) {
-              try { echo '   ', str_pad($lib, 52), ': ', (string) $pdo->query($sql)->fetchColumn(), "\n"; }
-              catch (Throwable $e) { echo '   ', str_pad($lib, 52), ': ', $e->getMessage(), "\n"; }
-          }
-
-          echo "\n-- D7. REJEU methode par methode de ReferenceRepository (ce que /references execute, dans l'ordre) — transaction READ ONLY, annulee\n";
-          \Marketing\Support\Database::setConnection($pdo);
-          \Marketing\Support\AuthContext::set(1, 'BRAND_ADMIN');
-          $ref = new \Marketing\Repository\ReferenceRepository();
-          $ko = static function (Throwable $e): string {
-              return get_class($e) . ' [' . (string) $e->getCode() . '] ' . $e->getMessage();
-          };
-          foreach (['levers', 'campaignStatuses', 'campaignTypes', 'leadStatuses', 'b2bSectors', 'formats', 'positions',
-                    'channels', 'uniforms', 'offerTemplates', 'tones', 'agencyAsks', 'b2bOptions', 'retroplanningDefaults'] as $m) {
-              try { echo '   OK  ', str_pad($m, 22), count($ref->$m()), " ligne(s)\n"; }
-              catch (Throwable $e) { echo '   KO  ', str_pad($m, 22), $ko($e), "\n"; }
-          }
-          foreach (['mar_client_target', 'mar_cost_kind', 'mar_fund_source', 'mar_review_platform', 'mar_sales_channel', 'mar_promotion_mechanic'] as $t) {
-              try { echo '   OK  ', str_pad('codeLabels ' . $t, 40), count($pdo->query("SELECT code, label FROM $t ORDER BY sort_order, code")->fetchAll()), " ligne(s)\n"; }
-              catch (Throwable $e) { echo '   KO  ', str_pad('codeLabels ' . $t, 40), $ko($e), "\n"; }
-          }
-          try { echo '   OK  ', str_pad('posAnswerTypes', 22), count($pdo->query('SELECT code, label, hint FROM mar_pos_answer_type ORDER BY sort_order')->fetchAll()), " ligne(s)\n"; }
-          catch (Throwable $e) { echo '   KO  ', str_pad('posAnswerTypes', 22), $ko($e), "\n"; }
-          try { $c = \Marketing\Repository\CampaignRepository::COLORS; echo '   OK  ', str_pad('CampaignRepository::COLORS', 22), count($c), " couleur(s)\n"; }
-          catch (Throwable $e) { echo '   KO  ', str_pad('CampaignRepository::COLORS', 22), $ko($e), "\n"; }
-          try { $r = $ref->all(); echo '   OK  ', str_pad('all()', 22), count($r), " jeux => GET /references devrait rendre 200\n"; }
-          catch (Throwable $e) { echo '   KO  ', str_pad('all()', 22), $ko($e), "  <== la cause du 500 de /references\n"; }
-          try { echo '   OK  ', str_pad('brands()', 22), count($ref->brands()), " marque(s) => GET /brands\n"; }
-          catch (Throwable $e) { echo '   KO  ', str_pad('brands()', 22), $ko($e), "  <== la cause si /references passe\n"; }
-          try { echo '   OK  ', str_pad('shops()', 22), count($ref->shops(\Marketing\Support\AuthContext::current())), " boutique(s) => GET /shops\n"; }
-          catch (Throwable $e) { echo '   KO  ', str_pad('shops()', 22), $ko($e), "\n"; }
-
-          echo "\n-- D8. vues du module (aucune n'est lue par /references ; lues a la rouverture d'une campagne et par /funds, /leads, /roi)\n";
-          foreach (['mar_v_fund_ledger_by_period', 'mar_v_lever_performance', 'mar_v_campaign_monitor', 'mar_v_lead_funnel', 'mar_v_lead_funnel_by_shop', 'mar_v_roi_quarterly'] as $v) {
-              try { $pdo->query("SELECT 1 FROM $v LIMIT 1")->fetchAll(); echo "   OK  $v\n"; }
-              catch (Throwable $e) { echo "   KO  $v : ", $e->getMessage(), "\n"; }
-          }
-
-          echo "\n-- D9. droits du compte (un 1142 'command denied' donnerait le meme 500)\n";
-          try { foreach ($pdo->query('SHOW GRANTS FOR CURRENT_USER()') as $g) { echo '   ', preg_replace('/IDENTIFIED BY .*$/i', 'IDENTIFIED BY ***', (string) reset($g)), "\n"; } }
-          catch (Throwable $e) { echo '   SHOW GRANTS : ', $e->getMessage(), "\n"; }
-
-          $pdo->rollBack();
-          echo "\n(transaction annulee : rien n'a ete ecrit)\n";
+          $run = Db::row('SELECT * FROM ceo_rapport_run WHERE id = ?', [$runId]);
+          if ($run === null || $run['html'] === null) { fwrite(STDERR, "run $runId sans HTML\n"); exit(2); }
+          $ctx = json_decode((string) ($run['contexte'] ?? ''), true) ?: [];
+          $rep = Db::row('SELECT nom, magasins FROM ceo_rapport WHERE id = ?', [(int) ($run['rapport_id'] ?? 0)]) ?? [];
+          $pdf = rapPdfRendu((string) $run['html'], [
+              'magasin' => (string) ($ctx['magasin'] ?? '') !== '' ? (string) $ctx['magasin'] : rapMagasinLabel($rep),
+              'rapport' => (string) ($ctx['rapport'] ?? '') !== '' ? (string) $ctx['rapport'] : (string) ($rep['nom'] ?? ''),
+              'genere' => date('d/m/Y à H:i', strtotime((string) ($run['genere_le'] ?? 'now'))),
+              'envoye' => '',
+          ]);
+          if ($pdf === null) { fwrite(STDERR, "aucun moteur PDF\n"); exit(2); }
+          file_put_contents('/tmp/sonde_run3.pdf', $pdf);
+          echo 'PDF : run ' . $runId . ' — ' . strlen($pdf) . ' octets — sha256 ' . hash('sha256', $pdf) . "\n";
           EOPHP
-          $PHP /tmp/sonde_refs.php
-          rm -f /tmp/sonde_refs.php /tmp/sonde_session.json /tmp/sonde_references.json /tmp/sonde_brands.json /tmp/sonde_shops.json
+
+          if [ "$MODE" = "cli" ]; then
+            REP=$($PHP -d extension=gd /tmp/sonde_v3.php generer)
+            echo "generation CLI : $REP"
+            RUNID=$(echo "$REP" | $PHP -r '$j=json_decode(stream_get_contents(STDIN),true)?:[];echo (int)($j["runId"]??0);')
+          fi
+          echo "run retenu : $RUNID (voie $MODE)"
+
+          echo "===== C. RENDU PDF DU RUN $RUNID ====="
+          rm -f /tmp/sonde_run3.pdf
+          $PHP -d extension=gd /tmp/sonde_v3.php rendre "$RUNID"
+
+          echo "===== D. MENAGE DU RUN 106 ====="
+          $PHP /tmp/sonde_v3.php menage106
+
+          if [ -s /tmp/sonde_run3.pdf ] && [ "$(stat -c%s /tmp/sonde_run3.pdf)" -lt 1200000 ]; then
+            echo "===== E. PDF EN HEXADECIMAL ====="
+            xxd -p /tmp/sonde_run3.pdf | tr -d '\n' | fold -w 240 | sed 's/^/HEX:/'
+            echo ""
+            echo "===== FIN HEX ====="
+          fi
           EOSH
+
+      - name: Rapatrier le PDF
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          mkdir -p /tmp/sonde
+          sshpass -e scp -P ${{ vars.SSH_PORT || '22' }} \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/sonde_run3.pdf" /tmp/sonde/ \
+            || echo "pas de PDF produit" > /tmp/sonde/ABSENT.txt
+          ls -la /tmp/sonde/
+
+      - name: Publier l'artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonde-cockpit-run
+          path: /tmp/sonde/
+          retention-days: 3
