@@ -1568,6 +1568,7 @@
           </sc-if>
           </div>
           <span style="font:600 11px var(--font-ui);color:var(--color-text-muted);flex:none">{{ bcTotalTxt }}</span>
+          <button onClick="{{ bcViesTout }}" class="btn-secondary" style="padding:9px 14px;font-size:12px;flex:none" title="Interroge le registre européen VIES pour toutes les TVA affichées, quatre à la fois. Rien n'est écrit : le résultat vaut pour cette session, avec l'heure du contrôle.">Contrôler les TVA (VIES)</button>
           <button onClick="{{ goDemandes }}" class="btn-secondary" style="padding:9px 14px;font-size:12px;flex:none" title="Un client B2B est une personne : elle crée son compte depuis le lien d'invitation de son bureau, puis vous la validez.">Demandes de rattachement →</button>
         </div>
         <div style="display:flex;gap:8px;overflow-x:auto">
@@ -1579,10 +1580,11 @@
           </sc-for>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:var(--radius-lg,12px);overflow-x:auto">
-          <div style="min-width:1120px">
-          <div style="display:grid;grid-template-columns:minmax(190px,1.4fr) 150px minmax(200px,1.2fr) minmax(240px,1.3fr) 150px 100px auto;align-items:center;column-gap:20px;padding:14px 24px;border-bottom:.5px solid var(--color-border-secondary);background:var(--color-background-secondary)">
+          <div style="min-width:1560px">
+          <div style="display:grid;grid-template-columns:240px 150px 170px 230px 300px 150px 100px 150px;align-items:center;column-gap:20px;padding:14px 24px;border-bottom:.5px solid var(--color-border-secondary);background:var(--color-background-secondary)">
             <span class="t-admin-label">Nom</span>
             <span class="t-admin-label">Société</span>
+            <span class="t-admin-label">TVA · VIES</span>
             <span class="t-admin-label">Contact</span>
             <span class="t-admin-label">Bureau</span>
             <span></span>
@@ -1597,6 +1599,15 @@
                   <span title="{{ c.companyChip }}" style="display:inline-flex;align-items:center;border-radius:var(--radius-pill,20px);padding:3px 10px;font-size:var(--font-size-small,12px);font-weight:var(--weight-medium,500);color:var(--color-popup,#6a3f9e);background:color-mix(in srgb, var(--color-popup,#6a3f9e) 14%, transparent);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis">{{ c.companyChip }}</span>
                 </sc-if>
                 <sc-if value="{{ c.noCompany }}" hint-placeholder-val="{{ false }}"><span class="t-label" style="color:var(--color-border-secondary)">—</span></sc-if>
+              </div>
+              <!-- TVA · VIES : le numéro, et ce que le registre européen en dit.
+                   Rien n'est supposé — tant qu'on n'a pas demandé, on ne sait pas. -->
+              <div style="min-width:0">
+                <sc-if value="{{ c.hasTva }}" hint-placeholder-val="{{ false }}">
+                  <div style="font:500 11.5px var(--font-ui);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.tva }}</div>
+                  <button onClick="{{ c.viesGo }}" title="{{ c.viesTitre }}" style="{{ c.viesStyle }}">{{ c.viesTxt }}</button>
+                </sc-if>
+                <sc-if value="{{ c.noTva }}" hint-placeholder-val="{{ false }}"><span class="t-label" style="color:var(--color-border-secondary)">—</span></sc-if>
               </div>
               <div style="display:flex;align-items:center;gap:8px;min-width:0">
                 <span class="t-label" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.emailDisplay }}<br><span style="font:500 11px var(--font-ui);color:var(--color-text-muted)">{{ c.telDisplay }}</span></span>
@@ -6402,6 +6413,48 @@ class Component extends DCLogic {
      manque — l'adresse validée par Google en tête — la livraison ne peut pas
      être annoncée. Rend la liste des libellés manquants, vide = complet. */
   DROP_STD = 5;
+  /* ═══ CONTRÔLE VIES ════════════════════════════════════════════════════
+     Le registre européen dit si un numéro de TVA est valide, et sous quel
+     nom. Rien n'est écrit en base : on interroge l'endpoint et on garde la
+     réponse le temps de la session, avec l'heure — un contrôle daté vaut
+     mieux qu'un drapeau dont personne ne sait de quand il date. */
+  viesNorm(v){ return String(v==null?'':v).replace(/[^A-Za-z0-9]/g,'').toUpperCase(); }
+  viesVerifier(vat){ const fr=window.__FR||{}; const k=this.viesNorm(vat);
+    if(!fr.base||k.length<4) return Promise.resolve(null);
+    const cache=this._vies||(this._vies={});
+    if(cache[k]&&cache[k].etat!=='cours') return Promise.resolve(cache[k]);
+    cache[k]={etat:'cours'}; this.setState(s=>({_rev:(s._rev||0)+1}));
+    return fetch(fr.base+'/franchisee/vies-check?vat='+encodeURIComponent(k)+(fr.shop?('&shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().catch(()=>null)).then(j=>{
+        const h=new Date(); const quand=String(h.getHours()).padStart(2,'0')+':'+String(h.getMinutes()).padStart(2,'0');
+        cache[k]=(j&&j.valid)?{etat:'ok',nom:j.name||'',quand}
+          :((j&&j.error==='vies_unavailable')?{etat:'indispo',quand}:{etat:'ko',quand});
+        this.setState(s=>({_rev:(s._rev||0)+1})); return cache[k]; })
+      .catch(()=>{ cache[k]={etat:'indispo'}; this.setState(s=>({_rev:(s._rev||0)+1})); return cache[k]; }); }
+  /* Les lignes affichées, quatre à la fois : le registre européen n'aime pas
+     les rafales, et une file sans limite finit en refus pour tout le monde. */
+  viesLot(vats){ const l=[...new Set(vats.map(v=>this.viesNorm(v)).filter(v=>v.length>=4))]
+      .filter(v=>!(this._vies||{})[v]);
+    if(!l.length){ this.printJob('Toutes les TVA affichées sont déjà contrôlées.'); return; }
+    this.printJob('Contrôle VIES de '+l.length+' numéro(s)…');
+    let i=0; const suivant=()=>{ if(i>=l.length) return Promise.resolve(); const v=l[i++]; return this.viesVerifier(v).then(suivant); };
+    Promise.all([suivant(),suivant(),suivant(),suivant()]).then(()=>{
+      const c=this._vies||{}; const ok=l.filter(v=>c[v]&&c[v].etat==='ok').length;
+      this.printJob('✓ VIES : '+ok+' valide(s) sur '+l.length+' contrôlé(s)'); }); }
+  viesCellule(c){
+    const vat=c&&(c.tax_number||c.vat||''); const k=this.viesNorm(vat);
+    const r=(this._vies||{})[k]||null;
+    const pill='margin-top:3px;border:none;border-radius:999px;padding:2px 8px;font:600 10px var(--font-ui);cursor:pointer;white-space:nowrap;';
+    if(!k) return {hasTva:false,noTva:true,tva:'',viesTxt:'',viesTitre:'',viesStyle:pill,viesGo:()=>{}};
+    const etat=r?r.etat:null;
+    return { hasTva:true, noTva:false, tva:vat,
+      viesTxt:etat==='ok'?'✓ VIES':(etat==='ko'?'✕ VIES':(etat==='cours'?'…':(etat==='indispo'?'VIES ?':'Vérifier'))),
+      viesTitre:etat==='ok'?('Valide au registre européen'+(r.nom?(' — '+r.nom):'')+' · contrôlé à '+r.quand)
+        :(etat==='ko'?('Introuvable au registre européen · contrôlé à '+r.quand)
+        :(etat==='indispo'?'Registre VIES injoignable — réessayez':'Contrôler ce numéro au registre européen (VIES)')),
+      viesStyle:pill+'background:'+(etat==='ok'?'#eaf5ec':(etat==='ko'?'#fbe9eb':'var(--color-background-secondary)'))
+        +';color:'+(etat==='ok'?'#2d7a3e':(etat==='ko'?'var(--color-primary)':'var(--color-text-muted)')),
+      viesGo:()=>this.viesVerifier(vat) }; }
   /* ═══ CRM DE PROSPECTION ═══════════════════════════════════════════════
      Un tableau par campagne : la marque décide la campagne, le franchisé y
      pose ses cibles et les fait avancer. Prendre une carte, poser sur une
@@ -11444,7 +11497,8 @@ class Component extends DCLogic {
           deptOpts:[{value:'',label:'— Département (facultatif) —'},...dOpts.map(x=>({value:String(x.d.id!=null?x.d.id:x.di),label:x.d.name||x.d.dept||'Département'}))],
           deptSet:(e)=>{ const v=e.target.value; const x=dOpts.find(y=>String(y.d.id!=null?y.d.id:y.di)===v)||null;
             postAtt(c.id,{department_id:x&&x.d.id!=null?x.d.id:null},{department_id:x&&x.d.id!=null?x.d.id:null,department:x?(x.d.name||x.d.dept):null}); },
-          rowStyle:'display:grid;grid-template-columns:minmax(190px,1.4fr) 150px minmax(200px,1.2fr) minmax(240px,1.3fr) 150px 100px auto;align-items:center;column-gap:20px;padding:16px 24px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
+          ...this.viesCellule(c),
+          rowStyle:'display:grid;grid-template-columns:240px 150px 170px 230px 300px 150px 100px 150px;align-items:center;column-gap:20px;padding:16px 24px;border-bottom:.5px solid var(--color-border-tertiary)'+(Number(c.blocked)?';opacity:.55':''),
           // « Suppression » = soft delete (client.active=0) avec confirmation
           // inline (pas de vraie destruction de la ligne en base).
           delAsk:S.bcDelAsk===c.id,
@@ -11477,6 +11531,7 @@ class Component extends DCLogic {
           +';border-radius:20px;padding:8px 12px;font:600 11.5px var(--font-ui);cursor:pointer;white-space:nowrap;flex:none';
         const togStyle=(on,onBg,onC)=>'border:1.5px solid '+(on?onC:'var(--color-border-secondary)')+';background:'+(on?onBg:'transparent')+';color:'+(on?onC:'var(--color-text-muted)')+';border-radius:8px;padding:7px 13px;font:600 11.5px var(--font-ui);cursor:pointer;flex:none';
         const base={ isB2bClients:screen==='b2bClients',
+          bcViesTout:()=>this.viesLot((bcList||[]).map(x=>x.tva||'')),
           bcQ:S.bcQ||'',bcSetQ:(e)=>this.setState({bcQ:e.target.value}),
           bcSelStyle:'border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 10px;font:500 12px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:180px',
           bcDept:S.bcDept||'',bcSetDept:(e)=>this.setState({bcDept:e.target.value}),bcDeptOpts:opts(distinct('department'),'— Département —'),
