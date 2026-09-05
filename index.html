@@ -272,6 +272,7 @@
            semaine — il quitte donc le bloc « Paramétrage ». -->
       <div style="margin:14px 8px 6px;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--color-text-muted)">{{ t.navDeveloppement }}</div>
       <button onClick="{{ nav.crm }}" title="{{ navTitles.crm }}" style="{{ navStyles.crm }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="5.5" height="16" rx="1.4"/><rect x="9.7" y="4" width="5.5" height="11" rx="1.4"/><rect x="16.4" y="4" width="4.6" height="7" rx="1.4"/></svg><span>{{ t.navCrm }}</span></button>
+      <button onClick="{{ nav.crmRapport }}" title="{{ navTitles.crmRapport }}" style="{{ navStyles.crmRapport }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 4-6"/></svg><span>{{ t.navCrmRapport }}</span></button>
       <button onClick="{{ toggleParams }}" style="{{ paramsHeadStyle }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="{{ paramsChevStyle }}"><path d="M9 6l6 6-6 6"/></svg><span style="flex:1;font:600 10px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase">Paramétrage</span></button>
       <sc-if value="{{ paramsOpen }}" hint-placeholder-val="{{ true }}">
       <sc-for list="{{ navGroups }}" as="g" hint-placeholder-count="6">
@@ -1653,6 +1654,75 @@
           <sc-if value="{{ bcHasMore }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 24px"><button onClick="{{ bcMore }}" class="btn-secondary" style="width:100%;font-size:12px">{{ bcMoreTxt }}</button></div></sc-if>
           </div>
         </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== RAPPORT DE CAMPAGNE =====================
+           Ce que la campagne a coûté en gestes, ce qu'elle a gagné, et ce que
+           les gagnés ont commandé depuis. Aucune estimation. -->
+      <sc-if value="{{ isCrmRapport }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <select onChange="{{ rapSetCamp }}" value="{{ rapCamp }}" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 11px;font:500 13px var(--font-ui);background:var(--color-surface);color:var(--color-text);min-width:280px">
+            <sc-for list="{{ rapCampOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+          <span style="font:600 13px var(--font-ui);flex:1;min-width:0">{{ rapTitre }}</span>
+          <button onClick="{{ rapRecharger }}" class="btn-secondary" style="font-size:12px">Recalculer</button>
+        </div>
+        <sc-if value="{{ rapPret }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px">
+          <sc-for list="{{ rapKpis }}" as="k" hint-placeholder-count="6">
+            <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 16px">
+              <div style="font:600 9.5px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted)">{{ k.k }}</div>
+              <div style="font:400 25px var(--font-title,Georgia),serif;margin:6px 0 2px">{{ k.v }}</div>
+              <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ k.s }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:18px 20px">
+          <div style="font:600 14px var(--font-ui);margin-bottom:2px">L’entonnoir</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:8px">Chaque étape, et ce qui en sort. Le décrochage se lit à l’œil.</div>
+          <div style="display:flex;align-items:flex-end;gap:6px;height:120px;margin-bottom:4px">
+            <sc-for list="{{ rapEntonnoir }}" as="e" hint-placeholder-count="6"><div style="flex:1;display:flex;align-items:flex-end;height:100%"><div style="{{ e.barre }};width:100%">{{ e.n }}</div></div></sc-for>
+          </div>
+          <div style="display:flex;font:600 10px var(--font-ui);color:var(--color-text-muted);text-align:center">
+            <sc-for list="{{ rapEntonnoir }}" as="e" hint-placeholder-count="6"><span style="flex:1">{{ e.label }}</span></sc-for>
+          </div>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+          <div style="padding:14px 18px;border-bottom:.5px solid var(--color-border-tertiary);font:600 14px var(--font-ui)">Les clients gagnés, et ce qu’ils commandent depuis</div>
+          <div style="display:grid;grid-template-columns:1.6fr 90px 110px 130px 110px;gap:12px;padding:10px 18px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)">
+            <span class="t-admin-label">Client</span><span class="t-admin-label">Gagné le</span><span class="t-admin-label">Commandes</span><span class="t-admin-label">CA depuis</span><span class="t-admin-label">Dernière</span>
+          </div>
+          <sc-for list="{{ rapClients }}" as="c" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:1.6fr 90px 110px 130px 110px;gap:12px;padding:11px 18px;border-bottom:.5px solid var(--color-border-tertiary);align-items:center">
+              <div><div style="font:600 12.5px var(--font-ui)">{{ c.nom }}</div><div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">{{ c.note }}</div></div>
+              <span style="font:500 12px var(--font-ui);color:var(--color-text-muted)">{{ c.gagneLe }}</span>
+              <span style="font:500 12px var(--font-ui);font-variant-numeric:tabular-nums">{{ c.commandes }}</span>
+              <span style="font:600 12.5px var(--font-ui);font-variant-numeric:tabular-nums">{{ c.ca }}</span>
+              <span style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ c.derniere }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ rapClientsVide }}" hint-placeholder-val="{{ false }}"><div style="padding:16px 18px;font:400 12px var(--font-ui);color:var(--color-text-muted)">Aucun client gagné sur cette campagne pour l’instant.</div></sc-if>
+          <div style="padding:12px 18px;font:400 10.5px/1.5 var(--font-ui);color:var(--color-text-muted)">{{ rapNote }}</div>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;overflow:hidden">
+          <div style="padding:14px 18px;border-bottom:.5px solid var(--color-border-tertiary);font:600 14px var(--font-ui)">Comparer les campagnes</div>
+          <div style="display:grid;grid-template-columns:1.6fr 80px 80px 80px 80px 90px 90px 120px;gap:10px;padding:10px 16px;border-bottom:.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)">
+            <span class="t-admin-label">Campagne</span><span class="t-admin-label">Cibles</span><span class="t-admin-label">Mails</span><span class="t-admin-label">Appels</span><span class="t-admin-label">Visites</span><span class="t-admin-label">Gagnés</span><span class="t-admin-label">Transfo.</span><span class="t-admin-label">CA développé</span>
+          </div>
+          <sc-for list="{{ rapLignes }}" as="l" hint-placeholder-count="3">
+            <div onClick="{{ l.voir }}" style="{{ l.style }};cursor:pointer">
+              <span style="font:600 12.5px var(--font-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.nom }}</span>
+              <span style="font-variant-numeric:tabular-nums">{{ l.cibles }}</span><span style="font-variant-numeric:tabular-nums">{{ l.mail }}</span>
+              <span style="font-variant-numeric:tabular-nums">{{ l.tel }}</span><span style="font-variant-numeric:tabular-nums">{{ l.visite }}</span>
+              <span style="font-variant-numeric:tabular-nums;color:#2d7a3e;font-weight:600">{{ l.gagnes }}</span>
+              <span style="font-variant-numeric:tabular-nums">{{ l.transfo }}</span><span style="font-variant-numeric:tabular-nums;font-weight:600">{{ l.ca }}</span>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+        <sc-if value="{{ rapMsg }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted)">{{ rapMsg }}</div></sc-if>
       </div>
       </sc-if>
 
@@ -6582,6 +6652,62 @@ class Component extends DCLogic {
       crmAgVide:!jours.some(j=>j.events.length),
       crmAgTotal:String(avec.length)+' action(s) datée(s) sur le tableau' };
   }
+  /* LE RAPPORT DE CAMPAGNE. Ce que la campagne a coûté en gestes, ce qu'elle
+     a gagné, et ce que les gagnés ont commandé DEPUIS leur gain. Aucune
+     estimation : un gain sans client rattachable vaut zéro, et la ligne le
+     dit plutôt que de faire semblant. */
+  crmRapCharger(force){ const fr=window.__FR||{}; if(!fr.base) return;
+    if(this._rapBusy) return; if(this.state.crmRap&&!force) return;
+    this._rapBusy=true;
+    fetch(fr.base+'/franchisee/crm-rapport'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{headers:FRH(),credentials:'omit'})
+      .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{ this._rapBusy=false;
+        if(st===200&&j&&j.ok) this.setState({crmRap:j,crmRapErr:''});
+        else this.setState({crmRapErr:(j&&j.error)||('Rapport indisponible (HTTP '+st+')')}); })
+      .catch(()=>{ this._rapBusy=false; this.setState({crmRapErr:'Réseau indisponible'}); }); }
+  crmRapVals(){
+    const S=this.state; const base={isCrmRapport:S.screen==='crmRapport'};
+    if(S.screen!=='crmRapport') return base;
+    this.crmRapCharger(false); this.crmCharger(false);
+    const D=S.crmRap||null;
+    if(!D) return {...base,rapPret:false,rapMsg:S.crmRapErr||'Lecture des campagnes…',rapKpis:[],rapLignes:[],rapClients:[],rapEntonnoir:[],rapCampOpts:[]};
+    const camps=D.campagnes||[];
+    const sel=S.rapCamp!==undefined?S.rapCamp:(camps[0]?String(camps[0].campagneId||'0'):'');
+    const c=camps.find(x=>String(x.campagneId||'0')===String(sel))||camps[0]||null;
+    const eur=v=>this.eur?this.eur(v):(Math.round(v).toLocaleString('fr-BE')+' €');
+    const pct=(a,b)=>b>0?Math.round(a/b*1000)/10+' %':'—';
+    const clients=(D.clients||[]).filter(x=>!c||String(x.campagneId||'0')===String(c.campagneId||'0'));
+    const etapes=c?[['Cibles',c.cibles,'#8b8177'],['Mails',c.mail,'#2a5a9e'],['Appels',c.tel,'#C17A2A'],
+      ['Visites',c.visite,'#6b4fa8'],['Bons remis',c.bon,'#b26a00'],['Gagnés',c.gagnes,'#2d7a3e']]:[];
+    const maxE=Math.max(1,...etapes.map(e=>e[1]));
+    return {...base, rapPret:true, rapMsg:S.crmRapErr||'',
+      rapCampOpts:camps.map(x=>({value:String(x.campagneId||'0'),label:x.campagneNom+' · '+x.cibles+' cible(s)'})),
+      rapCamp:String(c?(c.campagneId||'0'):''), rapSetCamp:(e)=>this.setState({rapCamp:e.target.value}),
+      rapTitre:c?c.campagneNom:'—',
+      rapKpis:c?[
+        {k:'Cibles',v:String(c.cibles),s:'bureaux et clients posés'},
+        {k:'Mails',v:String(c.mail),s:pct(c.mail,c.cibles)+' des cibles'},
+        {k:'Appels',v:String(c.tel),s:pct(c.tel,c.cibles)+' des cibles'},
+        {k:'Visites',v:String(c.visite),s:pct(c.visite,c.cibles)+' des cibles'},
+        {k:'Clients gagnés',v:String(c.gagnes),s:c.transfo+' % de transformation',vert:true},
+        {k:'CA développé',v:D.caLisible?eur(c.ca):'n.d.',s:D.caLisible?(c.commandes+' commande(s) depuis le gain'):'commandes non rattachables'}]:[],
+      rapEntonnoir:etapes.map(([lab,n,col])=>({label:lab,n:String(n),
+        barre:'height:'+Math.max(4,Math.round(n/maxE*100))+'%;background:'+col+';border-radius:8px 8px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:5px;font:700 11px var(--font-ui);color:#fff'})),
+      rapClients:clients.map(x=>({nom:x.nom,
+        gagneLe:x.gagneLe?String(x.gagneLe).slice(8,10)+'/'+String(x.gagneLe).slice(5,7):'—',
+        commandes:String(x.commandes),
+        ca:x.lie?eur(x.ca):'—',
+        derniere:x.derniere?String(x.derniere).slice(8,10)+'/'+String(x.derniere).slice(5,7):'—',
+        note:x.lie?'':'pas de client rattaché — aucune commande mesurable'})),
+      rapClientsVide:!clients.length,
+      rapLignes:camps.map(x=>({nom:x.campagneNom,cibles:String(x.cibles),mail:String(x.mail),tel:String(x.tel),
+        visite:String(x.visite),gagnes:String(x.gagnes),transfo:x.transfo+' %',ca:D.caLisible?eur(x.ca):'n.d.',
+        actif:String(x.campagneId||'0')===String(c?(c.campagneId||'0'):''),
+        style:'display:grid;grid-template-columns:1.6fr 80px 80px 80px 80px 90px 90px 120px;gap:10px;align-items:center;padding:11px 16px;border-bottom:.5px solid var(--color-border-tertiary);'+(String(x.campagneId||'0')===String(c?(c.campagneId||'0'):'')?'background:var(--color-background-secondary)':''),
+        voir:()=>this.setState({rapCamp:String(x.campagneId||'0')})})),
+      rapNote:D.caLisible?'CA lu sur les commandes du webshop rattachées à ces clients depuis leur date de gain. Un client gagné sans commande apparaît à zéro : gagné sur le papier, pas dans la caisse.'
+        :'Les commandes ne sont pas rattachables dans cette base : le CA développé ne peut pas être mesuré, il n’est donc pas affiché.',
+      rapRecharger:()=>{ this.setState({crmRap:null}); this.crmRapCharger(true); } };
+  }
   crmVals(){
     const S=this.state, D=this.state.crm||null;
     const SRV=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
@@ -7391,6 +7517,7 @@ class Component extends DCLogic {
     navFidelite:{FR:'Fidélité',NL:'Loyaliteit',EN:'Loyalty',PL:'Lojalność',DE:'Treue'},
     navDeveloppement:{FR:'Développement',NL:'Ontwikkeling',EN:'Development',PL:'Rozwój',DE:'Entwicklung'},
     navCrm:{FR:'Prospection (CRM)',NL:'Prospectie (CRM)',EN:'Prospecting (CRM)',PL:'Prospecting (CRM)',DE:'Akquise (CRM)'},
+    navCrmRapport:{FR:'Rapport de campagne',NL:'Campagnerapport',EN:'Campaign report',PL:'Raport kampanii',DE:'Kampagnenbericht'},
     navAvis:{FR:'Avis clients',NL:'Klantbeoordelingen',EN:'Customer reviews',PL:'Opinie klientów',DE:'Kundenbewertungen'},
     avisSub:{FR:'Notes et commentaires laissés par les clients de la boutique',
              NL:'Beoordelingen en opmerkingen van de klanten van de winkel',
@@ -7504,8 +7631,8 @@ class Component extends DCLogic {
   // et écrans du bloc « Paramétrage ». Ces deux listes existaient déjà dans le
   // rendu ; elles remontent ici pour être lues AUSSI par les adresses — une
   // seule définition, sinon un écran ajouté au menu n'aurait pas d'adresse.
-  NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis','crm'];
-  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','tabletteKitchen','crm'];
+  NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis','crm','crmRapport'];
+  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','tabletteKitchen','crm','crmRapport'];
 
   // Groupes dépliants du menu « Paramétrage ». Définis ici et non dans le rendu,
   // parce que l'adresse doit savoir quel groupe déplier à l'arrivée sur un de
@@ -8554,11 +8681,12 @@ class Component extends DCLogic {
     ['FR','NL','EN','DE','PL'].forEach(l=>{ setLang[l]=()=>this.setState({lang:l}); langStyles[l]=this.langStyle(l); });
     const langList=['FR','NL','EN','DE','PL'].map(l=>({code:l,pick:setLang[l],style:langStyles[l]}));
     const t={ navTdb:this.tr('navTdb'),navPrep:this.tr('navPrep'),navTournees:this.tr('navTournees'),navSuivi:this.tr('navSuivi'),navClients:this.tr('navClients'),navValidations:this.tr('navValidations'),navZones:this.tr('navZones'),navIncidents:this.tr('navIncidents'),navRentabilite:this.tr('navRentabilite'),navParams:this.tr('navParams'),navAvis:this.tr('navAvis'),navFidelite:this.tr('navFidelite'),
-      navDeveloppement:this.tr('navDeveloppement'),navCrm:this.tr('navCrm') };
+      navDeveloppement:this.tr('navDeveloppement'),navCrm:this.tr('navCrm'),navCrmRapport:this.tr('navCrmRapport') };
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',bureauAssortiment:'Assortiment d\'un bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
-      crm:'Prospection (CRM) — aide à la prospection',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
-    const subs={crm:'Choisir la campagne, poser ses cibles, les faire avancer jusqu’au rendez-vous',avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
+      crm:'Prospection (CRM) — aide à la prospection',crmRapport:'Rapport de campagne',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
+    const subs={crm:'Choisir la campagne, poser ses cibles, les faire avancer jusqu’au rendez-vous',
+      crmRapport:'Gestes, clients gagnés et chiffre développé depuis le gain',avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',bureauAssortiment:'Produits proposés et affichage des prix — pour un bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
       commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
@@ -11388,7 +11516,7 @@ class Component extends DCLogic {
       ...profileVals,
       isLivProcess,livSteps,grpTabsOn,grpTabs,grpTabsTitre,
       crmInp:'width:100%;box-sizing:border-box;margin-top:5px;padding:9px 11px;border:.5px solid var(--color-border-secondary);border-radius:9px;font:400 12.5px var(--font-ui);color:var(--color-text);background:var(--color-surface)',
-      ...this.crmVals(),
+      ...this.crmVals(), ...this.crmRapVals(),
       pencilStyle:'background:transparent;border:.5px solid var(--color-border-tertiary);border-radius:7px;cursor:pointer;color:var(--color-text-muted);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none',
       paramsOpen,toggleParams,paramsHeadStyle,paramsChevStyle,
       formOpen:!!fCfg, formTitle:fCfg?fCfg.title:'', formTable:fCfg?fCfg.table:'', formSaveLabel:fCfg?fCfg.save:'', formFields,
