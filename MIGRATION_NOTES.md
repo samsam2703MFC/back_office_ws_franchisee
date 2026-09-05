@@ -603,13 +603,55 @@ ceux de ses bureaux — le chauffeur qui livre trois sociétés dans la même zo
 s'y arrête trois fois ; une zone sans bureau garde le standard réseau
 (`DROP_STD`).
 
+### Les trois écrans partagent enfin une clé : `siteKey()`
+
+L'écran **Sites**, l'écran **Offices** (étape 3) et l'assistant tournée
+groupaient chacun à leur façon — les deux premiers par **adresse**, l'assistant
+par ligne. `siteKey(r)` est désormais la seule définition : le **nom** de la
+zone, l'adresse à défaut, `''` quand la ligne n'a ni l'un ni l'autre (à
+l'appelant de décider). `twSiteKey()` et le `bKey()` d'Offices s'y ramènent.
+
+Sur l'écran **Sites**, une vignette = une zone. Elle porte les adresses de la
+zone (la première, puis « +N autre(s) adresse(s) »), les temps d'accès
+réellement saisis (« 6′ / 8′ » quand les lignes divergent, plutôt qu'une valeur
+élue au hasard) et la **liste des sociétés desservies**, chacune à son adresse.
+Rattacher une tournée, déplacer la zone par ⠿ et supprimer portent sur
+**toutes** ses lignes. Sur l'écran **Offices**, une carte site = une zone, et le
+sélecteur « → Assigner à un site » n'offre plus la même zone N fois.
+
+### Deux bugs de fond corrigés au passage
+
+**1. Écriture par indice sur une liste filtrée.** L'écran Sites travaille sur
+`sitesActifs()` — filtré — mais écrivait dans la table brute avec l'indice de
+la liste affichée (`tourSet`, `del`, `dndSite`, et `submitForm` via
+`formIndex`). Un seul site **désactivé** plus haut dans la table décalait tout.
+Reproduit au navigateur sur la version d'avant, avec un site désactivé en tête :
+rattacher une tournée l'écrivait sur le site désactivé (la zone visée ne
+bougeait pas), et supprimer « Parc de Gembloux » effaçait la ligne d'une
+**autre** zone en laissant la cible en place. Tout passe désormais par
+l'**identifiant** de ligne ; l'indice ne reste qu'en repli pour les tables sans
+`id`.
+
+**2. Renommer une zone la coupait en deux.** Le nom identifie le site : ne le
+changer que sur la ligne éditée aurait fait deux arrêts d'un seul, avec les
+sociétés réparties entre les deux. Le nom et la tournée se propagent donc à
+toutes les lignes de la zone ; l'adresse, l'étage, le temps d'accès et la
+société restent propres à la ligne.
+
+### L'alerte « sites en double » ne crie plus au loup
+
+Elle signalait **toute** répétition d'adresse. Or plusieurs lignes à la même
+adresse sont la représentation normale de plusieurs sociétés dans un immeuble :
+l'alerte envoyait « nettoyer » un paramétrage correct. Elle ne compte plus que
+les vrais doublons — la **même société deux fois sur la même zone**, ou deux
+lignes sans société.
+
 ### Ce qui n'a pas changé
 
-L'écran **Sites (buildings)** groupe toujours par **adresse normalisée** (« UNE
-vignette par BÂTIMENT »), et `sitesData()` fait de même. Un zoning à trois
-adresses y apparaît donc encore comme trois sites. Le passage de cet écran au
-grain « zone » n'est pas fait : il touche les vignettes, les tags, les cartes
-et les compteurs.
+`sitesData()` groupe toujours par **adresse** : c'est elle qui alimente les
+cartes, la chronologie et les ETA de l'écran Tournées, où un bureau à plus de
+60 m de son site devient déjà un arrêt à part entière (`tourPoints`). Le grain
+y est donc « point de livraison », volontairement plus fin que la zone.
 
 Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : un zoning
 à trois sociétés et trois adresses → 1 arrêt ; l'adresse propre de chaque
