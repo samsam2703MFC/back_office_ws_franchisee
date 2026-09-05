@@ -545,45 +545,74 @@ Vérifié en local contre le VRAI `erp_alias.php` et un faux ERP : jeton posé,
 jeton refusé (401), ERP injoignable, ERP non configuré — et aucun montant,
 client, référence ni jeton dans la sortie.
 
-## Un site, plusieurs bureaux (assistant tournée, étape 3)
+## Un site est un ZONING, et il a plusieurs bureaux (assistant tournée)
 
-`ws_office_delivery_sites` porte **une ligne par couple (site, bureau)** : un
-immeuble qui livre trois sociétés y occupe trois lignes, avec le même nom et la
-même adresse. C'est la forme que `sitesData()` lit déjà — elle regroupe par
-adresse et publie `offices[]` — mais l'assistant tournée, lui, lisait ces lignes
-telles quelles. Conséquences vues à l'écran : le même bâtiment listé deux fois
-dans les arrêts, un menu déroulant qui n'acceptait **qu'un** bureau par ligne,
-« 3 site(s) » pour deux bâtiments, et trois trajets, trois temps d'accès et
-trois temps de dépôt comptés dans l'ETA pour un seul arrêt. L'ordre d'arrêts
-proposé par Google s'écrivait sur ces doublons.
+Un **site n'est pas un bâtiment** : c'est une **zone économique** — un zoning,
+un parc d'activité, un immeuble — où le camion s'arrête **une fois** pour
+toutes les sociétés qui s'y trouvent, chacune à **son** adresse.
 
-L'assistant regroupe désormais les lignes d'un même site (même nom **et** même
-adresse, sans accents ni casse ; une ligne sans nom ni adresse n'est jamais
-fusionnée) en **un arrêt** qui porte :
+`ws_office_delivery_sites` porte une ligne par **couple (site, bureau)** :
+l'onboarding d'un bureau (`POST /franchisee/onboard-office`, champ `adr`) y
+écrit une ligne avec l'adresse de CE bureau et le nom du site où il se trouve.
+Un zoning à trois sociétés y occupe donc trois lignes, **de même nom et
+d'adresses distinctes**.
 
-- `officeIds[]` — les bureaux livrés à ce site, ajoutés et retirés un par un ;
-- `rowIds[]` / `rowByOffice{}` — les lignes de la table qui le composent.
+L'assistant tournée lisait ces lignes telles quelles. À l'écran : le même
+zoning listé trois fois dans les arrêts, un menu déroulant qui n'acceptait
+qu'**un** bureau par ligne, « 3 site(s) » pour une seule zone. Et dans l'ETA,
+trois trajets, trois temps d'accès et trois temps de dépôt pour un seul arrêt ;
+l'ordre d'arrêts proposé par Google s'écrivait sur ces doublons.
+
+### Ce qui identifie un site : son nom
+
+C'est le seul champ que ses lignes partagent — l'adresse, non. Les lignes de
+même nom (sans accents ni casse) sont regroupées en **un arrêt** qui porte :
+
+- `officeIds[]` — les sociétés desservies, ajoutées et retirées une par une ;
+- `rowIds[]` / `rowByOffice{}` — les lignes de la table qui le composent ;
+- `rowAdr{}` — **l'adresse propre de chaque ligne**, conservée telle quelle ;
+- `adrDirty` — vrai seulement si l'adresse de l'arrêt a été **réécrite** à
+  l'étape 2.
+
+À défaut de nom, l'adresse sert de clé ; sans nom **ni** adresse, deux lignes
+ne sont jamais fusionnées.
+
+### Ce qui est réécrit, et ce qui ne l'est pas
 
 À l'enregistrement, l'arrêt est **redéployé** en lignes : une par bureau, une
-seule s'il n'en a aucun. Chaque bureau reprend la ligne qui le portait déjà
-(mise à jour, pas suppression + création) ; un bureau nouvellement rattaché
-prend une ligne libre du site, sinon une ligne neuve. Les lignes qu'aucun
-bureau ne réclame plus partent dans `removeSites`.
+seule s'il n'en a aucun. Chaque bureau reprend la ligne qui le portait déjà —
+mise à jour, pas suppression + création — **avec son adresse**. Écrire
+l'adresse de référence de la zone sur toutes ses lignes remplacerait l'adresse
+de livraison de chaque société par celle de sa voisine.
+
+- **Bureau déjà rattaché** → sa ligne, son adresse, inchangées.
+- **Bureau nouvellement rattaché** → une ligne neuve avec l'adresse que
+  `ws_offices` lui connaît (sa vraie porte) ; si elle est inconnue, l'adresse
+  de référence de la zone, qui situe au moins le bureau.
+- **Adresse de l'arrêt réécrite à l'étape 2** (`adrDirty`) → elle se porte sur
+  toutes les lignes du site. C'est un choix explicite, et l'étape 3 l'annonce.
+- **Ligne qu'aucun bureau ne réclame plus** → `removeSites`. Annoncé aussi,
+  avant l'enregistrement, jamais après.
 
 **Le corps posté à `POST /franchisee/tour-wizard` garde exactement la forme que
 le serveur connaît** (`sites[]` avec `id` et `officeId`) : il y a seulement
 autant d'entrées que de couples. Aucun changement côté WebShop.
 
-Deux conséquences visibles, voulues :
+Autre conséquence voulue : le temps de dépôt d'un arrêt est la **somme** de
+ceux de ses bureaux — le chauffeur qui livre trois sociétés dans la même zone
+s'y arrête trois fois ; une zone sans bureau garde le standard réseau
+(`DROP_STD`).
 
-- le temps de dépôt d'un arrêt est la **somme** de ceux de ses bureaux (le
-  chauffeur qui livre trois sociétés dans le même hall s'y arrête trois fois) ;
-  un site sans bureau garde le standard réseau (`DROP_STD`) ;
-- un site déjà dédoublé en base perd ses lignes en trop à l'enregistrement.
-  Ce n'est pas silencieux : l'étape 3 l'annonce, ligne par ligne, **avant** que
-  l'on enregistre.
+### Ce qui n'a pas changé
 
-Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : 3 lignes
-→ 2 arrêts, rattachement d'un second bureau, détachement, pied de modale, et le
-corps réellement posté — 3 lignes pour 2 sites, `removeSites` vide, la ligne en
-double reprise pour le bureau ajouté.
+L'écran **Sites (buildings)** groupe toujours par **adresse normalisée** (« UNE
+vignette par BÂTIMENT »), et `sitesData()` fait de même. Un zoning à trois
+adresses y apparaît donc encore comme trois sites. Le passage de cet écran au
+grain « zone » n'est pas fait : il touche les vignettes, les tags, les cartes
+et les compteurs.
+
+Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : un zoning
+à trois sociétés et trois adresses → 1 arrêt ; l'adresse propre de chaque
+société affichée sous son nom ; rattachement d'une société qui a son adresse
+(elle la garde) et d'une autre qui n'en a pas (repli sur la référence de la
+zone) ; détachement ; et le corps réellement posté, ligne par ligne.

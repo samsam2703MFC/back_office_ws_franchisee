@@ -3465,7 +3465,7 @@
 
         <!-- 2 · SITES -->
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px 20px">
-          <div class="tw-head" style="justify-content:space-between;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:12px"><span class="tw-num">2</span><div><div class="tw-title">Sites (arrêts), dans l'ordre de la tournée</div><div class="tw-sub">Un site = un bâtiment desservi. L'adresse se choisit dans la liste Google : rue, n°, code postal, localité et position d'un coup.</div></div></div>
+          <div class="tw-head" style="justify-content:space-between;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:12px"><span class="tw-num">2</span><div><div class="tw-title">Sites (arrêts), dans l'ordre de la tournée</div><div class="tw-sub">Un site = une zone desservie — un zoning, un parc d'activité, un immeuble — où le camion s'arrête une fois pour tous ses bureaux. L'adresse est le point de référence de l'arrêt : celle que l'itinéraire vise. Chaque bureau garde la sienne à l'étape 3.</div></div></div>
             <div style="display:flex;gap:8px;align-items:center;flex:none"><sc-if value="{{ twExistHas }}" hint-placeholder-val="{{ false }}"><select value="{{ twExist }}" onChange="{{ twExistPick }}" class="tw-in" style="width:auto;max-width:340px"><option value="">Reprendre un site existant…</option><sc-for list="{{ twExistOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></sc-if><button type="button" onClick="{{ twAddSite }}" class="btn-primary" style="font-size:12px">+ Nouveau site</button></div></div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
             <sc-for list="{{ twSites }}" as="s" hint-placeholder-count="2">
@@ -3488,13 +3488,13 @@
                 </div>
               </div>
             </sc-for>
-            <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Aucun site sur cette tournée. « + Nouveau site », ou reprenez un site existant.</div></sc-if>
+            <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Aucune zone sur cette tournée. « + Nouveau site », ou reprenez un site existant.</div></sc-if>
           </div>
         </div>
 
         <!-- 3 · BUREAUX -->
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px 20px">
-          <div class="tw-head"><span class="tw-num">3</span><div><div class="tw-title">Bureaux livrés à chaque site</div><div class="tw-sub">Les bureaux (sociétés) desservis à chaque arrêt — un site en compte autant qu'il en héberge. Un site sans bureau n'est pas livrable — le lien se fait ici, jamais deviné.</div></div></div>
+          <div class="tw-head"><span class="tw-num">3</span><div><div class="tw-title">Bureaux livrés à chaque site</div><div class="tw-sub">Les sociétés desservies à chaque arrêt : une zone en héberge autant qu'elle en compte, chacune à son adresse. Un site sans aucun bureau n'est pas livrable — le lien se fait ici, jamais deviné.</div></div></div>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
             <sc-for list="{{ twSiteOffices }}" as="s" hint-placeholder-count="2">
               <div style="display:grid;grid-template-columns:34px 1.4fr 2fr;gap:10px;align-items:start;border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 14px">
@@ -3502,12 +3502,13 @@
                 <div style="min-width:0;padding-top:3px"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.address }}</div></div>
                 <div style="min-width:0;display:flex;flex-direction:column;gap:6px">
                   <sc-for list="{{ s.offices }}" as="o" hint-placeholder-count="1">
-                    <span style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--color-primary);background:var(--color-background-secondary);color:var(--color-primary);border-radius:8px;padding:7px 10px;font:600 12px var(--font-ui)"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span><span title="Temps de dépôt de ce bureau — il entre dans l'heure d'arrivée des arrêts suivants" style="flex:none;font-weight:400;color:var(--color-text-muted)">{{ o.drop }}</span><button type="button" onClick="{{ o.remove }}" title="Détacher ce bureau du site" style="border:none;background:transparent;color:var(--color-primary);cursor:pointer;font-size:15px;line-height:1;padding:0;flex:none">×</button></span>
+                    <span style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--color-primary);background:var(--color-background-secondary);color:var(--color-primary);border-radius:8px;padding:7px 10px;font:600 12px var(--font-ui)"><span style="flex:1;min-width:0"><span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span><sc-if value="{{ o.adrShow }}" hint-placeholder-val="{{ false }}"><span title="Adresse de livraison de ce bureau dans la zone" style="display:block;font:400 10.5px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.adr }}</span></sc-if></span><span title="Temps de dépôt de ce bureau — il entre dans l'heure d'arrivée des arrêts suivants" style="flex:none;font-weight:400;color:var(--color-text-muted)">{{ o.drop }}</span><button type="button" onClick="{{ o.remove }}" title="Détacher ce bureau du site" style="border:none;background:transparent;color:var(--color-primary);cursor:pointer;font-size:15px;line-height:1;padding:0;flex:none">×</button></span>
                   </sc-for>
                   <sc-if value="{{ s.noOffice }}" hint-placeholder-val="{{ false }}"><div style="font:500 12px var(--font-ui);color:var(--color-text-muted);padding:5px 0 1px">— Aucun bureau (site seul, non livrable) —</div></sc-if>
                   <sc-if value="{{ s.canAdd }}" hint-placeholder-val="{{ true }}"><select value="" onChange="{{ s.addOffice }}" class="tw-in"><option value="">{{ s.addLabel }}</option><sc-for list="{{ s.addOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></sc-if>
                   <sc-if value="{{ s.allTaken }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Tous les bureaux connus sont déjà rattachés à ce site.</div></sc-if>
                   <sc-if value="{{ s.dblShow }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px/1.5 var(--font-ui);color:var(--color-primary)">{{ s.dblTxt }}</div></sc-if>
+                  <sc-if value="{{ s.adrShow }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px/1.5 var(--font-ui);color:var(--color-primary)">{{ s.adrTxt }}</div></sc-if>
                 </div>
               </div>
             </sc-for>
@@ -4677,37 +4678,55 @@ class Component extends DCLogic {
      tables sont RELUES depuis l'API — jamais mises à jour de mémoire. */
   twVide(){ return {open:false,tourId:null,name:'',start:'06:00',max:'',vehicule:'',ret:true,forfait:'',pricePerKm:'',
     days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false},postcodes:[],cpQ:'',sites:[],removed:[],route:null,routeBusy:false,routeErr:'',saving:false,err:'',exist:'',opt:null,optBusy:false,optErr:''}; }
-  /* UN SITE, PLUSIEURS BUREAUX. `ws_office_delivery_sites` porte une ligne par
-     COUPLE (site, bureau) : un bâtiment qui livre trois sociétés y occupe trois
-     lignes, avec la même adresse et le même nom. L'assistant lisait ces lignes
-     telles quelles — le même immeuble revenait trois fois dans les arrêts, il
-     comptait trois trajets, trois temps d'accès et trois temps de dépôt, et
-     l'ordre d'arrêts proposé par Google s'écrivait sur des doublons. Les lignes
-     d'un même site sont donc REGROUPÉES en un arrêt qui porte la liste de ses
-     bureaux (`officeIds`) et l'identifiant de chacune de ses lignes (`rowIds`,
-     `rowByOffice`) ; l'enregistrement les redéploie ligne par ligne, de sorte
-     que la table garde exactement la forme que le serveur lui connaît. */
+  /* UN SITE EST UN ZONING, PAS UN BÂTIMENT — une zone économique qui héberge
+     PLUSIEURS BUREAUX, à des adresses différentes à l'intérieur de la zone.
+     `ws_office_delivery_sites` porte une ligne par COUPLE (site, bureau) :
+     l'onboarding d'un bureau y écrit une ligne avec l'adresse de CE bureau et
+     le nom du site sur lequel il se trouve. Un zoning à trois sociétés y occupe
+     donc trois lignes, de même nom et d'adresses distinctes.
+
+     L'assistant lisait ces lignes telles quelles : le même zoning revenait
+     trois fois dans les arrêts, avec un menu déroulant qui n'acceptait qu'UN
+     bureau, et l'ETA lui comptait trois trajets, trois temps d'accès et trois
+     temps de dépôt. L'ordre d'arrêts proposé par Google s'écrivait sur ces
+     doublons.
+
+     Ce qui identifie un site, c'est donc son NOM — le zoning — et non son
+     adresse : c'est le seul champ que ses lignes partagent. Les lignes de même
+     nom sont regroupées en UN arrêt qui porte la liste de ses bureaux
+     (`officeIds`), l'identifiant de chacune de ses lignes (`rowIds`,
+     `rowByOffice`) et l'ADRESSE PROPRE de chaque ligne (`rowAdr`).
+     L'enregistrement les redéploie ligne par ligne : la table garde exactement
+     la forme que le serveur lui connaît, et chaque bureau garde son adresse. */
   twSiteKey(r){ const n=v=>String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
     const nom=n((r.name&&r.name!=='—')?r.name:''), adr=n((r.adr&&r.adr!=='—')?r.adr:'');
-    // Sans nom NI adresse, rien ne dit que deux lignes sont le même site : elles restent séparées.
-    return (nom||adr)?(nom+'|'+adr):('#'+(r.id!=null?r.id:Math.random().toString(36).slice(2))); }
-  twSiteDe(r){ const oid=(r.office_client_id!=null?String(r.office_client_id):'');
+    // Le nom fait foi ; à défaut l'adresse. Sans l'un ni l'autre, rien ne dit
+    // que deux lignes sont le même zoning : elles restent séparées.
+    if(nom) return 'n|'+nom;
+    if(adr) return 'a|'+adr;
+    return '#'+(r.id!=null?r.id:Math.random().toString(36).slice(2)); }
+  twAdrDe(r){ return {address:(r.adr&&r.adr!=='—')?r.adr:'',lat:(r.lat!=null?+r.lat:null),lng:(r.lng!=null?+r.lng:null),
+    place_id:r.place_id||'',street:r.street||'',street_number:r.street_number||'',postal_code:r.postal_code||'',city:r.city||''}; }
+  twSiteDe(r){ const oid=(r.office_client_id!=null?String(r.office_client_id):''); const a=this.twAdrDe(r);
     return {key:'s'+(r.id!=null?r.id:Math.random().toString(36).slice(2)),id:(r.id!=null?r.id:null),
     rowIds:(r.id!=null?[r.id]:[]),rowByOffice:(oid&&r.id!=null?{[oid]:r.id}:{}),
-    name:(r.name&&r.name!=='—')?r.name:'',address:(r.adr&&r.adr!=='—')?r.adr:'',acc:(r.acc!=null?String(r.acc):''),
-    officeIds:(oid?[oid]:[]),lat:(r.lat!=null?+r.lat:null),lng:(r.lng!=null?+r.lng:null),
-    place_id:r.place_id||'',formatted:'',street:r.street||'',street_number:r.street_number||'',postal_code:r.postal_code||'',city:r.city||''}; }
+    rowAdr:(r.id!=null?{[String(r.id)]:a}:{}),adrDirty:false,
+    name:(r.name&&r.name!=='—')?r.name:'',acc:(r.acc!=null?String(r.acc):''),officeIds:(oid?[oid]:[]),
+    ...a,formatted:''}; }
   /* Le regroupement complète l'arrêt avec ce que la première ligne n'avait pas :
      une ligne sans position ni temps d'accès n'efface pas ceux d'une autre ligne
-     du même bâtiment. */
+     du même zoning. L'adresse de référence de l'arrêt reste celle de la première
+     ligne — les autres sont conservées telles quelles dans `rowAdr`. */
   twSitesDe(rows){ const out=[], idx={};
     (rows||[]).forEach(r=>{ const k=this.twSiteKey(r); const j=idx[k];
       if(j===undefined){ idx[k]=out.length; out.push(this.twSiteDe(r)); return; }
       const s=out[j];
       if(r.id!=null&&!s.rowIds.some(x=>String(x)===String(r.id))) s.rowIds.push(r.id);
+      if(r.id!=null&&s.rowAdr[String(r.id)]==null) s.rowAdr[String(r.id)]=this.twAdrDe(r);
       if(s.id==null&&r.id!=null) s.id=r.id;
       const oid=(r.office_client_id!=null?String(r.office_client_id):'');
       if(oid){ if(!s.officeIds.includes(oid)) s.officeIds.push(oid); if(r.id!=null&&s.rowByOffice[oid]==null) s.rowByOffice[oid]=r.id; }
+      if(!s.address&&r.adr&&r.adr!=='—') s.address=r.adr;
       if(s.lat==null&&r.lat!=null&&r.lng!=null){ s.lat=+r.lat; s.lng=+r.lng; }
       if(s.acc===''&&r.acc!=null) s.acc=String(r.acc);
       if(!s.place_id&&r.place_id) s.place_id=r.place_id;
@@ -4731,11 +4750,11 @@ class Component extends DCLogic {
   twPatch(p){ this.setState(s=>{ const t=s.tw||this.twVide(); return {tw:{...t,...(typeof p==='function'?p(t):p)}}; }); }
   twSiteSet(i,k){ return e=>{ const v=(e&&e.target)?e.target.value:e; this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,[k]:v}:x),err:''})); }; }
   twSiteType(i){ return e=>{ const v=e.target.value; const key=((this.state.tw||{}).sites||[])[i]?.key;
-    this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,address:v,lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}:x),route:null}));
+    this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,address:v,adrDirty:true,lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}:x),route:null}));
     if(key) this.geoType('tw'+key,v); }; }
   twSitePick(i,id){ const key=((this.state.tw||{}).sites||[])[i]?.key; if(!key) return;
     this.geoPick('tw'+key,id,j=>this.twPatch(t=>({sites:t.sites.map((x,jj)=>jj===i?{...x,
-      address:this.geoLigne(j)+((j.zip||j.city)?(', '+[j.zip,j.city].filter(Boolean).join(' ')):''),name:x.name||this.geoLigne(j),
+      address:this.geoLigne(j)+((j.zip||j.city)?(', '+[j.zip,j.city].filter(Boolean).join(' ')):''),name:x.name||this.geoLigne(j),adrDirty:true,
       lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''}:x),route:null}))); }
   twSiteMove(i,d){ this.twPatch(t=>{ const a=t.sites.slice(); const j=i+d; if(j<0||j>=a.length) return {}; const x=a[i]; a[i]=a[j]; a[j]=x; return {sites:a,route:null}; }); }
   twSiteRemove(i){ this.twPatch(t=>{ const x=t.sites[i]; const ids=(x&&x.rowIds&&x.rowIds.length)?x.rowIds:((x&&x.id!=null)?[x.id]:[]);
@@ -4745,7 +4764,15 @@ class Component extends DCLogic {
   twOfficeAdd(i){ return e=>{ const v=String((e&&e.target)?e.target.value:e||''); if(!v) return;
     this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,officeIds:((x.officeIds||[]).some(o=>String(o)===v)?x.officeIds:[...(x.officeIds||[]),v])}:x),err:''})); }; }
   twOfficeRemove(i,id){ return ()=>this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,officeIds:(x.officeIds||[]).filter(o=>String(o)!==String(id))}:x),err:''})); }
-  twAddSite(){ this.twPatch(t=>({sites:[...t.sites,{key:'n'+Date.now(),id:null,rowIds:[],rowByOffice:{},name:'',address:'',acc:'',officeIds:[],lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}],route:null})); }
+  /* L'adresse d'un bureau telle que `ws_offices` la connaît — celle encodée à
+     son onboarding. Rend `null` quand il n'y en a pas : aucune adresse n'est
+     reconstituée à partir de la seule localité. */
+  twOfficeAdr(){ const m={}; ((window.BOServer?window.BOServer.table('ws_offices'):[])||[]).forEach(o=>{ if(!o||o.id==null) return;
+      const rue=String(o.address||o.adr||'').trim(); if(!rue) return;
+      const cp=String(o.postal_code||'').trim(), loc=String(o.city||'').trim();
+      m[String(o.id)]={address:rue+((cp||loc)?(', '+[cp,loc].filter(Boolean).join(' ')):''),postal_code:cp,city:loc}; });
+    return (id)=>m[String(id||'')]||null; }
+  twAddSite(){ this.twPatch(t=>({sites:[...t.sites,{key:'n'+Date.now(),id:null,rowIds:[],rowByOffice:{},rowAdr:{},adrDirty:true,name:'',address:'',acc:'',officeIds:[],lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}],route:null})); }
   twAddExisting(e){ const id=e.target.value; if(!id) return;
     const rows=((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[]);
     const r=rows.find(x=>String(x.id)===String(id)); if(!r) return;
@@ -4794,23 +4821,43 @@ class Component extends DCLogic {
     if(!fr.base){ this.twPatch({err:'API non configurée — rien ne peut être enregistré.'}); return; }
     this.twPatch({saving:true,err:''});
     const num=v=>{ const n=parseFloat(String(v==null?'':v).replace(',','.')); return isNaN(n)?null:n; };
+    const twoAdr=this.twOfficeAdr();
     /* REDÉPLOIEMENT : un arrêt à trois bureaux redevient trois lignes de
        `ws_office_delivery_sites`, une par couple (site, bureau) — la forme que
        le serveur écrit déjà. Chaque bureau reprend LA LIGNE qui le portait
        (`rowByOffice`) pour que l'enregistrement soit une mise à jour et non une
        suppression suivie d'une création ; un bureau nouvellement rattaché prend
        une ligne libre du site, sinon une ligne neuve (`id:null`). Les lignes
-       qu'aucun bureau ne réclame plus — bureau détaché — sont supprimées. */
+       qu'aucun bureau ne réclame plus — bureau détaché — sont supprimées.
+
+       L'ADRESSE reste celle de chaque ligne. Un zoning n'a pas une adresse mais
+       autant que de bureaux : écrire l'adresse de référence de l'arrêt sur
+       toutes ses lignes remplacerait l'adresse de livraison de chaque société
+       par celle de sa voisine. Seule une adresse RÉÉCRITE à l'étape 2
+       (`adrDirty`) se porte sur toutes les lignes — là, c'est un choix. */
     const twRows=[], twOrphelines=[];
     T.sites.forEach(x=>{ const pris={}; const libres=(x.rowIds||[]).slice(); const parBureau=x.rowByOffice||{};
       const prendre=(oid)=>{ const r=(oid!=null&&parBureau[oid]!=null)?parBureau[oid]:null;
         if(r!=null&&!pris[String(r)]){ pris[String(r)]=1; return r; }
         const libre=libres.find(v=>!pris[String(v)]); if(libre!=null){ pris[String(libre)]=1; return libre; } return null; };
-      const base={name:String(x.name||'').trim(),address:String(x.address||'').trim(),acc:num(x.acc),
-        lat:x.lat,lng:x.lng,place_id:x.place_id||'',formatted:x.formatted||'',street:x.street||'',street_number:x.street_number||'',postal_code:x.postal_code||'',city:x.city||''};
+      const adrSite={address:String(x.address||'').trim(),lat:x.lat,lng:x.lng,place_id:x.place_id||'',
+        street:x.street||'',street_number:x.street_number||'',postal_code:x.postal_code||'',city:x.city||''};
+      /* Un bureau NOUVELLEMENT rattaché n'a pas encore de ligne dans cette zone :
+         sa ligne prend l'adresse que `ws_offices` lui connaît — sa vraie porte —
+         et non celle de la zone, qui serait celle d'une société voisine. Sans
+         adresse connue, la référence de la zone sert de point de départ : elle
+         situe au moins le bureau, et l'étape 2 permet de la préciser. */
+      const adrBureau=(oid)=>{ const a=twoAdr(oid); return a?{address:a.address,lat:null,lng:null,place_id:'',
+        street:'',street_number:'',postal_code:a.postal_code,city:a.city}:adrSite; };
+      const adrDe=(rid,oid)=>{ if(x.adrDirty) return adrSite;
+        if(rid==null) return adrBureau(oid);
+        const a=(x.rowAdr||{})[String(rid)];
+        return a?{address:String(a.address||'').trim(),lat:a.lat,lng:a.lng,place_id:a.place_id||'',
+          street:a.street||'',street_number:a.street_number||'',postal_code:a.postal_code||'',city:a.city||''}:adrSite; };
       const bureaux=(x.officeIds||[]).filter(Boolean);
       // Un site sans bureau garde UNE ligne : il existe comme arrêt, il n'est simplement pas livrable.
-      (bureaux.length?bureaux:[null]).forEach(oid=>{ twRows.push({...base,id:prendre(oid),officeId:(oid?+oid:null)}); });
+      (bureaux.length?bureaux:[null]).forEach(oid=>{ const rid=prendre(oid);
+        twRows.push({name:String(x.name||'').trim(),acc:num(x.acc),formatted:'',...adrDe(rid,oid),id:rid,officeId:(oid?+oid:null)}); });
       libres.forEach(v=>{ if(!pris[String(v)]) twOrphelines.push(v); }); });
     const payload={tour:{id:(T.tourId?+T.tourId:null),name:String(T.name).trim(),start:T.start,max:(String(T.max||'').trim()===''?null:parseInt(T.max,10)),vehicule:T.vehicule||'',ret:!!T.ret,
         forfait:num(T.forfait),pricePerKm:num(T.pricePerKm),days:T.days,postcodes:T.postcodes,routeKm:(T.route?T.route.km:null),routeMin:(T.route?T.route.minutes:null)},
@@ -9653,15 +9700,29 @@ class Component extends DCLogic {
       up:()=>this.twSiteMove(i,-1),down:()=>this.twSiteMove(i,1),remove:()=>this.twSiteRemove(i),
       upStyle:(i===0?'opacity:.3':''),downStyle:(i===T.sites.length-1?'opacity:.3':'')}));
     const twOffLabel=(id)=>{ const o=twOffById[String(id||'')]; if(!o) return 'Bureau #'+id+' — introuvable'; return String(o.name||('Bureau #'+id))+(o.city?(' · '+o.city):''); };
+    const twAdrNorm=v=>String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+    const twOffAdr=this.twOfficeAdr();
     const twSiteOffices=(T.sites||[]).map((x,i)=>{ const ids=(x.officeIds||[]).filter(Boolean);
       const reste=twOfficeOpts.filter(o=>!ids.some(v=>String(v)===String(o.value)));
       /* Un site garde UNE ligne par bureau (une seule s'il n'en a aucun) : les
-         lignes en trop d'un site déjà dédoublé partent à l'enregistrement. Ce
+         lignes en trop d'un zoning déjà dédoublé partent à l'enregistrement. Ce
          n'est pas une suppression silencieuse — elle est annoncée ici, avant. */
       const dbl=(x.rowIds||[]).length-Math.max(1,ids.length);
+      /* L'ADRESSE PROPRE de chaque bureau dans la zone : dans un zoning, elle
+         diffère normalement de l'adresse de référence de l'arrêt. On l'affiche
+         quand c'est le cas — c'est là que le chauffeur dépose. */
+      const adrRef=twAdrNorm(x.address);
+      const adrDe=(id)=>{ if(x.adrDirty) return '';
+        const rid=(x.rowByOffice||{})[String(id)]; const a=(rid!=null)?(x.rowAdr||{})[String(rid)]:null;
+        const b=(a==null)?twOffAdr(id):null;   // bureau tout juste rattaché : son adresse à lui
+        const v=a?String(a.address||'').trim():(b?b.address:'');
+        return (v&&twAdrNorm(v)!==adrRef)?v:''; };
       return {num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),address:x.address||'—',
-        dblShow:dbl>0,dblTxt:(dbl===1?'Une ligne en double pour ce site (même nom, même adresse) sera supprimée à l’enregistrement.':(dbl+' lignes en double pour ce site (même nom, même adresse) seront supprimées à l’enregistrement.')),
-        offices:ids.map(id=>({key:String(id),label:twOffLabel(id),drop:(String(twDropUn(id)).replace('.',',')+' min'),remove:this.twOfficeRemove(i,id)})),
+        dblShow:dbl>0,dblTxt:(dbl===1?'Une ligne en double pour ce site (même nom) sera supprimée à l’enregistrement.':(dbl+' lignes en double pour ce site (même nom) seront supprimées à l’enregistrement.')),
+        adrShow:!!x.adrDirty&&(x.rowIds||[]).length>1,
+        adrTxt:'Adresse réécrite : elle remplacera celle des '+(x.rowIds||[]).length+' lignes de ce site, bureau par bureau.',
+        offices:ids.map(id=>{ const a=adrDe(id);
+          return {key:String(id),label:twOffLabel(id),adr:a,adrShow:!!a,drop:(String(twDropUn(id)).replace('.',',')+' min'),remove:this.twOfficeRemove(i,id)}; }),
         noOffice:ids.length===0, addOffice:this.twOfficeAdd(i), addOpts:reste, canAdd:reste.length>0,
         addLabel:(ids.length?'+ Rattacher un autre bureau…':'+ Rattacher un bureau…'),
         allTaken:reste.length===0&&twOfficeOpts.length>0}; });
