@@ -1982,12 +1982,15 @@
 
       <!-- ===================== RÈGLES HORAIRES BOUTIQUE ===================== -->
       <sc-if value="{{ isReglesBoutique }}" hint-placeholder-val="{{ false }}">
-      <div style="display:flex;flex-direction:column;gap:16px;max-width:760px">
+      <div style="display:flex;flex-direction:column;gap:16px">
         <div style="display:inline-flex;background:var(--color-background-secondary);border-radius:10px;padding:3px;align-self:flex-start;flex-wrap:wrap"><button onClick="{{ setDispoTabDispo }}" style="{{ dispoSegDispo }}">Disponibilité boutique</button><button onClick="{{ setDispoTabCal }}" style="{{ dispoSegCal }}">Règles calendrier</button><button onClick="{{ setDispoTabExcept }}" style="{{ dispoSegExcept }}">Jours exceptionnels</button><button onClick="{{ setDispoTabCreneaux }}" style="{{ dispoSegCreneaux }}">Créneaux</button></div>
         <sc-if value="{{ dispoTabDispo }}" hint-placeholder-val="{{ true }}">
         <div style="display:flex;flex-direction:column;gap:16px">
           <div style="display:flex;align-items:flex-start;gap:10px;background:#eef3fb;border:.5px solid #cfe0f5;border-radius:10px;padding:12px 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a5a9e" stroke-width="1.8" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg><div style="font:400 11.5px/1.6 var(--font-ui);color:#2a5a9e">Ces réglages sont la <strong>source unique</strong> lue par le webshop : jours ouverts, heures, durée de créneau, cut-off et délai. Toute modification enregistrée ici <strong>régénère aussitôt les créneaux</strong> proposés aux clients.</div></div>
 
+          <!-- Les deux modes CÔTE À CÔTE sur grand écran : on règle la
+               livraison en regardant la collecte, pas en faisant défiler. -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:16px;align-items:start">
           <!-- COLLECTE -->
           <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
             <div class="t-section-title" style="font-size:15px;margin-bottom:14px;color:var(--color-primary)">Collecte (retrait en magasin)</div>
@@ -2018,6 +2021,7 @@
               <div><div class="t-admin-label" style="margin-bottom:4px">Délai (h)</div><input value="{{ avaDelLead.val }}" onChange="{{ avaDelLead.set }}" placeholder="ex. 20" style="{{ avaInputStyle }}"/></div>
               <div><div class="t-admin-label" style="margin-bottom:4px">Capacité / créneau</div><input value="{{ avaDelCap.val }}" onChange="{{ avaDelCap.set }}" placeholder="ex. 30" style="{{ avaInputStyle }}"/></div>
             </div>
+          </div>
           </div>
 
           <div style="display:flex;align-items:center;gap:14px"><button onClick="{{ avaSave }}" style="{{ avaSaveStyle }}">Enregistrer la disponibilité</button><sc-if value="{{ avaDirty }}" hint-placeholder-val="{{ false }}"><span style="font:500 12px var(--font-ui);color:var(--color-primary)">Modifications non enregistrées</span></sc-if></div>
@@ -2772,9 +2776,12 @@
           </sc-for>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:20px">
-          <div class="t-section-title" style="font-size:15px;margin-bottom:3px">Paiement différé par client</div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">ws_client.deferral_payment (1/0) — seuls les clients autorisés peuvent régler par virement / facturation différée</div>
-          <div style="display:grid;grid-template-columns:1.8fr .8fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Client</span><span class="t-admin-label" style="text-align:center">Différé</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:3px">
+            <div class="t-section-title" style="font-size:15px">Paiement différé — état du parc</div>
+            <button onClick="{{ deferGo }}" class="btn-secondary" style="font-size:12px">Ouvrir les bureaux →</button>
+          </div>
+          <div style="font:400 11px/1.5 var(--font-ui);color:var(--color-text-muted);margin-bottom:12px">En LECTURE : l’autorisation se donne sur la fiche du bureau, où l’on voit aussi son contrat et son encours. Ici, la vue d’ensemble.</div>
+          <div style="display:grid;grid-template-columns:1.8fr .8fr;padding:8px 6px;border-bottom:.5px solid var(--color-border-tertiary)"><span class="t-admin-label">Bureau</span><span class="t-admin-label" style="text-align:center">Différé</span></div>
           <sc-for list="{{ deferList }}" as="d" hint-placeholder-count="5">
             <div style="display:grid;grid-template-columns:1.8fr .8fr;align-items:center;padding:11px 6px;border-bottom:.5px solid var(--color-border-tertiary)">
               <span style="font:500 12.5px var(--font-ui);color:var(--color-text)">{{ d.nom }}</span>
@@ -10785,12 +10792,16 @@ class Component extends DCLogic {
     const deferList=SRV('ws_offices').map((o,i)=>{ const on=(o.deferred_billing_enabled===true||o.deferred_billing_enabled==='Oui');
       const nom=o.name||'—';
       return {nom,on,val:on?'1':'0',
-        help:on?('« '+nom+' » AUTORISÉ au paiement différé : peut régler par virement / facturation différée (encours suivi). Désactiver = paiement immédiat exigé à la commande.'):('« '+nom+' » NON autorisé au différé : doit payer immédiatement. Activer pour ouvrir la facturation différée (dans la limite de son encours).'),
+        help:on?('« '+nom+' » AUTORISÉ au paiement différé : peut régler par virement / facturation différée (encours suivi). Cliquer ouvre sa fiche, où l’autorisation se donne.'):('« '+nom+' » NON autorisé au différé : doit payer immédiatement. Cliquer ouvre sa fiche, où l’autorisation se donne (dans la limite de son encours).'),
         valColor:on?'#2d7a3e':'var(--color-text-muted)',
         style:'position:relative;width:38px;height:21px;border-radius:20px;border:none;cursor:pointer;background:'+(on?'var(--color-primary)':'var(--color-border-secondary)'),
         knob:'position:absolute;top:2px;left:'+(on?'19px':'2px')+';width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2)',
-        toggle:()=>{ if(window.BOServer){ const rows=window.BOServer.table('ws_offices'); if(rows[i]){ rows[i]={...rows[i],deferred_billing_enabled:on?'Non':'Oui'}; window.BOServer.save('ws_offices',rows); } } this.setState(s=>({_rev:(s._rev||0)+1})); this.printJob('✓ « '+nom+' » — facturation différée '+(on?'désactivée':'activée')+' (ws_offices)'); }}; });
+        toggle:()=>{ this.goTo('offices'); setTimeout(()=>{ const rows=(window.BOServer?window.BOServer.table('ws_offices'):[])||[]; if(rows[i]) this.editForm('office',rows[i],i)(); },80); }};
+    });
     const deferCount=deferList.filter(x=>x.on).length, deferTotal=deferList.length;
+    // Le geste part d'ici vers la fiche : un interrupteur qui vit à deux
+    // endroits finit par dire deux choses différentes.
+    const deferGo=this.go('offices');
     const deferBadge=pill2('#eef3fb','#2a5a9e');
 
     // ===== Assistant onboarding bureau =====
@@ -11672,7 +11683,7 @@ class Component extends DCLogic {
       assortSegCat:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.assortTab||'assort')==='cat'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       assortSegProd:'border:none;cursor:pointer;border-radius:8px;padding:9px 16px;font:600 12.5px var(--font-ui);'+((S.assortTab||'assort')==='prod'?'background:var(--color-surface);color:var(--color-primary);box-shadow:0 1px 3px rgba(0,0,0,.12)':'background:transparent;color:var(--color-text-muted)'),
       setAssortAssort:()=>this.setState({assortTab:'assort'}),setAssortCat:()=>this.setState({assortTab:'cat'}),setAssortProd:()=>this.setState({assortTab:'prod'}),
-      isPaiements:screen==='paiements',payMethods,deferList,deferCount,deferTotal,deferBadge,
+      isPaiements:screen==='paiements',payMethods,deferList,deferCount,deferTotal,deferBadge,deferGo,
       // Stripe — état + compte depuis ws_param (persisté) ; plus d'identifiant fictif.
       ...(()=>{ const sOn=(()=>{ const v=window.BOServer?window.BOServer.getParam('stripe.enabled',undefined):undefined; return S.flags['stripe_on']!==undefined?S.flags['stripe_on']:((v!==undefined&&v!==null&&v!=='')?(v===true||v==='1'||v===1):false); })();
         const acct=String((window.BOServer?window.BOServer.getParam('stripe.account',''):'')||'');
