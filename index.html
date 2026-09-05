@@ -3151,7 +3151,7 @@
             <input value="{{ crmDet.contactNom }}" onInput="{{ crmDet.setContactNom }}" placeholder="nom du contact" style="{{ crmInp }};margin-top:0"/>
             <input value="{{ crmDet.contactRole }}" onInput="{{ crmDet.setContactRole }}" placeholder="secrétariat, RH…" style="{{ crmInp }};margin-top:0"/>
             <div style="{{ crmChampIco }}"><a href="{{ crmDet.telContact }}" title="Appeler ce numéro" style="{{ crmIco }}">☎</a><input value="{{ crmDet.contactTel }}" onInput="{{ crmDet.setContactTel }}" placeholder="+32 …" style="{{ crmInpNu }}"/></div>
-            <div style="{{ crmChampIco }}"><a href="{{ crmDet.mailtoContact }}" title="Écrire à cette adresse" style="{{ crmIco }}">✉</a><input value="{{ crmDet.contactEmail }}" onInput="{{ crmDet.setContactEmail }}" placeholder="contact@…" style="{{ crmInpNu }}"/></div>
+            <div style="{{ crmChampIco }}"><a href="{{ crmDet.mailtoContact }}" title="Écrire à cette adresse" style="{{ crmIco }}">✉</a><input value="{{ crmDet.contactEmail }}" onInput="{{ crmDet.setContactEmail }}" title="{{ crmDet.contactEmail }}" placeholder="contact@…" style="{{ crmInpNu }}"/></div>
           </div>
         </div>
         <div><div style="{{ crmLab }}">Bon remis</div><input value="{{ crmDet.voucher }}" onInput="{{ crmDet.setVoucher }}" placeholder="code du bon" style="{{ crmInp }}"/></div>
@@ -3265,7 +3265,7 @@
         <div style="border-top:.5px solid var(--color-border-tertiary);padding-top:11px;margin-top:2px">
           <div style="font:600 10.5px var(--font-ui);letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:6px">Ce qui a été fait</div>
           <sc-if value="{{ crmDet.journalVide }}" hint-placeholder-val="{{ false }}"><div style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">Rien encore.</div></sc-if>
-          <sc-for list="{{ crmDet.journal }}" as="j" hint-placeholder-count="2"><div style="display:flex;gap:10px;padding:4px 0;border-top:.5px dashed var(--color-border-tertiary);font:400 11.5px var(--font-ui)"><span style="width:104px;flex:none;color:var(--color-text-muted);font-variant-numeric:tabular-nums">{{ j.quand }}</span><span>{{ j.txt }}</span></div></sc-for>
+          <sc-for list="{{ crmDet.journal }}" as="j" hint-placeholder-count="2"><div style="display:flex;gap:10px;padding:4px 0;border-top:.5px dashed var(--color-border-tertiary);font:400 11.5px var(--font-ui)"><span style="width:76px;flex:none;color:var(--color-text-muted);font-variant-numeric:tabular-nums">{{ j.quand }}</span><span>{{ j.txt }}</span></div></sc-for>
         </div>
       </div>
       </div>
@@ -7209,7 +7209,12 @@ class Component extends DCLogic {
         prochaineType:det.prochaineType||'', setProchaineType:(e)=>majDet({prochaineType:e.target.value}),
         typeOpts:[{value:'',label:'— nature —'},{value:'visite',label:'Visite sur place'},{value:'tel',label:'Appel'},{value:'mail',label:'Envoi mail'},{value:'bon',label:'Remise du bon'},{value:'assort',label:'Assortiment'}],
         note:det.note||'', setNote:(e)=>majDet({note:e.target.value}),
-        journal:(det.gestes||[]).slice(0,12).map(g=>({txt:(gesteDe[g.type]||'•')+' '+(g.texte||g.type),quand:String(g.quand||'').slice(0,16).replace('T',' ')})),
+        // Le texte d'un geste porte déjà son symbole (le serveur écrit
+        // « ✉ objet → destinataire ») : en préfixer un second les doublait.
+        journal:(det.gestes||[]).slice(0,12).map(g=>{ const t=String(g.texte||g.type).trim();
+          const q=String(g.quand||'');
+          return { txt:(/^[✉💬📍☎🎟🗒→•]/.test(t)?'':((gesteDe[g.type]||'•')+' '))+t,
+            quand:q.length>=16?(q.slice(8,10)+'/'+q.slice(5,7)+' '+q.slice(11,16)):q.slice(0,16).replace('T',' ') }; }),
         journalVide:!(det.gestes||[]).length,
         gestes:[['mail','✉ Mail envoyé'],['bon','🎟 Bon remis'],['assort','🗒 Assortiment imprimé'],['visite','📍 Visite faite'],['tel','☎ Appel passé']]
           .map(([k,lab])=>({label:lab,poser:()=>{ this.crmEcrire({id:det.id,geste:k,gesteTexte:lab},'✓ '+lab); this.setState({crmDet:null}); }})),
