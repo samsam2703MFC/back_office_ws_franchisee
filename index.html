@@ -8766,8 +8766,8 @@ class Component extends DCLogic {
       if(e.act==='ob') setTimeout(()=>this.obOpen(),0); }; }
   /* La mise en route, constatée. `ok` vaut true/false sur les tables servies
      pour la boutique en portée, et null sans portée (rien à constater). */
-  onbChecklist(){ const T=(n)=>(window.BOServer?window.BOServer.table(n):[])||[];
-    const scoped=!!this.shopScopeId(); const si=this.shopInfo();
+  onbChecklist(doc){ const T=(n)=>(window.BOServer?window.BOServer.table(n):[])||[];
+    const scoped=!doc&&!!this.shopScopeId(); const si=this.shopInfo();
     const st=(v)=>scoped?!!v:null;
     return [
       {t:'La fiche de la boutique : enseigne, adresse, position', d:'L’adresse est le départ et le retour de vos tournées ; sans position connue du serveur, aucune heure d’arrivée n’est calculée.', s:'shopParams', goLabel:'Ma boutique', ok:st(si&&si.name&&si.address&&si.lat!=null&&si.lng!=null)},
@@ -8778,26 +8778,35 @@ class Component extends DCLogic {
       {t:'Au moins un bureau validé', d:'Seuls les bureaux validés sont livrables. L’onboarding en 7 étapes crée la société, le contact, le site, les départements et le lien d’invitation.', s:'offices', goLabel:'Bureaux', ok:st(T('ws_offices').some(o=>o.status==='validated'))},
       {t:'Les coûts de la boutique', d:'Coût horaire de préparation, emballage par colis, chargement, minutes par colis : sans eux, la rentabilité n’a rien à afficher.', s:'params', goLabel:'Coûts', ok:st(this.costParams()!=null)},
     ]; }
-  onbChapters(){
-    const si=this.shopInfo(); const id=this.shopScopeId();
-    const scopeTxt=id?('Boutique en portée : '+((si&&(si.name||si.nom))||'—')+' (#'+id+').')
-      :String((typeof window!=='undefined'&&window.__SHOPREASON)||'Aucune boutique sélectionnée : rouvrez la console avec ?shop=<id>.');
-    const check=this.onbChecklist(); const scoped=!!id;
+  onbChapters(doc){
+    /* doc = { console, driver, webshop } : rendu DOCUMENT — le PDF du guide
+       (docs/onboarding/build-pdf.cjs). Les adresses sont celles que le script
+       fournit (génériques : <hôte>, ?shop=<id>), rien n'est constaté sur les
+       données, la boutique en portée n'est pas nommée. Le reste est identique :
+       le PDF dit ce que l'écran dit. */
+    const si=doc?null:this.shopInfo(); const id=doc?'':this.shopScopeId();
+    const scopeTxt=doc?'':(id?('Boutique en portée : '+((si&&(si.name||si.nom))||'—')+' (#'+id+').')
+      :String((typeof window!=='undefined'&&window.__SHOPREASON)||'Aucune boutique sélectionnée : rouvrez la console avec ?shop=<id>.'));
+    const check=this.onbChecklist(doc); const scoped=!!id;
     const reste=check.filter(c=>c.ok===false).length;
-    const checkNote=!scoped?scopeTxt
+    const checkNote=doc?'Dans la console, cette liste est constatée sur vos données : une coche verte quand la table est servie, « à faire » sinon.'
+      :(!scoped?scopeTxt
       :(reste?(reste+' étape'+(reste>1?'s restent':' reste')+' à faire. Si le bandeau rouge est affiché, une ligne « à faire » peut simplement ne pas avoir été chargée.')
-        :'✓ Tout est en place : le webshop a ce qu’il lui faut pour vendre et livrer.');
+        :'✓ Tout est en place : le webshop a ce qu’il lui faut pour vendre et livrer.'));
+    const consoleAddr=doc?doc.console:this.addrFull('tdb');
+    const driverAddr=doc?doc.driver:this.driverUrl();
+    const webshopAddr=doc?doc.webshop:this.webshopUrl();
     return [
       {k:'start', label:'Démarrer', cards:[
         {titre:'Votre accès et vos repères', sub:'Ce qui vaut sur tous les écrans.', steps:[
-          {t:'Une adresse par écran', d:'Votre console : '+this.addrFull('tdb')+' — chaque section a la sienne (#tournees, #stockJour…). Mettez-la en favori, envoyez-la à un collègue ; Précédent et Suivant fonctionnent, et le survol d’une entrée du menu montre son adresse.'},
-          {t:'La boutique en portée', d:scopeTxt+' L’identifiant ?shop= de l’adresse décide de tout ce que la console montre — clients, tournées, bureaux, facturation — et il est rappelé en bas du menu.'},
+          {t:'Une adresse par écran', d:'Votre console : '+consoleAddr+' — chaque section a la sienne (#tournees, #stockJour…). Mettez-la en favori, envoyez-la à un collègue ; Précédent et Suivant fonctionnent, et le survol d’une entrée du menu montre son adresse.'},
+          {t:'La boutique en portée', d:(scopeTxt?scopeTxt+' ':'')+'L’identifiant ?shop= de l’adresse décide de tout ce que la console montre — clients, tournées, bureaux, facturation — et il est rappelé en bas du menu.'},
           {t:'Le jeton d’accès', d:'Il vous est remis par la marque. Dès la première ouverture, la console le retire de l’adresse et le garde sur ce navigateur : ne partagez jamais un lien qui contient ?token=.'},
           {t:'Rechercher un écran', d:'Le champ en tête du menu cherche dans les écrans, leurs onglets et leurs explications. Tapez « cut-off », « franco », « bon » ou « rupture » : vous arrivez au bon réglage sans connaître l’arborescence.'},
           {t:'Rien n’est inventé', d:'Un écran vide est vide parce que le serveur n’a rien servi. Le bandeau rouge « ERREUR — PLEASE DEBUG » liste les chargements qui ont échoué et n’apparaît que sur un vrai échec.'},
           {t:'Votre compte et les paramètres du site', d:'Le rond en bas du menu ouvre votre compte : coordonnées de la boutique, horaires en lecture, paramètres du site — bo_show_source affiche l’origine des données de chaque page, bo_show_help ajoute les « i » d’aide sur les interrupteurs.', act:'profile', s:'tdb', goLabel:'Mon compte'},
         ]},
-        {titre:'Mise en route — dans cet ordre', sub:'L’état est constaté sur les données que le serveur sert pour votre boutique : une ligne « à faire » signifie que la table est vide.', note:checkNote, noteCls:(!scoped||reste)?'onb-warn':'',
+        {titre:'Mise en route — dans cet ordre', sub:'L’état est constaté sur les données que le serveur sert pour votre boutique : une ligne « à faire » signifie que la table est vide.', note:checkNote, noteCls:(!doc&&(!scoped||reste))?'onb-warn':'',
           steps:check.map(c=>({t:c.t, d:c.d, s:c.s, tab:c.tab, goLabel:c.goLabel, ok:c.ok}))},
         {titre:'Le sens de paramétrage de la livraison', sub:'Le fil d’ariane en tête des écrans de livraison suit cet ordre ; chaque étape hérite de la précédente.', steps:[
           {t:'Tournées · horaires', d:'Circuits, fenêtres horaires, cut-off, capacité, fermetures. L’assistant « Atelier livraison » guide la création tournée → zones → bureaux.', s:'tournees', goLabel:'Tournées'},
@@ -8882,7 +8891,7 @@ class Component extends DCLogic {
       ]},
       {k:'apps', label:'Applications', cards:[
         {titre:'Application chauffeur (téléphone)', sub:'Le chauffeur prend sa tournée, charge, livre et rentre — avec son téléphone.', steps:[
-          {t:'L’adresse', d:this.driverUrl()+' — le chauffeur l’ouvre et l’ajoute à son écran d’accueil : installable, feuille de route lisible hors réseau. La même adresse et son QR sont en tête de l’écran Tournées.', href:this.driverUrl(), goLabel:'Ouvrir l’app'},
+          {t:'L’adresse', d:driverAddr+' — le chauffeur l’ouvre et l’ajoute à son écran d’accueil : installable, feuille de route lisible hors réseau. La même adresse et son QR sont en tête de l’écran Tournées.', href:driverAddr, goLabel:'Ouvrir l’app'},
           {t:'Connexion', d:'Boutique + PIN à 4 chiffres — le compte tablette, borné par le serveur à sa boutique. Le jeton d’accès de la console ne va jamais sur un téléphone ; un mode test avec ce jeton existe en attendant les profils chauffeur, à retirer dès qu’un PIN existe.'},
           {t:'Le parcours', d:'Prendre sa tournée (scan du QR du bon, ou choix dans la liste) → chargement (un scan par colis, jamais de « tout cocher ») → feuille de route → en route (Google Maps ou Waze, position envoyée vers Livraison du jour) → remise et SMS d’arrivée → retour dépôt (km, note, étoiles).'},
           {t:'Ce qui remonte au dépôt aujourd’hui', d:'La prise de tournée (le nom du chauffeur s’affiche sur la tournée) et la position en route. Les scans, notes, étoiles et incidents restent sur le téléphone tant que le serveur ne les reçoit pas : l’écran « Ce que le dépôt reçoit » le dit.'},
@@ -8893,7 +8902,7 @@ class Component extends DCLogic {
           {t:'Ce qu’il ouvre', d:'Les données du comptoir de cette boutique seulement — jamais les marges, les coûts ni les paramètres réseau. Il ne remplace pas le jeton administrateur.'},
         ]},
         {titre:'La boutique en ligne', steps:[
-          {t:'Voir ce que vos clients voient', d:this.webshopUrl()+' — ouvrez-la après chaque réglage important : créneaux, stock, promotions, frais.', href:this.webshopUrl(), goLabel:'Ouvrir le webshop'},
+          {t:'Voir ce que vos clients voient', d:webshopAddr+' — ouvrez-la après chaque réglage important : créneaux, stock, promotions, frais.', href:webshopAddr, goLabel:'Ouvrir le webshop'},
           {t:'Ce qui vient de la marque', d:'Le catalogue, l’assortiment ouvert à votre boutique, les règles de prix réseau, les bons Marque et les offres croisées sont décidés dans la console marque et arrivent d’en haut. Ce qui est local reste local.', s:'assortiment', goLabel:'Assortiment'},
         ]},
       ]},

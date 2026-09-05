@@ -65,6 +65,33 @@ nouvelle page (le guide le rappelle au franchisé : `Ctrl+Maj+R`).
 La pastille « Nouveau » n'a besoin d'aucun geste : elle compare `ONB_VERSION` à
 la dernière version ouverte sur le navigateur.
 
+## Le guide en PDF
+
+`docs/onboarding/guide-franchise.pdf` est la sortie imprimable du même guide :
+couverture au logo, sommaire paginé, les sept chapitres, et les écrans en
+galerie à la fin de chaque chapitre (captures de `docs/landing/` et de
+`docs/driver-pwa/app/`, plus une capture fraîche de l'écran du guide). Charte :
+`_ds/…/global.css` (jetons, Gotham / Vank / Playwrite) + `guide.css` (mise en
+page A4). Les polices sont embarquées ; Gotham l'est en contours (Type 3), comme
+Chromium le fait pour ces fichiers.
+
+Le PDF **lit la page** : `build-pdf.cjs` sert le dépôt en local, ouvre la console
+dans Chromium, évalue la classe de la page comme le runtime et lui demande
+`onbChapters({console, driver, webshop})` — le mode document : adresses
+génériques (`<hôte>`, `?shop=<id>`), aucune constatation sur les données. Il n'y
+a donc rien à recopier quand le guide change : on regénère.
+
+```bash
+# en local (Playwright + Chromium installés : npm i -D playwright && npx playwright install chromium)
+node docs/onboarding/build-pdf.cjs --host https://atelierby.online
+# → docs/onboarding/guide-franchise.pdf ; --html guide.html garde la page intermédiaire
+```
+
+Ou par l'onglet Actions → **Guide du franchisé (PDF)** → Run workflow : le PDF
+est déposé en artefact (hôte = variable `PUBLIC_HOST`, sinon `atelierby.online`).
+Le fichier commité dans `docs/onboarding/` est celui de la version courante ;
+après une nouvelle version du guide, le regénérer et le commiter avec.
+
 ## Ce qui n'y est pas, et pourquoi
 
 - **Pas de captures d'écran** : les écrans changent à chaque version et le

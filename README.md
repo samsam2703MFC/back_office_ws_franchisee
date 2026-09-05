@@ -48,7 +48,10 @@ version**. It opens by itself on a browser's first visit, and the nav entry
 carries a **Nouveau** badge whenever a newer guide version has not been opened
 yet. Content, version number and release notes are in the page script
 (`ONB_VERSION`, `ONB_NOTES`, `onbChapters()`); the update procedure is in
-[`docs/ONBOARDING.md`](docs/ONBOARDING.md).
+[`docs/ONBOARDING.md`](docs/ONBOARDING.md). A printable version — brand CSS and
+fonts, logo, screenshots — is generated from the page by
+`docs/onboarding/build-pdf.cjs` (or the **Guide du franchisé (PDF)** workflow):
+[`docs/onboarding/guide-franchise.pdf`](docs/onboarding/guide-franchise.pdf).
 
 ## Architecture — identical to the franchisor
 

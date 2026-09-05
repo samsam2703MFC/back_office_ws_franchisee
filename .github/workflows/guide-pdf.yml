@@ -1,0 +1,54 @@
+name: Guide du franchisé (PDF)
+
+# Régénère docs/onboarding/guide-franchise.pdf — le guide « Bien démarrer » de la
+# console, à la charte (design system, Gotham / Vank / Playwrite, logo), avec les
+# captures d'écran du dépôt — puis le dépose en artefact. À lancer après chaque
+# version du guide (ONB_VERSION dans index.html) ; le contenu est lu dans la
+# page elle-même, rien n'est recopié (docs/onboarding/build-pdf.cjs).
+#
+# L'hôte public sert aux adresses imprimées (console, application chauffeur,
+# boutique en ligne) : variable PUBLIC_HOST, comme le dossier « Carte & tarifs ».
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "Hôte public pour les adresses imprimées (vide : variable PUBLIC_HOST, sinon atelierby.online)"
+        required: false
+        type: string
+
+jobs:
+  guide:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer Chromium (Playwright)
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund playwright@1.47.2 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+
+      - name: Générer le PDF
+        env:
+          HOST_IN: ${{ inputs.host }}
+          HOST_VAR: ${{ vars.PUBLIC_HOST }}
+        run: |
+          HOST="${HOST_IN:-${HOST_VAR:-atelierby.online}}"
+          case "$HOST" in http://*|https://*) ;; *) HOST="https://$HOST" ;; esac
+          echo "hôte : $HOST"
+          PLAYWRIGHT_MODULE="$PWD/node_modules/playwright" node docs/onboarding/build-pdf.cjs --host "$HOST" --out guide-franchise.pdf --html guide-franchise.html
+          ls -la guide-franchise.pdf
+
+      - name: Déposer le guide
+        uses: actions/upload-artifact@v4
+        with:
+          name: guide-franchise-pdf
+          path: |
+            guide-franchise.pdf
+            guide-franchise.html
+          retention-days: 30
