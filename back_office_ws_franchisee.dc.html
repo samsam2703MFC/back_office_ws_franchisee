@@ -3049,7 +3049,7 @@
             <label style="display:block"><span style="{{ crmLab }}">Numéro</span><input value="{{ crmDet.sTo }}" onInput="{{ crmDet.setSTo }}" placeholder="+32 …" style="{{ crmInp }}"/></label>
           </div>
           <label style="display:block"><span style="{{ crmLab }}">Message</span><textarea value="{{ crmDet.sCorps }}" onInput="{{ crmDet.setSCorps }}" rows="4" style="{{ crmInp }};resize:vertical;line-height:1.45"></textarea></label>
-          <div style="display:flex;justify-content:space-between;gap:10px;font:400 10.5px var(--font-ui);color:var(--color-text-muted)"><span>{{ crmDet.varsTxt }}</span><span style="flex:none;font-weight:600">{{ crmDet.sCompte }}</span></div>
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;font:400 10.5px var(--font-ui);color:var(--color-text-muted)"><span>{{ crmDet.varsTxt }}</span><span style="flex:none;font-weight:600;text-align:right">{{ crmDet.sCompte }}<sc-if value="{{ crmDet.sUniOn }}" hint-placeholder-val="{{ false }}"> <button onClick="{{ crmDet.sSimplifier }}" title="Remplace ç ê â ô À ’ « » — par leur équivalent GSM : le SMS repasse à 160 caractères" style="border:1.5px solid var(--color-primary);background:#fbe9eb;color:var(--color-primary);border-radius:999px;padding:2px 9px;font:600 10.5px var(--font-ui);cursor:pointer;margin-left:6px">Simplifier</button></sc-if></span></div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <sc-if value="{{ crmDet.smsPret }}" hint-placeholder-val="{{ false }}"><button onClick="{{ crmDet.smsEnvoyer }}" class="btn-primary" style="font-size:12.5px;min-height:0;padding:10px 16px">{{ crmDet.smsBtn }}</button></sc-if>
             <a href="{{ crmDet.smsHref }}" onClick="{{ crmDet.smsTel }}" class="btn-secondary" style="font-size:12px;min-height:0;padding:9px 14px;text-decoration:none;display:inline-block">Ouvrir sur le téléphone</a>
@@ -6620,6 +6620,18 @@ class Component extends DCLogic {
     return {contact:c||'Madame, Monsieur',societe:d.nom||'',bon:d.voucher||'',campagne:d.campagneNom||'',boutique:b.nom||'',
       tel_boutique:b.tel||'',email_boutique:b.email||'',ville_boutique:b.ville||'',adresse:d.adresse||''}; }
   crmRendre(t,v){ return String(t||'').replace(/\{([a-z_]+)\}/g,(m,k)=>v[k]!=null?v[k]:m); }
+  /* Un SMS se facture par segment : 160 caractères (153 au-delà d'un) quand
+     tout tient dans la table GSM 7 bits, 70 (67) dès qu'un seul caractère en
+     sort — ç, ê, â, ô, À, ’, «, — sont hors table ; é, è, à, ù, É y sont.
+     Le compteur dit le vrai coût, et nomme les caractères qui le doublent. */
+  crmSmsCompte(txt){ txt=String(txt||''); const GSM='@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà';
+    const EXT='^{}\\[~]|€'; let len=0; const hors=[];
+    for(const ch of txt){ if(GSM.indexOf(ch)>=0) len+=1; else if(EXT.indexOf(ch)>=0) len+=2; else { len+=1; if(hors.indexOf(ch)<0) hors.push(ch); } }
+    const uni=hors.length>0; const n=[...txt].length;
+    const parts=uni?(n<=70?1:Math.ceil(n/67)):(len<=160?1:Math.ceil(len/153));
+    return {n,len,parts:n?parts:0,uni,hors}; }
+  crmSmsSimplifier(txt){ const M={'À':'A','Â':'A','Ê':'E','È':'E','Ë':'E','Î':'I','Ï':'I','Ô':'O','Û':'U','Ù':'U','Ç':'Ç','â':'a','ê':'e','ë':'e','î':'i','ï':'i','ô':'o','û':'u','ç':'c','œ':'oe','Œ':'OE','’':'\'','‘':'\'','«':'"','»':'"','“':'"','”':'"','—':'-','–':'-','…':'...','\u00a0':' ','\u202f':' '};
+    return String(txt||'').replace(/[ÀÂÊÈËÎÏÔÛÙâêëîïôûçœŒ’‘«»“”—–…\u00a0\u202f]/g,ch=>M[ch]!==undefined?M[ch]:ch); }
   /* Un numéro tel que tapé → forme composable (+32…). Belge par défaut. */
   crmTel(t){ t=String(t||'').trim(); if(!t) return ''; if(t[0]==='+') t=t.replace(/\(0\)/g,''); const d=t.replace(/\D+/g,'');
     if(t[0]==='+') return d.length>=8?'+'+d:''; if(/^00\d{8,}$/.test(d)) return '+'+d.slice(2);
@@ -6683,7 +6695,7 @@ class Component extends DCLogic {
     const v=this.crmVarsDe(det,A);
     const varsTxt='Variables : '+((A&&A.variables)||[]).map(x=>'{'+x.cle+'}').join(' ')+' — remplies à l’ouverture du modèle ; ce qui part est ce que vous lisez.';
     const pj=(A&&A.pieces)||[], coches=det.mPieces||[];
-    const sLen=String(det.sCorps||'').length, sN=sLen?(sLen<=160?1:Math.ceil(sLen/153)):0;
+    const sc=this.crmSmsCompte(det.sCorps);
     const tMod=mods('tel').find(x=>String(x.id)===String(det.tModele||''))||null;
     const ymd=(d)=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     const auj=new Date(); const plus=(n)=>{ const d=new Date(auj); d.setDate(d.getDate()+n); return ymd(d); };
@@ -6729,7 +6741,8 @@ class Component extends DCLogic {
       modSms:opts('sms','— sans modèle —'), sModele:det.sModele||'', setSModele:(e)=>this.crmActModele('sms',e.target.value),
       sTo:det.sTo||'', setSTo:(e)=>majDet({sTo:e.target.value}),
       sCorps:det.sCorps||'', setSCorps:(e)=>majDet({sCorps:e.target.value}),
-      sCompte:sLen+' caractère'+(sLen>1?'s':'')+' · '+sN+' SMS'+(sLen>160?' (au-delà de 160, le texte se coupe en plusieurs)':''),
+      sCompte:sc.n+' caractère'+(sc.n>1?'s':'')+' · '+sc.parts+' SMS'+(sc.uni?' — hors GSM : '+sc.hors.slice(0,6).join(' ')+(sc.hors.length>6?' …':'')+' (70 caractères par SMS au lieu de 160)':''),
+      sUniOn:sc.uni, sSimplifier:()=>majDet({sCorps:this.crmSmsSimplifier(det.sCorps)}),
       smsPret:!!(A&&A.smsPret), smsBtn:S.crmEnvoi?'Envoi…':'Envoyer le SMS',
       smsHref:'sms:'+this.crmTel(det.sTo)+'?&body='+encodeURIComponent(det.sCorps||''),
       smsNote:!A?'Lecture des modèles…':(A.smsPret
@@ -6769,7 +6782,7 @@ class Component extends DCLogic {
       crmModSujet:ME.sujet||'', crmModSetSujet:(e)=>maj({sujet:e.target.value}),
       crmModCorpsLab:ME.type==='tel'?'Script — les points à dérouler':(ME.type==='sms'?'Texte du SMS':'Texte du mail'),
       crmModCorps:ME.corps||'', crmModSetCorps:(e)=>maj({corps:e.target.value}),
-      crmModAide:ME.type==='sms'?'Court : 160 caractères font un SMS, au-delà il se coupe. Les variables comptent une fois remplies.'
+      crmModAide:ME.type==='sms'?'Court : 160 caractères font un SMS, au-delà il se coupe. Un seul caractère hors table GSM (ç, ê, â, ô, À, ’, «, —) ramène le SMS à 70 caractères : é, è, à, ù, É passent. Les variables comptent une fois remplies.'
         :(ME.type==='tel'?'Le script s’affiche sous le numéro pendant l’appel, variables remplies. Numérotez les points : on suit au doigt.'
         :'Le texte part tel quel, en paragraphes, avec le logo du réseau si le serveur en a un. Signez : {boutique} · {tel_boutique}.'),
       crmModSupprOn:!!ME.id&&!ME.reseau, crmModBtn:ME.id&&ME.reseau?'Enregistrer ma copie':'Enregistrer',
