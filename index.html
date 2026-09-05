@@ -7119,6 +7119,10 @@ class Component extends DCLogic {
     const campsTous=D.campagnes||[];
     const camps=campsTous.filter(c=>String((c&&c.audience)||'').trim().toLowerCase()==='b2b');
     const campsAutres=campsTous.length-camps.length;
+    // Le serveur dit POURQUOI la liste est ce qu'elle est quand il le sait :
+    // module marketing absent de la base, colonne de cible absente, boutiques
+    // de campagne introuvables. Une liste vide sans raison est un écran muet.
+    const campNote=String(D.campagnesNote||'').trim();
 
     // La campagne en cours : celle choisie, sinon la première active.
     const campDef=(camps.find(c=>c.active)||camps[0]||null);
@@ -7185,14 +7189,18 @@ class Component extends DCLogic {
 
     return {...base, crmPret:true, crmMsg:S.crmErr||'',
       crmCampOpts:[{value:'',label:'— Toutes les campagnes B2B —'},...camps.map(c=>({value:String(c.id),
-        label:(c.reseau?'Réseau · ':'Locale · ')+c.nom+(c.active?'':' (close)')}))],
+        // Le statut est celui de la campagne côté marque (« En cours »,
+        // « Planifiée », « Terminée ») ; sans lui, on se contente de dire close.
+        label:(c.reseau?'Réseau · ':'Locale · ')+c.nom+(c.statutLabel?(' · '+c.statutLabel):(c.active?'':' (close)'))}))],
       crmCamp:campId, crmSetCamp:(e)=>this.setState({crmCamp:e.target.value,crmGrab:null}),
-      crmCampInfo:campObj?((campObj.reseau?'Campagne du réseau':'Campagne locale')+' · clientèle B2B'
+      crmCampInfo:(campObj?((campObj.reseau?'Campagne du réseau':'Campagne locale')+' · clientèle B2B'
+        +(campObj.statutLabel?(' · '+campObj.statutLabel):'')
         +(campObj.du?(' · '+String(campObj.du).slice(0,10)+' → '+String(campObj.au||'').slice(0,10)):''))
         :(camps.length?('Aucune campagne choisie — les cartes du tableau sont toutes affichées'
             +(campsAutres?(' · '+campsAutres+' campagne(s) visant une autre clientèle que le B2B ne sont pas proposées'):''))
-          :(campsTous.length?(campsTous.length+' campagne(s) ouverte(s), aucune dont la clientèle cible est « B2B » : le sélecteur n’en propose donc aucune.')
-            :'Aucune campagne B2B ouverte : la marque en déclare une avec la clientèle cible « B2B ».')),
+          :(campNote||(campsTous.length?(campsTous.length+' campagne(s) ouverte(s), aucune dont la clientèle cible est « B2B » : le sélecteur n’en propose donc aucune.')
+            :'Aucune campagne B2B ouverte : la marque en déclare une avec la clientèle cible « B2B ».'))))
+        +((campNote&&camps.length)?(' — '+campNote):''),
       crmColonnes:colonnes, crmTotal:String(cartes.length),
       crmGrabTxt:pris?('Carte prise — cliquez une colonne pour l’y poser'):'',
       crmAnnuler:()=>this.setState({crmGrab:null}),

@@ -445,6 +445,36 @@ jobs:
             echo
           fi
 
+          # ── CAMPAGNES DU CRM DE PROSPECTION ───────────────────────────────
+          # Le sélecteur de campagnes du tableau de prospection s'ouvrait vide, et
+          # rien ne disait pourquoi : /franchisee/crm lisait ws_promo_campaign — la
+          # table des BONS du webshop — au lieu de mar_campaign, où le module
+          # marketing déclare les campagnes du réseau AVEC leur clientèle cible
+          # (client_target : b2c | b2b | mixte). La route appartient au dépôt
+          # WebShop : son absence n'est donc PAS une régression d'ici et ne fait
+          # rougir personne — mais c'est ici qu'on voit si le serveur a le code, et
+          # si la base porte le module. Aucun nom de campagne n'est imprimé.
+          echo "== Campagnes B2B du CRM de prospection (module marketing, tables mar_*) =="
+          CRMC=$(curl -s -o /dev/null -w '%{http_code}' --max-time 12 "${HDR[@]}" "$BASE/franchisee/crm$QS" 2>/dev/null)
+          echo "  /franchisee/crm (le tableau) : HTTP $CRMC"
+          CC=$(curl -s -o /tmp/sonde_campagnes.json -w '%{http_code}' --max-time 12 "${HDR[@]}" "$BASE/franchisee/campagnes$QS" 2>/dev/null)
+          case "$CC" in
+            404) echo "  ABSENT   /franchisee/campagnes — le serveur n'a pas ce code (déploiement du dépôt WebShop en attente)" ;;
+            401|403) echo "  OK       /franchisee/campagnes en place (jeton requis — relancer avec ADMIN_TOKEN pour le compte)" ;;
+            200)
+              N=$(tr -d ' \n' < /tmp/sonde_campagnes.json | grep -o '"id":' | wc -l | tr -d ' ')
+              echo "  OK       /franchisee/campagnes répond — $N campagne(s) dont la cible est « b2b » pour cette portée"
+              NOTE=$(grep -o '"campagnesNote":"[^"]*"' /tmp/sonde_campagnes.json | head -1 | sed 's/.*:"//;s/"$//')
+              if [ -n "$NOTE" ]; then echo "           raison donnée par le serveur : $NOTE"
+              elif [ "$N" = "0" ]; then
+                echo "           le module répond mais aucune campagne ne vise le B2B :"
+                echo "           la marque en déclare une dans la console consultant, clientèle cible « B2B »."
+              fi ;;
+            *) echo "  ⚠ /franchisee/campagnes — HTTP $CC" ;;
+          esac
+          rm -f /tmp/sonde_campagnes.json
+          echo
+
           # ── CE QUI S'AFFICHERA « — » ──────────────────────────────────────
           # La console n'invente plus aucune valeur : une donnée que le serveur
           # ne sert pas s'affiche « — », et les calculs qui en dépendent ne sont
