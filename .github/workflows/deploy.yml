@@ -30,7 +30,12 @@ jobs:
         run: |
           rm -rf site && mkdir -p site
           cp index.html back_office_ws_franchisee.dc.html support.js bo_server.js api-config.js site/
-          cp -r _ds vendor img site/
+          # mail/ : le gabarit du pied de mail est un FICHIER que l'écran
+          # « Signature de mail » charge à l'exécution (mail/stopper-2a.html).
+          # Sans lui sur le serveur, l'aperçu répond 404 et l'écran le dit —
+          # une copie du gabarit dans le code aurait menti sur ce que le client
+          # reçoit, alors on livre le fichier lui-même.
+          cp -r _ds vendor img mail site/
           ls -R site | head -50
 
       - name: Install sshpass

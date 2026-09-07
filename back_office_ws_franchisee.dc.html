@@ -2825,6 +2825,30 @@
            sous Kitchen, qui porte son propre appareil et sa propre session.
            Cet écran ne fait que livrer ce qu'il faut saisir dans la tablette :
            l'URL du back-office et un jeton d'appareil révocable. -->
+      <!-- ===================== MA BOUTIQUE › SIGNATURE DE MAIL ===================== -->
+      <sc-if value="{{ isMailSignature }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 1.15fr;gap:14px;align-items:start">
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+          <div class="t-section-title" style="font-size:15px">Pied de mail</div>
+          <span style="{{ sigEtatStyle }}">{{ sigEtat }}</span>
+          <div style="display:flex;flex-direction:column;gap:3px;background:var(--color-background-secondary);border-radius:9px;padding:11px 13px">
+            <span style="font:600 10px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--color-text-muted)">Servi par le serveur — non saisissable ici</span>
+            <span style="font:500 12px var(--font-ui);color:var(--color-text)">Enseigne : {{ sigEnseigne }}</span>
+            <span style="font:500 12px var(--font-ui);color:var(--color-text)">Adresse : {{ sigAdresse }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <sc-for list="{{ sigChamps }}" as="sc" hint-placeholder-count="8">
+              <div><div style="font:500 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:4px">{{ sc.lbl }}</div><input value="{{ sc.val }}" onInput="{{ sc.set }}" placeholder="{{ sc.ph }}" style="{{ sc.style }}"/></div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px"><button onClick="{{ sigSave }}" style="{{ sigSaveStyle }}">{{ sigSaveLbl }}</button><span style="font:400 11.5px var(--font-ui);color:var(--color-text-muted)">{{ sigMsg }}</span></div>
+        </div>
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:14px 16px">
+          <div class="t-admin-label" style="margin-bottom:9px">Aperçu — le bloc tel qu'il partira</div>
+          <sc-if value="{{ sigAGab }}" hint-placeholder-val="{{ true }}">
+            <iframe src="{{ sigUrl }}" title="Aperçu du pied de mail" style="width:100%;height:210px;border:.5px solid var(--color-border-tertiary);border-radius:8px;background:#fff;display:block"></iframe>
+          </sc-if>
+
       <sc-if value="{{ isTabletteKitchen }}" hint-placeholder-val="{{ false }}">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div style="font:400 12px/1.6 var(--font-ui);color:var(--color-text-muted);max-width:680px">
@@ -5328,6 +5352,7 @@ class Component extends DCLogic {
     stockJour:{table:'ws_product_stock (catalog actif)',origin:'Stock online (webshop) + en shop, produits actifs · filtres badges',calc:'Dispo = online + shop ; sous seuil si dispo<min, tension si <min×1,25',dev:'1,5 j'},
     commandes:{table:'ws_orders',origin:'Commandes du jour · filtres livraison/retrait',calc:'Statut préparation → prête → livrée cliquable ; flags[ord_*] en mémoire',dev:'1,5 j'},
     shopParams:{table:'atelierbydb_shops (+ horaires : fr_shop_availability, en lecture)',origin:'Ligne de la boutique de la portée, servie par /franchisee/me',calc:'Édition ⇒ POST /franchisee/shop-update, puis relecture de /franchisee/me ; horaires édités dans « Disponibilité & créneaux »',dev:'1 j'},
+    mailSignature:{table:'ws_bo_store (journal JSON par table et par boutique — table mail_signature)',origin:'Saisie de la boutique ; l\u2019enseigne et l\u2019adresse viennent de /franchisee/me et ne se retapent pas',calc:'BOServer.save(\u2039 mail_signature \u203a) \u21d2 POST /franchisee/save : aucun mapping typé côté API, l\u2019écriture retombe donc sur l\u2019overlay ws_bo_store, relu au boot par /franchisee/bo-store. Le gabarit mail/stopper-2a.html est un FICHIER, chargé à l\u2019entrée de l\u2019écran',dev:'0,5 j'},
     statsReseau:{table:'ERP consolidé (lecture seule)',origin:'Stats multi-boutiques poussées par l\'ERP',calc:'Aucun formulaire ; agrégats read-only + exports CSV',dev:'1 j'},
   }; return M[screen]||{table:'ws_param · tables du module',origin:'Servi par l’API /franchisee/* via la couche BOServer',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
   // ===== Recherche profonde — index de navigation du back-office =====
@@ -5389,6 +5414,7 @@ class Component extends DCLogic {
     {s:'paiements',g:'Paramétrage › Boutique',grp:'g_boutique',label:'Paiements',k:'carte bancaire virement especes comptoir profil guest registered company moyen'},
     // ---- Boutique & réseau ----
     {s:'shopParams',g:'Ma boutique',label:'Paramètres du shop',k:'enseigne adresse horaires branding logo coordonnees magasin'},
+    {s:'mailSignature',g:'Ma boutique',label:'Signature de mail',k:'signature pied de mail email iban tva telephone logo promo bouton gabarit'},
     {s:'statsReseau',g:'Ma boutique',label:'Stats réseau consolidées',k:'erp multi boutiques export csv comparaison classement'},
   ]; }
   formDefs(){
@@ -7981,6 +8007,8 @@ class Component extends DCLogic {
     if(s==='suivi') setTimeout(()=>this.suiviMapShow(this.state.suiviView!=='chrono'),0);
     // Rentabilité : charge (une fois) les points réels (geo-clients).
     if(s==='rentabilite') setTimeout(()=>this.rentaEnsure(),0);
+    // Signature : le gabarit du pied de mail est un FICHIER, chargé à l'entrée.
+    if(s==='mailSignature') setTimeout(()=>this.mailSigEnsure(),0);
     // Écrans à données de commandes : refetch à l'ENTRÉE (une nouvelle
     // commande webshop apparaît sans recharger toute la page).
     if(this.ORD_SCREENS[s]) setTimeout(()=>this.ordersRefresh(),0);
@@ -8011,7 +8039,7 @@ class Component extends DCLogic {
   // rendu ; elles remontent ici pour être lues AUSSI par les adresses — une
   // seule définition, sinon un écran ajouté au menu n'aurait pas d'adresse.
   NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis','crm','crmRapport'];
-  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','tabletteKitchen','crm','crmRapport'];
+  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','mailSignature','tabletteKitchen','crm','crmRapport'];
 
   // Groupes dépliants du menu « Paramétrage ». Définis ici et non dans le rendu,
   // parce que l'adresse doit savoir quel groupe déplier à l'arrivée sur un de
@@ -8022,7 +8050,7 @@ class Component extends DCLogic {
      fil d'ariane numéroté — c'est une SUITE d'étapes, pas des onglets. */
   PARAM_FAMILLES(){ return [
     {id:'boutique', titre:'Boutique', ecrans:[['reglesBoutique','Disponibilité & créneaux'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
-    {id:'maison', titre:'Ma boutique', ecrans:[['shopParams','Fiche & horaires'],['tabletteKitchen','Tablette Kitchen']]},
+    {id:'maison', titre:'Ma boutique', ecrans:[['shopParams','Fiche & horaires'],['mailSignature','Signature de mail'],['tabletteKitchen','Tablette Kitchen']]},
   ]; }
   navGroupsDef(){ return [
       // « Coûts · temps · frais » sort du menu : accessible via l'ENGRENAGE de
@@ -8100,6 +8128,77 @@ class Component extends DCLogic {
     if(!this.addrScreens()[s]){ this.addrSync(); return; }  // inconnu : corrigé, pas suivi
     const g=this.navGroupOf(s);
     this.goTo(s,g?{paramsOpen:true,openGroups:Object.assign({},this.state.openGroups,{[g]:true})}:null); }
+
+
+  /* Mise en forme du bloc de signature : charte L'Atelier, pas donnée métier —
+     ces valeurs-là ont leur place dans le code, au même titre que les libellés
+     de la nav. Tout le reste est saisi par la boutique ou servi par /me. */
+  MAIL_SIG_GABARIT={COLOR_BG:'#EFE9E1',COLOR_TEXT:'#222222',COLOR_TEXT_MUTED:'#666666',
+    COLOR_ACCENT:'#C8981F',COLOR_RULE:'#D8BE8A',COLOR_CTA1_BG:'#8D1D2C',COLOR_CTA1_TEXT:'#FFFFFF',
+    COLOR_CTA2_BG:'#F2C9A0',COLOR_CTA2_TEXT:'#6B4420',COLOR_BADGE_BG:'#C8981F',COLOR_BADGE_TEXT:'#FFFFFF',
+    BLOCK_WIDTH:'1080',IMAGE_COL_WIDTH:'300',FONT_STACK:'Helvetica,Arial,sans-serif',LOGO_WIDTH:'132'};
+
+  /* Variables saisies par la boutique. `ph` est une consigne de FORMAT, jamais
+     une valeur : une valeur d'exemple préremplie devient un enregistrement au
+     premier enregistrement — c'est ainsi qu'une raison sociale fictive s'est
+     retrouvée en production. Ce qui est saisi ici part chez un client. */
+  MAIL_SIG_CHAMPS=[
+    {k:'TAGLINE',        lbl:'Accroche',              ph:'une ligne, sous le logo'},
+    {k:'BASELINE',       lbl:'Baseline',              ph:'une phrase, en italique'},
+    {k:'PHONE_LABEL',    lbl:'Libellé téléphone',     ph:'Tél'},
+    {k:'PHONE',          lbl:'Téléphone',             ph:'0XX/XX XX XX'},
+    {k:'VAT_LABEL',      lbl:'Libellé TVA',           ph:'TVA'},
+    {k:'VAT',            lbl:'Numéro de TVA',         ph:'BE 0XXXXXXXXX'},
+    {k:'IBAN',           lbl:'IBAN',                  ph:'BEXX XXXX XXXX XXXX'},
+    {k:'LOGO_URL',       lbl:'Logo (URL publique)',   ph:'https://…/logo.png'},
+    {k:'PROMO_BADGE',    lbl:'Badge de la promo',     ph:'quelques mots'},
+    {k:'PROMO_IMAGE_URL',lbl:'Photo promo (URL)',     ph:'https://…/promo.jpg'},
+    {k:'PROMO_IMAGE_ALT',lbl:'Texte de la photo',     ph:'ce que montre la photo'},
+    {k:'CTA1_LABEL',     lbl:'Bouton 1 — libellé',    ph:'quelques mots'},
+    {k:'CTA1_URL',       lbl:'Bouton 1 — lien',       ph:'https://…'},
+    {k:'CTA2_LABEL',     lbl:'Bouton 2 — libellé',    ph:'quelques mots'},
+    {k:'CTA2_URL',       lbl:'Bouton 2 — lien',       ph:'https://…'},
+  ];
+
+  /* Mémorisation PAR BOUTIQUE. ws_param n'a pas de colonne boutique — le
+     serveur le dit lui-même et refuse d'ailleurs toute clé hors liste blanche :
+     l'IBAN d'une boutique y deviendrait celui de tout le réseau. ws_bo_store,
+     lui, est scopé ?shop=. D'où BOServer.save et non setParam. */
+  mailSigRow(){ const t=(window.BOServer?window.BOServer.table('mail_signature'):[]);
+    const r=t&&t[0]; return (r&&typeof r==='object')?r:{}; }
+  mailSigVal(k){ const d=this.state.mailSigDraft||{};
+    return d[k]!==undefined?d[k]:String(this.mailSigRow()[k]||''); }
+  mailSigSet(k){ return (e)=>{ const v=e.target.value;
+    this.setState(s=>({mailSigDraft:{...(s.mailSigDraft||{}),[k]:v},mailSigMsg:''})); }; }
+  mailSigDirty(){ const d=this.state.mailSigDraft||{}, r=this.mailSigRow();
+    return Object.keys(d).some(k=>String(d[k])!==String(r[k]||'')); }
+  /* L'ANNONCE SUIT L'ÉCRITURE, pas l'appel. La couche données NOTE ses échecs
+     dans loadErrors au lieu de rejeter : une écriture non partie (API absente,
+     403, réseau coupé) résolvait quand même, et l'écran affichait « ✓ Signature
+     enregistrée » sur un pied de mail qui n'existait nulle part. On attend donc
+     la fin de l'écriture (flush) puis on relit le journal d'erreurs — c'est lui
+     qui sait si le serveur a répondu. */
+  mailSigSave(){ if(!window.BOServer||!this.mailSigDirty()) return;
+    const row={...this.mailSigRow(),...(this.state.mailSigDraft||{})};
+    const dejaVues=(window.BOServer.loadErrors||[]).length;
+    const mien=(e)=>String((e&&e.detail)||e||'').indexOf('mail_signature')>=0;
+    this.setState({mailSigMsg:'Enregistrement…'});
+    Promise.resolve(window.BOServer.save('mail_signature',[row]))
+      .then(()=>window.BOServer.flush?window.BOServer.flush():true)
+      .then(()=>{ const ratees=(window.BOServer.loadErrors||[]).slice(dejaVues).filter(mien);
+        if(ratees.length){ this.setState({mailSigMsg:'Échec — '+String(ratees[0].detail||ratees[0])}); return; }
+        this.setState({mailSigDraft:{},mailSigMsg:'✓ Signature enregistrée pour cette boutique'}); },
+        (e)=>this.setState({mailSigMsg:'Échec de l’enregistrement — '+((e&&e.message)||'réseau')})); }
+
+  /* Le gabarit est un FICHIER (mail/stopper-2a.html), celui-là même que le
+     serveur doit rendre à l'envoi. Chargé, jamais recopié dans le code : deux
+     copies, c'est un aperçu qui ment sur ce que le client reçoit. */
+  mailSigEnsure(){ if(this.state.screen!=='mailSignature'||this._mailGabFait) return;
+    this._mailGabFait=true;
+    fetch('mail/stopper-2a.html',{cache:'no-store'})
+      .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+      .then(t=>{ this._mailGab=t; this.setState(s=>({_rev:(s._rev||0)+1})); })
+      .catch(e=>{ this._mailGabErr=(e&&e.message)||'échec réseau'; this.setState(s=>({_rev:(s._rev||0)+1})); }); }
 
   // Écrans dont les données bougent avec les commandes entrantes.
   ORD_SCREENS={tdb:1,commandes:1,prep:1,suivi:1,stockJour:1,capacite:1};
@@ -9063,11 +9162,11 @@ class Component extends DCLogic {
       navDeveloppement:this.tr('navDeveloppement'),navCrm:this.tr('navCrm'),navCrmRapport:this.tr('navCrmRapport') };
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',bureauAssortiment:'Assortiment d\'un bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
-      crm:'Prospection (CRM) — aide à la prospection',crmRapport:'Rapport de campagne',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',tabletteKitchen:'Tablette Kitchen'};
+      crm:'Prospection (CRM) — aide à la prospection',crmRapport:'Rapport de campagne',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',mailSignature:'Signature de mail',tabletteKitchen:'Tablette Kitchen'};
     const subs={crm:'Choisir la campagne, poser ses cibles, les faire avancer jusqu’au rendez-vous',
       crmRapport:'Gestes, clients gagnés et chiffre développé depuis le gain',avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',bureauAssortiment:'Produits proposés et affichage des prix — pour un bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
-      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
+      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',mailSignature:'Pied de mail de la boutique — variables du gabarit d\u2019envoi',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
 
     // ===== Recherche profonde (barre de nav) =====
     // Cherche dans les menus, les sous-menus (onglets) ET les explications :
@@ -11876,6 +11975,65 @@ class Component extends DCLogic {
       gRevDo:()=>this.gRevReload(),
     };
 
+
+    /* ── Signature ────────────────────────────────────────────────────────
+       Trois origines, et l'écran ne les mélange pas : ce que le SERVEUR sert
+       (l'enseigne et l'adresse de la boutique — on ne les retape pas dans un
+       mail), ce que la BOUTIQUE saisit, et le GABARIT (mise en forme). */
+    const sigSrv={ LOGO_ALT:this.shopField('name',''),
+      ADDRESS:[this.shopField('address',''),
+               [this.shopField('cp',''),this.shopField('city','')].filter(v=>v&&v!=='—').join(' ')]
+              .filter(v=>v&&v!=='—').join(' — ') };
+    const sigChamps=this.MAIL_SIG_CHAMPS.map(c=>{ const v=this.mailSigVal(c.k);
+      return {lbl:c.lbl,ph:c.ph,val:v,set:this.mailSigSet(c.k),
+        style:'width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;border:.5px solid '
+          +(String(v).trim()?'var(--color-border-tertiary)':'#e0b6bc')
+          +';background:var(--color-surface);color:var(--color-text);font:400 12.5px var(--font-ui);outline:none'}; });
+    const sigManq=this.MAIL_SIG_CHAMPS.filter(c=>!String(this.mailSigVal(c.k)).trim()).map(c=>c.lbl);
+    const sigSrvManq=Object.keys(sigSrv).filter(k=>!sigSrv[k]);
+    /* Un mail qui part avec « {{IBAN}} » en clair est pire qu'un mail sans pied
+       de page : on NOMME ce qui manque au lieu de laisser croire que c'est prêt. */
+    const sigPrete=!sigManq.length&&!sigSrvManq.length;
+    const sigEtat=sigPrete?'Signature complète — toutes les variables sont remplies.'
+      :('Incomplète : '+[sigManq.length?(sigManq.length+' champ(s) à saisir — '+sigManq.join(', ')):'',
+         sigSrvManq.length?('non servi par /franchisee/me — '+sigSrvManq.join(', ')):'']
+        .filter(Boolean).join(' · '));
+    const sigEtatStyle='display:block;border-radius:9px;padding:8px 12px;font:600 11px/1.55 var(--font-ui);'
+      +'background:'+(sigPrete?'#eaf5ec':'#fbe9eb')+';color:'+(sigPrete?'#2d7a3e':'var(--color-primary)');
+    const sigVals={...this.MAIL_SIG_GABARIT,...sigSrv};
+    this.MAIL_SIG_CHAMPS.forEach(c=>{ const v=this.mailSigVal(c.k); if(String(v).trim()) sigVals[c.k]=v; });
+    // Une variable non remplie RESTE « {{NOM}} » dans l'aperçu : c'est ce que le
+    // client verrait, et c'est donc ce qu'il faut montrer.
+    const sigCorps=(this._mailGab||'').replace(/\{\{\s*([A-Z0-9_]+)\s*\}\}/g,
+      (m,k)=>sigVals[k]!==undefined?String(sigVals[k]):m);
+    const sigDoc=this._mailGab
+      ? ('<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff;overflow:hidden">'
+         +'<div style="width:1080px;transform:scale(.58);transform-origin:0 0">'+sigCorps+'</div></body>')
+      : '';
+    /* L'aperçu passe par une URL blob plutôt que par srcDoc : le gabarit
+       traverse l'analyseur HTML du navigateur avant le runtime, qui met les
+       attributs en minuscules — React reçoit alors « srcdoc », le refuse et
+       avertit en console. Or ici une alerte console est un DÉFAUT, pas du
+       bruit. `src` est un attribut ordinaire, insensible à la casse. L'URL
+       n'est recréée que si le contenu a changé, et la précédente est révoquée :
+       un aperçu qui se redessine à chaque frappe fuirait sinon un blob par
+       caractère tapé. */
+    let sigUrl='';
+    if(sigDoc){
+      if(this._sigDocPrec!==sigDoc){
+        try{ if(this._sigUrl) URL.revokeObjectURL(this._sigUrl); }catch(e){}
+        try{ this._sigUrl=URL.createObjectURL(new Blob([sigDoc],{type:'text/html;charset=utf-8'})); }
+        catch(e){ this._sigUrl=''; }
+        this._sigDocPrec=sigDoc;
+      }
+      sigUrl=this._sigUrl||'';
+    }
+    const sigGabErr=this._mailGab?'':(this._mailGabErr
+      ? ('Gabarit mail/stopper-2a.html illisible — '+this._mailGabErr)
+      : 'Chargement du gabarit…');
+    const sigSave=()=>this.mailSigSave();
+    const sigDirty=this.mailSigDirty();
+    const sigSaveStyle='border:none;border-radius:8px;padding:10px 18px;font:600 12px var(--font-ui);color:#fff;'
     return {
       navGroups,
       ...dsVals,
@@ -12392,6 +12550,9 @@ class Component extends DCLogic {
           stripeBtnLabel:sOn?'Gérer le compte':'Connecter Stripe',
           stripeBtnStyle:'flex:none;border:none;cursor:pointer;border-radius:9px;padding:10px 18px;font:600 12.5px var(--font-ui);'+(sOn?'background:var(--color-background-secondary);color:var(--color-text)':'background:#635bff;color:#fff'),
         }; })(),
+      isMailSignature:screen==='mailSignature',sigChamps,sigEtat,sigEtatStyle,sigUrl,sigGabErr,
+      sigAGab:!!this._mailGab,sigSave,sigSaveStyle,sigSaveLbl:sigDirty?'Enregistrer':'Aucune modification',
+      sigMsg:S.mailSigMsg||'',sigEnseigne:sigSrv.LOGO_ALT||'—',sigAdresse:sigSrv.ADDRESS||'—',
       isShopParams:screen==='shopParams',editShop:this.openForm('shop'),
       // ── Tablette Kitchen (Réglages) ──
       // Le mode tablette a quitté ce back-office : Kitchen porte l'appareil et
