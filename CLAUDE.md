@@ -82,6 +82,40 @@ des écrans au navigateur — API absente **et** API présente.
 - **`index.html` et `back_office_ws_franchisee.dc.html` restent identiques**,
   au bloc de boot près. Toute modification de l'un se reporte sur l'autre.
 
+## Mise en ligne — d'où part une livraison
+
+**Ce dépôt n'a qu'une ligne : `main`.** Elle est à la fois la branche par
+défaut, celle où les PR sont fusionnées, et la seule d'où part une livraison —
+`deploy.yml` se déclenche sur **tout** push sur `main`. Fusionner une PR met
+donc le changement en ligne dans la minute, sans rien lancer à la main.
+
+C'est à vérifier avant de livrer, parce que ce n'est pas vrai partout : dans
+`consultant_BO`, la production se livrait depuis une branche distincte, sans
+ancêtre commun avec la branche par défaut. Fusionner n'y mettait rien en ligne,
+et livrer la branche par défaut aurait retiré du serveur les écrans qu'elle ne
+portait pas. Les deux lignes y ont été réunies le 07/09/2026 ; le modèle est
+écrit dans son `docs/DEPLOIEMENT.md`. Avant toute livraison, dans n'importe
+quel dépôt : regardez `on:` du workflow, et comparez ce que vous poussez à ce
+qui est en ligne.
+
+Le transfert est un `rsync` **sans `--delete`** : rien d'autre sur le serveur
+n'est effacé. La livraison contrôle ensuite, depuis le serveur, que la page
+servie et ses actifs répondent — runtime, `bo_server.js`, `api-config.js`,
+React, le design system et les cinq polices. La PWA chauffeur (`/webshop/driver`)
+part dans le même job, avec sa propre copie du design system.
+
+> **Onze branches de ce dépôt n'ont aucun ancêtre commun avec `main`** (lignes
+> parallèles de juillet à septembre 2026). Aucune ne livre : elles sont sans
+> effet sur la production. Elles sont toutes **en retard** sur `main` — la plus
+> récente porte 180 méthodes contre 302, et 345 Ko de moins. Les fusionner
+> telles quelles ferait donc reculer la console. Trois portent tout de même
+> quelques méthodes que `main` n'a pas : `mailSig*` (signature d'email) sur
+> `claude/navbar-section-addresses-wiz4lr`, `invPdf` / `obDomaine*` sur
+> `claude/verify-idshop-backoffice-links-jr66dv`, `geoDataEnsure` sur
+> `claude/deep-search-bar-backoffice-ghqldg`. Si l'une de ces fonctions est
+> voulue, elle se **reporte** sur `main` fonction par fonction — jamais par une
+> fusion de la branche entière.
+
 ## Diagnostic
 
 `.github/workflows/check-endpoints.yml` (onglet Actions → Run workflow)
