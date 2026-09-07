@@ -1622,6 +1622,7 @@
           <select onChange="{{ crmAjouter }}" style="border:.5px solid var(--color-border-secondary);border-radius:9px;padding:9px 11px;font:500 12.5px var(--font-ui);background:var(--color-surface);color:var(--color-text);max-width:250px">
             <sc-for list="{{ crmAjoutOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
           </select>
+          <button onClick="{{ crmTous }}" disabled="{{ crmTousOff }}" title="{{ crmTousTitre }}" class="btn-secondary" style="font-size:12px">{{ crmTousTxt }}</button>
           <button onClick="{{ crmProspect }}" class="btn-secondary" style="font-size:12px">+ Prospect libre</button>
           <button onClick="{{ crmColOuvrir }}" class="btn-secondary" style="font-size:12px" title="Renommer, réordonner, ajouter ou retirer des étapes">⚙ Étapes</button>
         </div>
@@ -6673,6 +6674,48 @@ class Component extends DCLogic {
         this.setState(this.state.crmDet?{crmActErr:why}:{crmEcritErr:why}); return null; })
       .catch(()=>{ const why='Réseau indisponible — rien n’est parti'; this.printJob('⚠ '+why);
         this.setState(this.state.crmDet?{crmActErr:why}:{crmEcritErr:why}); return null; }); }
+  /* La fiche d'une cible proposée au sélecteur — 'o12' un bureau, 'c34' un
+     client B2B. Un seul endroit la construit : l'ajout à l'unité et l'ajout de
+     toute la liste posent donc exactement la même carte, jamais deux versions
+     qui divergeraient à la première correction. */
+  crmFicheCible(v){
+    const T=(k)=>(window.BOServer?window.BOServer.table(k):[])||[];
+    const s=String(v||''); if(!s) return null;
+    const type=s[0]==='o'?'office':'client'; const id=+s.slice(1); if(!id) return null;
+    const src=(type==='office'?T('ws_offices'):T('b2b_clients')).find(x=>String(x.id)===String(id));
+    if(!src) return null;
+    const nom=type==='office'?src.name:(src.company_name||src.name);
+    if(!nom) return null;
+    return {cibleType:type,cibleId:id,nom,contactNom:src.contact||'',contactTel:src.phone||'',
+      contactEmail:src.email||'',
+      adresse:[src.address||src.street,[src.postal_code||src.zip,src.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')}; }
+  /* TOUT AJOUTER. Poser vingt bureaux un par un au sélecteur est un travail de
+     copiste. Mais le bouton ÉCRIT vingt cartes, et une carte se retire une par
+     une : il demande donc confirmation avec le compte exact, avance cible par
+     cible — le serveur reçoit une écriture à la fois, comme à la main — et ne
+     relit le tableau qu'à la fin. Le compteur avance à l'écran : un bouton qui
+     ne dit rien pendant vingt secondes passe pour cassé. */
+  crmAjouterTous(vals,entete){
+    if(this.state.crmMasse) return Promise.resolve();
+    const liste=(vals||[]).filter(Boolean);
+    if(!liste.length) return Promise.resolve();
+    const q='Ajouter les '+liste.length+' cible(s) proposées au tableau ?\n\n'
+      +'Chacune devient une carte dans la première colonne. Pour en retirer une, il faudra ouvrir sa fiche.';
+    if(window.confirm&&!window.confirm(q)) return Promise.resolve();
+    const avance=()=>this.setState(st=>({crmMasse:{fait:((st.crmMasse&&st.crmMasse.fait)||0)+1,total:liste.length}}));
+    this.setState({crmMasse:{fait:0,total:liste.length},crmEcritErr:''});
+    let ok=0,ko=0;
+    return liste.reduce((p,v)=>p.then(()=>{
+      const f=this.crmFicheCible(v);
+      // Une cible dont la fiche a disparu entre-temps n'est pas inventée :
+      // elle est comptée en refus, et le total le dit à la fin.
+      if(!f){ ko++; avance(); return null; }
+      return this.crmPoster('/franchisee/crm-carte',{...entete,...f},null)
+        .then(j=>{ if(j) ok++; else ko++; avance(); }); }),Promise.resolve())
+      .then(()=>{ this.setState({crmMasse:null});
+        this.printJob(ok?('✓ '+ok+' cible(s) ajoutée(s) au tableau'+(ko?(' · '+ko+' refusée(s)'):''))
+                        :('⚠ Aucune cible ajoutée — '+ko+' refus'));
+        this.crmCharger(true); }); }
   crmVarsDe(d,A){ const b=(A&&A.boutique)||{}; const c=String(d.contactNom||'').trim();
     return {contact:c||'Madame, Monsieur',societe:d.nom||'',bon:d.voucher||'',campagne:d.campagneNom||'',boutique:b.nom||'',
       tel_boutique:b.tel||'',email_boutique:b.email||'',ville_boutique:b.ville||'',adresse:d.adresse||''}; }
@@ -7053,6 +7096,10 @@ class Component extends DCLogic {
       const nom=c.company_name||c.name||''; if(!nom) return;
       ajout.push({value:'c'+c.id,label:'Client B2B · '+nom+(c.city?(' — '+c.city):'')}); });
     ajout.sort((a,b)=>a.label.localeCompare(b.label,'fr'));
+    // Ce que le sélecteur montre VRAIMENT : « tout ajouter » ne pose que
+    // celles-là, pour que le bouton et la liste ne disent jamais deux choses.
+    const ajoutVus=ajout.slice(0,300);
+    const masse=S.crmMasse||null;
 
     const det=S.crmDet||null;
     const majDet=(pl)=>this.setState(st=>({crmDet:{...st.crmDet,...pl}}));
@@ -7074,16 +7121,18 @@ class Component extends DCLogic {
       crmColonnes:colonnes, crmTotal:String(cartes.length),
       crmGrabTxt:pris?('Carte prise — cliquez une colonne pour l’y poser'):'',
       crmAnnuler:()=>this.setState({crmGrab:null}),
-      crmAjoutOpts:[{value:'',label:'+ Ajouter une cible…'},...ajout.slice(0,300)],
-      crmAjouter:(e)=>{ const v=e.target.value; if(!v) return;
-        const type=v[0]==='o'?'office':'client'; const id=+v.slice(1);
-        const src=type==='office'?SRV('ws_offices').find(x=>String(x.id)===String(id)):SRV('b2b_clients').find(x=>String(x.id)===String(id));
-        if(!src) return;
-        const nom=type==='office'?src.name:(src.company_name||src.name);
-        this.crmEcrire({campagneId:campId||null,campagneNom:campObj?campObj.nom:null,cibleType:type,cibleId:id,nom,
-          colonne:prem.cle,contactNom:src.contact||'',contactTel:src.phone||'',contactEmail:src.email||'',
-          adresse:[src.address||src.street,[src.postal_code||src.zip,src.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')},
-          '✓ « '+nom+' » ajouté au tableau'); },
+      crmAjoutOpts:[{value:'',label:'+ Ajouter une cible…'},...ajoutVus],
+      crmAjouter:(e)=>{ const f=this.crmFicheCible(e.target.value); if(!f) return;
+        this.crmEcrire({campagneId:campId||null,campagneNom:campObj?campObj.nom:null,colonne:prem.cle,...f},
+          '✓ « '+f.nom+' » ajouté au tableau'); },
+      // Le même geste, pour toute la liste — et rien de plus : ce que le bouton
+      // ajoute est exactement ce que le sélecteur propose.
+      crmTousTxt:masse?('… '+masse.fait+'/'+masse.total):('+ Tout ajouter ('+ajoutVus.length+')'),
+      crmTousOff:!!masse||!ajoutVus.length,
+      crmTousTitre:ajoutVus.length?('Ajoute les '+ajoutVus.length+' cibles proposées, chacune dans la colonne « '+(prem.label||prem.cle)+' »')
+        :'Aucune cible à ajouter : les bureaux et clients B2B de la boutique sont déjà au tableau',
+      crmTous:()=>this.crmAjouterTous(ajoutVus.map(a=>a.value),
+        {campagneId:campId||null,campagneNom:campObj?campObj.nom:null,colonne:prem.cle}),
       crmProspect:()=>{ const nom=(window.prompt&&window.prompt('Nom de l’entreprise à prospecter'))||''; if(!String(nom).trim()) return;
         this.crmEcrire({campagneId:campId||null,campagneNom:campObj?campObj.nom:null,cibleType:'prospect',nom:String(nom).trim(),colonne:prem.cle},'✓ Prospect ajouté'); },
 
