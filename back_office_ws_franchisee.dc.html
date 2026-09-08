@@ -10,8 +10,14 @@
 <helmet>
 <link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026073014">
 <script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026073014"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<!-- Leaflet 1.9.4 SERVI LOCALEMENT, comme React (vendor/). Il venait d'unpkg :
+     une boutique dont le réseau bloque le CDN — ou un CDN en panne — perdait
+     toutes ses cartes, et la page l'attendait indéfiniment sans le dire.
+     Les empreintes `integrity` sont celles de la version officielle et n'ont
+     pas changé : elles vérifient que la copie vendorisée est bien 1.9.4, non
+     modifiée. Le CSS référence `images/` en relatif — d'où le sous-dossier. -->
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=2026073014" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H">
+<script src="vendor/leaflet/leaflet.js?v=2026073014" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"></script>
 <style>
   /* Le design system n'expose ni vert ni orange : on les déclare ici, une
      seule fois, plutôt qu'en dur dans les écrans. Le « mauvais » réutilise la
@@ -1708,8 +1714,8 @@
           <button onClick="{{ addSite }}" class="btn-primary" style="font-size:12px;flex:none">+ Site de livraison</button>
         </div>
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:12px 16px">
-          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Étape 2 sur 4 · Assigner les sites (buildings) aux tournées — les tournées viennent de l'étape 1 · déplacez les sites pour optimiser la charge</div>
-          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:9px">Saisissez un site (bouton « ⠿ Déplacer » sur sa carte) puis déposez-le sur une tournée — toutes les lignes du bâtiment suivent. Le rattachement des bureaux aux sites se fait à l'étape 3 (écran Offices) ; les clients se rattachent ensuite à leur bureau (étape 4).</div>
+          <div style="font:600 10px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:3px">Étape 2 sur 4 · Assigner les sites (zones) aux tournées — les tournées viennent de l'étape 1 · déplacez les zones pour optimiser la charge</div>
+          <div style="font:400 11px var(--font-ui);color:var(--color-text-muted);margin-bottom:9px">Un site est une <strong>zone</strong> — un zoning, un parc d'activité, un immeuble — où le camion s'arrête une fois pour toutes les sociétés qui s'y trouvent, chacune à son adresse. Saisissez-la (bouton « ⠿ Déplacer » sur sa carte) puis déposez-la sur une tournée : toutes ses lignes suivent. Le rattachement des bureaux aux zones se fait à l'étape 3 (écran Offices) ; les clients se rattachent ensuite à leur bureau (étape 4).</div>
           <div style="display:flex;gap:8px;overflow-x:auto">
             <sc-for list="{{ tourAssignTiles }}" as="ta" hint-placeholder-count="4">
               <button type="button" onClick="{{ ta.drop }}" style="{{ ta.style }}">
@@ -1742,6 +1748,19 @@
                   <sc-for list="{{ s.tourOpts }}" as="to" hint-placeholder-count="3"><option value="{{ to.value }}">{{ to.label }}</option></sc-for>
                 </select>
               </div>
+              <div style="height:.5px;background:var(--color-border-tertiary);margin:14px 0"></div>
+              <div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px">Sociétés desservies dans la zone</div>
+              <sc-if value="{{ s.hasBureaux }}" hint-placeholder-val="{{ true }}">
+                <div style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);margin-bottom:7px">{{ s.bureauxTxt }}</div>
+                <div style="display:flex;flex-direction:column;gap:5px">
+                  <sc-for list="{{ s.bureaux }}" as="b" hint-placeholder-count="2">
+                    <div style="display:flex;align-items:baseline;gap:8px;min-width:0"><span style="font:600 11.5px var(--font-ui);color:#2a5a9e;flex:none;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ b.nom }}</span><sc-if value="{{ b.adrShow }}" hint-placeholder-val="{{ false }}"><span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ b.adr }}</span></sc-if></div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ s.noBureaux }}" hint-placeholder-val="{{ false }}">
+                <div style="font:500 11px var(--font-ui);color:#b26a00">Aucune société desservie — la zone est un arrêt sans livraison. Rattachez un bureau à l'étape 3 (écran Offices).</div>
+              </sc-if>
               <div style="height:.5px;background:var(--color-border-tertiary);margin:14px 0"></div>
               <div style="font:600 9px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-muted);margin-bottom:8px">Chaîne logique de livraison</div>
               <div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px 4px">
@@ -3360,7 +3379,7 @@
 
         <!-- 2 · SITES -->
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px 20px">
-          <div class="tw-head" style="justify-content:space-between;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:12px"><span class="tw-num">2</span><div><div class="tw-title">Sites (arrêts), dans l'ordre de la tournée</div><div class="tw-sub">Un site = un bâtiment desservi. L'adresse se choisit dans la liste Google : rue, n°, code postal, localité et position d'un coup.</div></div></div>
+          <div class="tw-head" style="justify-content:space-between;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:12px"><span class="tw-num">2</span><div><div class="tw-title">Sites (arrêts), dans l'ordre de la tournée</div><div class="tw-sub">Un site = une zone desservie — un zoning, un parc d'activité, un immeuble — où le camion s'arrête une fois pour tous ses bureaux. L'adresse est le point de référence de l'arrêt : celle que l'itinéraire vise. Chaque bureau garde la sienne à l'étape 3.</div></div></div>
             <div style="display:flex;gap:8px;align-items:center;flex:none"><sc-if value="{{ twExistHas }}" hint-placeholder-val="{{ false }}"><select value="{{ twExist }}" onChange="{{ twExistPick }}" class="tw-in" style="width:auto;max-width:340px"><option value="">Reprendre un site existant…</option><sc-for list="{{ twExistOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></sc-if><button type="button" onClick="{{ twAddSite }}" class="btn-primary" style="font-size:12px">+ Nouveau site</button></div></div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
             <sc-for list="{{ twSites }}" as="s" hint-placeholder-count="2">
@@ -3383,19 +3402,28 @@
                 </div>
               </div>
             </sc-for>
-            <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Aucun site sur cette tournée. « + Nouveau site », ou reprenez un site existant.</div></sc-if>
+            <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Aucune zone sur cette tournée. « + Nouveau site », ou reprenez un site existant.</div></sc-if>
           </div>
         </div>
 
         <!-- 3 · BUREAUX -->
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:14px;padding:18px 20px">
-          <div class="tw-head"><span class="tw-num">3</span><div><div class="tw-title">Bureaux livrés à chaque site</div><div class="tw-sub">Le bureau (société) desservi à chaque arrêt. Un site sans bureau n'est pas livrable — le lien se fait ici, jamais deviné.</div></div></div>
+          <div class="tw-head"><span class="tw-num">3</span><div><div class="tw-title">Bureaux livrés à chaque site</div><div class="tw-sub">Les sociétés desservies à chaque arrêt : une zone en héberge autant qu'elle en compte, chacune à son adresse. Un site sans aucun bureau n'est pas livrable — le lien se fait ici, jamais deviné.</div></div></div>
           <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
             <sc-for list="{{ twSiteOffices }}" as="s" hint-placeholder-count="2">
-              <div style="display:grid;grid-template-columns:34px 1.4fr 2fr;gap:10px;align-items:center;border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 14px">
-                <span style="{{ s.numStyle }}">{{ s.num }}</span>
-                <div style="min-width:0"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.address }}</div></div>
-                <select value="{{ s.officeId }}" onChange="{{ s.setOffice }}" class="tw-in"><option value="">— Aucun bureau (site seul, non livrable) —</option><sc-for list="{{ s.officeOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select>
+              <div style="display:grid;grid-template-columns:34px 1.4fr 2fr;gap:10px;align-items:start;border:.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 14px">
+                <span style="{{ s.numStyle }};margin-top:5px">{{ s.num }}</span>
+                <div style="min-width:0;padding-top:3px"><div style="font:600 12.5px var(--font-ui);color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.name }}</div><div style="font:400 11px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ s.address }}</div></div>
+                <div style="min-width:0;display:flex;flex-direction:column;gap:6px">
+                  <sc-for list="{{ s.offices }}" as="o" hint-placeholder-count="1">
+                    <span style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--color-primary);background:var(--color-background-secondary);color:var(--color-primary);border-radius:8px;padding:7px 10px;font:600 12px var(--font-ui)"><span style="flex:1;min-width:0"><span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span><sc-if value="{{ o.adrShow }}" hint-placeholder-val="{{ false }}"><span title="Adresse de livraison de ce bureau dans la zone" style="display:block;font:400 10.5px var(--font-ui);color:var(--color-text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.adr }}</span></sc-if></span><span title="Temps de dépôt de ce bureau — il entre dans l'heure d'arrivée des arrêts suivants" style="flex:none;font-weight:400;color:var(--color-text-muted)">{{ o.drop }}</span><button type="button" onClick="{{ o.remove }}" title="Détacher ce bureau du site" style="border:none;background:transparent;color:var(--color-primary);cursor:pointer;font-size:15px;line-height:1;padding:0;flex:none">×</button></span>
+                  </sc-for>
+                  <sc-if value="{{ s.noOffice }}" hint-placeholder-val="{{ false }}"><div style="font:500 12px var(--font-ui);color:var(--color-text-muted);padding:5px 0 1px">— Aucun bureau (site seul, non livrable) —</div></sc-if>
+                  <sc-if value="{{ s.canAdd }}" hint-placeholder-val="{{ true }}"><select value="" onChange="{{ s.addOffice }}" class="tw-in"><option value="">{{ s.addLabel }}</option><sc-for list="{{ s.addOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.value }}">{{ o.label }}</option></sc-for></select></sc-if>
+                  <sc-if value="{{ s.allTaken }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px var(--font-ui);color:var(--color-text-muted)">Tous les bureaux connus sont déjà rattachés à ce site.</div></sc-if>
+                  <sc-if value="{{ s.dblShow }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px/1.5 var(--font-ui);color:var(--color-primary)">{{ s.dblTxt }}</div></sc-if>
+                  <sc-if value="{{ s.adrShow }}" hint-placeholder-val="{{ false }}"><div style="font:400 11px/1.5 var(--font-ui);color:var(--color-primary)">{{ s.adrTxt }}</div></sc-if>
+                </div>
               </div>
             </sc-for>
             <sc-if value="{{ twSitesEmpty }}" hint-placeholder-val="{{ false }}"><div style="font:400 12px var(--font-ui);color:var(--color-text-muted);padding:6px 0">Les bureaux se rattachent aux sites de l'étape 2.</div></sc-if>
@@ -4564,10 +4592,59 @@ class Component extends DCLogic {
      tables sont RELUES depuis l'API — jamais mises à jour de mémoire. */
   twVide(){ return {open:false,tourId:null,name:'',start:'06:00',max:'',vehicule:'',ret:true,forfait:'',pricePerKm:'',
     days:{L:true,Ma:true,Me:true,J:true,V:true,S:false,D:false},postcodes:[],cpQ:'',sites:[],removed:[],route:null,routeBusy:false,routeErr:'',saving:false,err:'',exist:'',opt:null,optBusy:false,optErr:''}; }
-  twSiteDe(r){ return {key:'s'+(r.id!=null?r.id:Math.random().toString(36).slice(2)),id:(r.id!=null?r.id:null),
-    name:(r.name&&r.name!=='—')?r.name:'',address:(r.adr&&r.adr!=='—')?r.adr:'',acc:(r.acc!=null?String(r.acc):''),
-    officeId:(r.office_client_id!=null?String(r.office_client_id):''),lat:(r.lat!=null?+r.lat:null),lng:(r.lng!=null?+r.lng:null),
-    place_id:r.place_id||'',formatted:'',street:r.street||'',street_number:r.street_number||'',postal_code:r.postal_code||'',city:r.city||''}; }
+  /* UN SITE EST UN ZONING, PAS UN BÂTIMENT — une zone économique qui héberge
+     PLUSIEURS BUREAUX, à des adresses différentes à l'intérieur de la zone.
+     `ws_office_delivery_sites` porte une ligne par COUPLE (site, bureau) :
+     l'onboarding d'un bureau y écrit une ligne avec l'adresse de CE bureau et
+     le nom du site sur lequel il se trouve. Un zoning à trois sociétés y occupe
+     donc trois lignes, de même nom et d'adresses distinctes.
+
+     L'assistant lisait ces lignes telles quelles : le même zoning revenait
+     trois fois dans les arrêts, avec un menu déroulant qui n'acceptait qu'UN
+     bureau, et l'ETA lui comptait trois trajets, trois temps d'accès et trois
+     temps de dépôt. L'ordre d'arrêts proposé par Google s'écrivait sur ces
+     doublons.
+
+     Ce qui identifie un site, c'est donc son NOM — le zoning — et non son
+     adresse : c'est le seul champ que ses lignes partagent. Les lignes de même
+     nom sont regroupées en UN arrêt qui porte la liste de ses bureaux
+     (`officeIds`), l'identifiant de chacune de ses lignes (`rowIds`,
+     `rowByOffice`) et l'ADRESSE PROPRE de chaque ligne (`rowAdr`).
+     L'enregistrement les redéploie ligne par ligne : la table garde exactement
+     la forme que le serveur lui connaît, et chaque bureau garde son adresse. */
+  // Sans nom NI adresse, rien ne dit que deux lignes sont le même zoning :
+  // elles restent séparées.
+  twSiteKey(r){ return this.siteKey(r)||('#'+(r&&r.id!=null?r.id:Math.random().toString(36).slice(2))); }
+  twAdrDe(r){ return {address:(r.adr&&r.adr!=='—')?r.adr:'',lat:(r.lat!=null?+r.lat:null),lng:(r.lng!=null?+r.lng:null),
+    place_id:r.place_id||'',street:r.street||'',street_number:r.street_number||'',postal_code:r.postal_code||'',city:r.city||''}; }
+  twSiteDe(r){ const oid=(r.office_client_id!=null?String(r.office_client_id):''); const a=this.twAdrDe(r);
+    return {key:'s'+(r.id!=null?r.id:Math.random().toString(36).slice(2)),id:(r.id!=null?r.id:null),
+    rowIds:(r.id!=null?[r.id]:[]),rowByOffice:(oid&&r.id!=null?{[oid]:r.id}:{}),
+    rowAdr:(r.id!=null?{[String(r.id)]:a}:{}),adrDirty:false,
+    name:(r.name&&r.name!=='—')?r.name:'',acc:(r.acc!=null?String(r.acc):''),officeIds:(oid?[oid]:[]),
+    ...a,formatted:''}; }
+  /* Le regroupement complète l'arrêt avec ce que la première ligne n'avait pas :
+     une ligne sans position ni temps d'accès n'efface pas ceux d'une autre ligne
+     du même zoning. L'adresse de référence de l'arrêt reste celle de la première
+     ligne — les autres sont conservées telles quelles dans `rowAdr`. */
+  twSitesDe(rows){ const out=[], idx={};
+    (rows||[]).forEach(r=>{ const k=this.twSiteKey(r); const j=idx[k];
+      if(j===undefined){ idx[k]=out.length; out.push(this.twSiteDe(r)); return; }
+      const s=out[j];
+      if(r.id!=null&&!s.rowIds.some(x=>String(x)===String(r.id))) s.rowIds.push(r.id);
+      if(r.id!=null&&s.rowAdr[String(r.id)]==null) s.rowAdr[String(r.id)]=this.twAdrDe(r);
+      if(s.id==null&&r.id!=null) s.id=r.id;
+      const oid=(r.office_client_id!=null?String(r.office_client_id):'');
+      if(oid){ if(!s.officeIds.includes(oid)) s.officeIds.push(oid); if(r.id!=null&&s.rowByOffice[oid]==null) s.rowByOffice[oid]=r.id; }
+      if(!s.address&&r.adr&&r.adr!=='—') s.address=r.adr;
+      if(s.lat==null&&r.lat!=null&&r.lng!=null){ s.lat=+r.lat; s.lng=+r.lng; }
+      if(s.acc===''&&r.acc!=null) s.acc=String(r.acc);
+      if(!s.place_id&&r.place_id) s.place_id=r.place_id;
+      if(!s.street&&r.street) s.street=r.street;
+      if(!s.street_number&&r.street_number) s.street_number=r.street_number;
+      if(!s.postal_code&&r.postal_code) s.postal_code=r.postal_code;
+      if(!s.city&&r.city) s.city=r.city; });
+    return out; }
   twOpen(tourId){ const T=this.twVide(); T.open=true; this.zfGeoEnsure();
     if(tourId){ const t=(this.routesMeta()||[]).find(x=>String(x.id)===String(tourId));
       if(t){ const k=String(t.id).replace(/^r/,'');
@@ -4575,7 +4652,7 @@ class Component extends DCLogic {
         T.forfait=(t.forfait!=null?String(t.forfait):''); T.pricePerKm=(t.pricePerKm!=null?String(t.pricePerKm):''); T.days=t.days||T.days;
         const tp=(window.BOServer?window.BOServer.table('ws_tour_postcodes'):[])||[]; T.postcodes=[...new Set(tp.filter(r=>String(r.tour_id)===k).map(r=>String(r.postcode)))];
         const sites=(window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[];
-        T.sites=sites.filter(r=>r.tournee_id!=null&&String(r.tournee_id)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))).map(r=>this.twSiteDe(r));
+        T.sites=this.twSitesDe(sites.filter(r=>r.tournee_id!=null&&String(r.tournee_id)===k).sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name))));
         if(t.routeKm!=null&&t.routeMin!=null) T.route={km:+t.routeKm,minutes:+t.routeMin,legs:null,at:t.routeAt||null}; }
       else { this.printJob('⚠ Tournée introuvable — rechargez la page'); return; } }
     this.setState({tw:T}); }
@@ -4583,18 +4660,36 @@ class Component extends DCLogic {
   twPatch(p){ this.setState(s=>{ const t=s.tw||this.twVide(); return {tw:{...t,...(typeof p==='function'?p(t):p)}}; }); }
   twSiteSet(i,k){ return e=>{ const v=(e&&e.target)?e.target.value:e; this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,[k]:v}:x),err:''})); }; }
   twSiteType(i){ return e=>{ const v=e.target.value; const key=((this.state.tw||{}).sites||[])[i]?.key;
-    this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,address:v,lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}:x),route:null}));
+    this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,address:v,adrDirty:true,lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}:x),route:null}));
     if(key) this.geoType('tw'+key,v); }; }
   twSitePick(i,id){ const key=((this.state.tw||{}).sites||[])[i]?.key; if(!key) return;
     this.geoPick('tw'+key,id,j=>this.twPatch(t=>({sites:t.sites.map((x,jj)=>jj===i?{...x,
-      address:this.geoLigne(j)+((j.zip||j.city)?(', '+[j.zip,j.city].filter(Boolean).join(' ')):''),name:x.name||this.geoLigne(j),
+      address:this.geoLigne(j)+((j.zip||j.city)?(', '+[j.zip,j.city].filter(Boolean).join(' ')):''),name:x.name||this.geoLigne(j),adrDirty:true,
       lat:j.lat,lng:j.lng,place_id:j.placeId||'',formatted:j.formatted||'',street:j.street||'',street_number:j.number||'',postal_code:j.zip||'',city:j.city||''}:x),route:null}))); }
   twSiteMove(i,d){ this.twPatch(t=>{ const a=t.sites.slice(); const j=i+d; if(j<0||j>=a.length) return {}; const x=a[i]; a[i]=a[j]; a[j]=x; return {sites:a,route:null}; }); }
-  twSiteRemove(i){ this.twPatch(t=>{ const x=t.sites[i]; return {sites:t.sites.filter((_,j)=>j!==i),removed:(x&&x.id!=null)?[...t.removed,x.id]:t.removed,route:null}; }); }
-  twAddSite(){ this.twPatch(t=>({sites:[...t.sites,{key:'n'+Date.now(),id:null,name:'',address:'',acc:'',officeId:'',lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}],route:null})); }
+  twSiteRemove(i){ this.twPatch(t=>{ const x=t.sites[i]; const ids=(x&&x.rowIds&&x.rowIds.length)?x.rowIds:((x&&x.id!=null)?[x.id]:[]);
+      return {sites:t.sites.filter((_,j)=>j!==i),removed:ids.length?[...t.removed,...ids]:t.removed,route:null}; }); }
+  /* Rattacher / détacher un bureau : le lien vit dans le brouillon, il n'est
+     écrit qu'à l'enregistrement — comme le reste de l'assistant. */
+  twOfficeAdd(i){ return e=>{ const v=String((e&&e.target)?e.target.value:e||''); if(!v) return;
+    this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,officeIds:((x.officeIds||[]).some(o=>String(o)===v)?x.officeIds:[...(x.officeIds||[]),v])}:x),err:''})); }; }
+  twOfficeRemove(i,id){ return ()=>this.twPatch(t=>({sites:t.sites.map((x,j)=>j===i?{...x,officeIds:(x.officeIds||[]).filter(o=>String(o)!==String(id))}:x),err:''})); }
+  /* L'adresse d'un bureau telle que `ws_offices` la connaît — celle encodée à
+     son onboarding. Rend `null` quand il n'y en a pas : aucune adresse n'est
+     reconstituée à partir de la seule localité. */
+  twOfficeAdr(){ const m={}; ((window.BOServer?window.BOServer.table('ws_offices'):[])||[]).forEach(o=>{ if(!o||o.id==null) return;
+      const rue=String(o.address||o.adr||'').trim(); if(!rue) return;
+      const cp=String(o.postal_code||'').trim(), loc=String(o.city||'').trim();
+      m[String(o.id)]={address:rue+((cp||loc)?(', '+[cp,loc].filter(Boolean).join(' ')):''),postal_code:cp,city:loc}; });
+    return (id)=>m[String(id||'')]||null; }
+  twAddSite(){ this.twPatch(t=>({sites:[...t.sites,{key:'n'+Date.now(),id:null,rowIds:[],rowByOffice:{},rowAdr:{},adrDirty:true,name:'',address:'',acc:'',officeIds:[],lat:null,lng:null,place_id:'',formatted:'',street:'',street_number:'',postal_code:'',city:''}],route:null})); }
   twAddExisting(e){ const id=e.target.value; if(!id) return;
-    const r=((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[]).find(x=>String(x.id)===String(id)); if(!r) return;
-    this.twPatch(t=>t.sites.some(x=>String(x.id)===String(id))?{exist:''}:{sites:[...t.sites,this.twSiteDe(r)],removed:t.removed.filter(x=>String(x)!==String(id)),route:null,exist:''}); }
+    const rows=((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[]);
+    const r=rows.find(x=>String(x.id)===String(id)); if(!r) return;
+    // Un site repris arrive avec ses bureaux : ils sont sur ses AUTRES lignes.
+    const k=this.twSiteKey(r); const s=this.twSitesDe(rows.filter(x=>this.twSiteKey(x)===k))[0]; if(!s) return;
+    const deja=(x)=>(x.rowIds||[]).some(v=>(s.rowIds||[]).some(w=>String(v)===String(w)));
+    this.twPatch(t=>t.sites.some(deja)?{exist:''}:{sites:[...t.sites,s],removed:t.removed.filter(v=>!(s.rowIds||[]).some(w=>String(w)===String(v))),route:null,exist:''}); }
   twCpAdd(cp){ this.twPatch(t=>({postcodes:t.postcodes.includes(cp)?t.postcodes:[...t.postcodes,cp],cpQ:'',err:''})); }
   twCpRemove(cp){ this.twPatch(t=>({postcodes:t.postcodes.filter(x=>x!==cp)})); }
   twRoute(){ const T=this.state.tw||this.twVide(); const fr=window.__FR||{};
@@ -4636,15 +4731,51 @@ class Component extends DCLogic {
     if(!fr.base){ this.twPatch({err:'API non configurée — rien ne peut être enregistré.'}); return; }
     this.twPatch({saving:true,err:''});
     const num=v=>{ const n=parseFloat(String(v==null?'':v).replace(',','.')); return isNaN(n)?null:n; };
+    const twoAdr=this.twOfficeAdr();
+    /* REDÉPLOIEMENT : un arrêt à trois bureaux redevient trois lignes de
+       `ws_office_delivery_sites`, une par couple (site, bureau) — la forme que
+       le serveur écrit déjà. Chaque bureau reprend LA LIGNE qui le portait
+       (`rowByOffice`) pour que l'enregistrement soit une mise à jour et non une
+       suppression suivie d'une création ; un bureau nouvellement rattaché prend
+       une ligne libre du site, sinon une ligne neuve (`id:null`). Les lignes
+       qu'aucun bureau ne réclame plus — bureau détaché — sont supprimées.
+
+       L'ADRESSE reste celle de chaque ligne. Un zoning n'a pas une adresse mais
+       autant que de bureaux : écrire l'adresse de référence de l'arrêt sur
+       toutes ses lignes remplacerait l'adresse de livraison de chaque société
+       par celle de sa voisine. Seule une adresse RÉÉCRITE à l'étape 2
+       (`adrDirty`) se porte sur toutes les lignes — là, c'est un choix. */
+    const twRows=[], twOrphelines=[];
+    T.sites.forEach(x=>{ const pris={}; const libres=(x.rowIds||[]).slice(); const parBureau=x.rowByOffice||{};
+      const prendre=(oid)=>{ const r=(oid!=null&&parBureau[oid]!=null)?parBureau[oid]:null;
+        if(r!=null&&!pris[String(r)]){ pris[String(r)]=1; return r; }
+        const libre=libres.find(v=>!pris[String(v)]); if(libre!=null){ pris[String(libre)]=1; return libre; } return null; };
+      const adrSite={address:String(x.address||'').trim(),lat:x.lat,lng:x.lng,place_id:x.place_id||'',
+        street:x.street||'',street_number:x.street_number||'',postal_code:x.postal_code||'',city:x.city||''};
+      /* Un bureau NOUVELLEMENT rattaché n'a pas encore de ligne dans cette zone :
+         sa ligne prend l'adresse que `ws_offices` lui connaît — sa vraie porte —
+         et non celle de la zone, qui serait celle d'une société voisine. Sans
+         adresse connue, la référence de la zone sert de point de départ : elle
+         situe au moins le bureau, et l'étape 2 permet de la préciser. */
+      const adrBureau=(oid)=>{ const a=twoAdr(oid); return a?{address:a.address,lat:null,lng:null,place_id:'',
+        street:'',street_number:'',postal_code:a.postal_code,city:a.city}:adrSite; };
+      const adrDe=(rid,oid)=>{ if(x.adrDirty) return adrSite;
+        if(rid==null) return adrBureau(oid);
+        const a=(x.rowAdr||{})[String(rid)];
+        return a?{address:String(a.address||'').trim(),lat:a.lat,lng:a.lng,place_id:a.place_id||'',
+          street:a.street||'',street_number:a.street_number||'',postal_code:a.postal_code||'',city:a.city||''}:adrSite; };
+      const bureaux=(x.officeIds||[]).filter(Boolean);
+      // Un site sans bureau garde UNE ligne : il existe comme arrêt, il n'est simplement pas livrable.
+      (bureaux.length?bureaux:[null]).forEach(oid=>{ const rid=prendre(oid);
+        twRows.push({name:String(x.name||'').trim(),acc:num(x.acc),formatted:'',...adrDe(rid,oid),id:rid,officeId:(oid?+oid:null)}); });
+      libres.forEach(v=>{ if(!pris[String(v)]) twOrphelines.push(v); }); });
     const payload={tour:{id:(T.tourId?+T.tourId:null),name:String(T.name).trim(),start:T.start,max:(String(T.max||'').trim()===''?null:parseInt(T.max,10)),vehicule:T.vehicule||'',ret:!!T.ret,
         forfait:num(T.forfait),pricePerKm:num(T.pricePerKm),days:T.days,postcodes:T.postcodes,routeKm:(T.route?T.route.km:null),routeMin:(T.route?T.route.minutes:null)},
-      sites:T.sites.map(x=>({id:x.id,name:String(x.name||'').trim(),address:String(x.address||'').trim(),acc:num(x.acc),officeId:(x.officeId?+x.officeId:null),
-        lat:x.lat,lng:x.lng,place_id:x.place_id||'',formatted:x.formatted||'',street:x.street||'',street_number:x.street_number||'',postal_code:x.postal_code||'',city:x.city||''})),
-      removeSites:T.removed};
+      sites:twRows,removeSites:[...T.removed,...twOrphelines]};
     fetch(fr.base+'/franchisee/tour-wizard'+(fr.shop?('?shop='+encodeURIComponent(fr.shop)):''),{method:'POST',headers:FRH({'Content-Type':'application/json'}),credentials:'omit',body:JSON.stringify(payload)})
       .then(r=>r.json().then(j=>({st:r.status,j}),()=>({st:r.status,j:null}))).then(({st,j})=>{
         if(st===200&&j&&j.ok){
-          this.printJob('✓ Tournée « '+payload.tour.name+' » enregistrée — '+T.sites.length+' site(s), '+T.postcodes.length+' code(s) postal(aux)');
+          this.printJob('✓ Tournée « '+payload.tour.name+' » enregistrée — '+T.sites.length+' site(s), '+twRows.filter(r=>r.officeId!=null).length+' bureau(x), '+T.postcodes.length+' code(s) postal(aux)');
           this.twReload().then(()=>this.setState(s=>({tw:{...(s.tw||this.twVide()),open:false,saving:false},_rev:(s._rev||0)+1}),()=>{ if(this.drawRoute) this.drawRoute(); })); }
         else this.twPatch({saving:false,err:(j&&j.error)||(st===404?'POST /franchisee/tour-wizard absent du serveur — déployez le webshop.':('Enregistrement refusé (HTTP '+st+')'))}); })
       .catch(()=>this.twPatch({saving:false,err:'Réseau indisponible — rien n’a été enregistré.'})); }
@@ -4933,8 +5064,18 @@ class Component extends DCLogic {
     // Coûts et validation : taux horaire, prix au km, doublons de sites.
     if(gp('cost_driver_hour')==null) C.push({what:'Taux horaire chauffeur',why:'Non paramétré — aucun coût de tournée dans la rentabilité',ctx:'Paramètres de coûts · clé cost_driver_hour',lien:'Paramétrer → Paramètres de coûts',go:goScreen('params')});
     const sansPpk=tours.filter(t=>t.pricePerKm==null); if(sansPpk.length) C.push({what:sansPpk.map(t=>t.name).join(' · '),why:'Prix au km non renseigné — coût de tournée non calculable',ctx:sansPpk.length+' tournée(s)',lien:'Renseigner → assistant tournée',go:goWizard(sansPpk[0])});
-    const byAdr={}; sites.forEach(r=>{ const k=norm(r.adr); if(!k||k==='—') return; (byAdr[k]=byAdr[k]||[]).push(r); }); const dups=Object.keys(byAdr).filter(k=>byAdr[k].length>1);
-    if(dups.length) C.push({what:dups.map(k=>byAdr[k][0].adr+' ×'+byAdr[k].length).join(' · '),why:'Sites en double à la même adresse',ctx:dups.reduce((a,k)=>a+byAdr[k].length,0)+' lignes pour '+dups.length+' bâtiment(s)',lien:'Nettoyer → Sites',go:goScreen('sites')});
+    /* DOUBLONS DE LIGNES. Plusieurs lignes à la même adresse ne sont PAS un
+       doublon : une zone porte une ligne par société, et deux sociétés peuvent
+       partager un immeuble. L'alerte les signalait toutes — elle envoyait
+       « nettoyer » un paramétrage correct. Un vrai doublon, c'est deux lignes
+       de la même zone pour la MÊME société (ou deux lignes sans société). */
+    const parZone={}; sites.forEach(r=>{ const k=this.siteKey(r); if(!k) return;
+      const b=norm(r.bureau&&r.bureau!=='—'?r.bureau:(r.office&&r.office!=='—'?r.office:''))||'∅';
+      const z=(parZone[k]=parZone[k]||{nom:(r.name&&r.name!=='—')?r.name:r.adr,par:{}}); (z.par[b]=z.par[b]||[]).push(r); });
+    const dups=Object.keys(parZone).map(k=>{ const z=parZone[k];
+      const n=Object.keys(z.par).reduce((a,b)=>a+Math.max(0,z.par[b].length-1),0);
+      return n>0?{nom:z.nom,n}:null; }).filter(Boolean);
+    if(dups.length) C.push({what:dups.map(d=>d.nom+' ×'+(d.n+1)).join(' · '),why:'Lignes en double : la même société deux fois sur la même zone (ou deux lignes sans société)',ctx:dups.reduce((a,d)=>a+d.n,0)+' ligne(s) en trop sur '+dups.length+' zone(s)',lien:'Nettoyer → assistant tournée',go:goScreen('sites')});
     const out=[];
     if(B.length) out.push({key:'b',label:'Bloquant pour les livraisons',color:'var(--color-primary)',sub:B.length+' · le client ne peut pas être livré',items:B});
     if(H.length) out.push({key:'h',label:'Heures d’arrivée incomplètes',color:'#b26a00',sub:H.length+' · les arrêts concernés perdent leur ETA',items:H});
@@ -5493,9 +5634,9 @@ class Component extends DCLogic {
           {k:'motif',label:'Motif',type:'text',ph:'ex. Jour férié · Congés annuels · Inventaire',
            info:'Il explique la fermeture à qui relit le calendrier plus tard.'},
         ]},
-      site:{ title:'Site (building)', table:'ws_office_delivery_sites', tbl:'ws_office_delivery_sites', save:'Créer le site',
+      site:{ title:'Site (zone desservie)', table:'ws_office_delivery_sites', tbl:'ws_office_delivery_sites', save:'Créer le site',
         fields:[
-          {k:'name',label:'Nom du site / bâtiment',type:'text',ph:'ex. Tour Bastion, Zoning Fleming',info:'Un site est un BUILDING (ou groupement de bureaux) : l\'arrêt physique de la tournée. Les bureaux (offices) s\'y rattachent depuis leur propre formulaire.',section:'Rattachement'},
+          {k:'name',label:'Nom de la zone / du site',type:'text',ph:'ex. Zoning Fleming, Parc Créalys, Tour Bastion',info:'Un site est une ZONE — un zoning, un parc d\'activité, un immeuble : l\'arrêt physique de la tournée, où le camion s\'arrête une fois pour toutes les sociétés qui s\'y trouvent. C\'est le NOM qui identifie la zone : deux lignes de même nom sont le même arrêt, même à des adresses différentes. Les bureaux (offices) s\'y rattachent depuis leur propre formulaire.',section:'Rattachement'},
           {k:'tour',label:'Tournée rattachée',type:'select',options:sel(tours),def:tours[0],section:'Rattachement'},
           {k:'bureau',label:'Société / bureau desservi',type:'select',options:[{value:'',label:'— Aucune (site seul, non livrable) —'},...bureaux.map(b=>({value:b,label:b}))],info:'Le bureau (personne morale) livré à ce site. Un site sans société n\'est pas livrable : le client peut le choisir sans effet. Le même site peut être partagé par plusieurs sociétés : une ligne par société.',section:'Site'},
           // Adresse STRUCTURÉE (rue+n° / CP / ville) : recomposée en `adr` à
@@ -5815,7 +5956,34 @@ class Component extends DCLogic {
       this.feeWrite({id:(S.formRow&&S.formRow.id)||0,niveau:v.niveau,cible:v.cible,
         offert:v.offert==='Oui',toujours:v.toujours==='Oui',montant:v.montant,franco:v.franco,
         paiement:v.paiement==='Selon bureau'?'':v.paiement}); return; }
-    if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl); if(S.formEdit && S.formIndex!=null && rows[S.formIndex]){ rows[S.formIndex]={...rows[S.formIndex],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
+    if(cfg.tbl && window.BOServer){ const rows=window.BOServer.table(cfg.tbl);
+      /* LA LIGNE VISÉE SE RETROUVE PAR SON IDENTIFIANT, pas par son indice.
+         L'indice vient de la liste AFFICHÉE, qui peut être filtrée — l'écran
+         Sites travaille sur `sitesActifs()` — alors que l'écriture porte sur la
+         table brute. Un seul site désactivé plus haut dans la table et c'est
+         une AUTRE ligne qui était réécrite. L'indice reste le repli pour les
+         tables sans identifiant. */
+      let ix=(S.formEdit&&S.formIndex!=null)?S.formIndex:-1;
+      const src=S.formRow;
+      if(src&&src.id!=null){ const j=rows.findIndex(x=>x&&x.id!=null&&String(x.id)===String(src.id)); if(j>=0) ix=j; }
+      if(S.formEdit&&ix>=0&&rows[ix]){ rows[ix]={...rows[ix],...v}; } else { rows.push(v); } window.BOServer.save(cfg.tbl,rows); }
+    /* RENOMMER UNE ZONE RENOMME TOUTES SES LIGNES. Le nom est ce qui identifie
+       un site : ne le changer que sur la ligne éditée couperait le zoning en
+       deux — un arrêt de plus dans la tournée, et ses sociétés réparties entre
+       les deux moitiés. La tournée suit la même règle : c'est l'ARRÊT qui est
+       rattaché, pas la ligne. Le reste — adresse, étage, temps d'accès, société
+       — appartient à la ligne et n'est pas propagé. */
+    if(S.formKey==='site'&&S.formEdit&&S.formRow&&window.BOServer){
+      const k0=this.siteKey(S.formRow);
+      const nom=String(v.name==null?'':v.name).trim(), tour=v.tour;
+      const nomChg=!!nom&&nom!==String(S.formRow.name==null?'':S.formRow.name).trim();
+      const tourChg=(tour!==undefined)&&String(tour==null?'':tour)!==String(S.formRow.tour==null?'':S.formRow.tour);
+      if(k0&&(nomChg||tourChg)){ const rows=window.BOServer.table('ws_office_delivery_sites'); let n=0;
+        rows.forEach((x,xi)=>{ if(!x||this.siteKey(x)!==k0) return;
+          if(S.formRow.id!=null&&x.id!=null&&String(x.id)===String(S.formRow.id)) return;
+          rows[xi]={...x,...(nomChg?{name:nom}:{}),...(tourChg?{tour:tour}:{})}; n++; });
+        if(n){ window.BOServer.save('ws_office_delivery_sites',rows);
+          this.printJob('✓ '+n+' autre(s) ligne(s) de la zone suivent'+(nomChg?' le nouveau nom':'')+(nomChg&&tourChg?' et':'')+(tourChg?' la nouvelle tournée':'')); } } }
     // Choix « garder le siège » (client B2B) : l'adresse encodée devient un
     // LIEU DE LIVRAISON (ws_offices, statut pending) rattaché à la société.
     if(S.formKey==='clientEdit'&&S.pendingOffice){ const po=S.pendingOffice;
@@ -7264,6 +7432,24 @@ class Component extends DCLogic {
      mais une ligne créée ou modifiée dans la console vit d'abord en mémoire —
      c'est là qu'un site retiré pouvait continuer d'être proposé. */
   sitesActifs(){ return ((window.BOServer?window.BOServer.table('ws_office_delivery_sites'):[])||[]).filter(r=>r&&r.active!==false&&r.active!==0&&r.active!=='0'&&r.active!=='Non'); }
+  /* CLÉ D'IDENTITÉ D'UN SITE — partagée par l'assistant tournée, l'écran Sites
+     et l'écran Offices, pour que les trois comptent la même chose.
+
+     Un site est une ZONE : un zoning, un parc d'activité, un immeuble — l'arrêt
+     où le camion s'arrête une fois pour toutes les sociétés qui s'y trouvent.
+     `ws_office_delivery_sites` porte une ligne par couple (site, bureau), et
+     l'onboarding y écrit l'adresse DU BUREAU : les lignes d'une même zone ont
+     donc des adresses différentes et ne partagent que leur NOM. Grouper par
+     adresse — ce que faisaient les trois écrans — faisait compter un zoning à
+     trois sociétés pour trois sites, avec trois vignettes, trois arrêts et
+     trois temps d'accès.
+
+     Le nom fait donc foi ; l'adresse ne sert que pour une ligne sans nom. Rend
+     '' quand la ligne n'a ni l'un ni l'autre : l'appelant décide (une carte à
+     part, ou rien du tout). */
+  siteKey(r){ const n=v=>String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+    const nom=(r&&r.name&&r.name!=='—')?n(r.name):''; if(nom) return 'n:'+nom;
+    const adr=(r&&r.adr&&r.adr!=='—')?n(r.adr):''; return adr?('a:'+adr):''; }
   officeManques(o){
     if(!o) return [];
     const vide=v=>{ const x=String(v==null?'':v).trim(); return x===''||x==='—'; };
@@ -7311,17 +7497,26 @@ class Component extends DCLogic {
       fetch(fr.base+'/franchisee/b2b-clients'+qs,H).then(r=>r.ok?r.json():null).catch(()=>null),
     ]).then(([offs,sites,cls])=>{ if(window.BOServer){ if(Array.isArray(offs)) window.BOServer.refresh('ws_offices',offs); if(Array.isArray(sites)) window.BOServer.refresh('ws_office_delivery_sites',sites); if(Array.isArray(cls)) window.BOServer.refresh('b2b_clients',cls); } this.setState(s=>({_rev:(s._rev||0)+1})); })); }
   deleteRow(tbl,idx,label){ return ()=>{ this.setState({confirmDel:{tbl,idx,label:label||'cet élément'}}); }; }
-  confirmDelDo(){ const c=this.state.confirmDel; let delAdr=null;
+  confirmDelDo(){ const c=this.state.confirmDel; let delAdrs=[];
     if(c&&c.tbl&&window.BOServer){ const rows=window.BOServer.table(c.tbl);
-      if(c.tbl==='ws_office_delivery_sites'&&rows[c.idx]) delAdr=rows[c.idx].adr;
-      // Suppression d'un BÂTIMENT : toutes ses lignes de liaison partent
-      // ensemble (idxs) — sinon les lignes restantes le font « revenir ».
-      const dl=(c.idxs&&c.idxs.length)?c.idxs.slice().sort((a,b)=>b-a):[c.idx];
+      /* Suppression d'une ZONE : toutes ses lignes de liaison partent ensemble
+         — sinon les lignes restantes la font « revenir » au refetch.
+         Par IDENTIFIANT (`ids`) et non par indice : l'écran Sites travaille sur
+         `sitesActifs()`, filtré, tandis que la suppression porte sur la table
+         brute. Un seul site désactivé plus haut dans la table décalait les
+         indices, et c'est un AUTRE site qui disparaissait. Les appelants qui
+         ne fournissent qu'un indice (deleteRow) gardent l'ancien chemin. */
+      let dl;
+      if(c.ids&&c.ids.length){ const set=new Set(c.ids.map(String));
+        dl=rows.map((x,ix)=>({x,ix})).filter(o=>o.x&&o.x.id!=null&&set.has(String(o.x.id))).map(o=>o.ix).sort((a,b)=>b-a); }
+      else if(c.idxs&&c.idxs.length){ dl=c.idxs.slice().sort((a,b)=>b-a); }
+      else dl=[c.idx];
+      if(c.tbl==='ws_office_delivery_sites') dl.forEach(ix=>{ if(rows[ix]&&rows[ix].adr&&rows[ix].adr!=='—') delAdrs.push(rows[ix].adr); });
       dl.forEach(ix=>rows.splice(ix,1)); window.BOServer.save(c.tbl,rows);
       // Anti-résurrection : les offices qui portaient ce site en mémoire ne
       // doivent plus le renvoyer au prochain enregistrement (pairing PHP).
-      if(delAdr&&delAdr!=='—'){ const offs=window.BOServer.table('ws_offices'); let ch=false;
-        offs.forEach(o=>{ if(o.site===delAdr){ o.site=''; ch=true; } });
+      if(delAdrs.length){ const offs=window.BOServer.table('ws_offices'); let ch=false;
+        offs.forEach(o=>{ if(o.site&&delAdrs.indexOf(o.site)>=0){ o.site=''; ch=true; } });
         if(ch) window.BOServer.refresh('ws_offices',offs); } }
     this.setState({confirmDel:null,_rev:(this.state._rev||0)+1});
     if(c&&(c.tbl==='ws_offices'||c.tbl==='ws_office_delivery_sites')){
@@ -7588,49 +7783,74 @@ class Component extends DCLogic {
       const v=(c&&c.drop!=null&&c.drop!=='')?c.drop:((ligne&&ligne.drop!=null&&ligne.drop!=='')?ligne.drop:null);
       const n=parseFloat(v); return !(v==null||isNaN(n)||n<=0); };
     const seen={}; const out=[];
-    rows.forEach(r=>{ const adr=(r.adr&&r.adr!=='—')?r.adr:null; if(!adr) return;
-      if(seen[adr]===undefined){
-        // Géoloc : CP de l'adresse du site, SINON CP du BUREAU rattaché
-        // (ws_offices.postal_code) — les adresses de référence sont celles
-        // des bureaux concernés.
-        const cp=(String(adr).match(/\b(\d{4})\b/)||[])[1]||String(r.office_cp||'').trim();
-        const e=(geo&&geo.idx)?geo.idx[cp]:null;
-        // La POSITION du site d'abord : celle choisie dans la liste Google et
-        // servie par le serveur (lat / lng). Le centre du code postal n'est
-        // qu'un repli — il posait chaque site au milieu de sa commune, quelle
-        // que soit l'adresse encodée.
-        const own=(r.lat!=null&&r.lng!=null&&!isNaN(parseFloat(r.lat))&&!isNaN(parseFloat(r.lng)))?{lat:parseFloat(r.lat),lng:parseFloat(r.lng)}:null;
-        seen[adr]=out.length;
-        out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,adr,geoGoogle:!!own,
-          ville:(r.city&&String(r.city).trim())||(e?e.city:(r.office_city||cp||'—')),lat:own?own.lat:(e?e.lat:null),lng:own?own.lng:(e?e.lng:null),cp,
-          stop:(r.stop!=null?+r.stop:null),
-          // Temps d'accès : celui de la base, ou RIEN. Les 10 minutes par
-          // défaut entraient dans chaque ETA sans que personne les ait
-          // mesurées, et s'affichaient « 10 min » comme une donnée saisie.
-          zone:(r.tour&&r.tour!=='—')?r.tour:'—',
-          access:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?null:parseFloat(r.acc),offices:[],
+    /* UN ARRÊT PAR ZONE, pas par adresse. Le regroupement se faisait sur
+       l'adresse exacte de la ligne : un zoning dont les trois sociétés sont à
+       trois adresses y devenait trois arrêts — trois trajets, trois temps
+       d'accès et trois pins sur la carte pour un seul arrêt du camion. C'est
+       siteKey() qui fait foi (le nom de la zone), la même clé que l'écran
+       Sites, l'écran Offices et l'assistant tournée.
+
+       Une ligne SANS adresse n'est plus jetée : elle était écartée d'entrée
+       (`if(!adr) return`), si bien qu'une zone nommée mais pas encore
+       adressée — « Zoning Sud Wavre », assignable partout ailleurs dans la
+       console — n'existait ni sur les cartes, ni dans les ETA, ni dans les
+       alertes. Elle apparaît désormais, sans position (`geoKo`), ce qui est
+       la vérité : un arrêt réel dont on ignore où il est. */
+    rows.forEach(r=>{ const k=this.siteKey(r); if(!k) return;
+      const adr=(r.adr&&r.adr!=='—')?String(r.adr):null;
+      if(seen[k]===undefined){
+        seen[k]=out.length;
+        out.push({id:(r.id!=null?r.id:('zone:'+k)),name:(r.name&&r.name!=='—')?r.name:(adr||'—'),adr:adr||'—',geoGoogle:false,
+          ville:'—',lat:null,lng:null,cp:'',stop:(r.stop!=null?+r.stop:null),zone:'—',access:null,offices:[],
           notes:(r.etage&&r.etage!=='—')?('Étage/local : '+r.etage):''});
       }
-      const st=out[seen[adr]];
-      // Ordre du bâtiment = plus petit stop de ses lignes ; géoloc de secours
-      // par le CP d'un autre bureau du même bâtiment.
+      const st=out[seen[k]];
+      /* LE POINT DE RÉFÉRENCE DE LA ZONE est la PREMIÈRE ligne qui en a un :
+         une position Google d'abord (celle choisie dans la liste), le centre du
+         code postal ensuite — repli signalé, qui posait sinon chaque site au
+         milieu de sa commune. Les lignes suivantes ne l'écrasent pas ; leurs
+         propres adresses restent portées par leurs bureaux, et un bureau assez
+         loin devient un arrêt à part entière (tourPoints). */
+      const own=(r.lat!=null&&r.lng!=null&&!isNaN(parseFloat(r.lat))&&!isNaN(parseFloat(r.lng)))?{lat:parseFloat(r.lat),lng:parseFloat(r.lng)}:null;
+      if(st.adr==='—'&&adr) st.adr=adr;
+      if(own&&!st.geoGoogle){ st.lat=own.lat; st.lng=own.lng; st.geoGoogle=true;
+        const cpO=(adr?(String(adr).match(/\b(\d{4})\b/)||[])[1]:'')||String(r.office_cp||'').trim();
+        if(cpO) st.cp=cpO;
+        const vO=(r.city&&String(r.city).trim())||''; if(vO) st.ville=vO; }
+      if(!st.geoGoogle&&st.lat==null&&geo&&geo.idx){
+        const cp2=(adr?(String(adr).match(/\b(\d{4})\b/)||[])[1]:'')||String(r.office_cp||'').trim();
+        const e2=cp2?geo.idx[cp2]:null;
+        if(e2){ st.lat=e2.lat; st.lng=e2.lng; st.cp=cp2; if(st.ville==='—') st.ville=(r.city&&String(r.city).trim())||e2.city||(r.office_city||cp2); } }
+      if(st.ville==='—'){ const v=(r.city&&String(r.city).trim())||(r.office_city&&String(r.office_city).trim())||''; if(v) st.ville=v; }
+      // Ordre de la zone = plus petit `stop` de ses lignes ; tournée et temps
+      // d'accès = la première valeur réellement saisie, pas celle d'une ligne
+      // élue au hasard.
       if(r.stop!=null&&(st.stop==null||+r.stop<st.stop)) st.stop=+r.stop;
-      if(st.lat==null&&geo&&geo.idx){ const cp2=String(r.office_cp||'').trim(); const e2=geo.idx[cp2]; if(e2){ st.lat=e2.lat; st.lng=e2.lng; st.ville=e2.city; st.cp=cp2; } }
+      if(st.zone==='—'&&r.tour&&r.tour!=='—') st.zone=r.tour;
+      if(st.access==null&&!(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))) st.access=parseFloat(r.acc);
+      if(!st.notes&&r.etage&&r.etage!=='—') st.notes='Étage/local : '+r.etage;
       // Un BUREAU, seulement s'il y en a un : sans bureau rattaché, le
       // serveur renvoie le nom du site à la place — la chronologie réclamait
       // alors un temps de dépôt pour un bureau qui n'existe pas, et rien ne
       // pouvait l'enregistrer.
       const b=(r.office&&r.office!=='—')?r.office:null;
       if(b&&!st.offices.some(o=>o.name===b)){
-        const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
+        /* L'ADRESSE DU BUREAU : la rue que `ws_offices` lui connaît, sinon
+           celle de SA ligne — dans une zone, c'est la porte où l'on dépose, et
+           elle n'est pas celle de la zone. Le code postal et la localité ne
+           tiennent pas lieu d'adresse : « 5032 Isnes » ne mène nulle part, et
+           c'est ce qui s'affichait dès que ws_offices n'avait pas la rue. */
+        const oRue=String(r.office_address||'').trim();
+        const oCpVille=[r.office_cp,r.office_city].filter(v=>v&&String(v).trim()).join(' ').trim();
+        const oAdr=oRue?(oRue+(oCpVille?(', '+oCpVille):'')):(adr||oCpVille||'');
         // Temps de dépôt : celui paramétré pour CE bureau, ou inconnu — pas
         // 5 minutes décidées par la page et additionnées à chaque arrêt.
-        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||'adresse non renseignée',drop:dropDe(b,r),dropStd:!dropSaisi(b,r),
+        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||adr||'adresse non renseignée',drop:dropDe(b,r),dropStd:!dropSaisi(b,r),
           // Position Google du bureau (ws_offices, 0123) : avec elle, un bureau à
           // une autre adresse que son site devient un ARRÊT à part entière.
           lat:(r.office_lat!=null&&!isNaN(parseFloat(r.office_lat)))?parseFloat(r.office_lat):null,
           lng:(r.office_lng!=null&&!isNaN(parseFloat(r.office_lng)))?parseFloat(r.office_lng):null,
-          addrBrut:String(r.office_address||'').trim()});
+          addrBrut:String(r.office_address||'').trim()||(adr||'')});
       }
     });
     // Un site dont le CP n'est pas au référentiel n'est PAS placé au centre de
@@ -8326,7 +8546,7 @@ class Component extends DCLogic {
     const el=document.getElementById('map-geo-fr'); if(!el) return;
     if(this.mapStale(this._geoAMap)){ this._geoAMap=null; this._geoAKey=null; }
     if(!el._leaflet_id){ const L=window.L; const m=L.map(el,{zoomControl:true}).setView([50.72,4.45],10);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m); this._geoAMap=m; this._geoAKey=null; }
+      this.tuiles(L,m,'map-geo-fr'); this._geoAMap=m; this._geoAKey=null; }
     this.geoADraw();
   }
   geoAFiltered(){ const D=this._geoAData; if(!D) return {list:[],unloc:0};
@@ -8759,6 +8979,67 @@ class Component extends DCLogic {
     // Une animation de zoom en cours (fitBounds) programme _onZoomTransitionEnd
     // 250 ms plus tard ; sur une carte détruite il lève « _leaflet_pos ».
     try{ m._animatingZoom=false; m.remove(); }catch(e){} return true; }
+  /* LE FOND DE CARTE vient d'un service extérieur, et il n'est PAS embarqué.
+     Couvrir la Belgique jusqu'au zoom 18 — celui que ces cartes autorisent —
+     demanderait près de neuf millions de tuiles, de l'ordre de 200 Go ; et la
+     Tile Usage Policy de l'OSMF interdit l'aspiration en masse de
+     tile.openstreetmap.org. Embarquer un cache serait donc infaisable ET
+     contraire aux conditions du service.
+
+     Son URL était écrite en dur à QUATRE endroits. Elle est désormais lue une
+     seule fois, dans `ws_param` : une boutique derrière un réseau qui bloque le
+     CDN, qui paie un fournisseur ou qui héberge son propre serveur de tuiles la
+     change sans toucher au code.
+
+     L'ATTRIBUTION suit la source. Elle n'est posée d'office que pour OSM :
+     créditer OpenStreetMap pour les tuiles de quelqu'un d'autre serait faux.
+     Qui change l'URL renseigne `map_tiles_attribution` — c'est en général une
+     obligation du fournisseur. */
+  MAP_TILES_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  MAP_TILES_ATTRIB = '© OpenStreetMap contributors';
+  tileUrl(){ const v=(window.BOServer?String(window.BOServer.getParam('map_tiles_url','')||''):'').trim(); return v||this.MAP_TILES_URL; }
+  tileAttrib(){ const v=(window.BOServer?String(window.BOServer.getParam('map_tiles_attribution','')||''):'').trim();
+    if(v) return v; return (this.tileUrl()===this.MAP_TILES_URL)?this.MAP_TILES_ATTRIB:''; }
+  /* Pose le fond sur une carte et SURVEILLE son chargement. Une tuile isolée
+     peut échouer (bord de mer, zoom trop profond) sans que rien ne soit cassé :
+     on ne parle que si PLUSIEURS tuiles échouent sans qu'aucune n'arrive —
+     alors le fond est réellement injoignable. Sans ce message, une carte grise
+     parsemée de pins a l'air cassée, et rien ne dit que les positions, elles,
+     sont justes. */
+  tuiles(L,m,elId){ const t=L.tileLayer(this.tileUrl(),{attribution:this.tileAttrib(),maxZoom:18});
+    let ok=0, ko=0;
+    t.on('tileload',()=>{ if(++ok===1) this.tuilesBanner(elId,false); });
+    t.on('tileerror',()=>{ if(!ok&&++ko>=3) this.tuilesBanner(elId,true); });
+    t.addTo(m); return t; }
+  tuilesBanner(elId, montrer){ if(typeof document==='undefined') return;
+    const el=document.getElementById(elId); if(!el) return;
+    const id=elId+'-tilewarn'; const b=document.getElementById(id);
+    if(!montrer){ if(b&&b.parentNode) b.parentNode.removeChild(b); return; }
+    if(b) return;
+    const n=document.createElement('div'); n.id=id;
+    n.style.cssText='position:absolute;z-index:500;top:10px;left:50%;transform:translateX(-50%);max-width:92%;padding:6px 11px;border-radius:8px;'
+      +'background:rgba(255,255,255,.94);color:#6b4420;font:500 11.5px sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);text-align:center;pointer-events:none';
+    n.textContent='Fond de carte indisponible — le service de tuiles n’est pas joignable. Les positions, les tracés et les heures restent justes ; il manque le décor. (ws_param · map_tiles_url)';
+    try { if(window.getComputedStyle(el).position==='static') el.style.position='relative'; } catch(e){}
+    el.appendChild(n); }
+  /* Une carte absente doit se voir. Les autres bandeaux (dépôt, tracé, sites)
+     disent ce qui manque À L'INTÉRIEUR d'une carte ; celui-ci dit que la carte
+     elle-même n'a pas pu être construite — le reste de l'écran, lui, reste
+     juste, et le message le précise pour qu'on ne doute pas des chiffres. */
+  LEAFLET_ESSAIS = 30;
+  leafletBanner(montrer){ if(typeof document==='undefined') return;
+    ['map-tournees','map-suivi','map-zones-fr','map-geo-fr'].forEach(elId=>{
+      const el=document.getElementById(elId); if(!el) return;
+      const id=elId+'-lwarn'; const b=document.getElementById(id);
+      if(!montrer){ if(b&&b.parentNode) b.parentNode.removeChild(b); return; }
+      if(b) return;
+      const n=document.createElement('div'); n.id=id;
+      n.style.cssText='position:absolute;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;'
+        +'text-align:center;padding:20px;background:rgba(255,255,255,.96);color:var(--color-primary);font:600 12.5px/1.65 var(--font-ui),sans-serif';
+      n.textContent='Carte indisponible — la bibliothèque Leaflet n’a pas pu être chargée (vendor/leaflet/leaflet.js). '
+        +'Vérifiez que le dossier vendor/ est bien déployé. Le reste de l’écran reste juste : seule la carte manque.';
+      try { if(window.getComputedStyle(el).position==='static') el.style.position='relative'; } catch(e){}
+      el.appendChild(n); }); }
   ensureMaps(){
     this.reviewsEnsure();
     this.gRevEnsure();
@@ -8767,12 +9048,22 @@ class Component extends DCLogic {
     // tournées en dépend (sinon tous les sites retombent sur le point défaut).
     if(this.state.screen==='zones'||this.state.screen==='tournees') this.zfGeoEnsure();
     if(this.state.screen==='geoAnalyse') this.geoAEnsure();
-    if(!window.L){ this._mapTimer=setTimeout(()=>this.ensureMaps(),140); return; }
+    /* ATTENTE BORNÉE. Sans Leaflet, la page se relançait toutes les 140 ms
+       INDÉFINIMENT et sans un mot : la zone de carte restait blanche, et rien
+       à l'écran ne disait pourquoi. On laisse ~4 s au script (chaque écran a
+       droit à sa propre fenêtre, car le runtime rejoue la balise dans <head>),
+       puis on le DIT à l'endroit où la carte aurait dû être. */
+    if(this._lScreen!==this.state.screen){ this._lScreen=this.state.screen; this._lTry=0; }
+    if(!window.L){ this._lTry=(this._lTry||0)+1;
+      if(this._lTry<=this.LEAFLET_ESSAIS) this._mapTimer=setTimeout(()=>this.ensureMaps(),140);
+      else this.leafletBanner(true);
+      return; }
+    this.leafletBanner(false);
     if(this.state.screen==='zones'){
       const elz=document.getElementById('map-zones-fr');
       if(this.mapStale(this._zonesFrMap)){ this._zonesFrMap=null; this._zfKey=null; }
       if(elz && !elz._leaflet_id){ const Lz=window.L; const mz=Lz.map(elz,{zoomControl:true}).setView([50.72,4.45],9);
-        Lz.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(mz); this._zonesFrMap=mz; this._zfKey=null; }
+        this.tuiles(Lz,mz,'map-zones-fr'); this._zonesFrMap=mz; this._zfKey=null; }
       this.drawZonesMap();
     }
     const L=window.L;
@@ -8788,7 +9079,7 @@ class Component extends DCLogic {
         // y a quelque chose à montrer. Aucun point de donnée n'en dépend.
         const dc0=this.depotCoords();
         const m=L.map(el,{zoomControl:true,attributionControl:true}).setView(dc0.length?dc0[0]:[50.83,4.40],dc0.length?12:11);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
+        this.tuiles(L,m,'map-suivi');
         this._suiviMap=m; this._suiviFit=false; this.drawSuiviMap();
       } else if(el && this._suiviMap){
         // La POSITION de la boutique entre dans la signature : « __SHOPINFO
@@ -8812,7 +9103,7 @@ class Component extends DCLogic {
       if(el && !el._leaflet_id){
         const dc1=this.depotCoords();
         const m=L.map(el,{zoomControl:true}).setView(dc1.length?dc1[0]:[50.84,4.37],12);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
+        this.tuiles(L,m,'map-tournees');
         this._tourneesMap=m; this.drawRoute();
       } else if(el && this._tourneesMap){
         // Redessine quand la donnée change (géo chargée, ordre modifié,
@@ -9128,7 +9419,7 @@ class Component extends DCLogic {
     // pastille 30px, ✓ vert quand l'étape est franchie, sous-titre, connecteurs.
     const livFlow=[
       ['tournees','Tournées · horaires','Circuits, horaires & fermetures'],
-      ['sites','Sites (buildings)','Bâtiments · rattachés aux tournées'],
+      ['sites','Sites (zones)','Zones desservies · rattachées aux tournées'],
       ['offices','Bureaux (offices)','Bureaux validés · assignés aux sites'],
       ['b2bClients','Clients','Chaque client → sa fiche dédiée'],
     ];
@@ -9393,36 +9684,39 @@ class Component extends DCLogic {
         etaColor:sel?'#fff':'var(--color-primary)',subColor:sel?'rgba(255,255,255,.8)':'var(--color-text-muted)',
         select:()=>this.setState({selRoute:m.id},()=>this.drawRoute()),stops}; });
     // ===== TOURNÉES v2 — composition RÉELLE et PERSISTÉE =====
-    // Un « site » = un bâtiment (adresse normalisée) de ws_office_delivery_sites.
-    // Assigner un site à une tournée ÉCRIT tournee_id sur toutes ses lignes
-    // (save typé) — plus d'état de session (routeAssign) qui se perdait.
+    // Un « site » = une ZONE (siteKey) de ws_office_delivery_sites, pas une
+    // adresse : assigner une zone à une tournée ÉCRIT la tournée sur TOUTES
+    // ses lignes (save typé) — plus d'état de session (routeAssign) qui se
+    // perdait. La clé était ici l'adresse d'abord : un zoning à trois sociétés
+    // apparaissait trois fois dans la liste des sites à assigner.
     const tNorm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
     const tvRows=this.sitesActifs();
     const tvBlds={}; const tvOrder=[];
-    tvRows.forEach(r=>{ const key=(r.adr&&r.adr!=='—')?('a:'+tNorm(r.adr)):((r.name&&r.name!=='—')?('n:'+tNorm(r.name)):null); if(!key) return;
+    tvRows.forEach(r=>{ const key=this.siteKey(r); if(!key) return;
       if(!tvBlds[key]){ tvBlds[key]={key,name:(r.name&&r.name!=='—')?r.name:r.adr,adr:(r.adr&&r.adr!=='—')?r.adr:'',tour:(r.tour&&r.tour!=='—')?r.tour:null,acc:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?null:parseFloat(r.acc),stop:(r.stop!=null?+r.stop:null),offices:[]}; tvOrder.push(key); }
       const b=tvBlds[key]; if(!b.tour&&r.tour&&r.tour!=='—') b.tour=r.tour;
+      if(!b.adr&&r.adr&&r.adr!=='—') b.adr=r.adr;
+      if(b.acc==null&&!(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))) b.acc=parseFloat(r.acc);
       if(r.stop!=null&&(b.stop==null||+r.stop<b.stop)) b.stop=+r.stop;
       const off=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
       if(off&&!b.offices.some(x=>tNorm(x)===tNorm(off))) b.offices.push(off); });
     const tvList=tvOrder.map(k=>tvBlds[k]);
     const armKey=(S.armSite&&tvBlds[S.armSite])?S.armSite:null;
-    // Écrit la tournée d'un BÂTIMENT (toutes ses lignes) — save typé + refetch.
+    // Écrit la tournée d'une ZONE (toutes ses lignes) — save typé + refetch.
     // À l'assignation, le site prend l'ordre SUIVANT (max+1) dans la tournée ;
     // au retrait, son ordre est effacé.
     const tourSetBld=(bld,tourName)=>{ if(!window.BOServer) return;
       const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false;
       let nextStop=null;
       if(tourName){ const used=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(tourName)&&b.key!==bld.key).map(b=>b.stop||0); nextStop=(used.length?Math.max(...used):0)+1; }
-      rows.forEach((x,xi)=>{ const kx=(x.adr&&x.adr!=='—')?('a:'+tNorm(x.adr)):((x.name&&x.name!=='—')?('n:'+tNorm(x.name)):null);
-        if(kx===bld.key){ rows[xi]={...x,tour:tourName||'—',stop:tourName?nextStop:null}; ch=true; } });
+      rows.forEach((x,xi)=>{ if(this.siteKey(x)===bld.key){ rows[xi]={...x,tour:tourName||'—',stop:tourName?nextStop:null}; ch=true; } });
       if(ch) window.BOServer.save('ws_office_delivery_sites',rows);
       this.setState(s=>({armSite:null,_rev:(s._rev||0)+1}));
       setTimeout(()=>this.bcRefreshOffices(),150);
       setTimeout(()=>this.drawRoute(),400);
       this.printJob(tourName?('✓ Site « '+bld.name+' » → tournée « '+tourName+' » · arrêt n°'+nextStop+' (ws_office_delivery_sites)'):('Site « '+bld.name+' » retiré de sa tournée — non desservi')); };
     // Réordonner un site dans sa tournée (↑/↓) : renumérote 1..n et PERSISTE
-    // tournee_stop_id sur toutes les lignes de chaque bâtiment.
+    // tournee_stop_id sur toutes les lignes de chaque zone.
     const tourReorder=(tourName,key,dir)=>{ if(!window.BOServer) return;
       const ordered=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(tourName))
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
@@ -9431,7 +9725,7 @@ class Component extends DCLogic {
       const tmp=ordered[i]; ordered[i]=ordered[j]; ordered[j]=tmp;
       const stopOf={}; ordered.forEach((b,ix)=>stopOf[b.key]=ix+1);
       const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false;
-      rows.forEach((x,xi)=>{ const kx=(x.adr&&x.adr!=='—')?('a:'+tNorm(x.adr)):((x.name&&x.name!=='—')?('n:'+tNorm(x.name)):null);
+      rows.forEach((x,xi)=>{ const kx=this.siteKey(x);
         if(kx&&stopOf[kx]!==undefined&&x.tour&&tNorm(x.tour)===tNorm(tourName)){ rows[xi]={...x,stop:stopOf[kx]}; ch=true; } });
       if(ch) window.BOServer.save('ws_office_delivery_sites',rows);
       this.setState(s=>({_rev:(s._rev||0)+1}));
@@ -9581,7 +9875,13 @@ class Component extends DCLogic {
     const twStart=/^\d{1,2}:\d{2}$/.test(String(T.start||''))?this.toMin(T.start):null;
     const twOffById={}; (SRV('ws_offices')||[]).forEach(o=>{ twOffById[String(o.id)]=o; });
     const twDset={}; (SRV('ws_office_delivery_settings')||[]).forEach(b=>{ const k=String(b.bureau||'').trim(); if(k) twDset[k]=b; });
-    const twDropOf=(officeId)=>{ const o=twOffById[String(officeId||'')]; if(!o) return this.DROP_STD; const c=twDset[String(o.name||'').trim()]; const v=(c&&c.drop!=null&&c.drop!=='')?parseFloat(c.drop):NaN; return (isNaN(v)||v<=0)?this.DROP_STD:v; };
+    const twDropUn=(officeId)=>{ const o=twOffById[String(officeId||'')]; if(!o) return this.DROP_STD; const c=twDset[String(o.name||'').trim()]; const v=(c&&c.drop!=null&&c.drop!=='')?parseFloat(c.drop):NaN; return (isNaN(v)||v<=0)?this.DROP_STD:v; };
+    /* Le temps de dépôt d'un ARRÊT est la somme de ceux de ses bureaux : le
+       chauffeur qui livre trois sociétés dans le même immeuble s'y arrête trois
+       fois. Un site sans bureau garde le standard réseau — c'est le temps de
+       l'arrêt lui-même, pas celui d'un bureau inconnu. */
+    const twDropOf=(officeIds)=>{ const l=(officeIds||[]).filter(Boolean); if(!l.length) return this.DROP_STD;
+      return l.reduce((n,id)=>n+twDropUn(id),0); };
     const twDep=this.depot(); let twCur=twStart; let twPrev=(twDep&&twDep.lat!=null)?{lat:twDep.lat,lng:twDep.lng}:null;
     const twLegs=(T.route&&Array.isArray(T.route.legs))?T.route.legs:null;
     const twNumStyle='width:22px;height:22px;border-radius:50%;background:var(--color-primary);color:#fff;font:700 11px var(--font-ui);display:inline-flex;align-items:center;justify-content:center;flex:none';
@@ -9590,7 +9890,7 @@ class Component extends DCLogic {
       else if(twLegs&&twLegs[i]){ twCur+=(+twLegs[i].min||0); eta=this.hhmm(twCur); why='Trajet Google'; }
       else if(twPrev&&x.lat!=null&&x.lng!=null){ twCur+=this.travelMin(twPrev,{lat:+x.lat,lng:+x.lng}).min; eta='≈ '+this.hhmm(twCur); why='Estimation à vol d’oiseau — calculez l’itinéraire Google'; }
       else { why=(x.lat==null?'Adresse non vérifiée (à choisir dans la liste Google)':'Boutique non positionnée'); twCur=null; }
-      if(twCur!=null){ const acc=parseFloat(x.acc); if(isNaN(acc)){ twCur=null; why='Temps d’accès à saisir — les arrêts suivants n’ont pas d’heure'; } else { twCur+=acc; const dr=twDropOf(x.officeId); if(dr!=null) twCur+=dr; } }
+      if(twCur!=null){ const acc=parseFloat(x.acc); if(isNaN(acc)){ twCur=null; why='Temps d’accès à saisir — les arrêts suivants n’ont pas d’heure'; } else { twCur+=acc; const dr=twDropOf(x.officeIds); if(dr!=null) twCur+=dr; } }
       if(x.lat!=null&&x.lng!=null) twPrev={lat:+x.lat,lng:+x.lng};
       return {num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),eta,why,color:(eta==='—'?'var(--color-text-muted)':'var(--color-primary)')}; });
     let twRetEta='—', twRetWhy='';
@@ -9601,16 +9901,51 @@ class Component extends DCLogic {
     const twPpk=parseFloat(String(T.pricePerKm||'').replace(',','.'));
     const twKmTxt=(T.route&&T.route.km!=null)?(String(T.route.km).replace('.',',')+' km'):'—';
     const twRouteCost=(T.route&&T.route.km!=null&&!isNaN(twPpk))?((T.route.km*twPpk).toFixed(2).replace('.',',')+' €'):'—';
-    const twExistOpts=(SRV('ws_office_delivery_sites')||[]).filter(r=>r.id!=null&&!(T.sites||[]).some(x=>String(x.id)===String(r.id)))
-      .map(r=>({value:String(r.id),label:((r.name&&r.name!=='—')?r.name:'(sans nom)')+((r.adr&&r.adr!=='—')?(' — '+r.adr):'')+((r.tour&&r.tour!=='—')?(' · tournée '+r.tour):' · sans tournée')}));
+    /* La liste des sites reprenables se dédoublonne elle aussi : une même
+       adresse à trois bureaux y apparaissait trois fois, et les trois entrées
+       ramenaient le même arrêt. Le nombre de bureaux est dit dans le libellé. */
+    const twDejaPris=new Set(); (T.sites||[]).forEach(x=>(x.rowIds||[]).forEach(v=>twDejaPris.add(String(v))));
+    const twExistVus={}; const twExistOpts=[];
+    (SRV('ws_office_delivery_sites')||[]).filter(r=>r.id!=null&&!twDejaPris.has(String(r.id))).forEach(r=>{
+      const k=this.twSiteKey(r); if(twExistVus[k]!=null){ twExistOpts[twExistVus[k]]._n+=(r.office_client_id!=null?1:0); return; }
+      twExistVus[k]=twExistOpts.length;
+      twExistOpts.push({value:String(r.id),_n:(r.office_client_id!=null?1:0),
+        _base:((r.name&&r.name!=='—')?r.name:'(sans nom)')+((r.adr&&r.adr!=='—')?(' — '+r.adr):'')+((r.tour&&r.tour!=='—')?(' · tournée '+r.tour):' · sans tournée')}); });
+    twExistOpts.forEach(o=>{ o.label=o._base+(o._n>1?(' · '+o._n+' bureaux'):''); });
     const twOfficeOpts=(SRV('ws_offices')||[]).filter(o=>o.active!==false&&o.active!==0&&o.name).map(o=>({value:String(o.id),label:String(o.name)+(o.city?(' · '+o.city):'')}));
     const twSitesView=(T.sites||[]).map((x,i)=>({num:String(i+1),numStyle:twNumStyle,key:x.key,name:x.name||'',address:x.address||'',acc:(x.acc==null?'':String(x.acc)),
       setName:this.twSiteSet(i,'name'),setAcc:this.twSiteSet(i,'acc'),addrType:this.twSiteType(i),
       ...this.geoView('tw'+x.key,(x.lat!=null&&x.lng!=null),{pick:(id)=>this.twSitePick(i,id)}),
       up:()=>this.twSiteMove(i,-1),down:()=>this.twSiteMove(i,1),remove:()=>this.twSiteRemove(i),
       upStyle:(i===0?'opacity:.3':''),downStyle:(i===T.sites.length-1?'opacity:.3':'')}));
-    const twSiteOffices=(T.sites||[]).map((x,i)=>({num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),address:x.address||'—',officeId:x.officeId||'',setOffice:this.twSiteSet(i,'officeId'),officeOpts:twOfficeOpts}));
-    const twNbOff=(T.sites||[]).filter(x=>x.officeId).length;
+    const twOffLabel=(id)=>{ const o=twOffById[String(id||'')]; if(!o) return 'Bureau #'+id+' — introuvable'; return String(o.name||('Bureau #'+id))+(o.city?(' · '+o.city):''); };
+    const twAdrNorm=v=>String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+    const twOffAdr=this.twOfficeAdr();
+    const twSiteOffices=(T.sites||[]).map((x,i)=>{ const ids=(x.officeIds||[]).filter(Boolean);
+      const reste=twOfficeOpts.filter(o=>!ids.some(v=>String(v)===String(o.value)));
+      /* Un site garde UNE ligne par bureau (une seule s'il n'en a aucun) : les
+         lignes en trop d'un zoning déjà dédoublé partent à l'enregistrement. Ce
+         n'est pas une suppression silencieuse — elle est annoncée ici, avant. */
+      const dbl=(x.rowIds||[]).length-Math.max(1,ids.length);
+      /* L'ADRESSE PROPRE de chaque bureau dans la zone : dans un zoning, elle
+         diffère normalement de l'adresse de référence de l'arrêt. On l'affiche
+         quand c'est le cas — c'est là que le chauffeur dépose. */
+      const adrRef=twAdrNorm(x.address);
+      const adrDe=(id)=>{ if(x.adrDirty) return '';
+        const rid=(x.rowByOffice||{})[String(id)]; const a=(rid!=null)?(x.rowAdr||{})[String(rid)]:null;
+        const b=(a==null)?twOffAdr(id):null;   // bureau tout juste rattaché : son adresse à lui
+        const v=a?String(a.address||'').trim():(b?b.address:'');
+        return (v&&twAdrNorm(v)!==adrRef)?v:''; };
+      return {num:String(i+1),numStyle:twNumStyle,name:x.name||x.address||('Site '+(i+1)),address:x.address||'—',
+        dblShow:dbl>0,dblTxt:(dbl===1?'Une ligne en double pour ce site (même nom) sera supprimée à l’enregistrement.':(dbl+' lignes en double pour ce site (même nom) seront supprimées à l’enregistrement.')),
+        adrShow:!!x.adrDirty&&(x.rowIds||[]).length>1,
+        adrTxt:'Adresse réécrite : elle remplacera celle des '+(x.rowIds||[]).length+' lignes de ce site, bureau par bureau.',
+        offices:ids.map(id=>{ const a=adrDe(id);
+          return {key:String(id),label:twOffLabel(id),adr:a,adrShow:!!a,drop:(String(twDropUn(id)).replace('.',',')+' min'),remove:this.twOfficeRemove(i,id)}; }),
+        noOffice:ids.length===0, addOffice:this.twOfficeAdd(i), addOpts:reste, canAdd:reste.length>0,
+        addLabel:(ids.length?'+ Rattacher un autre bureau…':'+ Rattacher un bureau…'),
+        allTaken:reste.length===0&&twOfficeOpts.length>0}; });
+    const twNbOff=(T.sites||[]).reduce((n,x)=>n+((x.officeIds||[]).filter(Boolean).length),0);
     const twVals={
       twOpen:!!(S.tw&&S.tw.open), twTitle:(T.tourId?('Assistant — tournée « '+(T.name||'')+' »'):'Assistant — nouvelle tournée'),
       twClose:()=>this.twClose(), twSave:()=>this.twSave(), twNew:()=>this.twOpen(null),
@@ -10050,53 +10385,85 @@ class Component extends DCLogic {
     // Adresse/nom NORMALISÉS (casse, espaces) : deux variantes de la même
     // adresse = UN SEUL bâtiment — sinon cartes et tags apparaissent en double.
     const normA=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
-    const sameA=(a,b)=>normA(a)!==''&&normA(a)===normA(b);
-    // UNE vignette par BÂTIMENT (adresse normalisée) — pas par ligne de
-    // liaison bureau↔site : un building partagé par N bureaux apparaissait N
-    // fois, et supprimer une vignette ne retirait qu'UNE ligne (les autres
-    // « revenaient »). La suppression retire désormais TOUTES les lignes du
-    // bâtiment ; la tournée s'applique aussi à toutes.
+    /* UNE vignette par ZONE — pas par ligne de liaison bureau↔site. Un zoning
+       partagé par N sociétés donnait N vignettes : la clé de regroupement était
+       l'adresse, or `ws_office_delivery_sites` porte l'adresse DU BUREAU sur
+       chaque ligne. C'est siteKey() qui fait foi (le nom de la zone), la même
+       que l'assistant tournée et l'écran Offices.
+
+       Les actions portent sur TOUTES les lignes de la zone, et par IDENTIFIANT
+       de ligne — jamais par indice de tableau : `siteRowsAll` est filtré
+       (sitesActifs) alors que l'écriture se fait sur la table brute, et un seul
+       site désactivé décalait tout. La tournée s'appliquait à la mauvaise ligne
+       et la suppression retirait le mauvais site. */
     const siteGroups=[]; const siteGroupIdx={};
-    siteRowsAll.forEach((r,i)=>{ const k=(r.adr&&r.adr!=='—')?('a:'+normA(r.adr)):((r.name&&r.name!=='—')?('n:'+normA(r.name)):('i:'+i));
-      if(siteGroupIdx[k]===undefined){ siteGroupIdx[k]=siteGroups.length; siteGroups.push({idxs:[i],rep:r,repIdx:i}); }
-      else { const g=siteGroups[siteGroupIdx[k]]; g.idxs.push(i); if((!g.rep.name||g.rep.name==='—')&&r.name&&r.name!=='—'){ g.rep=r; g.repIdx=i; } } });
-    const sitesList=siteGroups.map(g=>{ const r=g.rep, i=g.repIdx, idxs=g.idxs;
-      const depts=deptRowsAll.map((d,gi)=>({d,gi})).filter(x=>x.d.site===r.adr);
+    siteRowsAll.forEach((r,i)=>{ const k=this.siteKey(r)||('i:'+i);
+      if(siteGroupIdx[k]===undefined){ siteGroupIdx[k]=siteGroups.length; siteGroups.push({key:k,rows:[r],rep:r,repIdx:i}); }
+      else { const g=siteGroups[siteGroupIdx[k]]; g.rows.push(r); if((!g.rep.name||g.rep.name==='—')&&r.name&&r.name!=='—'){ g.rep=r; g.repIdx=i; } } });
+    // Écriture par identifiant : la ligne visée est retrouvée dans la table
+    // brute, quels que soient les sites désactivés qui la précèdent.
+    const siteRowsPatch=(rows,ids,patch)=>{ const set=new Set(ids.map(String)); let ch=false;
+      rows.forEach((x,xi)=>{ if(x&&x.id!=null&&set.has(String(x.id))){ rows[xi]={...x,...patch}; ch=true; } }); return ch; };
+    const sitesList=siteGroups.map(g=>{ const r=g.rep, i=g.repIdx, gRows=g.rows;
+      const ids=gRows.map(x=>x.id).filter(v=>v!=null);
+      // Les adresses de la zone : celles de ses lignes, dédoublonnées. Un
+      // zoning en a normalement autant que de sociétés.
+      const adrs=[...new Set(gRows.map(x=>(x.adr&&x.adr!=='—')?String(x.adr).trim():'').filter(Boolean))];
+      // Départements : rattachés à UNE adresse de site — donc à n'importe
+      // laquelle des adresses de la zone.
+      const adrSet=new Set(adrs.map(normA));
+      const depts=deptRowsAll.map((d,gi)=>({d,gi})).filter(x=>adrSet.has(normA(x.d.site)));
       // Règle : un site SANS tournée est inactif → carte grisée jusqu'au rattachement.
       const noTour=!r.tour||r.tour==='—';
-      const grabbed=S.dndSite===i;
+      const grabbed=S.dndSite===g.key;
+      // Bureaux de la ZONE, dans l'ordre des lignes, dédoublonnés par nom.
+      const bxSeen=new Set(); const bureaux=[];
+      gRows.forEach(x=>{ const b=(x.bureau&&x.bureau!=='—')?x.bureau:((x.office&&x.office!=='—')?x.office:null);
+        if(b&&!bxSeen.has(normA(b))){ bxSeen.add(normA(b)); bureaux.push({nom:b,adr:(x.adr&&x.adr!=='—')?x.adr:''}); } });
+      /* Temps d'accès : la mesure, ou « — ». Un apostrophe seul (« ′ ») se
+         lisait comme zéro minute, et un site sans mesure prive la tournée de
+         toutes ses heures d'arrivée — autant que ça se voie. Les lignes d'une
+         zone peuvent porter des mesures différentes : on les montre toutes
+         plutôt que d'en élire une au hasard. */
+      const accs=[...new Set(gRows.map(x=>(x.acc===''||x.acc==null||isNaN(parseFloat(x.acc)))?null:parseFloat(x.acc)).filter(v=>v!=null))];
       return {...r, office:r.office||r.bureau, noTour,
-        // Le TITRE de la vignette = le NOM du site (l'adresse passe en sous-titre).
+        // Le TITRE de la vignette = le NOM de la zone (les adresses en sous-titre).
         siteName:(r.name&&r.name!=='—')?r.name:((r.office&&r.office!=='—')?r.office:r.adr),
-        subTitle:(r.adr||'—')+(r.etage&&r.etage!=='—'?(' · '+r.etage):''),
-        /* Temps d'accès : la mesure, ou « — ». Un apostrophe seul (« ′ ») se
-           lisait comme zéro minute, et un site sans mesure prive la tournée de
-           toutes ses heures d'arrivée — autant que ça se voie. */
-        accTxt:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?'—':(parseFloat(r.acc)+'′'),
-        accColor:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?'var(--color-text-muted)':'#2d7a3e',
+        subTitle:(adrs.length?adrs[0]:'—')+(r.etage&&r.etage!=='—'?(' · '+r.etage):'')+(adrs.length>1?(' · +'+(adrs.length-1)+' autre(s) adresse(s) dans la zone'):''),
+        accTxt:(accs.length===0?'—':accs.map(v=>v+'′').join(' / ')),
+        accColor:(accs.length===0?'var(--color-text-muted)':'#2d7a3e'),
+        // Les sociétés de la zone, chacune à son adresse : c'est le contenu réel d'un zoning.
+        bureaux:bureaux.map(b=>({nom:b.nom,adr:b.adr,adrShow:!!b.adr&&normA(b.adr)!==normA(adrs[0]||'')})),
+        hasBureaux:bureaux.length>0,
+        bureauxTxt:bureaux.length+' société(s) desservie(s) · '+adrs.length+' adresse(s)',
+        noBureaux:bureaux.length===0,
         // Rattachement tournée modifiable DIRECTEMENT sur la vignette.
         tourVal:(r.tour&&r.tour!=='—')?r.tour:'',
         tourOpts:[{value:'',label:'— Rattacher une tournée —'},...siteTourNames.map(n=>({value:n,label:n}))],
-        tourSet:(e)=>{ const v=e.target.value; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false; idxs.forEach(ix=>{ if(rows[ix]){ rows[ix]={...rows[ix],tour:v||'—'}; ch=true; } }); if(ch) window.BOServer.save('ws_office_delivery_sites',rows); } this.setState(s=>({_rev:(s._rev||0)+1})); setTimeout(()=>this.bcRefreshOffices(),150); this.printJob(v?('✓ Site rattaché à la tournée « '+v+' »'):'Tournée retirée — le site repasse inactif'); },
+        tourSet:(e)=>{ const v=e.target.value; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites');
+            if(siteRowsPatch(rows,ids,{tour:v||'—'})) window.BOServer.save('ws_office_delivery_sites',rows); }
+          this.setState(s=>({_rev:(s._rev||0)+1})); setTimeout(()=>this.bcRefreshOffices(),150);
+          this.printJob(v?('✓ Zone rattachée à la tournée « '+v+' » — '+ids.length+' ligne(s)'):'Tournée retirée — la zone repasse inactive'); },
         cardStyle:'background:var(--color-surface);border:'+(grabbed?'2px solid var(--color-primary)':'.5px solid var(--color-border-tertiary)')+';border-radius:14px;padding:16px 18px'+(noTour&&!grabbed?';opacity:.5;filter:grayscale(.35)':''),
-        // « Prendre → déposer » : on saisit LE SITE puis on le dépose sur une tuile Tournée.
-        grabbed, grabLabel:grabbed?'⠿ Saisi — choisissez une tournée ci-dessus':'⠿ Déplacer vers une tournée',
+        // « Prendre → déposer » : on saisit LA ZONE puis on la dépose sur une tuile Tournée.
+        grabbed, grabLabel:grabbed?'⠿ Saisie — choisissez une tournée ci-dessus':'⠿ Déplacer vers une tournée',
         grabStyle:'width:100%;margin-bottom:10px;border:1.5px '+(grabbed?'solid':'dashed')+' '+(grabbed?'var(--color-primary)':'var(--color-border-secondary)')+';background:'+(grabbed?'var(--color-background-secondary)':'transparent')+';color:'+(grabbed?'var(--color-primary)':'var(--color-text-muted)')+';border-radius:9px;padding:8px;font:600 11.5px var(--font-ui);cursor:grab',
-        grab:()=>this.setState(s=>({dndSite:s.dndSite===i?null:i})),
+        grab:()=>this.setState(s=>({dndSite:s.dndSite===g.key?null:g.key})),
         edit:this.editForm('site',r,i),
-        // Supprimer le BÂTIMENT = retirer TOUTES ses lignes de liaison (sinon
-        // les lignes restantes refont apparaître la vignette au refetch).
-        del:()=>this.setState({confirmDel:{tbl:'ws_office_delivery_sites',idx:i,idxs:idxs.slice(),label:'le site « '+((r.name&&r.name!=='—')?r.name:r.adr)+' » (et ses '+idxs.length+' ligne(s) de liaison)'}}),
+        // Supprimer la ZONE = retirer TOUTES ses lignes de liaison (sinon les
+        // lignes restantes refont apparaître la vignette au refetch).
+        del:()=>this.setState({confirmDel:{tbl:'ws_office_delivery_sites',idx:i,ids:ids.slice(),
+          label:'la zone « '+((r.name&&r.name!=='—')?r.name:r.adr)+' » et ses '+gRows.length+' ligne(s) de liaison'+(bureaux.length?(' — '+bureaux.length+' société(s) n’y seront plus livrées'):'')}}),
         chain:(()=>{
           // Chaîne conservée : Tournée → Site → Bureaux déjà liés → (si présents)
           // Départements, + slots utilisés de la tournée (ex. 10/20).
           const sName=(r.name&&r.name!=='—')?r.name:((r.office&&r.office!=='—')?r.office:r.adr);
-          const bureaux=[...new Set(siteRowsAll.filter(x=>sameA(x.adr,r.adr)).map(x=>x.bureau||x.office).filter(v=>v&&v!=='—'))];
-          const bVal=bureaux.length===0?'Aucun bureau lié':(bureaux.length<=2?bureaux.join(', '):bureaux.length+' bureaux');
+          const noms=bureaux.map(b=>b.nom);
+          const bVal=noms.length===0?'Aucun bureau lié':(noms.length<=2?noms.join(', '):noms.length+' bureaux');
           const items=[
             {lbl:'Tournée',val:(r.tour&&r.tour!=='—')?r.tour:'Sans tournée',style:chipMini,go:this.go('tournees')},
             {lbl:'Site',val:sName,style:chipMini+';background:#eaf5ec;color:#2d7a3e',go:this.editForm('site',r,i)},
-            {lbl:'Bureaux déjà liés',val:bVal,style:chipMini+(bureaux.length?';background:#eef3fb;color:#2a5a9e':';color:var(--color-text-muted)'),go:this.go('offices')},
+            {lbl:'Bureaux déjà liés',val:bVal,style:chipMini+(noms.length?';background:#eef3fb;color:#2a5a9e':';color:var(--color-text-muted)'),go:this.go('offices')},
           ];
           if(depts.length>0) items.push({lbl:'Départements',val:depts.length+' départ.',style:chipMini,go:this.go('offices')});
           const sl=tSlots.find(tt=>tt.nom===r.tour);
@@ -10181,11 +10548,10 @@ class Component extends DCLogic {
     const siteRowsTour=siteRowsAll.filter(siteHasTour);
     const offPairedKeys=new Set();
     siteRowsTour.forEach(r=>{ const b=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null); if(b) offPairedKeys.add(normA(b)); });
-    // CLÉ DE BÂTIMENT : adresse normalisée, SINON nom normalisé — un site créé
-    // sans adresse (ex. « Zoning Sud Wavre ») reste assignable partout ; avant,
-    // tout était indexé par adresse et ces sites étaient invisibles de l'étape 3.
-    const bKey=(x)=>{ const a=(x&&x.adr&&x.adr!=='—')?normA(x.adr):''; if(a) return 'a:'+a;
-      const n=(x&&x.name&&x.name!=='—')?normA(x.name):''; return n?('n:'+n):null; };
+    // CLÉ DE SITE : celle de siteKey() — le NOM de la zone, l'adresse à défaut.
+    // Elle était ici l'inverse (adresse d'abord) : un zoning à trois sociétés
+    // donnait trois cartes à l'étape 3 et trois entrées au sélecteur « → site ».
+    const bKey=(x)=>this.siteKey(x)||null;
     // Rattacher un office à un site (partagé : drop après saisie + sélecteur).
     const offAttach=(r,key)=>{ const off=SRV('ws_offices').find(o=>offKey(o)===String(key)); if(!off) return;
       if(window.BOServer){
@@ -10321,14 +10687,20 @@ class Component extends DCLogic {
       const max=(tt.amplitude==null||tt.decharge==null||tt.trajet==null||(tt.decharge+tt.trajet)<=0)
         ?null:Math.max(1,Math.floor(tt.amplitude/(tt.decharge+tt.trajet)));
       const sitesOf=siteRowsAll.filter(r=>r.tour===tt.nom);
+      // La charge se compte en ZONES (arrêts), pas en lignes de liaison : une
+      // zone à trois sociétés y comptait pour trois sites.
+      const zonesOf=new Set(sitesOf.map((r,ri)=>this.siteKey(r)||('i:'+ri)));
       const bx=new Set(sitesOf.map(r=>r.bureau||r.office).filter(v=>v&&v!=='—'));
       const canDrop=S.dndSite!=null;
-      return {nom:tt.nom,cap:(tt.used||0)+' / '+(max==null?'—':max),charge:sitesOf.length+' site(s) · '+bx.size+' bureau(x)',canDrop,
+      return {nom:tt.nom,cap:(tt.used||0)+' / '+(max==null?'—':max),charge:zonesOf.size+' site(s) · '+bx.size+' bureau(x)',canDrop,
         style:'flex:none;text-align:left;border:1.5px '+(canDrop?'dashed var(--color-primary)':'solid var(--color-border-tertiary)')+';background:var(--color-surface);color:var(--color-text);border-radius:10px;padding:8px 14px;cursor:'+(canDrop?'copy':'default'),
-        drop:()=>{ const idx=this.state.dndSite; if(idx==null) return; if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites');
-          // Déplacer le BÂTIMENT : toutes les lignes de la même adresse suivent.
-          if(rows[idx]){ const a=rows[idx].adr; rows.forEach((x,xi)=>{ if(xi===idx||sameA(x.adr,a)) rows[xi]={...x,tour:tt.nom}; }); window.BOServer.save('ws_office_delivery_sites',rows); } }
-          this.setState(s=>({dndSite:null,_rev:(s._rev||0)+1})); setTimeout(()=>this.bcRefreshOffices(),150); this.printJob('✓ Site déplacé vers la tournée « '+tt.nom+' »'); }};
+        drop:()=>{ const k=this.state.dndSite; if(k==null) return; let n=0;
+          if(window.BOServer){ const rows=window.BOServer.table('ws_office_delivery_sites');
+            // Déplacer la ZONE : toutes les lignes qui portent sa clé suivent.
+            rows.forEach((x,xi)=>{ if(this.siteKey(x)===k){ rows[xi]={...x,tour:tt.nom}; n++; } });
+            if(n) window.BOServer.save('ws_office_delivery_sites',rows); }
+          this.setState(s=>({dndSite:null,_rev:(s._rev||0)+1})); setTimeout(()=>this.bcRefreshOffices(),150);
+          this.printJob(n?('✓ Zone déplacée vers la tournée « '+tt.nom+' » — '+n+' ligne(s)'):'⚠ Zone introuvable — rechargez la page'); }};
     });
 
     /* Les jours arrivent en ISO : 1 = lundi … 7 = dimanche, comme date('N')

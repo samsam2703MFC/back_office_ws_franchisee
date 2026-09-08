@@ -5,7 +5,8 @@ name: Deploy to server (SSH / rsync)
 # SSH (rsync). Static site, no build step:
 #   index.html (wired copy of back_office_ws_franchisee.dc.html)
 #   + support.js (DC runtime) + bo_server.js (data layer, hydrate → /franchisee/*)
-#   + api-config.js + _ds/ (design system + fonts) + vendor/ (React UMD) + img/
+#   + api-config.js + _ds/ (design system + fonts) + img/
+#   + vendor/ (React UMD, et Leaflet 1.9.4 — les cartes n'ont plus de CDN)
 # Served at  http://<host>/webshop/backoffice_franchisee
 #
 # Secrets:  SSH_HOST · SSH_USER · SSH_PASSWORD
@@ -71,7 +72,15 @@ jobs:
           curl -fsS "$BASE/" | grep -o './support.js' | head -1 || echo "WARN: support.js ref not found"
           echo "== asset status (code type bytes) =="
           fail=0
+          # Leaflet est SERVI PAR NOUS depuis vendor/ : il n'a plus de CDN pour
+          # le rattraper. Un déploiement qui le laisserait au vestiaire passerait
+          # vert pendant que toutes les cartes de la console tombent — c'est
+          # exactement ce que cette étape existe pour empêcher. Les images du
+          # dossier images/ sont vérifiées par un fichier témoin (le CSS les
+          # référence en relatif).
           for f in support.js bo_server.js api-config.js vendor/react.js vendor/react-dom.js \
+                   vendor/leaflet/leaflet.js vendor/leaflet/leaflet.css \
+                   vendor/leaflet/images/marker-icon.png \
                    $DS/global.css $DS/_ds_bundle.js \
                    $DS/fonts/GC_Vank.ttf $DS/fonts/Gotham_Regular_New.otf \
                    $DS/fonts/Gotham_Medium.otf $DS/fonts/Gotham_Regular.otf \
@@ -81,6 +90,10 @@ jobs:
             echo "  $code  $type  ${size}b  $f"
             case "$f" in
               */fonts/*) if [ "$code" != "200" ] || [ "${size:-0}" -lt 1000 ]; then echo "  ^ FONT NOT OK"; fail=1; fi ;;
+              # Un serveur qui rend une page d'erreur EN 200 passerait le simple
+              # test du code ; Leaflet serait alors rejeté par son empreinte SRI
+              # et les cartes disparaîtraient. On exige donc aussi du volume.
+              vendor/leaflet/*) if [ "$code" != "200" ] || [ "${size:-0}" -lt 1000 ]; then echo "  ^ LEAFLET NOT OK"; fail=1; fi ;;
               *) if [ "$code" != "200" ]; then echo "  ^ ASSET NOT OK"; fail=1; fi ;;
             esac
           done

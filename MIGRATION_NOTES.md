@@ -544,3 +544,252 @@ saisissant l'id de boutique. Sortie attendue :
 Vérifié en local contre le VRAI `erp_alias.php` et un faux ERP : jeton posé,
 jeton refusé (401), ERP injoignable, ERP non configuré — et aucun montant,
 client, référence ni jeton dans la sortie.
+
+## Un site est un ZONING, et il a plusieurs bureaux (assistant tournée)
+
+Un **site n'est pas un bâtiment** : c'est une **zone économique** — un zoning,
+un parc d'activité, un immeuble — où le camion s'arrête **une fois** pour
+toutes les sociétés qui s'y trouvent, chacune à **son** adresse.
+
+`ws_office_delivery_sites` porte une ligne par **couple (site, bureau)** :
+l'onboarding d'un bureau (`POST /franchisee/onboard-office`, champ `adr`) y
+écrit une ligne avec l'adresse de CE bureau et le nom du site où il se trouve.
+Un zoning à trois sociétés y occupe donc trois lignes, **de même nom et
+d'adresses distinctes**.
+
+L'assistant tournée lisait ces lignes telles quelles. À l'écran : le même
+zoning listé trois fois dans les arrêts, un menu déroulant qui n'acceptait
+qu'**un** bureau par ligne, « 3 site(s) » pour une seule zone. Et dans l'ETA,
+trois trajets, trois temps d'accès et trois temps de dépôt pour un seul arrêt ;
+l'ordre d'arrêts proposé par Google s'écrivait sur ces doublons.
+
+### Ce qui identifie un site : son nom
+
+C'est le seul champ que ses lignes partagent — l'adresse, non. Les lignes de
+même nom (sans accents ni casse) sont regroupées en **un arrêt** qui porte :
+
+- `officeIds[]` — les sociétés desservies, ajoutées et retirées une par une ;
+- `rowIds[]` / `rowByOffice{}` — les lignes de la table qui le composent ;
+- `rowAdr{}` — **l'adresse propre de chaque ligne**, conservée telle quelle ;
+- `adrDirty` — vrai seulement si l'adresse de l'arrêt a été **réécrite** à
+  l'étape 2.
+
+À défaut de nom, l'adresse sert de clé ; sans nom **ni** adresse, deux lignes
+ne sont jamais fusionnées.
+
+### Ce qui est réécrit, et ce qui ne l'est pas
+
+À l'enregistrement, l'arrêt est **redéployé** en lignes : une par bureau, une
+seule s'il n'en a aucun. Chaque bureau reprend la ligne qui le portait déjà —
+mise à jour, pas suppression + création — **avec son adresse**. Écrire
+l'adresse de référence de la zone sur toutes ses lignes remplacerait l'adresse
+de livraison de chaque société par celle de sa voisine.
+
+- **Bureau déjà rattaché** → sa ligne, son adresse, inchangées.
+- **Bureau nouvellement rattaché** → une ligne neuve avec l'adresse que
+  `ws_offices` lui connaît (sa vraie porte) ; si elle est inconnue, l'adresse
+  de référence de la zone, qui situe au moins le bureau.
+- **Adresse de l'arrêt réécrite à l'étape 2** (`adrDirty`) → elle se porte sur
+  toutes les lignes du site. C'est un choix explicite, et l'étape 3 l'annonce.
+- **Ligne qu'aucun bureau ne réclame plus** → `removeSites`. Annoncé aussi,
+  avant l'enregistrement, jamais après.
+
+**Le corps posté à `POST /franchisee/tour-wizard` garde exactement la forme que
+le serveur connaît** (`sites[]` avec `id` et `officeId`) : il y a seulement
+autant d'entrées que de couples. Aucun changement côté WebShop.
+
+Autre conséquence voulue : le temps de dépôt d'un arrêt est la **somme** de
+ceux de ses bureaux — le chauffeur qui livre trois sociétés dans la même zone
+s'y arrête trois fois ; une zone sans bureau garde le standard réseau
+(`DROP_STD`).
+
+### Les trois écrans partagent enfin une clé : `siteKey()`
+
+L'écran **Sites**, l'écran **Offices** (étape 3) et l'assistant tournée
+groupaient chacun à leur façon — les deux premiers par **adresse**, l'assistant
+par ligne. `siteKey(r)` est désormais la seule définition : le **nom** de la
+zone, l'adresse à défaut, `''` quand la ligne n'a ni l'un ni l'autre (à
+l'appelant de décider). `twSiteKey()` et le `bKey()` d'Offices s'y ramènent.
+
+Sur l'écran **Sites**, une vignette = une zone. Elle porte les adresses de la
+zone (la première, puis « +N autre(s) adresse(s) »), les temps d'accès
+réellement saisis (« 6′ / 8′ » quand les lignes divergent, plutôt qu'une valeur
+élue au hasard) et la **liste des sociétés desservies**, chacune à son adresse.
+Rattacher une tournée, déplacer la zone par ⠿ et supprimer portent sur
+**toutes** ses lignes. Sur l'écran **Offices**, une carte site = une zone, et le
+sélecteur « → Assigner à un site » n'offre plus la même zone N fois.
+
+### Deux bugs de fond corrigés au passage
+
+**1. Écriture par indice sur une liste filtrée.** L'écran Sites travaille sur
+`sitesActifs()` — filtré — mais écrivait dans la table brute avec l'indice de
+la liste affichée (`tourSet`, `del`, `dndSite`, et `submitForm` via
+`formIndex`). Un seul site **désactivé** plus haut dans la table décalait tout.
+Reproduit au navigateur sur la version d'avant, avec un site désactivé en tête :
+rattacher une tournée l'écrivait sur le site désactivé (la zone visée ne
+bougeait pas), et supprimer « Parc de Gembloux » effaçait la ligne d'une
+**autre** zone en laissant la cible en place. Tout passe désormais par
+l'**identifiant** de ligne ; l'indice ne reste qu'en repli pour les tables sans
+`id`.
+
+**2. Renommer une zone la coupait en deux.** Le nom identifie le site : ne le
+changer que sur la ligne éditée aurait fait deux arrêts d'un seul, avec les
+sociétés réparties entre les deux. Le nom et la tournée se propagent donc à
+toutes les lignes de la zone ; l'adresse, l'étage, le temps d'accès et la
+société restent propres à la ligne.
+
+### L'alerte « sites en double » ne crie plus au loup
+
+Elle signalait **toute** répétition d'adresse. Or plusieurs lignes à la même
+adresse sont la représentation normale de plusieurs sociétés dans un immeuble :
+l'alerte envoyait « nettoyer » un paramétrage correct. Elle ne compte plus que
+les vrais doublons — la **même société deux fois sur la même zone**, ou deux
+lignes sans société.
+
+### `sitesData()` aussi — un arrêt par zone
+
+C'est elle qui alimente les cartes, la chronologie, les ETA (`computeRoute`,
+`tourEtas`, `traceRefresh`) et le constructeur de tournées. Elle groupait par
+**adresse exacte**, avec deux conséquences mesurées sur un zoning de trois
+sociétés à trois adresses :
+
+- **trois arrêts au lieu d'un** — trois trajets, trois temps d'accès. Sur le
+  jeu d'essai, la tournée annonçait **≈ 01h52** au lieu de **≈ 01h32** : vingt
+  minutes d'accès fantômes pour un seul arrêt du camion ;
+- **trois pins empilés sur le même point** : faute de position propre, les
+  lignes 2 et 3 retombaient sur le centroïde du code postal — exactement le
+  « tracé crédible et faux » que le reste du fichier s'applique à éviter.
+
+Le regroupement se fait désormais sur `siteKey()`, et :
+
+- **une ligne sans adresse n'est plus jetée.** `if(!adr) return` l'écartait
+  d'entrée : une zone nommée mais pas encore adressée — « Zoning Sud Wavre »,
+  assignable partout ailleurs dans la console — n'existait ni sur les cartes,
+  ni dans les ETA, ni dans les alertes, et la chronologie se déclarait complète
+  sans elle. Elle apparaît maintenant sans position (`geoKo`), et la ligne dit
+  qu'elle s'arrête là ;
+- **le point de référence de la zone** est celui de la première ligne qui en a
+  un : position Google d'abord, centroïde du code postal ensuite. Les lignes
+  suivantes ne l'écrasent plus ;
+- **tournée, temps d'accès et étage** prennent la première valeur réellement
+  saisie de la zone, au lieu de celle de la ligne représentante ;
+- **chaque bureau porte son adresse** : la rue que `ws_offices` lui connaît,
+  sinon celle de sa propre ligne. Le code postal et la localité ne tiennent pas
+  lieu d'adresse — « 5032 Isnes » s'affichait dès que `ws_offices` n'avait pas
+  la rue, et « adresse non renseignée » alors que la ligne la portait.
+
+Le grain reste plus fin que la zone là où il le faut : `tourPoints()` détache
+en arrêt à part entière tout bureau ayant sa propre position à plus de 60 m,
+et signale (`adrDiff`) ceux dont l'adresse diffère sans position — c'est
+précisément le cas normal dans un zoning.
+
+Le constructeur de tournées (`tvBlds`, `tourSetBld`, `tourReorder`) reprend lui
+aussi `siteKey()` : il gardait la clé adresse-d'abord, et proposait donc la même
+zone trois fois dans « Sites non assignés ».
+
+### Les cartes Leaflet, vérifiées
+
+Le navigateur de test n'atteint pas `unpkg` (le proxy coupe la connexion). Les
+deux fichiers de Leaflet 1.9.4 ont donc été récupérés en local et servis sous
+leurs URL d'origine : leurs empreintes SHA-384 sont **identiques** à celles des
+attributs `integrity` de la page, qui valident donc la substitution — la page
+testée est exactement celle de production, rien n'y a été modifié.
+
+Sur le même jeu (un zoning de trois sociétés à trois adresses, référentiel
+CP→GPS chargé) :
+
+| | avant | après |
+| --- | --- | --- |
+| Carte des tournées — marqueurs | 4 (🏪 + arrêts **1, 2, 3**) | 2 (🏪 + arrêt **1**) |
+| Popup de l'arrêt | **une** société | **trois**, chacune à son adresse |
+| Livraison du jour — en-tête | « 3 site(s) · 3 bureau(x) » | « **1 site(s)** · 3 bureau(x) » |
+| Livraison du jour — pastilles | 3 empilées, « 1 bureau » chacune | 1, « **3** bureaux » |
+| ETA retour | −07:21 | −07:14 |
+| Zone sans adresse | ignorée en silence | « ⚠ 1 site sans coordonnées, non affiché ni compté dans les ETA : Zoning Sud Wavre » |
+
+Les trois marqueurs d'avant étaient **superposés au même point** : faute de
+position propre, les lignes 2 et 3 retombaient sur le centroïde du code postal.
+Aucune erreur JS dans aucun des deux cas.
+
+### Leaflet est vendorisé
+
+La page le chargeait depuis `unpkg`, alors que React est servi depuis
+`vendor/` : une boutique dont le réseau bloque le CDN — ou un CDN en panne —
+perdait toutes ses cartes. Il vit désormais dans **`vendor/leaflet/`** :
+`leaflet.js`, `leaflet.css` et le dossier `images/` que le CSS référence en
+relatif (icône de marqueur, contrôle des calques).
+
+Les attributs **`integrity` sont conservés et inchangés** : ce sont les
+empreintes SHA-384 officielles de la 1.9.4, elles vérifient que la copie
+vendorisée est bien cette version, non modifiée. `crossorigin` disparaît — il
+n'a pas de sens sur une ressource de même origine.
+
+### Une carte absente le dit
+
+`ensureMaps()` se relançait toutes les 140 ms **indéfiniment** tant que
+`window.L` manquait : la zone de carte restait blanche, sans un mot, et la page
+tournait en boucle. L'attente est maintenant bornée (~4 s, une fenêtre par
+écran car le runtime rejoue la balise dans `<head>`), après quoi
+`leafletBanner()` écrit dans la zone de carte ce qui manque et où le chercher —
+en précisant que **le reste de l'écran reste juste**, pour qu'on ne doute pas
+des chiffres affichés à côté.
+
+Vérifié au navigateur, `unpkg` coupé net et sans aucune interception : Leaflet
+1.9.4 se charge depuis `vendor/`, les deux cartes se dessinent à l'identique
+(`index.html` **et** `back_office_ws_franchisee.dc.html`). Et avec
+`vendor/leaflet/` bloqué en plus : l'écran se rend entièrement, la zone de
+carte porte le message, aucune erreur JS, plus de boucle.
+
+### Les tuiles, elles, ne sont PAS embarquées — et c'est délibéré
+
+Couvrir la Belgique jusqu'au zoom 18 (celui que ces cartes autorisent)
+demanderait près de **neuf millions de tuiles, de l'ordre de 200 Go** ; s'arrêter
+au zoom 12 tiendrait en ~57 Mo, mais le fond disparaîtrait au premier zoom sur
+une rue — pire que l'état actuel sur un réseau qui marche. Surtout, la **Tile
+Usage Policy de l'OSMF interdit l'aspiration en masse** de
+`tile.openstreetmap.org` : embarquer un cache serait contraire aux conditions du
+service. Leaflet était un autre cas — bibliothèque MIT, 160 Ko, redistribution
+permise.
+
+Deux choses à la place.
+
+**1. La source des tuiles est paramétrable.** Son URL était écrite en dur à
+quatre endroits ; elle est lue une seule fois, dans `ws_param` :
+
+| clé | rôle |
+| --- | --- |
+| `map_tiles_url` | gabarit `{z}/{x}/{y}` du service de tuiles. Vide ⇒ OpenStreetMap. |
+| `map_tiles_attribution` | crédit affiché sur la carte. |
+
+Une boutique derrière un réseau qui bloque le CDN, qui paie un fournisseur ou
+qui héberge son propre serveur de tuiles change l'URL sans toucher au code.
+L'**attribution suit la source** : le crédit OpenStreetMap n'est posé d'office
+que pour l'URL OSM — créditer OSM pour les tuiles d'un autre serait faux. Qui
+change l'URL renseigne l'attribution ; c'est en général une obligation du
+fournisseur.
+
+**2. Un fond manquant se voit.** `tuiles()` compte les tuiles chargées et les
+tuiles en échec : on ne parle que si **plusieurs échouent sans qu'aucune
+n'arrive** — une tuile isolée qui manque (bord de mer, zoom trop profond) n'est
+pas une panne. Alors un bandeau dit que le décor manque **et que les positions,
+les tracés et les heures restent justes** : une carte grise parsemée de pins a
+l'air cassée, et rien ne disait le contraire.
+
+Vérifié au navigateur, trois cas :
+
+| | source demandée | attribution | bandeau |
+| --- | --- | --- | --- |
+| normal | `tile.openstreetmap.org` (18 tuiles) | © OpenStreetMap contributors | non |
+| tuiles coupées | aucune | inchangée | **oui**, marqueurs toujours là |
+| `map_tiles_url` posé | `tuiles.interne.test` (18 tuiles) | © Service de tuiles interne | non |
+
+Un cache navigateur (service worker) des tuiles déjà visitées serait, lui,
+acceptable au regard de la policy — c'est de la navigation normale, pas de
+l'aspiration — mais il n'aide pas un réseau qui bloque le service d'emblée.
+Non fait.
+
+Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : un zoning
+à trois sociétés et trois adresses → 1 arrêt ; l'adresse propre de chaque
+société affichée sous son nom ; rattachement d'une société qui a son adresse
+(elle la garde) et d'une autre qui n'en a pas (repli sur la référence de la
+zone) ; détachement ; et le corps réellement posté, ligne par ligne.
