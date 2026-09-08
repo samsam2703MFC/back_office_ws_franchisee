@@ -711,10 +711,34 @@ Les trois marqueurs d'avant étaient **superposés au même point** : faute de
 position propre, les lignes 2 et 3 retombaient sur le centroïde du code postal.
 Aucune erreur JS dans aucun des deux cas.
 
-Reste que la page charge Leaflet depuis `unpkg`, alors que React est servi
-depuis `vendor/`. Une boutique dont le réseau bloque le CDN perd ses cartes.
-Vendoriser `leaflet.js` et `leaflet.css` comme React est un changement de
-production, non fait ici.
+### Leaflet est vendorisé
+
+La page le chargeait depuis `unpkg`, alors que React est servi depuis
+`vendor/` : une boutique dont le réseau bloque le CDN — ou un CDN en panne —
+perdait toutes ses cartes. Il vit désormais dans **`vendor/leaflet/`** :
+`leaflet.js`, `leaflet.css` et le dossier `images/` que le CSS référence en
+relatif (icône de marqueur, contrôle des calques).
+
+Les attributs **`integrity` sont conservés et inchangés** : ce sont les
+empreintes SHA-384 officielles de la 1.9.4, elles vérifient que la copie
+vendorisée est bien cette version, non modifiée. `crossorigin` disparaît — il
+n'a pas de sens sur une ressource de même origine.
+
+### Une carte absente le dit
+
+`ensureMaps()` se relançait toutes les 140 ms **indéfiniment** tant que
+`window.L` manquait : la zone de carte restait blanche, sans un mot, et la page
+tournait en boucle. L'attente est maintenant bornée (~4 s, une fenêtre par
+écran car le runtime rejoue la balise dans `<head>`), après quoi
+`leafletBanner()` écrit dans la zone de carte ce qui manque et où le chercher —
+en précisant que **le reste de l'écran reste juste**, pour qu'on ne doute pas
+des chiffres affichés à côté.
+
+Vérifié au navigateur, `unpkg` coupé net et sans aucune interception : Leaflet
+1.9.4 se charge depuis `vendor/`, les deux cartes se dessinent à l'identique
+(`index.html` **et** `back_office_ws_franchisee.dc.html`). Et avec
+`vendor/leaflet/` bloqué en plus : l'écran se rend entièrement, la zone de
+carte porte le message, aucune erreur JS, plus de boucle.
 
 Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : un zoning
 à trois sociétés et trois adresses → 1 arrêt ; l'adresse propre de chaque

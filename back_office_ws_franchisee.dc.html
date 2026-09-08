@@ -10,8 +10,14 @@
 <helmet>
 <link rel="stylesheet" href="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/global.css?v=2026073014">
 <script src="_ds/l-atelier-by-8504a4e3-7796-44da-b087-3fbd9dcb8dcd/_ds_bundle.js?v=2026073014"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<!-- Leaflet 1.9.4 SERVI LOCALEMENT, comme React (vendor/). Il venait d'unpkg :
+     une boutique dont le réseau bloque le CDN — ou un CDN en panne — perdait
+     toutes ses cartes, et la page l'attendait indéfiniment sans le dire.
+     Les empreintes `integrity` sont celles de la version officielle et n'ont
+     pas changé : elles vérifient que la copie vendorisée est bien 1.9.4, non
+     modifiée. Le CSS référence `images/` en relatif — d'où le sous-dossier. -->
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=2026073014" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H">
+<script src="vendor/leaflet/leaflet.js?v=2026073014" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"></script>
 <style>
   /* Le design system n'expose ni vert ni orange : on les déclare ici, une
      seule fois, plutôt qu'en dur dans les écrans. Le « mauvais » réutilise la
@@ -8802,6 +8808,24 @@ class Component extends DCLogic {
     // Une animation de zoom en cours (fitBounds) programme _onZoomTransitionEnd
     // 250 ms plus tard ; sur une carte détruite il lève « _leaflet_pos ».
     try{ m._animatingZoom=false; m.remove(); }catch(e){} return true; }
+  /* Une carte absente doit se voir. Les autres bandeaux (dépôt, tracé, sites)
+     disent ce qui manque À L'INTÉRIEUR d'une carte ; celui-ci dit que la carte
+     elle-même n'a pas pu être construite — le reste de l'écran, lui, reste
+     juste, et le message le précise pour qu'on ne doute pas des chiffres. */
+  LEAFLET_ESSAIS = 30;
+  leafletBanner(montrer){ if(typeof document==='undefined') return;
+    ['map-tournees','map-suivi','map-zones-fr','map-geo-fr'].forEach(elId=>{
+      const el=document.getElementById(elId); if(!el) return;
+      const id=elId+'-lwarn'; const b=document.getElementById(id);
+      if(!montrer){ if(b&&b.parentNode) b.parentNode.removeChild(b); return; }
+      if(b) return;
+      const n=document.createElement('div'); n.id=id;
+      n.style.cssText='position:absolute;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;'
+        +'text-align:center;padding:20px;background:rgba(255,255,255,.96);color:var(--color-primary);font:600 12.5px/1.65 var(--font-ui),sans-serif';
+      n.textContent='Carte indisponible — la bibliothèque Leaflet n’a pas pu être chargée (vendor/leaflet/leaflet.js). '
+        +'Vérifiez que le dossier vendor/ est bien déployé. Le reste de l’écran reste juste : seule la carte manque.';
+      try { if(window.getComputedStyle(el).position==='static') el.style.position='relative'; } catch(e){}
+      el.appendChild(n); }); }
   ensureMaps(){
     this.reviewsEnsure();
     this.gRevEnsure();
@@ -8810,7 +8834,17 @@ class Component extends DCLogic {
     // tournées en dépend (sinon tous les sites retombent sur le point défaut).
     if(this.state.screen==='zones'||this.state.screen==='tournees') this.zfGeoEnsure();
     if(this.state.screen==='geoAnalyse') this.geoAEnsure();
-    if(!window.L){ this._mapTimer=setTimeout(()=>this.ensureMaps(),140); return; }
+    /* ATTENTE BORNÉE. Sans Leaflet, la page se relançait toutes les 140 ms
+       INDÉFINIMENT et sans un mot : la zone de carte restait blanche, et rien
+       à l'écran ne disait pourquoi. On laisse ~4 s au script (chaque écran a
+       droit à sa propre fenêtre, car le runtime rejoue la balise dans <head>),
+       puis on le DIT à l'endroit où la carte aurait dû être. */
+    if(this._lScreen!==this.state.screen){ this._lScreen=this.state.screen; this._lTry=0; }
+    if(!window.L){ this._lTry=(this._lTry||0)+1;
+      if(this._lTry<=this.LEAFLET_ESSAIS) this._mapTimer=setTimeout(()=>this.ensureMaps(),140);
+      else this.leafletBanner(true);
+      return; }
+    this.leafletBanner(false);
     if(this.state.screen==='zones'){
       const elz=document.getElementById('map-zones-fr');
       if(this.mapStale(this._zonesFrMap)){ this._zonesFrMap=null; this._zfKey=null; }
