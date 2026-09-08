@@ -2975,6 +2975,150 @@
            Cet écran ne fait que livrer ce qu'il faut saisir dans la tablette :
            l'URL du back-office et un jeton d'appareil révocable. -->
       <!-- ===================== MA BOUTIQUE › SIGNATURE DE MAIL ===================== -->
+      <!-- ══ USAGE DE LA CONSOLE ══════════════════════════════════════════
+           L'écran d'arbitrage : ce qui sert, ce qui ne sert pas. Les cartes
+           sont dans l'ordre de la décision — le verdict d'abord, les heatmaps
+           pour vérifier avant de retirer, les familles pour voir où fusionner. -->
+      <sc-if value="{{ isUsage }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:260px">
+              <div class="t-section-title" style="font-size:15px">Ce qui sert, ce qui ne sert pas</div>
+              <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">Deux mesures, la même fenêtre : les écrans OUVERTS, et les boutons AFFICHÉS puis CLIQUÉS. Un bouton affiché deux cents fois et jamais cliqué peut partir ; un bouton jamais affiché n’est pas mort, il est inconnu — et c’est dit.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;gap:2px;background:var(--color-background-secondary);border-radius:9px;padding:2px">
+                <sc-for list="{{ usgPeriodes }}" as="p" hint-placeholder-count="3"><button onClick="{{ p.go }}" style="{{ p.style }}">{{ p.label }}</button></sc-for>
+              </div>
+              <button onClick="{{ usgExport }}" style="border:none;cursor:pointer;border-radius:9px;padding:8px 15px;font:600 12px var(--font-ui);background:var(--color-primary);color:#fff">Exporter (CSV)</button>
+            </div>
+          </div>
+          <sc-if value="{{ usgErr }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:11px;border-radius:9px;padding:9px 12px;background:rgba(179,38,30,.07);font:500 12px var(--font-ui);color:#B3261E">{{ usgErr }}</div>
+          </sc-if>
+          <sc-if value="{{ usgLu }}" hint-placeholder-val="{{ true }}">
+            <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:9px">{{ usgResume }}</div>
+          </sc-if>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;align-items:start">
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px">
+            <div class="t-section-title" style="font-size:15px">Écrans jamais ouverts</div>
+            <sc-if value="{{ usgLu }}" hint-placeholder-val="{{ true }}">
+              <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">{{ usgEcransMortsN }} sur {{ usgEcransN }} écrans du menu, sur la période. Cette liste est complète : le menu connaît tous ses écrans.</div>
+            </sc-if>
+            <sc-for list="{{ usgEcransMorts }}" as="m" hint-placeholder-count="5">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:.5px solid var(--color-border-tertiary)">
+                <span style="font:500 12.5px var(--font-ui)">{{ m.nom }}</span>
+                <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted);white-space:nowrap">{{ m.famille }}</span>
+              </div>
+            </sc-for>
+            <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:9px">{{ usgNonLu }}</div>
+          </div>
+
+          <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px">
+            <div class="t-section-title" style="font-size:15px">Boutons jamais cliqués</div>
+            <sc-if value="{{ usgLu }}" hint-placeholder-val="{{ true }}">
+              <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">{{ usgBoutonsMortsN }} bouton(s) affichés au moins une fois et jamais cliqués, du plus vu au moins vu.</div>
+            </sc-if>
+            <sc-for list="{{ usgBoutonsMorts }}" as="b" hint-placeholder-count="6">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:.5px solid var(--color-border-tertiary)">
+                <span style="font:500 12.5px var(--font-ui)">{{ b.action }} <span style="font:400 10.5px var(--font-ui);color:var(--color-text-muted)">— {{ b.ecran }}</span></span>
+                <span style="font:400 11px var(--font-ui);color:var(--color-text-muted);white-space:nowrap">{{ b.vu }}</span>
+              </div>
+            </sc-for>
+            <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:9px">{{ usgBoutonsReste }}{{ usgNonLu }}</div>
+            <div style="font:400 10.5px/1.45 var(--font-ui);color:var(--color-text-muted);margin-top:8px">{{ usgRailNote }}<br/>{{ usgInconnus }}</div>
+          </div>
+        </div>
+
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px">
+          <div class="t-section-title" style="font-size:15px">Écrans ouverts — {{ usgJoursN }} derniers jours</div>
+          <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">Une ligne par écran, une case par jour. Le menu se juge ici : ce qui reste pâle sur toute la ligne ne mérite pas une entrée à lui seul.</div>
+          <sc-if value="{{ usgAEcrans }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:8px;margin-top:12px;padding-left:2px">
+              <span style="flex:1;min-width:0;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Écran</span>
+              <span style="flex:none;width:70px;text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Ouvert.</span>
+              <span style="flex:none;width:58px;text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Dernier</span>
+              <span style="flex:2.2;min-width:180px;display:flex;gap:1px">
+                <sc-for list="{{ usgJoursCols }}" as="j" hint-placeholder-count="30"><span style="flex:1;min-width:0;font:500 8px var(--font-ui);color:var(--color-text-muted);text-align:center;overflow:hidden">{{ j.label }}</span></sc-for>
+              </span>
+            </div>
+            <sc-for list="{{ usgEcrans }}" as="l" hint-placeholder-count="8">
+              <div style="display:flex;align-items:center;gap:8px;padding:3px 2px;border-bottom:.5px solid var(--color-border-tertiary)">
+                <span style="flex:1;min-width:0;font:500 12px var(--font-ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.nom }}</span>
+                <span style="flex:none;width:70px;text-align:right;font:600 12px var(--font-ui)">{{ l.total }}</span>
+                <span style="flex:none;width:58px;text-align:right;font:400 11px var(--font-ui);color:var(--color-text-muted)">{{ l.dernier }}</span>
+                <span style="flex:2.2;min-width:180px;display:flex;gap:1px;align-items:center">
+                  <sc-for list="{{ l.cases }}" as="k" hint-placeholder-count="30"><span style="flex:1;min-width:0" title="{{ k.titre }}"><i style="{{ k.style }}"></i></span></sc-for>
+                </span>
+              </div>
+            </sc-for>
+            <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:9px">{{ usgEcransReste }}</div>
+          </sc-if>
+          <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:9px">{{ usgNonLu }}</div>
+        </div>
+
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="flex:1;min-width:240px">
+              <div class="t-section-title" style="font-size:15px">Boutons &amp; fonctions — {{ usgSelNom }}</div>
+              <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">« Vu » = le bouton était à l’écran lors d’une ouverture, depuis qu’il est mesuré. « Taux » = clics par affichage. Les lignes grises n’ont jamais été cliquées.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+            <sc-for list="{{ usgOnglets }}" as="o" hint-placeholder-count="6"><button onClick="{{ o.go }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
+          </div>
+          <sc-if value="{{ usgAActions }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 56px 56px 56px 62px minmax(120px,1.1fr);gap:8px;align-items:center;margin-top:12px;padding-bottom:5px">
+              <span style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Bouton</span>
+              <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Vu</span>
+              <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Clics</span>
+              <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Taux</span>
+              <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Dernier</span>
+              <span style="display:flex;gap:1px">
+                <sc-for list="{{ usgJoursCols }}" as="j" hint-placeholder-count="30"><span style="flex:1;min-width:0;font:500 8px var(--font-ui);color:var(--color-text-muted);text-align:center;overflow:hidden">{{ j.label }}</span></sc-for>
+              </span>
+            </div>
+            <sc-for list="{{ usgActions }}" as="l" hint-placeholder-count="10">
+              <div style="{{ l.style }}">
+                <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.action }}</span>
+                <span style="text-align:right">{{ l.vu }}</span>
+                <span style="text-align:right;font-weight:600">{{ l.clics }}</span>
+                <span style="text-align:right">{{ l.taux }}</span>
+                <span style="text-align:right">{{ l.dernier }}</span>
+                <span style="display:flex;gap:1px;align-items:center">
+                  <sc-for list="{{ l.cases }}" as="k" hint-placeholder-count="30"><span style="flex:1;min-width:0" title="{{ k.titre }}"><i style="{{ k.style }}"></i></span></sc-for>
+                </span>
+              </div>
+            </sc-for>
+          </sc-if>
+        </div>
+
+        <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px">
+          <div class="t-section-title" style="font-size:15px">Par famille du menu — où fusionner</div>
+          <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">Deux écrans peu ouverts sous la même entrée sont les candidats naturels à la fusion. Rangé par poids mort, puis par ouvertures.</div>
+          <div style="display:grid;grid-template-columns:minmax(0,1.1fr) 62px 68px 78px minmax(160px,1.5fr);gap:8px;margin-top:12px;padding-bottom:5px">
+            <span style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Famille</span>
+            <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Écrans</span>
+            <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Ouverts</span>
+            <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Ouvert.</span>
+            <span style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Jamais ouverts</span>
+          </div>
+          <sc-for list="{{ usgFamilles }}" as="f" hint-placeholder-count="7">
+            <div style="display:grid;grid-template-columns:minmax(0,1.1fr) 62px 68px 78px minmax(160px,1.5fr);gap:8px;align-items:baseline;padding:5px 0;border-bottom:.5px solid var(--color-border-tertiary);font:400 12px var(--font-ui)">
+              <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.titre }}</span>
+              <span style="text-align:right">{{ f.n }}</span>
+              <span style="text-align:right">{{ f.ouverts }}</span>
+              <span style="text-align:right;font-weight:600">{{ f.total }}</span>
+              <span style="font-size:11.5px;color:var(--color-text-muted)">{{ f.morts }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
       <sc-if value="{{ isMailSignature }}" hint-placeholder-val="{{ false }}">
       <div style="display:grid;grid-template-columns:minmax(0,1fr) 1.15fr;gap:14px;align-items:start">
         <div style="background:var(--color-surface);border:.5px solid var(--color-border-tertiary);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:12px">
@@ -5623,6 +5767,7 @@ class Component extends DCLogic {
     stockJour:{table:'ws_product_stock (catalog actif)',origin:'Stock online (webshop) + en shop, produits actifs · filtres badges',calc:'Dispo = online + shop ; sous seuil si dispo<min, tension si <min×1,25',dev:'1,5 j'},
     commandes:{table:'ws_orders',origin:'Commandes du jour · filtres livraison/retrait',calc:'Statut préparation → prête → livrée cliquable ; flags[ord_*] en mémoire',dev:'1,5 j'},
     shopParams:{table:'atelierbydb_shops (+ horaires : fr_shop_availability, en lecture)',origin:'Ligne de la boutique de la portée, servie par /franchisee/me',calc:'Édition ⇒ POST /franchisee/shop-update, puis relecture de /franchisee/me ; horaires édités dans « Disponibilité & créneaux »',dev:'1 j'},
+    usage:{table:'ws_bo_store (journal JSON par table et par boutique — table bo_usage)',origin:'La console elle-même : chaque ouverture d\u2019écran et chaque clic sur un bouton, mesurés dans le navigateur',calc:'Deux compteurs par bouton — VU (il était à l\u2019écran lors d\u2019une ouverture) et CLIQUÉ. Empilés en mémoire, écrits toutes les 30 s et en quittant la page par BOServer.saveQuiet(\u2039 bo_usage \u203a) \u21d2 POST /franchisee/save, relus au boot par /franchisee/bo-store. Fenêtre de 90 jours, élaguée à l\u2019écriture',dev:'0,5 j'},
     mailSignature:{table:'ws_bo_store (journal JSON par table et par boutique — table mail_signature)',origin:'Saisie de la boutique ; l\u2019enseigne et l\u2019adresse viennent de /franchisee/me et ne se retapent pas',calc:'BOServer.save(\u2039 mail_signature \u203a) \u21d2 POST /franchisee/save : aucun mapping typé côté API, l\u2019écriture retombe donc sur l\u2019overlay ws_bo_store, relu au boot par /franchisee/bo-store. Le gabarit mail/stopper-2a.html est un FICHIER, chargé à l\u2019entrée de l\u2019écran',dev:'0,5 j'},
     statsReseau:{table:'ERP consolidé (lecture seule)',origin:'Stats multi-boutiques poussées par l\'ERP',calc:'Aucun formulaire ; agrégats read-only + exports CSV',dev:'1 j'},
   }; return M[screen]||{table:'ws_param · tables du module',origin:'Servi par l’API /franchisee/* via la couche BOServer',calc:'Lecture directe de la table, aucune agrégation',dev:'1 j'}; }
@@ -5686,6 +5831,7 @@ class Component extends DCLogic {
     // ---- Boutique & réseau ----
     {s:'shopParams',g:'Ma boutique',label:'Paramètres du shop',k:'enseigne adresse horaires branding logo coordonnees magasin'},
     {s:'mailSignature',g:'Ma boutique',label:'Signature de mail',k:'signature pied de mail email iban tva telephone logo promo bouton gabarit'},
+    {s:'usage',g:'Ma boutique',label:'Usage de la console',desc:'Ce qui sert et ce qui ne sert pas — écrans ouverts, boutons affichés et cliqués',k:'usage mesure menage nettoyage simplifier alleger heatmap boutons jamais utilises ecrans morts fusionner'},
     {s:'statsReseau',g:'Ma boutique',label:'Stats réseau consolidées',k:'erp multi boutiques export csv comparaison classement'},
   ]; }
   formDefs(){
@@ -8389,7 +8535,7 @@ class Component extends DCLogic {
   // rendu ; elles remontent ici pour être lues AUSSI par les adresses — une
   // seule définition, sinon un écran ajouté au menu n'aurait pas d'adresse.
   NAV_KEYS=['tdb','prep','tournees','suivi','clients','validations','incidents','rentabilite','geoAnalyse','params','zones','capacite','commandes','stockJour','demandesBureau','fermetures','statsReseau','demandesB2B','avis','crm','crmRapport'];
-  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','mailSignature','tabletteKitchen','crm','crmRapport'];
+  PARAM_SCREENS=['atelierLiv','tournees','horaires','fermetures','clients','b2bClients','offices','emailsBureau','sites','bureauParams','bureauAssortiment','frais','zones','params','reglesBoutique','calendarRules','joursExcept','creneaux','pricingRules','vouchers','remiseWebshop','assortiment','dispoCat','dispoProd','paiements','shopParams','mailSignature','tabletteKitchen','usage','crm','crmRapport'];
 
   // Groupes dépliants du menu « Paramétrage ». Définis ici et non dans le rendu,
   // parce que l'adresse doit savoir quel groupe déplier à l'arrivée sur un de
@@ -8400,7 +8546,7 @@ class Component extends DCLogic {
      fil d'ariane numéroté — c'est une SUITE d'étapes, pas des onglets. */
   PARAM_FAMILLES(){ return [
     {id:'boutique', titre:'Boutique', ecrans:[['reglesBoutique','Disponibilité & créneaux'],['pricingRules','Promotions & bons'],['paiements','Paiements']]},
-    {id:'maison', titre:'Ma boutique', ecrans:[['shopParams','Fiche & horaires'],['mailSignature','Signature de mail'],['tabletteKitchen','Tablette Kitchen']]},
+    {id:'maison', titre:'Ma boutique', ecrans:[['shopParams','Fiche & horaires'],['mailSignature','Signature de mail'],['tabletteKitchen','Tablette Kitchen'],['usage','Usage de la console']]},
   ]; }
   navGroupsDef(){ return [
       // « Coûts · temps · frais » sort du menu : accessible via l'ENGRENAGE de
@@ -8543,6 +8689,324 @@ class Component extends DCLogic {
   /* Le gabarit est un FICHIER (mail/stopper-2a.html), celui-là même que le
      serveur doit rendre à l'envoi. Chargé, jamais recopié dans le code : deux
      copies, c'est un aperçu qui ment sur ce que le client reçoit. */
+  /* ══ USAGE DE LA CONSOLE ═══════════════════════════════════════════════
+     Ce qui sert, et ce qui ne sert pas.
+
+     Deux compteurs par bouton — VU (il était à l'écran) et CLIQUÉ — plus les
+     ouvertures de chaque écran. C'est le RAPPORT des deux qui tranche, et l'un
+     sans l'autre ne tranche rien : un bouton affiché deux cents fois et jamais
+     cliqué peut partir ; un bouton jamais affiché n'est pas mort, il est
+     INCONNU — et l'écran l'écrit plutôt que de le compter pour mort.
+
+     Le bouton est identifié par son ÉCRAN et son LIBELLÉ visible : ce qu'on lit
+     au moment d'arbitrer. Les chiffres deviennent « # » — « 3 colis » et
+     « 7 colis » sont le même bouton, et trente valeurs feraient trente lignes
+     illisibles. Sur une ligne de tableau, le texte est une DONNÉE (un nom de
+     client) : ces zones comptent ensemble sous « (zone cliquable) », sans quoi
+     il y aurait une ligne par client.
+
+     Rien ne part au clic : les compteurs s'empilent en mémoire et le tableau
+     complet est réécrit toutes les trente secondes, puis en quittant la page.
+     L'écriture passe par saveQuiet — un compteur perdu n'est pas une panne, et
+     le bandeau d'erreur ne vaut que s'il annonce des choses vraies et rares.
+
+     Où ça vit : table `bo_usage` de l'overlay ws_bo_store (POST
+     /franchisee/save, relue au boot par /franchisee/bo-store), PAR BOUTIQUE
+     comme le reste. Aucune route à écrire côté API. */
+  USG_TABLE='bo_usage';
+  USG_FENETRE=90;       // jours conservés dans la mesure
+  USG_MAX_LIGNES=1200;  // l'API refuse un paquet de plus de 500 Ko
+  USG_SEL='button,a[href],summary,label,select,[role="button"]';
+
+  usgJour(d){ const x=d||new Date();
+    return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+  usgJourMoins(n){ const d=new Date(); d.setDate(d.getDate()-n); return this.usgJour(d); }
+
+  /** La clé d'un élément cliquable : son écran, puis son libellé visible. */
+  usgCle(el){
+    if(!el||!el.closest) return null;
+    // Le rail et la recherche ne sont d'AUCUN écran : ils comptent à part sous
+    // « _menu ». Retirer un écran ne les emporte pas avec lui.
+    const ecran=el.closest('aside')?'_menu':(this.state.screen||'');
+    if(!ecran) return null;
+    // L'outil ne se mesure pas lui-même (voir usgTick).
+    if(ecran==='usage') return null;
+    const tag=(el.tagName||'').toLowerCase();
+    const controle=['button','a','summary','label','select','option'].indexOf(tag)>=0;
+    // Le TEXTE d'abord, le title seulement à défaut : dans le rail, le title
+    // porte l'ADRESSE de l'écran (#tournees), pas son nom.
+    let nom=controle?(el.textContent||'').replace(/\s+/g,' ').trim():'';
+    if(!nom) nom=(el.getAttribute('title')||el.getAttribute('aria-label')||'').trim();
+    if(!nom) nom=controle?'(sans libellé)':'(zone cliquable)';
+    nom=nom.replace(/^[▸▾▴▿►▼◂◃‣]\s*/,'').replace(/\d+/g,'#');
+    if(nom.length>60) nom=nom.slice(0,59)+'…';
+    return 'b\n'+ecran+'\n'+nom;
+  }
+
+  /** Un compteur de plus dans le paquet en attente. */
+  usgNote(cle,champ){
+    if(!cle) return;
+    if(!this._usg) this._usg={};
+    const c=this._usg[cle]||(this._usg[cle]={v:0,c:0});
+    c[champ]++;
+    if(!this._usgTimer) this._usgTimer=setTimeout(()=>{ this._usgTimer=null; this.usgEnvoi(); },30000);
+  }
+
+  /** Le relevé de ce qui est AFFICHÉ, une fois par ouverture d'écran. */
+  usgInventaire(){
+    if(typeof document==='undefined') return;
+    const t=Date.now();
+    // Le rendu se refait à chaque frappe au clavier : relire le DOM autant de
+    // fois coûterait plus que la mesure ne rapporte. Une fois et demie par
+    // seconde suffit — un bouton qui apparaît reste affiché bien plus longtemps.
+    if(this._usgInvT&&t-this._usgInvT<1500) return;
+    this._usgInvT=t;
+    if(!this._usgVus) this._usgVus={};
+    const els=document.querySelectorAll(this.USG_SEL);
+    for(let i=0;i<els.length;i++){
+      const cle=this.usgCle(els[i]);
+      if(!cle||this._usgVus[cle]) continue;
+      this._usgVus[cle]=1; this.usgNote(cle,'v');
+    }
+  }
+
+  /** Posé à chaque rendu : l'écoute, l'ouverture d'écran, puis l'inventaire. */
+  usgTick(){
+    if(typeof document==='undefined'||typeof window==='undefined') return;
+    if(!this._usgPose){
+      this._usgPose=1;
+      // Écoute À PART et en CAPTURE : ce qu'on compte ne doit rien changer à ce
+      // qui s'exécute, ni pouvoir l'empêcher si le comptage échoue.
+      document.addEventListener('click',(e)=>{ try{
+        const el=e.target&&e.target.closest?e.target.closest(this.USG_SEL):null;
+        if(el) this.usgNote(this.usgCle(el),'c');
+      }catch(err){} },true);
+      // Ce qui reste en attente part avant que la page ne disparaisse. Les deux
+      // écoutes sont nécessaires : une page masquée n'est pas toujours
+      // « déchargée », et pagehide seul manquerait la moitié des fins.
+      const adieu=()=>{ try{ this.usgEnvoi(); }catch(err){} };
+      window.addEventListener('pagehide',adieu);
+      document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') adieu(); });
+    }
+    const s=this.state.screen;
+    if(s&&this._usgEcran!==s){
+      this._usgEcran=s;
+      // Nouvel écran : ses boutons sont à réinventorier, et tout de suite — un
+      // écran ouvert puis quitté en une seconde a bien AFFICHÉ ses boutons.
+      // « Vu » compte les OUVERTURES pendant lesquelles le bouton était là.
+      this._usgVus=null; this._usgInvT=0;
+      /* L'ÉCRAN D'ARBITRAGE NE SE MESURE PAS LUI-MÊME. Ses onglets portent le
+         nom des autres écrans : comptés, ils remplissaient la liste « jamais
+         cliqué » de ses propres commandes, et l'écran qu'on était en train de
+         lire s'affichait « jamais ouvert » tant que le paquet n'était pas
+         parti. L'outil se serait mis à parler de lui plutôt que de la console. */
+      if(s!=='usage') this.usgNote('e\n'+s,'c');
+    }
+    setTimeout(()=>{ try{ this.usgInventaire(); }catch(e){} },0);
+  }
+
+  /** Le paquet part : le tableau entier est réécrit, élagué à la fenêtre. */
+  usgEnvoi(){
+    const buf=this._usg; this._usg=null;
+    if(!buf||!Object.keys(buf).length) return;
+    if(typeof window==='undefined'||!window.BOServer||!window.BOServer.saveQuiet) return;
+    const jour=this.usgJour();
+    const rows=(window.BOServer.table(this.USG_TABLE)||[]).filter(r=>r&&r.s);
+    const cleDe=(r)=>r.t==='e'?('e\n'+r.s):('b\n'+r.s+'\n'+(r.a||''));
+    const idx={}; rows.forEach(r=>{ idx[cleDe(r)]=r; });
+    Object.keys(buf).forEach(k=>{
+      const p=k.split('\n'), c=buf[k];
+      let r=idx[k];
+      if(!r){
+        r=(p[0]==='e')?{t:'e',s:p[1],n:0,p:jour,d:null,j:{}}
+                      :{t:'b',s:p[1],a:p[2],v:0,c:0,p:jour,dv:null,d:null,j:{}};
+        rows.push(r); idx[k]=r;
+      }
+      if(!r.j) r.j={};
+      if(!r.p) r.p=jour;
+      if(p[0]==='e'){ r.n=(r.n||0)+c.c; r.d=jour; r.dv=jour; r.j[jour]=(r.j[jour]||0)+c.c; }
+      else {
+        if(c.v){ r.v=(r.v||0)+c.v; r.dv=jour; }
+        if(c.c){ r.c=(r.c||0)+c.c; r.d=jour; r.j[jour]=(r.j[jour]||0)+c.c; }
+      }
+    });
+    /* ÉLAGAGE. Le paquet ENTIER repart à chaque envoi — l'API remplace la
+       table et refuse au-delà de 500 Ko : une mesure qui grossirait sans fin
+       finirait par ne plus partir du tout, sans que rien ne le dise. Trois
+       coupes, de la plus douce à la plus dure. */
+    const limite=this.usgJourMoins(this.USG_FENETRE);
+    let gardees=rows.filter(r=>{
+      if(r.j) Object.keys(r.j).forEach(j=>{ if(j<limite) delete r.j[j]; });
+      // Une ligne que plus rien n'a vue ni cliquée depuis la fenêtre s'en va :
+      // la garder ferait parler d'un bouton qui n'existe peut-être plus.
+      const vu=r.dv||r.d||r.p||'';
+      return vu>=limite;
+    });
+    if(gardees.length>this.USG_MAX_LIGNES){
+      gardees.sort((a,b)=>((b.c||0)+(b.n||0))-((a.c||0)+(a.n||0))||((b.v||0)-(a.v||0)));
+      gardees=gardees.slice(0,this.USG_MAX_LIGNES);
+    }
+    // Dernier garde-fou : si le paquet reste trop gros, le détail JOUR PAR JOUR
+    // des lignes les moins utilisées saute — les totaux, eux, restent. Une
+    // heatmap partielle vaut mieux qu'une mesure refusée en silence.
+    if(JSON.stringify(gardees).length>400000) gardees.forEach((r,i)=>{ if(i>=200) r.j={}; });
+    window.BOServer.saveQuiet(this.USG_TABLE,gardees);
+  }
+
+  /* Les valeurs de l'écran. L'ordre des cartes est l'ordre de la décision :
+     le VERDICT d'abord — c'est ce qu'on vient chercher — les heatmaps ensuite,
+     pour vérifier avant de retirer, les familles du menu en dernier, pour voir
+     où deux écrans peuvent n'en faire qu'un. */
+  usgVals(titres){
+    const S=this.state, R={};
+    const n=S.usgJours||30;
+    const jours=[]; for(let i=n-1;i>=0;i--) jours.push(this.usgJourMoins(i));
+    R.usgJoursN=String(n);
+    R.usgPeriodes=[7,30,90].map(k=>({label:k+' jours',
+      go:()=>this.setState({usgJours:k}),
+      style:'border:none;cursor:pointer;border-radius:7px;padding:6px 13px;font:'+(k===n?'600':'400')
+        +' 12px var(--font-ui);'+(k===n?'background:var(--color-surface);color:var(--color-primary)'
+        :'background:transparent;color:var(--color-text-muted)')}));
+
+    /* L'INVENTAIRE des écrans vient du MENU et de l'index de recherche. Ce qui
+       existe et n'a jamais été ouvert ne se déduit d'aucune mesure — c'est la
+       seule des deux listes du verdict qui soit complète. */
+    const noms={}, fams={};
+    this.searchDefs().forEach(e=>{ if(!e.s||noms[e.s]) return;
+      noms[e.s]=titres[e.s]||e.label||e.s; fams[e.s]=e.g||'—'; });
+    this.NAV_KEYS.concat(this.PARAM_SCREENS).forEach(s=>{
+      if(!noms[s]){ noms[s]=titres[s]||s; fams[s]=fams[s]||'—'; } });
+    delete noms['usage']; // l'outil n'est pas un des écrans qu'il fait arbitrer
+    const nomDe=(s)=>s==='_menu'?'Rail & recherche (hors écran)':(noms[s]||s);
+    const fr2=(j)=>j?(j.slice(8)+'/'+j.slice(5,7)):'—';
+
+    /* LU et VIDE ne se disent pas pareil. Une mesure qui n'a pas été relue ne
+       prouve pas qu'un écran dort : conclure « jamais ouvert » sur un
+       chargement raté ferait retirer un écran qui sert. */
+    const boErr=((typeof window!=='undefined'&&window.BOServer&&window.BOServer.loadErrors)||[])
+      .some(e=>String((e&&e.detail)||'').indexOf('bo-store')>=0);
+    const rows=((typeof window!=='undefined'&&window.BOServer&&window.BOServer.table(this.USG_TABLE))||[])
+      .filter(r=>r&&r.s);
+    R.usgLu=!boErr;
+    R.usgErr=boErr?'Mesure non lue — l’overlay bo-store n’a pas répondu au chargement : rien ne peut être conclu.':'';
+
+    const somme=(r)=>{ const j=r.j||{}; let t=0; for(let i=0;i<jours.length;i++) t+=(j[jours[i]]||0); return t; };
+    const barre=(v,mx)=>{ const f=mx>0?Math.min(1,v/mx):0;
+      return 'display:block;width:100%;height:14px;border-radius:3px;background:'
+        +(v===0?'var(--color-background-secondary)':'rgba(141,29,44,'+(0.18+0.82*f).toFixed(2)+')'); };
+
+    // ── Écrans ouverts ──
+    const ecrans=rows.filter(r=>r.t==='e').map(r=>({s:r.s,total:somme(r),j:r.j||{},d:r.d}))
+      .filter(e=>e.total>0).sort((a,b)=>b.total-a.total);
+    let maxE=0; ecrans.forEach(e=>jours.forEach(j=>{ if((e.j[j]||0)>maxE) maxE=e.j[j]; }));
+    R.usgJoursCols=jours.map((j,i)=>({label:(i%5===0)?fr2(j):''}));
+    const TOP=12;
+    R.usgEcrans=ecrans.slice(0,TOP).map(e=>({nom:nomDe(e.s),total:String(e.total),dernier:fr2(e.d),
+      cases:jours.map(j=>({style:barre(e.j[j]||0,maxE),titre:j+' — '+(e.j[j]||0)}))}));
+    R.usgEcransReste=ecrans.length>TOP?('+ '+(ecrans.length-TOP)+' autre(s) écran(s) ouvert(s) sur la période'):'';
+    R.usgAEcrans=R.usgEcrans.length>0;
+
+    // ── Le verdict, première liste : les écrans jamais ouverts ──
+    const vus={}; ecrans.forEach(e=>{ vus[e.s]=1; });
+    const morts=Object.keys(noms).filter(s=>!vus[s]);
+    R.usgEcransMorts=morts.map(s=>({nom:noms[s],famille:fams[s]||'—'}));
+    R.usgEcransMortsN=String(morts.length);
+    R.usgEcransN=String(Object.keys(noms).length);
+    R.usgAMorts=morts.length>0;
+
+    // ── Le verdict, seconde liste : les boutons affichés et jamais cliqués ──
+    /* Le RAIL est écarté d'ici : une entrée de menu jamais cliquée est un écran
+       jamais ouvert, elle est déjà dans la liste d'à côté, et la répéter ici
+       noierait les vrais boutons sous la navigation. */
+    const boutons=rows.filter(r=>r.t!=='e');
+    const bMorts=boutons.filter(r=>(r.c||0)===0&&(r.v||0)>0&&r.s!=='_menu')
+      .sort((a,b)=>(b.v||0)-(a.v||0));
+    R.usgBoutonsMorts=bMorts.slice(0,40).map(r=>({action:r.a,ecran:nomDe(r.s),
+      vu:'vu '+(r.v||0)+'× depuis le '+fr2(r.p)}));
+    R.usgBoutonsMortsN=String(bMorts.length);
+    R.usgABoutonsMorts=bMorts.length>0;
+    R.usgBoutonsReste=bMorts.length>40?('+ '+(bMorts.length-40)+' autre(s) — la liste complète est dans l’export.'):'';
+    R.usgInconnus='Seuls les boutons AFFICHÉS au moins une fois sont comptés : '+boutons.length
+      +' à ce jour. Un bouton qui n’apparaît que dans un cas rare — une fenêtre, un onglet jamais ouvert —'
+      +' reste inconnu ; il n’est pas dans cette liste, et son absence ne le condamne pas.';
+    R.usgRailNote='Le rail n’est pas listé ici : une entrée jamais cliquée est un écran jamais ouvert, à gauche.';
+
+    // ── Boutons de l'écran choisi ──
+    const parEcran={}; boutons.forEach(r=>{ parEcran[r.s]=(parEcran[r.s]||0)+somme(r); });
+    const mesures=Object.keys(parEcran).sort((a,b)=>parEcran[b]-parEcran[a]);
+    // Par défaut le premier VRAI écran : le rail est presque toujours le plus
+    // cliqué — c'est par lui qu'on passe — et l'ouvrir d'office montrerait la
+    // navigation à la place des boutons qu'on vient juger. Il reste dans la liste.
+    const sel=(S.usgSel&&parEcran[S.usgSel]!==undefined)?S.usgSel
+      :(mesures.filter(s=>s!=='_menu')[0]||mesures[0]||'');
+    R.usgSelNom=sel?nomDe(sel):(R.usgLu?'aucun écran mesuré':'mesure non lue');
+    R.usgOnglets=mesures.slice(0,10).map(s=>({label:nomDe(s),
+      go:()=>this.setState({usgSel:s}),
+      style:'border:none;cursor:pointer;border-radius:999px;padding:6px 13px;font:'+(s===sel?'600':'400')
+        +' 11.5px var(--font-ui);'+(s===sel?'background:var(--color-primary);color:#fff'
+        :'background:var(--color-background-secondary);color:var(--color-text-muted)')}));
+    const lignes=boutons.filter(r=>r.s===sel).map(r=>({a:r.a,v:r.v||0,c:somme(r),j:r.j||{},d:r.d,p:r.p}))
+      .sort((a,b)=>b.c-a.c||b.v-a.v);
+    let maxB=0; lignes.forEach(l=>jours.forEach(j=>{ if((l.j[j]||0)>maxB) maxB=l.j[j]; }));
+    R.usgActions=lignes.map(l=>({action:l.a,vu:String(l.v),clics:String(l.c),
+      taux:l.v?(Math.round(100*l.c/l.v)+' %'):'—',dernier:fr2(l.d),
+      style:'display:grid;grid-template-columns:minmax(0,1fr) 56px 56px 56px 62px minmax(120px,1.1fr);gap:8px;align-items:center;'
+        +'padding:5px 0;border-bottom:.5px solid var(--color-border-tertiary);font:400 12px var(--font-ui);'
+        +(l.c===0?'color:var(--color-text-muted);background:var(--color-background-secondary)':''),
+      cases:jours.map(j=>({style:barre(l.j[j]||0,maxB),titre:j+' — '+(l.j[j]||0)}))}));
+    R.usgAActions=lignes.length>0;
+
+    // ── Familles du menu : où fusionner ──
+    /* Deux écrans peu ouverts sous la même entrée sont les candidats naturels à
+       la fusion. L'écran ne décide pas à leur place : il range et il compte. */
+    const fam={};
+    Object.keys(noms).forEach(s=>{
+      const f=fams[s]||'—';
+      const e=ecrans.find(x=>x.s===s);
+      const g=fam[f]||(fam[f]={titre:f,n:0,ouverts:0,total:0,morts:[]});
+      g.n++;
+      if(e){ g.ouverts++; g.total+=e.total; } else g.morts.push(noms[s]);
+    });
+    R.usgFamilles=Object.keys(fam).map(k=>fam[k])
+      .sort((a,b)=>(b.morts.length-a.morts.length)||(a.total-b.total))
+      .map(f=>({titre:f.titre,n:String(f.n),ouverts:String(f.ouverts),total:String(f.total),
+        morts:f.morts.join(' · ')||'—'}));
+
+    R.usgResume=R.usgLu
+      ?(ecrans.reduce((a,e)=>a+e.total,0)+' ouverture(s) d’écran · '
+        +boutons.reduce((a,r)=>a+somme(r),0)+' clic(s) sur '+boutons.length+' bouton(s) vus · '
+        +n+' derniers jours')
+      :'';
+
+    /* MESURE NON LUE : on ne conclut RIEN. Sans cette coupe, un overlay muet
+       affichait les quarante-cinq écrans en « jamais ouvert » — et c'est la
+       liste sur laquelle on retire des écrans. Un chargement raté ne prouve
+       pas qu'un écran dort ; il prouve qu'on ne sait pas. */
+    if(!R.usgLu){
+      R.usgEcrans=[]; R.usgAEcrans=false; R.usgEcransReste='';
+      R.usgEcransMorts=[]; R.usgAMorts=false; R.usgEcransMortsN='—';
+      R.usgBoutonsMorts=[]; R.usgABoutonsMorts=false; R.usgBoutonsMortsN='—'; R.usgBoutonsReste='';
+      R.usgActions=[]; R.usgAActions=false; R.usgOnglets=[];
+      R.usgFamilles=[]; R.usgInconnus=''; R.usgRailNote='';
+      R.usgNonLu='Mesure non lue : ni « jamais ouvert » ni « jamais cliqué » ne peuvent être affirmés ici.';
+    } else R.usgNonLu='';
+
+    // L'export : la liste qu'on relit hors de l'écran, au moment d'arbitrer.
+    R.usgExport=()=>{
+      const t=[['type','ecran','element','vus','clics','premier_vu','dernier_clic']];
+      morts.forEach(s=>t.push(['ecran jamais ouvert',noms[s],'','','0','','']));
+      boutons.forEach(r=>t.push([((r.c||0)?'bouton utilisé':'bouton jamais cliqué'),nomDe(r.s),r.a||'',
+        String(r.v||0),String(somme(r)),r.p||'',r.d||'']));
+      ecrans.forEach(e=>t.push(['ecran ouvert',nomDe(e.s),'','',String(e.total),'',e.d||'']));
+      const csv=t.map(l=>l.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
+      a.download='usage-console-'+n+'j-'+this.usgJour()+'.csv';
+      a.click();
+    };
+    return R;
+  }
+
   mailSigEnsure(){ if(this.state.screen!=='mailSignature'||this._mailGabFait) return;
     this._mailGabFait=true;
     fetch('mail/stopper-2a.html',{cache:'no-store'})
@@ -9531,6 +9995,9 @@ class Component extends DCLogic {
 
   renderVals(){
     const S=this.state, screen=S.screen;
+    // La mesure d'usage : pose l'écoute des clics, compte l'ouverture d'écran
+    // et relève ce qui est affiché. Ne touche à AUCUN état de rendu.
+    try{ this.usgTick(); }catch(e){}
     const SRV=(n)=>(window.BOServer?window.BOServer.table(n):[]);
     const pts=this.points();
     // nav
@@ -9583,11 +10050,11 @@ class Component extends DCLogic {
       navDeveloppement:this.tr('navDeveloppement'),navCrm:this.tr('navCrm'),navCrmRapport:this.tr('navCrmRapport') };
     const titles={avis:t.navAvis,tdb:t.navTdb,prep:t.navPrep,tournees:'Constructeur de tournées',suivi:t.navSuivi,clients:'Bureaux (comptes B2B)',b2bClients:'Clients',validations:t.navValidations,zones:'Zone de chalandise',incidents:t.navIncidents,rentabilite:t.navRentabilite,params:'Coût-temps & coûts',geoAnalyse:'Analyse géographique',
       horaires:'Horaires des tournées',fermetures:'Fermetures ponctuelles',sites:'Sites de livraison',offices:'Offices (bureaux)',bureauParams:'Paramètres livraison par bureau',bureauAssortiment:'Assortiment d\'un bureau',dispoCat:'Disponibilité par catégorie',dispoProd:'Produits non vendus ici',creneaux:'Créneaux',capacite:'Capacité (calendrier)',reglesBoutique:'Disponibilité boutique',joursExcept:'Jours exceptionnels',frais:'Frais de livraison',
-      crm:'Prospection (CRM) — aide à la prospection',crmRapport:'Rapport de campagne',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',mailSignature:'Signature de mail',tabletteKitchen:'Tablette Kitchen'};
+      crm:'Prospection (CRM) — aide à la prospection',crmRapport:'Rapport de campagne',commandes:'Commandes du jour',stockJour:'Stock du jour',demandesBureau:'Demandes de rattachement bureau',demandesB2B:'Demandes B2B',statsReseau:'Stats réseau consolidées',emailsBureau:'Emails bureau',calendarRules:'Règles calendrier',pricingRules:'Règles de prix',vouchers:'Bons / codes',remiseWebshop:'Remise auto webshop',assortiment:'Assortiment & disponibilité',paiements:'Moyens de paiement',shopParams:'Paramètres du shop',mailSignature:'Signature de mail',tabletteKitchen:'Tablette Kitchen',usage:'Usage de la console'};
     const subs={crm:'Choisir la campagne, poser ses cibles, les faire avancer jusqu’au rendez-vous',
       crmRapport:'Gestes, clients gagnés et chiffre développé depuis le gain',avis:this.tr('avisSub'),tdb:new Date().toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),prep:'Bon de chargement · responsabilité franchisé',tournees:'Glisser-déposer · publication tablette',suivi:'Positions temps réel',clients:'Comptes B2B · contacts · facturation différée · drop minutes',b2bClients:'Clients rattachés aux bureaux — table client · badges · fiche',validations:'Comptes Office Client en attente de validation',zones:'Codes postaux · véhicule · franco · temps de service',incidents:'Preuves · avoirs · relivraisons',rentabilite:'Km marginaux · allocation au point',params:'Coûts versionnés · rôles',geoAnalyse:'Carte des clients de ma boutique · office en jaune · particuliers en bleu',
       horaires:'Fenêtres récurrentes · départ/fin · cut-off · capacité',fermetures:'Jours où une tournée ne roule pas',sites:'Adresses · étage/local · tournée · temps d\'accès',offices:'Bureaux clients · config livraison · statut · départements',bureauParams:'Jours autorisés · cut-off · tournée assignée — par bureau',bureauAssortiment:'Produits proposés et affichage des prix — pour un bureau',dispoCat:'Catégories de la marque · délai · cut-off — lecture seule',dispoProd:'Ce qui manque au catalogue de cette boutique, et pourquoi',creneaux:'Libellés de créneaux par mode',capacite:'Remplissage max vs réservé — anti-surbooking',reglesBoutique:'Jours/heures · durée créneau · cut-off · lead',joursExcept:'Fermetures & horaires spéciaux par date',frais:'Cascade site → bureau → tournée → boutique · franco',
-      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',mailSignature:'Pied de mail de la boutique — variables du gabarit d\u2019envoi',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette'};
+      commandes:'ws_orders — statut préparation → prête → livrée',stockJour:'ws_product_stock — online / en shop / seuil min',demandesBureau:'ws_office_join_requests — lier · créer · rejeter',demandesB2B:'Accès comptes Office & rattachement bureaux',statsReseau:'Consolidé multi-boutiques · poussé par l\'ERP',emailsBureau:'ws_office_emails — contacts & facturation',calendarRules:'ws_calendar_rules — open days · cut-off · lead',pricingRules:'ws_pricing_rules — local ✍ / réseau 👁',vouchers:'ws_vouchers — bons locaux & marque',remiseWebshop:'ws_shops.webshop_discount_*',assortiment:'ws_product_shops — actif · sans livraison',paiements:'ws_shop_payment_options — par profil',shopParams:'atelierbydb_shops — enseigne · adresse · ville · CP',mailSignature:'Pied de mail de la boutique — variables du gabarit d\u2019envoi',tabletteKitchen:'URL et jeton d\u2019appareil à saisir dans la tablette',usage:'Ce qui sert et ce qui ne sert pas — pour retirer ce qui dort et fusionner ce qui fait double emploi'};
 
     // ===== Recherche profonde (barre de nav) =====
     // Cherche dans les menus, les sous-menus (onglets) ET les explications :
@@ -13052,6 +13519,7 @@ class Component extends DCLogic {
           stripeBtnLabel:sOn?'Gérer le compte':'Connecter Stripe',
           stripeBtnStyle:'flex:none;border:none;cursor:pointer;border-radius:9px;padding:10px 18px;font:600 12.5px var(--font-ui);'+(sOn?'background:var(--color-background-secondary);color:var(--color-text)':'background:#635bff;color:#fff'),
         }; })(),
+      isUsage:screen==='usage',...(screen==='usage'?this.usgVals(titles):{}),
       isMailSignature:screen==='mailSignature',sigChamps,sigEtat,sigEtatStyle,sigUrl,sigGabErr,
       sigAGab:!!this._mailGab,sigSave,sigSaveStyle,sigSaveLbl:sigDirty?'Enregistrer':'Aucune modification',
       sigMsg:S.mailSigMsg||'',sigEnseigne:sigSrv.LOGO_ALT||'—',sigAdresse:sigSrv.ADDRESS||'—',
