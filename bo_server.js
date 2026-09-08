@@ -169,6 +169,25 @@
     getParam: function(key, dflt){ var db = ensure(); var rows = db.params || []; for (var i=0;i<rows.length;i++){ if (rows[i].cle===key){ var r=rows[i]; return (r.val!==undefined ? r.val : (r.def!==undefined ? r.def : dflt)); } } return dflt; },
     setParam: function(key, val){ ensure(); var rows = DB.params || (DB.params = []); var found=false; for (var i=0;i<rows.length;i++){ if (rows[i].cle===key){ rows[i].val=val; found=true; } } if (!found) rows.push({cle:key, type:'bool', val:val}); syncSave('params', rows); return persist(); },
     save: function(n, rows){ ensure(); DB[n] = JSON.parse(JSON.stringify(rows)); syncSave(n, DB[n]); return persist(); },
+    // Écriture SILENCIEUSE. La même chose que save(), sans le bandeau d'erreur
+    // et hors de flush(). Réservée aux COMPTEURS d'usage (écran « Usage de la
+    // console ») : un paquet de mesure qui n'arrive pas n'est pas une panne
+    // dont l'utilisateur doit être averti, et le bandeau ne vaut que s'il
+    // annonce des choses vraies et rares. Hors de flush() aussi : un refetch
+    // de données métier n'a pas à attendre un compteur.
+    saveQuiet: function(n, rows){
+      ensure(); DB[n] = JSON.parse(JSON.stringify(rows)); persist();
+      try {
+        var fr = (typeof window !== 'undefined' && window.__FR) || {};
+        if (!fr.base || !frHasAuth(fr)) return Promise.resolve(false);
+        return fetch(fr.base + '/franchisee/save' + (fr.shop ? ('?shop=' + encodeURIComponent(fr.shop)) : ''), {
+          method: 'POST',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, frAuth(fr)),
+          credentials: 'omit',
+          body: JSON.stringify({ table: n, rows: rows })
+        }).then(function(r){ return !!r.ok; }, function(){ return false; });
+      } catch(e){ return Promise.resolve(false); }
+    },
     // Attend la fin de TOUTES les écritures serveur en vol (POST /save) —
     // à appeler avant tout refetch GET pour ne jamais lire un état périmé.
     flush: function(){ return Promise.all(PENDING.slice()).then(function(){ return true; }, function(){ return true; }); },
