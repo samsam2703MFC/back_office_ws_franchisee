@@ -8505,7 +8505,7 @@ class Component extends DCLogic {
     const el=document.getElementById('map-geo-fr'); if(!el) return;
     if(this.mapStale(this._geoAMap)){ this._geoAMap=null; this._geoAKey=null; }
     if(!el._leaflet_id){ const L=window.L; const m=L.map(el,{zoomControl:true}).setView([50.72,4.45],10);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m); this._geoAMap=m; this._geoAKey=null; }
+      this.tuiles(L,m,'map-geo-fr'); this._geoAMap=m; this._geoAKey=null; }
     this.geoADraw();
   }
   geoAFiltered(){ const D=this._geoAData; if(!D) return {list:[],unloc:0};
@@ -8938,6 +8938,49 @@ class Component extends DCLogic {
     // Une animation de zoom en cours (fitBounds) programme _onZoomTransitionEnd
     // 250 ms plus tard ; sur une carte détruite il lève « _leaflet_pos ».
     try{ m._animatingZoom=false; m.remove(); }catch(e){} return true; }
+  /* LE FOND DE CARTE vient d'un service extérieur, et il n'est PAS embarqué.
+     Couvrir la Belgique jusqu'au zoom 18 — celui que ces cartes autorisent —
+     demanderait près de neuf millions de tuiles, de l'ordre de 200 Go ; et la
+     Tile Usage Policy de l'OSMF interdit l'aspiration en masse de
+     tile.openstreetmap.org. Embarquer un cache serait donc infaisable ET
+     contraire aux conditions du service.
+
+     Son URL était écrite en dur à QUATRE endroits. Elle est désormais lue une
+     seule fois, dans `ws_param` : une boutique derrière un réseau qui bloque le
+     CDN, qui paie un fournisseur ou qui héberge son propre serveur de tuiles la
+     change sans toucher au code.
+
+     L'ATTRIBUTION suit la source. Elle n'est posée d'office que pour OSM :
+     créditer OpenStreetMap pour les tuiles de quelqu'un d'autre serait faux.
+     Qui change l'URL renseigne `map_tiles_attribution` — c'est en général une
+     obligation du fournisseur. */
+  MAP_TILES_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  MAP_TILES_ATTRIB = '© OpenStreetMap contributors';
+  tileUrl(){ const v=(window.BOServer?String(window.BOServer.getParam('map_tiles_url','')||''):'').trim(); return v||this.MAP_TILES_URL; }
+  tileAttrib(){ const v=(window.BOServer?String(window.BOServer.getParam('map_tiles_attribution','')||''):'').trim();
+    if(v) return v; return (this.tileUrl()===this.MAP_TILES_URL)?this.MAP_TILES_ATTRIB:''; }
+  /* Pose le fond sur une carte et SURVEILLE son chargement. Une tuile isolée
+     peut échouer (bord de mer, zoom trop profond) sans que rien ne soit cassé :
+     on ne parle que si PLUSIEURS tuiles échouent sans qu'aucune n'arrive —
+     alors le fond est réellement injoignable. Sans ce message, une carte grise
+     parsemée de pins a l'air cassée, et rien ne dit que les positions, elles,
+     sont justes. */
+  tuiles(L,m,elId){ const t=L.tileLayer(this.tileUrl(),{attribution:this.tileAttrib(),maxZoom:18});
+    let ok=0, ko=0;
+    t.on('tileload',()=>{ if(++ok===1) this.tuilesBanner(elId,false); });
+    t.on('tileerror',()=>{ if(!ok&&++ko>=3) this.tuilesBanner(elId,true); });
+    t.addTo(m); return t; }
+  tuilesBanner(elId, montrer){ if(typeof document==='undefined') return;
+    const el=document.getElementById(elId); if(!el) return;
+    const id=elId+'-tilewarn'; const b=document.getElementById(id);
+    if(!montrer){ if(b&&b.parentNode) b.parentNode.removeChild(b); return; }
+    if(b) return;
+    const n=document.createElement('div'); n.id=id;
+    n.style.cssText='position:absolute;z-index:500;top:10px;left:50%;transform:translateX(-50%);max-width:92%;padding:6px 11px;border-radius:8px;'
+      +'background:rgba(255,255,255,.94);color:#6b4420;font:500 11.5px sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.25);text-align:center;pointer-events:none';
+    n.textContent='Fond de carte indisponible — le service de tuiles n’est pas joignable. Les positions, les tracés et les heures restent justes ; il manque le décor. (ws_param · map_tiles_url)';
+    try { if(window.getComputedStyle(el).position==='static') el.style.position='relative'; } catch(e){}
+    el.appendChild(n); }
   /* Une carte absente doit se voir. Les autres bandeaux (dépôt, tracé, sites)
      disent ce qui manque À L'INTÉRIEUR d'une carte ; celui-ci dit que la carte
      elle-même n'a pas pu être construite — le reste de l'écran, lui, reste
@@ -8979,7 +9022,7 @@ class Component extends DCLogic {
       const elz=document.getElementById('map-zones-fr');
       if(this.mapStale(this._zonesFrMap)){ this._zonesFrMap=null; this._zfKey=null; }
       if(elz && !elz._leaflet_id){ const Lz=window.L; const mz=Lz.map(elz,{zoomControl:true}).setView([50.72,4.45],9);
-        Lz.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(mz); this._zonesFrMap=mz; this._zfKey=null; }
+        this.tuiles(Lz,mz,'map-zones-fr'); this._zonesFrMap=mz; this._zfKey=null; }
       this.drawZonesMap();
     }
     const L=window.L;
@@ -8995,7 +9038,7 @@ class Component extends DCLogic {
         // y a quelque chose à montrer. Aucun point de donnée n'en dépend.
         const dc0=this.depotCoords();
         const m=L.map(el,{zoomControl:true,attributionControl:true}).setView(dc0.length?dc0[0]:[50.83,4.40],dc0.length?12:11);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
+        this.tuiles(L,m,'map-suivi');
         this._suiviMap=m; this._suiviFit=false; this.drawSuiviMap();
       } else if(el && this._suiviMap){
         // La POSITION de la boutique entre dans la signature : « __SHOPINFO
@@ -9019,7 +9062,7 @@ class Component extends DCLogic {
       if(el && !el._leaflet_id){
         const dc1=this.depotCoords();
         const m=L.map(el,{zoomControl:true}).setView(dc1.length?dc1[0]:[50.84,4.37],12);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:18}).addTo(m);
+        this.tuiles(L,m,'map-tournees');
         this._tourneesMap=m; this.drawRoute();
       } else if(el && this._tourneesMap){
         // Redessine quand la donnée change (géo chargée, ordre modifié,

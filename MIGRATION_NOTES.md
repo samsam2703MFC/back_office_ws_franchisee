@@ -740,6 +740,54 @@ Vérifié au navigateur, `unpkg` coupé net et sans aucune interception : Leafle
 `vendor/leaflet/` bloqué en plus : l'écran se rend entièrement, la zone de
 carte porte le message, aucune erreur JS, plus de boucle.
 
+### Les tuiles, elles, ne sont PAS embarquées — et c'est délibéré
+
+Couvrir la Belgique jusqu'au zoom 18 (celui que ces cartes autorisent)
+demanderait près de **neuf millions de tuiles, de l'ordre de 200 Go** ; s'arrêter
+au zoom 12 tiendrait en ~57 Mo, mais le fond disparaîtrait au premier zoom sur
+une rue — pire que l'état actuel sur un réseau qui marche. Surtout, la **Tile
+Usage Policy de l'OSMF interdit l'aspiration en masse** de
+`tile.openstreetmap.org` : embarquer un cache serait contraire aux conditions du
+service. Leaflet était un autre cas — bibliothèque MIT, 160 Ko, redistribution
+permise.
+
+Deux choses à la place.
+
+**1. La source des tuiles est paramétrable.** Son URL était écrite en dur à
+quatre endroits ; elle est lue une seule fois, dans `ws_param` :
+
+| clé | rôle |
+| --- | --- |
+| `map_tiles_url` | gabarit `{z}/{x}/{y}` du service de tuiles. Vide ⇒ OpenStreetMap. |
+| `map_tiles_attribution` | crédit affiché sur la carte. |
+
+Une boutique derrière un réseau qui bloque le CDN, qui paie un fournisseur ou
+qui héberge son propre serveur de tuiles change l'URL sans toucher au code.
+L'**attribution suit la source** : le crédit OpenStreetMap n'est posé d'office
+que pour l'URL OSM — créditer OSM pour les tuiles d'un autre serait faux. Qui
+change l'URL renseigne l'attribution ; c'est en général une obligation du
+fournisseur.
+
+**2. Un fond manquant se voit.** `tuiles()` compte les tuiles chargées et les
+tuiles en échec : on ne parle que si **plusieurs échouent sans qu'aucune
+n'arrive** — une tuile isolée qui manque (bord de mer, zoom trop profond) n'est
+pas une panne. Alors un bandeau dit que le décor manque **et que les positions,
+les tracés et les heures restent justes** : une carte grise parsemée de pins a
+l'air cassée, et rien ne disait le contraire.
+
+Vérifié au navigateur, trois cas :
+
+| | source demandée | attribution | bandeau |
+| --- | --- | --- | --- |
+| normal | `tile.openstreetmap.org` (18 tuiles) | © OpenStreetMap contributors | non |
+| tuiles coupées | aucune | inchangée | **oui**, marqueurs toujours là |
+| `map_tiles_url` posé | `tuiles.interne.test` (18 tuiles) | © Service de tuiles interne | non |
+
+Un cache navigateur (service worker) des tuiles déjà visitées serait, lui,
+acceptable au regard de la policy — c'est de la navigation normale, pas de
+l'aspiration — mais il n'aide pas un réseau qui bloque le service d'emblée.
+Non fait.
+
 Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : un zoning
 à trois sociétés et trois adresses → 1 arrêt ; l'adresse propre de chaque
 société affichée sous son nom ; rattachement d'une société qui a son adresse
