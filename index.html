@@ -3065,18 +3065,18 @@
           <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap">
             <div style="flex:1;min-width:240px">
               <div class="t-section-title" style="font-size:15px">Boutons &amp; fonctions — {{ usgSelNom }}</div>
-              <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">« Vu » = le bouton était à l’écran lors d’une ouverture, depuis qu’il est mesuré. « Taux » = clics par affichage. Les lignes grises n’ont jamais été cliquées.</div>
+              <div style="font:400 11.5px/1.5 var(--font-ui);color:var(--color-text-muted);margin-top:3px">« Vu » = le bouton était à l’écran lors d’une ouverture, depuis qu’il est mesuré. « Par affich. » = nombre de clics pour un affichage — il peut dépasser 1, on clique parfois plusieurs fois sans changer d’écran. Les lignes grises n’ont jamais été cliquées.</div>
             </div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
             <sc-for list="{{ usgOnglets }}" as="o" hint-placeholder-count="6"><button onClick="{{ o.go }}" style="{{ o.style }}">{{ o.label }}</button></sc-for>
           </div>
           <sc-if value="{{ usgAActions }}" hint-placeholder-val="{{ true }}">
-            <div style="display:grid;grid-template-columns:minmax(0,1fr) 56px 56px 56px 62px minmax(120px,1.1fr);gap:8px;align-items:center;margin-top:12px;padding-bottom:5px">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 52px 52px 74px 62px minmax(120px,1.1fr);gap:8px;align-items:center;margin-top:12px;padding-bottom:5px">
               <span style="font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Bouton</span>
               <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Vu</span>
               <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Clics</span>
-              <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Taux</span>
+              <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Par affich.</span>
               <span style="text-align:right;font:600 9.5px var(--font-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--color-text-muted)">Dernier</span>
               <span style="display:flex;gap:1px">
                 <sc-for list="{{ usgJoursCols }}" as="j" hint-placeholder-count="30"><span style="flex:1;min-width:0;font:500 8px var(--font-ui);color:var(--color-text-muted);text-align:center;overflow:hidden">{{ j.label }}</span></sc-for>
@@ -8874,8 +8874,28 @@ class Component extends DCLogic {
     const noms={}, fams={};
     this.searchDefs().forEach(e=>{ if(!e.s||noms[e.s]) return;
       noms[e.s]=titres[e.s]||e.label||e.s; fams[e.s]=e.g||'—'; });
+    /* Dix-huit écrans du menu ne sont PAS dans l'index de recherche : ils
+       tombaient tous dans une rubrique « — » de dix-huit lignes, dans la carte
+       même qui doit guider les fusions. On les range là où le code les place
+       vraiment — la famille d'onglets du paramétrage, le groupe du menu — et
+       à défaut on dit ce qu'ils sont : des écrans que la recherche ne trouve
+       pas. Un écran introuvable ET jamais ouvert, c'est deux raisons de partir. */
+    /* Le nom de la rubrique doit être CELUI QUE L'INDEX EMPLOIE DÉJÀ, sinon la
+       même famille apparaît deux fois — « Ma boutique » d'un côté, « Paramétrage
+       › Ma boutique » de l'autre — et le tableau des fusions compte deux fois
+       le même onglet. L'index n'est pas cohérent lui-même (« Paramétrage ›
+       Boutique » mais « Ma boutique ») : on s'aligne sur lui, pas l'inverse. */
+    const dejaNommees={}; Object.keys(fams).forEach(k=>{ dejaNommees[fams[k]]=1; });
+    const rubrique=(titre)=>dejaNommees['Paramétrage › '+titre]?('Paramétrage › '+titre)
+      :(dejaNommees[titre]?titre:('Paramétrage › '+titre));
+    const placeParam={};
+    this.PARAM_FAMILLES().forEach(f=>(f.ecrans||[]).forEach(e=>{ placeParam[e[0]]=rubrique(f.titre); }));
+    this.navGroupsDef().forEach(g=>(g.items||[]).forEach(it=>{ if(!placeParam[it[0]]) placeParam[it[0]]=rubrique(g.label); }));
     this.NAV_KEYS.concat(this.PARAM_SCREENS).forEach(s=>{
-      if(!noms[s]){ noms[s]=titres[s]||s; fams[s]=fams[s]||'—'; } });
+      if(!noms[s]) noms[s]=titres[s]||s;
+      if(!fams[s]) fams[s]=placeParam[s]
+        ||(this.PARAM_SCREENS.indexOf(s)>=0?'Paramétrage (hors index de recherche)'
+                                           :'Haut du menu (hors index de recherche)'); });
     delete noms['usage']; // l'outil n'est pas un des écrans qu'il fait arbitrer
     const nomDe=(s)=>s==='_menu'?'Rail & recherche (hors écran)':(noms[s]||s);
     const fr2=(j)=>j?(j.slice(8)+'/'+j.slice(5,7)):'—';
@@ -8891,6 +8911,12 @@ class Component extends DCLogic {
     R.usgErr=boErr?'Mesure non lue — l’overlay bo-store n’a pas répondu au chargement : rien ne peut être conclu.':'';
 
     const somme=(r)=>{ const j=r.j||{}; let t=0; for(let i=0;i<jours.length;i++) t+=(j[jours[i]]||0); return t; };
+    /* Clics PAR AFFICHAGE, en « × » et non en pourcentage : « vu » compte les
+       OUVERTURES d'écran où le bouton était là, et on peut cliquer plusieurs
+       fois pendant une même ouverture — le pourcentage passait alors 100 %, et
+       un taux impossible fait douter de toute la mesure. Deux décimales sous
+       1 : un bouton cliqué une fois sur quarante affichages n'est pas zéro. */
+    const parAff=(c,v)=>!v?'—':(c===0?'0':((c/v>=1?(c/v).toFixed(1):(c/v).toFixed(2)).replace('.',',')+' ×'));
     const barre=(v,mx)=>{ const f=mx>0?Math.min(1,v/mx):0;
       return 'display:block;width:100%;height:14px;border-radius:3px;background:'
         +(v===0?'var(--color-background-secondary)':'rgba(141,29,44,'+(0.18+0.82*f).toFixed(2)+')'); };
@@ -8949,8 +8975,8 @@ class Component extends DCLogic {
       .sort((a,b)=>b.c-a.c||b.v-a.v);
     let maxB=0; lignes.forEach(l=>jours.forEach(j=>{ if((l.j[j]||0)>maxB) maxB=l.j[j]; }));
     R.usgActions=lignes.map(l=>({action:l.a,vu:String(l.v),clics:String(l.c),
-      taux:l.v?(Math.round(100*l.c/l.v)+' %'):'—',dernier:fr2(l.d),
-      style:'display:grid;grid-template-columns:minmax(0,1fr) 56px 56px 56px 62px minmax(120px,1.1fr);gap:8px;align-items:center;'
+      taux:parAff(l.c,l.v),dernier:fr2(l.d),
+      style:'display:grid;grid-template-columns:minmax(0,1fr) 52px 52px 74px 62px minmax(120px,1.1fr);gap:8px;align-items:center;'
         +'padding:5px 0;border-bottom:.5px solid var(--color-border-tertiary);font:400 12px var(--font-ui);'
         +(l.c===0?'color:var(--color-text-muted);background:var(--color-background-secondary)':''),
       cases:jours.map(j=>({style:barre(l.j[j]||0,maxB),titre:j+' — '+(l.j[j]||0)}))}));
