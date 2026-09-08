@@ -115,6 +115,17 @@ part dans le même job, avec sa propre copie du design system.
 > `claude/deep-search-bar-backoffice-ghqldg`. Si l'une de ces fonctions est
 > voulue, elle se **reporte** sur `main` fonction par fonction — jamais par une
 > fusion de la branche entière.
+>
+> **Les quatre ont été examinées le 07/09/2026 ; une seule valait le report.**
+> Une méthode absente de `main` n'est pas une fonctionnalité manquante : c'est
+> l'hypothèse qu'il faut vérifier avant d'écrire une ligne.
+>
+> | Méthode | Verdict |
+> | --- | --- |
+> | `mailSig*` | **portée** — c'était un écran entier (« Signature de mail », sous Ma boutique), pas six méthodes. Il a fallu livrer aussi son gabarit `mail/`, que `deploy.yml` ne copiait pas : sur sa branche d'origine, l'aperçu répondait 404 en production. |
+> | `obDomaine*` | **écartée** — elle annonce « Réservé aux adresses @acme.be » d'après une liste censée refléter `$grandPublic` côté serveur. L'API a **retiré l'exigence de domaine le 14/08/2026** (`$dom = null` aux deux points d'émission) et la liste n'y existe plus : la porter ferait annoncer une règle abolie. Remplacée par une phrase qui dit ce qui se passe vraiment — le lien est ouvert à toute adresse. |
+> | `invPdf` | **écartée** — ce n'est pas une fonction absente, c'est l'autre implémentation du bouton « Affiche » que `main` a déjà, et la plus pauvre : son PDF ne porte que la raison sociale, là où l'affiche HTML de `main` imprime aussi horaire, jours, cut-off, remise et bons. |
+> | `geoDataEnsure` | **écartée** — code mort sur sa propre branche (définie, jamais appelée), doublon du `fetch` que `geoAEnsure` fait juste en dessous. `main` charge déjà `/franchisee/geo-clients` à deux endroits, par `FRH()` — la source unique des en-têtes, qui a déjà changé deux fois ; des en-têtes recopiés à la main auraient dérivé en silence. |
 
 ## Diagnostic
 
