@@ -7809,49 +7809,74 @@ class Component extends DCLogic {
       const v=(c&&c.drop!=null&&c.drop!=='')?c.drop:((ligne&&ligne.drop!=null&&ligne.drop!=='')?ligne.drop:null);
       const n=parseFloat(v); return !(v==null||isNaN(n)||n<=0); };
     const seen={}; const out=[];
-    rows.forEach(r=>{ const adr=(r.adr&&r.adr!=='—')?r.adr:null; if(!adr) return;
-      if(seen[adr]===undefined){
-        // Géoloc : CP de l'adresse du site, SINON CP du BUREAU rattaché
-        // (ws_offices.postal_code) — les adresses de référence sont celles
-        // des bureaux concernés.
-        const cp=(String(adr).match(/\b(\d{4})\b/)||[])[1]||String(r.office_cp||'').trim();
-        const e=(geo&&geo.idx)?geo.idx[cp]:null;
-        // La POSITION du site d'abord : celle choisie dans la liste Google et
-        // servie par le serveur (lat / lng). Le centre du code postal n'est
-        // qu'un repli — il posait chaque site au milieu de sa commune, quelle
-        // que soit l'adresse encodée.
-        const own=(r.lat!=null&&r.lng!=null&&!isNaN(parseFloat(r.lat))&&!isNaN(parseFloat(r.lng)))?{lat:parseFloat(r.lat),lng:parseFloat(r.lng)}:null;
-        seen[adr]=out.length;
-        out.push({id:(r.id!=null?r.id:('adr:'+adr)),name:(r.name&&r.name!=='—')?r.name:adr,adr,geoGoogle:!!own,
-          ville:(r.city&&String(r.city).trim())||(e?e.city:(r.office_city||cp||'—')),lat:own?own.lat:(e?e.lat:null),lng:own?own.lng:(e?e.lng:null),cp,
-          stop:(r.stop!=null?+r.stop:null),
-          // Temps d'accès : celui de la base, ou RIEN. Les 10 minutes par
-          // défaut entraient dans chaque ETA sans que personne les ait
-          // mesurées, et s'affichaient « 10 min » comme une donnée saisie.
-          zone:(r.tour&&r.tour!=='—')?r.tour:'—',
-          access:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?null:parseFloat(r.acc),offices:[],
+    /* UN ARRÊT PAR ZONE, pas par adresse. Le regroupement se faisait sur
+       l'adresse exacte de la ligne : un zoning dont les trois sociétés sont à
+       trois adresses y devenait trois arrêts — trois trajets, trois temps
+       d'accès et trois pins sur la carte pour un seul arrêt du camion. C'est
+       siteKey() qui fait foi (le nom de la zone), la même clé que l'écran
+       Sites, l'écran Offices et l'assistant tournée.
+
+       Une ligne SANS adresse n'est plus jetée : elle était écartée d'entrée
+       (`if(!adr) return`), si bien qu'une zone nommée mais pas encore
+       adressée — « Zoning Sud Wavre », assignable partout ailleurs dans la
+       console — n'existait ni sur les cartes, ni dans les ETA, ni dans les
+       alertes. Elle apparaît désormais, sans position (`geoKo`), ce qui est
+       la vérité : un arrêt réel dont on ignore où il est. */
+    rows.forEach(r=>{ const k=this.siteKey(r); if(!k) return;
+      const adr=(r.adr&&r.adr!=='—')?String(r.adr):null;
+      if(seen[k]===undefined){
+        seen[k]=out.length;
+        out.push({id:(r.id!=null?r.id:('zone:'+k)),name:(r.name&&r.name!=='—')?r.name:(adr||'—'),adr:adr||'—',geoGoogle:false,
+          ville:'—',lat:null,lng:null,cp:'',stop:(r.stop!=null?+r.stop:null),zone:'—',access:null,offices:[],
           notes:(r.etage&&r.etage!=='—')?('Étage/local : '+r.etage):''});
       }
-      const st=out[seen[adr]];
-      // Ordre du bâtiment = plus petit stop de ses lignes ; géoloc de secours
-      // par le CP d'un autre bureau du même bâtiment.
+      const st=out[seen[k]];
+      /* LE POINT DE RÉFÉRENCE DE LA ZONE est la PREMIÈRE ligne qui en a un :
+         une position Google d'abord (celle choisie dans la liste), le centre du
+         code postal ensuite — repli signalé, qui posait sinon chaque site au
+         milieu de sa commune. Les lignes suivantes ne l'écrasent pas ; leurs
+         propres adresses restent portées par leurs bureaux, et un bureau assez
+         loin devient un arrêt à part entière (tourPoints). */
+      const own=(r.lat!=null&&r.lng!=null&&!isNaN(parseFloat(r.lat))&&!isNaN(parseFloat(r.lng)))?{lat:parseFloat(r.lat),lng:parseFloat(r.lng)}:null;
+      if(st.adr==='—'&&adr) st.adr=adr;
+      if(own&&!st.geoGoogle){ st.lat=own.lat; st.lng=own.lng; st.geoGoogle=true;
+        const cpO=(adr?(String(adr).match(/\b(\d{4})\b/)||[])[1]:'')||String(r.office_cp||'').trim();
+        if(cpO) st.cp=cpO;
+        const vO=(r.city&&String(r.city).trim())||''; if(vO) st.ville=vO; }
+      if(!st.geoGoogle&&st.lat==null&&geo&&geo.idx){
+        const cp2=(adr?(String(adr).match(/\b(\d{4})\b/)||[])[1]:'')||String(r.office_cp||'').trim();
+        const e2=cp2?geo.idx[cp2]:null;
+        if(e2){ st.lat=e2.lat; st.lng=e2.lng; st.cp=cp2; if(st.ville==='—') st.ville=(r.city&&String(r.city).trim())||e2.city||(r.office_city||cp2); } }
+      if(st.ville==='—'){ const v=(r.city&&String(r.city).trim())||(r.office_city&&String(r.office_city).trim())||''; if(v) st.ville=v; }
+      // Ordre de la zone = plus petit `stop` de ses lignes ; tournée et temps
+      // d'accès = la première valeur réellement saisie, pas celle d'une ligne
+      // élue au hasard.
       if(r.stop!=null&&(st.stop==null||+r.stop<st.stop)) st.stop=+r.stop;
-      if(st.lat==null&&geo&&geo.idx){ const cp2=String(r.office_cp||'').trim(); const e2=geo.idx[cp2]; if(e2){ st.lat=e2.lat; st.lng=e2.lng; st.ville=e2.city; st.cp=cp2; } }
+      if(st.zone==='—'&&r.tour&&r.tour!=='—') st.zone=r.tour;
+      if(st.access==null&&!(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))) st.access=parseFloat(r.acc);
+      if(!st.notes&&r.etage&&r.etage!=='—') st.notes='Étage/local : '+r.etage;
       // Un BUREAU, seulement s'il y en a un : sans bureau rattaché, le
       // serveur renvoie le nom du site à la place — la chronologie réclamait
       // alors un temps de dépôt pour un bureau qui n'existe pas, et rien ne
       // pouvait l'enregistrer.
       const b=(r.office&&r.office!=='—')?r.office:null;
       if(b&&!st.offices.some(o=>o.name===b)){
-        const oAdr=[r.office_address,[r.office_cp,r.office_city].filter(Boolean).join(' ')].filter(v=>v&&String(v).trim()).join(', ');
+        /* L'ADRESSE DU BUREAU : la rue que `ws_offices` lui connaît, sinon
+           celle de SA ligne — dans une zone, c'est la porte où l'on dépose, et
+           elle n'est pas celle de la zone. Le code postal et la localité ne
+           tiennent pas lieu d'adresse : « 5032 Isnes » ne mène nulle part, et
+           c'est ce qui s'affichait dès que ws_offices n'avait pas la rue. */
+        const oRue=String(r.office_address||'').trim();
+        const oCpVille=[r.office_cp,r.office_city].filter(v=>v&&String(v).trim()).join(' ').trim();
+        const oAdr=oRue?(oRue+(oCpVille?(', '+oCpVille):'')):(adr||oCpVille||'');
         // Temps de dépôt : celui paramétré pour CE bureau, ou inconnu — pas
         // 5 minutes décidées par la page et additionnées à chaque arrêt.
-        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||'adresse non renseignée',drop:dropDe(b,r),dropStd:!dropSaisi(b,r),
+        st.offices.push({name:b,id:(r.office_client_id!=null?r.office_client_id:null),addr:oAdr||adr||'adresse non renseignée',drop:dropDe(b,r),dropStd:!dropSaisi(b,r),
           // Position Google du bureau (ws_offices, 0123) : avec elle, un bureau à
           // une autre adresse que son site devient un ARRÊT à part entière.
           lat:(r.office_lat!=null&&!isNaN(parseFloat(r.office_lat)))?parseFloat(r.office_lat):null,
           lng:(r.office_lng!=null&&!isNaN(parseFloat(r.office_lng)))?parseFloat(r.office_lng):null,
-          addrBrut:String(r.office_address||'').trim()});
+          addrBrut:String(r.office_address||'').trim()||(adr||'')});
       }
     });
     // Un site dont le CP n'est pas au référentiel n'est PAS placé au centre de
@@ -9541,36 +9566,39 @@ class Component extends DCLogic {
         etaColor:sel?'#fff':'var(--color-primary)',subColor:sel?'rgba(255,255,255,.8)':'var(--color-text-muted)',
         select:()=>this.setState({selRoute:m.id},()=>this.drawRoute()),stops}; });
     // ===== TOURNÉES v2 — composition RÉELLE et PERSISTÉE =====
-    // Un « site » = un bâtiment (adresse normalisée) de ws_office_delivery_sites.
-    // Assigner un site à une tournée ÉCRIT tournee_id sur toutes ses lignes
-    // (save typé) — plus d'état de session (routeAssign) qui se perdait.
+    // Un « site » = une ZONE (siteKey) de ws_office_delivery_sites, pas une
+    // adresse : assigner une zone à une tournée ÉCRIT la tournée sur TOUTES
+    // ses lignes (save typé) — plus d'état de session (routeAssign) qui se
+    // perdait. La clé était ici l'adresse d'abord : un zoning à trois sociétés
+    // apparaissait trois fois dans la liste des sites à assigner.
     const tNorm=v=>String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
     const tvRows=this.sitesActifs();
     const tvBlds={}; const tvOrder=[];
-    tvRows.forEach(r=>{ const key=(r.adr&&r.adr!=='—')?('a:'+tNorm(r.adr)):((r.name&&r.name!=='—')?('n:'+tNorm(r.name)):null); if(!key) return;
+    tvRows.forEach(r=>{ const key=this.siteKey(r); if(!key) return;
       if(!tvBlds[key]){ tvBlds[key]={key,name:(r.name&&r.name!=='—')?r.name:r.adr,adr:(r.adr&&r.adr!=='—')?r.adr:'',tour:(r.tour&&r.tour!=='—')?r.tour:null,acc:(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))?null:parseFloat(r.acc),stop:(r.stop!=null?+r.stop:null),offices:[]}; tvOrder.push(key); }
       const b=tvBlds[key]; if(!b.tour&&r.tour&&r.tour!=='—') b.tour=r.tour;
+      if(!b.adr&&r.adr&&r.adr!=='—') b.adr=r.adr;
+      if(b.acc==null&&!(r.acc===''||r.acc==null||isNaN(parseFloat(r.acc)))) b.acc=parseFloat(r.acc);
       if(r.stop!=null&&(b.stop==null||+r.stop<b.stop)) b.stop=+r.stop;
       const off=(r.bureau&&r.bureau!=='—')?r.bureau:((r.office&&r.office!=='—')?r.office:null);
       if(off&&!b.offices.some(x=>tNorm(x)===tNorm(off))) b.offices.push(off); });
     const tvList=tvOrder.map(k=>tvBlds[k]);
     const armKey=(S.armSite&&tvBlds[S.armSite])?S.armSite:null;
-    // Écrit la tournée d'un BÂTIMENT (toutes ses lignes) — save typé + refetch.
+    // Écrit la tournée d'une ZONE (toutes ses lignes) — save typé + refetch.
     // À l'assignation, le site prend l'ordre SUIVANT (max+1) dans la tournée ;
     // au retrait, son ordre est effacé.
     const tourSetBld=(bld,tourName)=>{ if(!window.BOServer) return;
       const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false;
       let nextStop=null;
       if(tourName){ const used=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(tourName)&&b.key!==bld.key).map(b=>b.stop||0); nextStop=(used.length?Math.max(...used):0)+1; }
-      rows.forEach((x,xi)=>{ const kx=(x.adr&&x.adr!=='—')?('a:'+tNorm(x.adr)):((x.name&&x.name!=='—')?('n:'+tNorm(x.name)):null);
-        if(kx===bld.key){ rows[xi]={...x,tour:tourName||'—',stop:tourName?nextStop:null}; ch=true; } });
+      rows.forEach((x,xi)=>{ if(this.siteKey(x)===bld.key){ rows[xi]={...x,tour:tourName||'—',stop:tourName?nextStop:null}; ch=true; } });
       if(ch) window.BOServer.save('ws_office_delivery_sites',rows);
       this.setState(s=>({armSite:null,_rev:(s._rev||0)+1}));
       setTimeout(()=>this.bcRefreshOffices(),150);
       setTimeout(()=>this.drawRoute(),400);
       this.printJob(tourName?('✓ Site « '+bld.name+' » → tournée « '+tourName+' » · arrêt n°'+nextStop+' (ws_office_delivery_sites)'):('Site « '+bld.name+' » retiré de sa tournée — non desservi')); };
     // Réordonner un site dans sa tournée (↑/↓) : renumérote 1..n et PERSISTE
-    // tournee_stop_id sur toutes les lignes de chaque bâtiment.
+    // tournee_stop_id sur toutes les lignes de chaque zone.
     const tourReorder=(tourName,key,dir)=>{ if(!window.BOServer) return;
       const ordered=tvList.filter(b=>b.tour&&tNorm(b.tour)===tNorm(tourName))
         .sort((a,b)=>((a.stop!=null?a.stop:999)-(b.stop!=null?b.stop:999))||String(a.name).localeCompare(String(b.name)));
@@ -9579,7 +9607,7 @@ class Component extends DCLogic {
       const tmp=ordered[i]; ordered[i]=ordered[j]; ordered[j]=tmp;
       const stopOf={}; ordered.forEach((b,ix)=>stopOf[b.key]=ix+1);
       const rows=window.BOServer.table('ws_office_delivery_sites'); let ch=false;
-      rows.forEach((x,xi)=>{ const kx=(x.adr&&x.adr!=='—')?('a:'+tNorm(x.adr)):((x.name&&x.name!=='—')?('n:'+tNorm(x.name)):null);
+      rows.forEach((x,xi)=>{ const kx=this.siteKey(x);
         if(kx&&stopOf[kx]!==undefined&&x.tour&&tNorm(x.tour)===tNorm(tourName)){ rows[xi]={...x,stop:stopOf[kx]}; ch=true; } });
       if(ch) window.BOServer.save('ws_office_delivery_sites',rows);
       this.setState(s=>({_rev:(s._rev||0)+1}));

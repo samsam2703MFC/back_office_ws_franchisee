@@ -646,12 +646,53 @@ l'alerte envoyait « nettoyer » un paramétrage correct. Elle ne compte plus qu
 les vrais doublons — la **même société deux fois sur la même zone**, ou deux
 lignes sans société.
 
-### Ce qui n'a pas changé
+### `sitesData()` aussi — un arrêt par zone
 
-`sitesData()` groupe toujours par **adresse** : c'est elle qui alimente les
-cartes, la chronologie et les ETA de l'écran Tournées, où un bureau à plus de
-60 m de son site devient déjà un arrêt à part entière (`tourPoints`). Le grain
-y est donc « point de livraison », volontairement plus fin que la zone.
+C'est elle qui alimente les cartes, la chronologie, les ETA (`computeRoute`,
+`tourEtas`, `traceRefresh`) et le constructeur de tournées. Elle groupait par
+**adresse exacte**, avec deux conséquences mesurées sur un zoning de trois
+sociétés à trois adresses :
+
+- **trois arrêts au lieu d'un** — trois trajets, trois temps d'accès. Sur le
+  jeu d'essai, la tournée annonçait **≈ 01h52** au lieu de **≈ 01h32** : vingt
+  minutes d'accès fantômes pour un seul arrêt du camion ;
+- **trois pins empilés sur le même point** : faute de position propre, les
+  lignes 2 et 3 retombaient sur le centroïde du code postal — exactement le
+  « tracé crédible et faux » que le reste du fichier s'applique à éviter.
+
+Le regroupement se fait désormais sur `siteKey()`, et :
+
+- **une ligne sans adresse n'est plus jetée.** `if(!adr) return` l'écartait
+  d'entrée : une zone nommée mais pas encore adressée — « Zoning Sud Wavre »,
+  assignable partout ailleurs dans la console — n'existait ni sur les cartes,
+  ni dans les ETA, ni dans les alertes, et la chronologie se déclarait complète
+  sans elle. Elle apparaît maintenant sans position (`geoKo`), et la ligne dit
+  qu'elle s'arrête là ;
+- **le point de référence de la zone** est celui de la première ligne qui en a
+  un : position Google d'abord, centroïde du code postal ensuite. Les lignes
+  suivantes ne l'écrasent plus ;
+- **tournée, temps d'accès et étage** prennent la première valeur réellement
+  saisie de la zone, au lieu de celle de la ligne représentante ;
+- **chaque bureau porte son adresse** : la rue que `ws_offices` lui connaît,
+  sinon celle de sa propre ligne. Le code postal et la localité ne tiennent pas
+  lieu d'adresse — « 5032 Isnes » s'affichait dès que `ws_offices` n'avait pas
+  la rue, et « adresse non renseignée » alors que la ligne la portait.
+
+Le grain reste plus fin que la zone là où il le faut : `tourPoints()` détache
+en arrêt à part entière tout bureau ayant sa propre position à plus de 60 m,
+et signale (`adrDiff`) ceux dont l'adresse diffère sans position — c'est
+précisément le cas normal dans un zoning.
+
+Le constructeur de tournées (`tvBlds`, `tourSetBld`, `tourReorder`) reprend lui
+aussi `siteKey()` : il gardait la clé adresse-d'abord, et proposait donc la même
+zone trois fois dans « Sites non assignés ».
+
+### Non vérifié ici
+
+Les **cartes Leaflet** ne se chargent pas dans l'environnement de test (le
+script vient d'`unpkg`, bloqué par le proxy). La sortie de `sitesData()` qui
+les alimente est vérifiée pièce à pièce, mais le rendu Leaflet lui-même reste
+à regarder au navigateur réel.
 
 Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : un zoning
 à trois sociétés et trois adresses → 1 arrêt ; l'adresse propre de chaque
