@@ -687,12 +687,34 @@ Le constructeur de tournées (`tvBlds`, `tourSetBld`, `tourReorder`) reprend lui
 aussi `siteKey()` : il gardait la clé adresse-d'abord, et proposait donc la même
 zone trois fois dans « Sites non assignés ».
 
-### Non vérifié ici
+### Les cartes Leaflet, vérifiées
 
-Les **cartes Leaflet** ne se chargent pas dans l'environnement de test (le
-script vient d'`unpkg`, bloqué par le proxy). La sortie de `sitesData()` qui
-les alimente est vérifiée pièce à pièce, mais le rendu Leaflet lui-même reste
-à regarder au navigateur réel.
+Le navigateur de test n'atteint pas `unpkg` (le proxy coupe la connexion). Les
+deux fichiers de Leaflet 1.9.4 ont donc été récupérés en local et servis sous
+leurs URL d'origine : leurs empreintes SHA-384 sont **identiques** à celles des
+attributs `integrity` de la page, qui valident donc la substitution — la page
+testée est exactement celle de production, rien n'y a été modifié.
+
+Sur le même jeu (un zoning de trois sociétés à trois adresses, référentiel
+CP→GPS chargé) :
+
+| | avant | après |
+| --- | --- | --- |
+| Carte des tournées — marqueurs | 4 (🏪 + arrêts **1, 2, 3**) | 2 (🏪 + arrêt **1**) |
+| Popup de l'arrêt | **une** société | **trois**, chacune à son adresse |
+| Livraison du jour — en-tête | « 3 site(s) · 3 bureau(x) » | « **1 site(s)** · 3 bureau(x) » |
+| Livraison du jour — pastilles | 3 empilées, « 1 bureau » chacune | 1, « **3** bureaux » |
+| ETA retour | −07:21 | −07:14 |
+| Zone sans adresse | ignorée en silence | « ⚠ 1 site sans coordonnées, non affiché ni compté dans les ETA : Zoning Sud Wavre » |
+
+Les trois marqueurs d'avant étaient **superposés au même point** : faute de
+position propre, les lignes 2 et 3 retombaient sur le centroïde du code postal.
+Aucune erreur JS dans aucun des deux cas.
+
+Reste que la page charge Leaflet depuis `unpkg`, alors que React est servi
+depuis `vendor/`. Une boutique dont le réseau bloque le CDN perd ses cartes.
+Vendoriser `leaflet.js` et `leaflet.css` comme React est un changement de
+production, non fait ici.
 
 Vérifié au navigateur (API absente, tables `ws_*` posées à la main) : un zoning
 à trois sociétés et trois adresses → 1 arrêt ; l'adresse propre de chaque
