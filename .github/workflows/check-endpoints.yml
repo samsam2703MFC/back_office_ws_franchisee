@@ -409,6 +409,18 @@ jobs:
           echo "  en-têtes de cache :"
           curl -sI --max-time 15 "$PAGE" | grep -i '^\(cache-control\|etag\|last-modified\|expires\)' | sed 's/^/    /'
           echo
+          # ── VITRINE WEBSHOP : page de garde (catégories illustrées) ──────
+          # Le bundle Vite est haché : on lit index.html pour trouver le JS
+          # réellement servi, puis on y cherche le composant. Les libellés
+          # viennent de ws_i18n (migration 0123) via GET /i18n.
+          WSIDX=$(curl -s --max-time 15 "http://localhost/webshop/" 2>/dev/null)
+          WSJS=$(printf '%s' "$WSIDX" | grep -o '/webshop/assets/index-[A-Za-z0-9_-]*\.js' | head -1)
+          if [ -z "$WSJS" ]; then echo "  ✗ vitrine webshop : index.html sans bundle Vite (chemin /webshop/assets/index-*.js introuvable)"
+          elif curl -s --max-time 20 "http://localhost$WSJS" 2>/dev/null | grep -q 'ws-cover__card'; then echo "  OK       vitrine webshop : page de garde (catégories illustrées) dans le bundle servi ($WSJS)"
+          else echo "  ✗ vitrine webshop : le bundle servi n'a pas la page de garde (ancien build ou déploiement en cours) — $WSJS"; fi
+          if curl -s --max-time 15 "$BASE/i18n" 2>/dev/null | grep -q '"cover.title"'; then echo "  OK       i18n : libellés de la page de garde servis (migration 0123 passée)"
+          else echo "  ✗ i18n : cover.title absent de GET /i18n — migration 0123 non passée (les clés s'affichent brutes)"; fi
+          echo
 
           # ── POSITION DE LA BOUTIQUE SONDÉE ────────────────────────────────
           # Le pin de « Livraison du jour » et de « Tournées » se déduit
