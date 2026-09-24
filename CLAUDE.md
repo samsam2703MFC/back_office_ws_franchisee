@@ -33,6 +33,14 @@ préférence. Elle se change en éditant ce tableau — dans les **deux** dépô
 > cross-sell, migration 0085). La répartition ci-dessus reste inchangée
 > pour tout le reste.
 
+> **Note du 24/09/2026 — exception ponctuelle demandée explicitement par
+> l'utilisateur :** cette session a aussi réorganisé la colonne de navigation
+> de la console MARQUE en sections et sous-sections (`navGroupsDef()` /
+> `navGroupOf()` dans `back_office_ws_franchisor/index.html`, six sections
+> repliables, état de repli par section via `state.openGroups` à la place du
+> drapeau unique `paramNavOpen`). Poussé sur `main` du dépôt marque, donc en
+> ligne. La répartition ci-dessus reste inchangée pour tout le reste.
+
 ## Pourquoi
 
 Trois incidents en une seule journée, tous dus au travail en parallèle :
