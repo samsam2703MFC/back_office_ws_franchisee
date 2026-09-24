@@ -425,6 +425,9 @@ jobs:
           JK=$(curl -s -o /tmp/jk.html -w '%{http_code}' --max-time 15 "http://localhost/webshop/jackpot-test.html" 2>/dev/null)
           if [ "$JK" = "200" ] && grep -q 'Jackpot de l' /tmp/jk.html; then echo "  OK       page de test « Jackpot de l'Atelier » servie (/webshop/jackpot-test.html)"
           else echo "  ✗ page de test « Jackpot » : HTTP $JK — non déployée"; fi
+          SN=$(curl -s -o /tmp/sn.html -w '%{http_code}' --max-time 15 "http://localhost/webshop/saisons-test.html" 2>/dev/null)
+          if [ "$SN" = "200" ] && grep -q 'sn-hero' /tmp/sn.html; then echo "  OK       page de test « habillage saisonnier » servie (/webshop/saisons-test.html)"
+          else echo "  ✗ page de test « saisons » : HTTP $SN — non déployée"; fi
           echo
 
           # ── POSITION DE LA BOUTIQUE SONDÉE ────────────────────────────────
