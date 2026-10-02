@@ -428,6 +428,9 @@ jobs:
           SN=$(curl -s -o /tmp/sn.html -w '%{http_code}' --max-time 15 "http://localhost/webshop/saisons-test.html" 2>/dev/null)
           if [ "$SN" = "200" ] && grep -q 'sn-hero' /tmp/sn.html; then echo "  OK       page de test « habillage saisonnier » servie (/webshop/saisons-test.html)"
           else echo "  ✗ page de test « saisons » : HTTP $SN — non déployée"; fi
+          FZ=$(curl -s -o /tmp/fz.html -w '%{http_code}' --max-time 15 "http://localhost/webshop/filtre-test.html" 2>/dev/null)
+          if [ "$FZ" = "200" ] && grep -q 'fz-skin' /tmp/fz.html; then echo "  OK       page de test « filtre intelligent » servie (/webshop/filtre-test.html)"
+          else echo "  ✗ page de test « filtre » : HTTP $FZ — non déployée"; fi
           echo
 
           # ── POSITION DE LA BOUTIQUE SONDÉE ────────────────────────────────
