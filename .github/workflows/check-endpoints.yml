@@ -436,6 +436,9 @@ jobs:
           FZ=$(curl -s -o /tmp/fz.html -w '%{http_code}' --max-time 15 "http://localhost/webshop/filtre-test.html" 2>/dev/null)
           if [ "$FZ" = "200" ] && grep -q 'fz-skin' /tmp/fz.html; then echo "  OK       page de test « filtre intelligent » servie (/webshop/filtre-test.html)"
           else echo "  ✗ page de test « filtre » : HTTP $FZ — non déployée"; fi
+          PO=$(curl -s -o /tmp/po.html -w '%{http_code}' --max-time 15 "http://localhost/webshop/pos-test.html" 2>/dev/null)
+          if [ "$PO" = "200" ] && grep -q 'pos-skin' /tmp/po.html; then echo "  OK       page de test « mode boutique » servie (/webshop/pos-test.html)"
+          else echo "  ✗ page de test « mode boutique » : HTTP $PO — non déployée"; fi
           echo
 
           # ── POSITION DE LA BOUTIQUE SONDÉE ────────────────────────────────
