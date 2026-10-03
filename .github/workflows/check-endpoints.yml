@@ -420,6 +420,11 @@ jobs:
           else echo "  ✗ vitrine webshop : le bundle servi n'a pas la page de garde (ancien build ou déploiement en cours) — $WSJS"; fi
           if curl -s --max-time 15 "$BASE/i18n" 2>/dev/null | grep -q '"cover.title"'; then echo "  OK       i18n : libellés de la page de garde servis (migration 0123 passée)"
           else echo "  ✗ i18n : cover.title absent de GET /i18n — migration 0123 non passée (les clés s'affichent brutes)"; fi
+          # Filtre « Selon mon budget » (jauges au-dessus de la grille, migration 0132).
+          if [ -n "$WSJS" ] && curl -s --max-time 20 "http://localhost$WSJS" 2>/dev/null | grep -q 'ws-fz__ill'; then echo "  OK       vitrine webshop : filtre « Selon mon budget » dans le bundle servi"
+          else echo "  ✗ vitrine webshop : le bundle servi n'a pas le filtre « Selon mon budget » (ancien build ou déploiement en cours)"; fi
+          if curl -s --max-time 15 "$BASE/i18n" 2>/dev/null | grep -q '"fz.title"'; then echo "  OK       i18n : libellés du filtre budget servis (migration 0132 passée)"
+          else echo "  ✗ i18n : fz.title absent de GET /i18n — migration 0132 non passée (les clés s'affichent brutes)"; fi
           # Page de test de la machine à sous (hors boutique, noindex, liée
           # depuis nulle part) : on vérifie seulement qu'elle est servie.
           JK=$(curl -s -o /tmp/jk.html -w '%{http_code}' --max-time 15 "http://localhost/webshop/jackpot-test.html" 2>/dev/null)
